@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Restaurant Voucher - {{ request.request_number }}{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+@media print {
+    @page { size: A4; margin: 0.5in; }
+    .no-print { display: none !important; }
+    .top-navbar, #sidebar, #sidebar-overlay, .restaurant-voucher-screen { display: none !important; }
+    .restaurant-voucher-print { display: block !important; }
+    body { background: white !important; }
+    #content, main { padding: 0 !important; margin: 0 !important; }
+}
+.restaurant-voucher-print {
+    display: none;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #000;
+}
+.restaurant-voucher-header {
+    text-align: center;
+    margin-bottom: 16px;
+}
+.restaurant-voucher-header img {
+    display: block;
+    width: 3cm;
+    height: 3cm;
+    object-fit: contain;
+    margin: 0 auto 8px auto;
+}
+.restaurant-voucher-company {
+    text-align: center;
+    margin-bottom: 16px;
+}
+.restaurant-voucher-company h1 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    font-weight: normal;
+    color: #000;
+}
+.restaurant-voucher-company p {
+    margin: 2px 0;
+    font-size: 11px;
+    color: #000;
+}
+.restaurant-voucher-form-title {
+    text-align: center;
+    border: 1px solid #000;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-weight: bold;
+    font-size: 14px;
+    letter-spacing: 0.05em;
+}
+.restaurant-voucher-booking {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    font-size: 12px;
+}
+.restaurant-voucher-booking-left p { margin: 2px 0; }
+.restaurant-voucher-booking-right {
+    display: flex;
+    gap: 12px;
+}
+.restaurant-voucher-booking-right .voucher-box, .restaurant-voucher-booking-right .guests-box {
+    border: 1px solid #000;
+    padding: 2px 12px;
+    height: fit-content;
+}
+.restaurant-voucher-provide {
+    margin-bottom: 16px;
+    font-size: 12px;
+}
+.restaurant-voucher-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+    font-size: 11px;
+}
+.restaurant-voucher-table th, .restaurant-voucher-table td {
+    border: 1px solid #000;
+    padding: 6px 4px;
+    empty-cells: show;
+}
+.restaurant-voucher-table th { font-weight: bold; background: #f5f5f5; text-align: center; }
+.restaurant-voucher-table td:not(:last-child) { text-align: center; }
+.restaurant-voucher-table td:last-child { text-align: left; }
+.restaurant-voucher-notes-section {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    align-items: flex-start;
+}
+.restaurant-voucher-notes-section .notes-title { flex-shrink: 0; font-weight: bold; }
+.restaurant-voucher-notes-section .notes-box {
+    flex: 1;
+    border: 1px solid #000;
+    min-height: 3.5cm;
+    padding: 8px;
+    font-size: 11px;
+}
+.restaurant-voucher-disclaimer {
+    font-size: 10px;
+    margin-bottom: 16px;
+    color: #333;
+}
+.restaurant-voucher-signature {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 11px;
+}
+.restaurant-voucher-signature .sig-line {
+    flex: 1;
+    border-bottom: 1px solid #000;
+    min-height: 20px;
+}
+.restaurant-voucher-total {
+    font-weight: bold;
+    text-align: right;
+    margin-bottom: 12px;
+    font-size: 12px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row no-print mb-3 restaurant-voucher-screen">
+        <div class="col-12">
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Request
+                </a>
+                <button onclick="window.print()" class="btn btn-primary">
+                    <i class="fas fa-print"></i> Print Voucher
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="restaurant-voucher-print">
+        <div class="restaurant-voucher-header">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Windows of Jordan" onerror="this.style.display='none'">
+            <div class="company-name-below-logo">Windows of Jordan Tours</div>
+        </div>
+        <div class="restaurant-voucher-company">
+            <h1>Windows of Jordan Tours</h1>
+            <p>Jabal Amman - Prince Mhd Street</p>
+            <p>Building number 247 - Office 500</p>
+            <p>Tel. +9626 4619402 - Fax +9626 4619404</p>
+        </div>
+        <div class="restaurant-voucher-form-title">RESTAURANT SERVICES VOUCHER</div>
+        <div class="restaurant-voucher-booking">
+            <div class="restaurant-voucher-booking-left">
+                <p><strong>To:</strong> Reservation Department.</p>
+                <p><strong>Date:</strong> {{ (request.from_date.strftime('%d %b %Y') if request.from_date else '') or '-' }}</p>
+            </div>
+            <div class="restaurant-voucher-booking-right">
+                <div class="voucher-box">Request No: {{ request.request_number or request.document_sequence or '-' }}</div>
+                <div class="guests-box">Pax #: {{ request.pax or 0 }}</div>
+            </div>
+        </div>
+        <p class="restaurant-voucher-provide">Please provide with the following.</p>
+        <table class="restaurant-voucher-table">
+            <thead>
+                <tr>
+                    <th>Booking at</th>
+                    <th>Date of Service</th>
+                    <th>Meal Requested</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if request.inbound_meals %}
+                {% for m in request.inbound_meals %}
+                <tr>
+                    <td>{{ m.supplier_name or m.restaurant or '-' }}</td>
+                    <td>{{ m.date.strftime('%d %b %Y') if m.date else '-' }}</td>
+                    <td>{{ m.meal_type or '-' }}</td>
+                    <td>{{ m.meal_note or '&nbsp;'|safe }}</td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center;">No restaurants added</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <div class="restaurant-voucher-notes-section">
+            <span class="notes-title">Notes and Special Requests.</span>
+            <div class="notes-box" id="restaurantVoucherNoteBox" contenteditable="true">{{ request.restaurant_voucher_note or '' }}</div>
+        </div>
+        <div class="restaurant-voucher-disclaimer">
+            Our Company is responsible only for service listed above.<br>
+            The presentation of this voucher must be attached to your invoice otherwise payment may be delayed.
+        </div>
+        <div class="restaurant-voucher-signature">
+            <span>Authorised Signature :</span>
+            <div class="sig-line"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

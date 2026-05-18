@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, send_from_directory
+from flask import Blueprint, render_template, redirect, url_for, flash, request, send_from_directory, jsonify
 from app import db
 from app.models.booking import Booking
 from app.models import STATUS_REQUEST, STATUS_IN_PROGRESS, STATUS_CONFIRMED, STATUS_BOOKED
@@ -7,6 +7,20 @@ from app.models.user import User
 
 # Create a blueprint for main routes
 main_bp = Blueprint('main', __name__)
+
+
+@main_bp.route('/inbound/all-files')
+def inbound_all_files_list():
+    """Hub link: all saved inbound files (request + confirmed + invoiced). Same UI as inbound index."""
+    from app.routes.inbound import _inbound_list_context
+
+    ctx = _inbound_list_context()
+    return render_template(
+        'inbound/index.html',
+        inbound_hide_run_down=True,
+        **ctx,
+    )
+
 
 @main_bp.route('/supplier/<int:supplier_id>')
 
@@ -18,43 +32,66 @@ def supplier_redirect(supplier_id):
 
 def index():
     """Home page showing New Booking action and weekly run-down plan"""
+    from app.models.inbound import InboundRequest
+    from sqlalchemy import or_
+    from datetime import datetime, timedelta
+
+    today = datetime.now().date()
+    week_start = today - timedelta(days=today.weekday())  # Monday
+    week_end = week_start + timedelta(days=6)  # Sunday
+
+    weekly_rundown = []
+    status_counts = {'REQUEST': 0, 'CONFIRMED': 0, 'INVOICED': 0}
+    deleted_queue_count = 0
+    total_all_files_count = 0
+
+    # Keep Hub counters stable even if run-down fails.
     try:
-        from app.models.inbound import InboundRequest
-        from sqlalchemy import func
-        from datetime import datetime, timedelta
+        base_saved = InboundRequest.query.filter(
+            or_(
+                InboundRequest.is_saved == True,
+                ~InboundRequest.request_number.like('IN-NEW-%')
+            )
+        )
+        total_all_files_count = base_saved.count()
+        deleted_queue_count = base_saved.filter(InboundRequest.pending_invoice_queue.is_(True)).count()
+        active_saved = base_saved.filter(InboundRequest.pending_invoice_queue.isnot(True))
 
-        # Get weekly run-down data (current week)
-        today = datetime.now().date()
-        week_start = today - timedelta(days=today.weekday())  # Monday
-        week_end = week_start + timedelta(days=6)  # Sunday
+        status_counts['REQUEST'] = active_saved.filter(InboundRequest.status == 'REQUEST').count()
+        status_counts['CONFIRMED'] = active_saved.filter(
+            InboundRequest.status.in_(['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS'])
+        ).count()
+        status_counts['INVOICED'] = active_saved.filter(
+            InboundRequest.status.in_(['INVOICE', 'COMPLETED', 'INVOICED'])
+        ).count()
+    except Exception as e:
+        print(f"[ERROR] Hub counters query failed in index(): {e}")
 
-        # Get confirmed requests for the week
+    workflow_counts = {
+        'REQUEST': status_counts['REQUEST'],
+        'CONFIRMED': status_counts['CONFIRMED'],
+        'INVOICED': status_counts['INVOICED']
+    }
+
+    try:
+        from sqlalchemy.orm import selectinload
+        # Get confirmed requests for the week (with limit to prevent timeout)
         confirmed_requests = InboundRequest.query.filter(
-            InboundRequest.user_id == 1,
-            InboundRequest.status.in_(['CONFIRMED', 'BOOKED'])
-        ).all()
+            InboundRequest.status.in_(['CONFIRMED', 'BOOKED']),
+            InboundRequest.pending_invoice_queue.isnot(True),
+        ).options(
+            selectinload(InboundRequest.itinerary_rows)
+        ).limit(40).all()
 
-        # Group activities by date for the week
         activities_by_date = {}
-
         for req in confirmed_requests:
-            # Get customer info
-            customer_name = "TBA"
-            if req.customer_id:
-                from app.models.customer import Customer
-                customer = Customer.query.get(req.customer_id)
-                if customer:
-                    customer_name = customer.name
-            elif req.contact_name:
-                customer_name = req.contact_name
-
-            # Process itinerary rows
-            for row in req.itinerary_rows:
+            customer_name = req.contact_name or "TBA"
+            itinerary_rows = list(req.itinerary_rows)[:25]
+            for row in itinerary_rows:
                 if row.date < week_start or row.date > week_end:
                     continue
 
                 date_key = row.date.strftime('%Y-%m-%d')
-
                 if date_key not in activities_by_date:
                     activities_by_date[date_key] = {
                         'date': row.date,
@@ -62,7 +99,6 @@ def index():
                         'activities': []
                     }
 
-                # Build activity info
                 services = []
                 if row.flag_hotel:
                     services.append({'type': 'Hotel', 'icon': 'fa-hotel'})
@@ -83,62 +119,37 @@ def index():
                     'services': services
                 })
 
-        # Sort by date
         weekly_rundown = sorted(activities_by_date.values(), key=lambda x: x['date'])
-
-        # Get status counts for quick stats (3-state system: REQUEST, CONFIRMED, INVOICED)
-        # Exclude unsaved draft requests (temporary IN-NEW- numbers)
-        from sqlalchemy import or_
-        all_requests = InboundRequest.query.filter_by(user_id=1).filter(
-            or_(
-                InboundRequest.is_saved == True,  # Explicitly saved requests
-                ~InboundRequest.request_number.like('IN-NEW-%')  # Legacy requests without is_saved flag but with proper numbers
-            )
-        ).all()
-
-        def map_status_for_dashboard(status):
-            """Map old statuses to new 3-state system"""
-            if not status:
-                return 'REQUEST'
-            status_upper = str(status).upper()
-            if status_upper in ['REQUEST']:
-                return 'REQUEST'
-            if status_upper in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS']:
-                return 'CONFIRMED'
-            if status_upper in ['INVOICE', 'COMPLETED', 'INVOICED']:
-                return 'INVOICED'
-            return 'REQUEST'
-
-        status_counts = {
-            'REQUEST': 0,
-            'CONFIRMED': 0,
-            'INVOICED': 0
-        }
-
-        for req in all_requests:
-            mapped_status = map_status_for_dashboard(req.status)
-            if mapped_status in status_counts:
-                status_counts[mapped_status] += 1
-
-        # Keep workflow_counts for backward compatibility with stats-bar
-        workflow_counts = {
-            'REQUEST': status_counts['REQUEST'],
-            'CONFIRMED': status_counts['CONFIRMED'],
-            'INVOICED': status_counts['INVOICED']
-        }
-
     except Exception as e:
-        print(f"Database query error: {e}")
-        weekly_rundown = []
-        status_counts = {'REQUEST': 0, 'CONFIRMED': 0, 'INVOICED': 0}
-        workflow_counts = {'REQUEST': 0, 'CONFIRMED': 0, 'INVOICED': 0}
+        print(f"[WARNING] Weekly run-down query failed in index(): {e}")
 
-    return render_template('index.html', 
-                         weekly_rundown=weekly_rundown,
-                         workflow_counts=workflow_counts,
-                         status_counts=status_counts,
-                         week_start=week_start,
-                         week_end=week_end)
+    try:
+        return render_template('index.html', 
+                             weekly_rundown=weekly_rundown,
+                             workflow_counts=workflow_counts,
+                             status_counts=status_counts,
+                             total_all_files_count=total_all_files_count,
+                             deleted_queue_count=deleted_queue_count,
+                             week_start=week_start,
+                             week_end=week_end)
+    except Exception as e:
+        print(f"[ERROR] Template rendering error in index(): {e}")
+        import traceback
+        traceback.print_exc()
+        # Return a simple error page instead of blank
+        from flask import Response, render_template_string
+        error_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head><title>Error</title></head>
+        <body>
+            <h1>Error Loading Page</h1>
+            <p>An error occurred while loading the page: {str(e)}</p>
+            <p>Please check the server logs for more details.</p>
+        </body>
+        </html>
+        """
+        return Response(error_html, status=500, mimetype='text/html')
 
 @main_bp.route('/dashboard')
 
@@ -477,6 +488,49 @@ def find_bookings():
                          total_amount=total_amount,
                          total_bookings=total_bookings,
                          has_search_params=has_search_params)
+
+@main_bp.route('/health')
+def health():
+    """Health check for production debugging - verifies DB connectivity and schema."""
+    import os
+    from sqlalchemy import text, inspect
+    db_uri = os.environ.get("DATABASE_URL", "sqlite:///app.db")
+    is_pg = db_uri.startswith(("postgresql://", "postgres://"))
+    result = {
+        "status": "ok",
+        "database_type": "postgresql" if is_pg else "sqlite",
+        "database_url_set": bool(os.environ.get("DATABASE_URL")),
+        "db_connected": False,
+        "schema_ok": False,
+        "inbound_request_columns": [],
+        "errors": [],
+    }
+    try:
+        with db.engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        result["db_connected"] = True
+    except Exception as e:
+        result["errors"].append(f"DB connection: {str(e)}")
+        return jsonify(result), 503
+    try:
+        inspector = inspect(db.engine)
+        tables = [t.lower() if is_pg else t for t in inspector.get_table_names()]
+        if "inbound_request" in tables:
+            cols = [c["name"] for c in inspector.get_columns("inbound_request")]
+            result["inbound_request_columns"] = cols
+            required = [
+                "restaurant_voucher_note", "hotel_voucher_note",
+                "advance_expense_sheet_data", "closing_guide_payment_sheet_data",
+            ]
+            missing = [c for c in required if c not in cols]
+            result["schema_ok"] = len(missing) == 0
+            if missing:
+                result["errors"].append(f"Missing columns: {missing}")
+        else:
+            result["errors"].append("inbound_request table not found")
+    except Exception as e:
+        result["errors"].append(f"Schema check: {str(e)}")
+    return jsonify(result)
 
 @main_bp.route('/favicon.ico')
 def favicon():

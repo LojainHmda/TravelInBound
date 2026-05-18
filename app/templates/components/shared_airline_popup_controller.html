@@ -1,0 +1,118 @@
+<script>
+(function () {
+    function getEl(id) { return document.getElementById(id); }
+
+    function syncAirlineCliqFields() {
+        const paymentTerms = (getEl('new_airline_payment_terms')?.value || '').trim();
+        const isCliq = paymentTerms === 'Cliq';
+        const bankNameWrap = getEl('airlineBankNameWrap');
+        const bankAccountWrap = getEl('airlineBankAccountWrap');
+        const cliqWrap = getEl('airlineCliqWrap');
+        if (bankNameWrap) bankNameWrap.style.display = isCliq ? 'none' : '';
+        if (bankAccountWrap) bankAccountWrap.style.display = isCliq ? 'none' : '';
+        if (cliqWrap) cliqWrap.style.display = isCliq ? '' : 'none';
+    }
+
+    function resetAirlineForm() {
+        const defaults = {
+            new_airline_name: '',
+            new_airline_iata_code: '',
+            new_airline_icao_code: '',
+            new_airline_phone: '',
+            new_airline_email: '',
+            new_airline_city: '',
+            new_airline_default_currency: 'USD',
+            new_airline_payment_terms: '',
+            new_airline_bank_name: '',
+            new_airline_bank_account: '',
+            new_airline_cliq_alias: '',
+            new_airline_tax_number: '',
+            new_airline_notes: ''
+        };
+        Object.keys(defaults).forEach(id => {
+            const el = getEl(id);
+            if (el) el.value = defaults[id];
+        });
+        getEl('add-airline-error')?.classList.add('hidden');
+        syncAirlineCliqFields();
+    }
+
+    window.openAddAirlineModal = function openAddAirlineModal() {
+        const modal = getEl('addAirlineModal');
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        modal.style.display = 'flex';
+        syncAirlineCliqFields();
+        getEl('new_airline_name')?.focus();
+    };
+
+    window.closeAddAirlineModal = function closeAddAirlineModal() {
+        const modal = getEl('addAirlineModal');
+        if (!modal) return;
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        modal.style.display = 'none';
+        resetAirlineForm();
+    };
+
+    window.saveNewAirline = function saveNewAirline() {
+        const modal = getEl('addAirlineModal');
+        if (!modal) return;
+        const url = modal.getAttribute('data-submit-url');
+        const name = (getEl('new_airline_name')?.value || '').trim();
+        if (!name) {
+            const err = getEl('add-airline-error');
+            if (err) {
+                err.textContent = 'Please enter an airline name';
+                err.classList.remove('hidden');
+            }
+            return;
+        }
+        if (!url) return;
+
+        const paymentTerms = (getEl('new_airline_payment_terms')?.value || '').trim();
+        const iataCode = (getEl('new_airline_iata_code')?.value || '').trim();
+        const icaoCode = (getEl('new_airline_icao_code')?.value || '').trim();
+        const existingNotes = (getEl('new_airline_notes')?.value || '').trim();
+        let notes = existingNotes;
+        if (iataCode) notes = `IATA: ${iataCode}\n${notes}`.trim();
+        if (icaoCode) notes = `ICAO: ${icaoCode}\n${notes}`.trim();
+
+        const formData = new FormData();
+        formData.append('supplier_type', 'AIRLINE');
+        formData.append('name', name);
+        formData.append('phone', (getEl('new_airline_phone')?.value || '').trim());
+        formData.append('email', (getEl('new_airline_email')?.value || '').trim());
+        formData.append('city', (getEl('new_airline_city')?.value || '').trim());
+        formData.append('default_currency', (getEl('new_airline_default_currency')?.value || 'USD').trim() || 'USD');
+        formData.append('payment_terms', paymentTerms);
+        if (paymentTerms === 'Cliq') {
+            formData.append('bank_name', 'Cliq');
+            formData.append('bank_account', (getEl('new_airline_cliq_alias')?.value || '').trim());
+            formData.append('cliq_alias', (getEl('new_airline_cliq_alias')?.value || '').trim());
+        } else {
+            formData.append('bank_name', (getEl('new_airline_bank_name')?.value || '').trim());
+            formData.append('bank_account', (getEl('new_airline_bank_account')?.value || '').trim());
+            formData.append('cliq_alias', '');
+        }
+        formData.append('tax_number', (getEl('new_airline_tax_number')?.value || '').trim());
+        formData.append('notes', notes);
+
+        fetch(url, { method: 'POST', body: formData })
+            .then(resp => {
+                if (!resp.ok) throw new Error('Save failed');
+                window.location.reload();
+            })
+            .catch(() => {
+                const err = getEl('add-airline-error');
+                if (err) {
+                    err.textContent = 'Could not save airline. Please try again.';
+                    err.classList.remove('hidden');
+                }
+            });
+    };
+
+    getEl('new_airline_payment_terms')?.addEventListener('change', syncAirlineCliqFields);
+})();
+</script>

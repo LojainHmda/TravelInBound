@@ -13,8 +13,12 @@ class Customer(db.Model):
     country = db.Column(db.String(50))
     
     # Business information
-    customer_type = db.Column(db.String(20), default='Individual')  # Individual, Corporate, Group
+    customer_type = db.Column(db.String(20), default='Direct')  # Travel Agent, Corporate, Direct, Other
     company_name = db.Column(db.String(100))
+    payment_terms = db.Column(db.String(100))
+    bank_name = db.Column(db.String(120))
+    bank_account = db.Column(db.String(255))
+    cliq_alias = db.Column(db.String(255))
     tax_number = db.Column(db.String(50))
     
     # Additional information

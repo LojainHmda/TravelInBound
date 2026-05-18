@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template, render_template_string, redirect, url_for, flash, request, jsonify, abort, send_file
-from flask_login import login_required
+from flask import Blueprint, render_template, render_template_string, redirect, url_for, flash, request, jsonify, abort, send_file, current_app
 from datetime import datetime, timedelta, date
+import calendar
+import time
 from typing import cast, Any
 import json
 import os
@@ -12,13 +13,16 @@ from app.models.inbound import (
     InboundRequest, ItineraryRow, InboundHotel, InboundTransport, 
     InboundMeal, InboundGuide, InboundCashExpense, InboundDocument,
     HotelRoom, COST_UNIT_PER_PERSON, COST_UNIT_PER_GROUP,
-    ArrivalBatch, DepartureBatch
+    ArrivalBatch, DepartureBatch, InboundRepresentative,
+    itinerary_row_guide_supplier_id_list,
 )
 from werkzeug.utils import secure_filename
 import uuid
+from urllib.parse import urlencode
 from app.models import STATUS_REQUEST, STATUS_QUOTED, STATUS_RESERVED, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED
 from app.models.service import ServiceItem
 from app.models.booking import Booking
+from app.models.invoice import Invoice
 from app.models.customer import Customer
 from app.services.proforma_doc_generator import ProformaDocGenerator
 from app.services.voucher_trip_plan_generator import VoucherTripPlanGenerator
@@ -26,120 +30,547 @@ from app.services.voucher_trip_plan_generator import VoucherTripPlanGenerator
 # Create blueprint for inbound tour operator routes
 inbound_bp = Blueprint('inbound', __name__, url_prefix='/inbound')
 
-@inbound_bp.route('/')
+_SUPPLIER_DROPDOWN_CACHE = {
+    'expires_at': 0.0,
+    'data': None,
+}
 
-def index():
-    """List all inbound requests with filtering and run-down plan"""
-    query = InboundRequest.query.filter_by(user_id=1)
+
+def _invalidate_supplier_dropdown_cache():
+    _SUPPLIER_DROPDOWN_CACHE['expires_at'] = 0.0
+    _SUPPLIER_DROPDOWN_CACHE['data'] = None
+
+
+def _get_supplier_dropdown_data(cache_ttl_seconds: int = 120):
+    """Load supplier dropdown data once and reuse briefly across requests."""
+    now = time.time()
+    cached = _SUPPLIER_DROPDOWN_CACHE.get('data')
+    if cached is not None and now < float(_SUPPLIER_DROPDOWN_CACHE.get('expires_at', 0.0)):
+        return cached
+
+    from app.models.supplier import Supplier
+
+    suppliers = Supplier.query.filter(
+        Supplier.is_active == True,
+        Supplier.supplier_type.in_(['HOTEL', 'TRANSPORT', 'GUIDE', 'RESTAURANT', 'GROUND_HANDLER']),
+    ).order_by(Supplier.supplier_type, Supplier.city, Supplier.name).all()
+    representatives = InboundRepresentative.query.order_by(InboundRepresentative.name).all()
+
+    hotels = []
+    transports = []
+    guides = []
+    restaurants = []
+    ground_handlers = []
+    for s in suppliers:
+        t = (s.supplier_type or '').upper()
+        if t == 'HOTEL':
+            hotels.append(s)
+        elif t == 'TRANSPORT':
+            transports.append(s)
+        elif t == 'GUIDE':
+            guides.append(s)
+        elif t == 'RESTAURANT':
+            restaurants.append(s)
+        elif t == 'GROUND_HANDLER':
+            ground_handlers.append(s)
+
+    hotels_by_city = {}
+    city_order = ['Amman', 'Aqaba', 'Petra', 'Dead Sea', 'Other']
+    for hotel in hotels:
+        city = hotel.city or 'Other'
+        hotels_by_city.setdefault(city, []).append(hotel)
+    sorted_hotels_by_city = {
+        city: hotels_by_city.get(city, [])
+        for city in city_order if city in hotels_by_city
+    }
+
+    data = {
+        'hotel_suppliers': hotels,
+        'hotels_by_city': sorted_hotels_by_city,
+        'transport_suppliers': transports,
+        'guide_suppliers': guides,
+        'representatives': representatives,
+        'restaurant_suppliers': restaurants,
+        'ground_handler_suppliers': ground_handlers,
+    }
+    _SUPPLIER_DROPDOWN_CACHE['data'] = data
+    _SUPPLIER_DROPDOWN_CACHE['expires_at'] = now + cache_ttl_seconds
+    return data
+
+
+def _parse_needs_transport(val, default=True):
+    """Parse Yes/No from arrival/departure Individual Transport dropdown."""
+    if val is None:
+        return default
+    if isinstance(val, bool):
+        return val
+    s = str(val).strip().lower()
+    if s in ('no', 'false', '0', 'off'):
+        return False
+    return True
+
+
+def _transport_flight_stub_complete(t: InboundTransport) -> bool:
+    """Green chip when supplier and vehicle type are set (execution layer complete)."""
+    return bool(t.supplier_id and (t.vehicle_type or '').strip())
+
+
+def _is_individual_transport_from_flight(t: InboundTransport) -> bool:
+    """True for arrival/departure individual-transfer stubs (chip flow), including legacy rows missing batch FK."""
+    if t.source_arrival_batch_id is not None or t.source_departure_batch_id is not None:
+        return True
+    if t.is_airport_transfer and (t.is_arrival or t.is_departure):
+        return True
+    return False
+
+
+def _include_transport_in_trip_summary(t: InboundTransport) -> bool:
+    """Individual transports from flights appear in trip summary / export only when supplier + vehicle are saved."""
+    if _is_individual_transport_from_flight(t):
+        return _transport_flight_stub_complete(t)
+    return True
+
+
+def _trip_summary_transports(transports) -> list:
+    """Ordered list of transports shown in Trip Summary and Word tour file."""
+    lst = list(transports or [])
+    lst.sort(key=lambda x: (x.date or date.min, x.id))
+    return [t for t in lst if _include_transport_in_trip_summary(t)]
+
+
+def _detach_individual_transport_from_batch(transport: InboundTransport) -> None:
+    """Turn off Individual Transport on the source flight batch so stubs are not recreated."""
+    if transport.source_arrival_batch_id:
+        arr = ArrivalBatch.query.filter_by(
+            id=transport.source_arrival_batch_id, request_id=transport.request_id
+        ).first()
+        if arr:
+            arr.needs_transport = False
+    if transport.source_departure_batch_id:
+        dep = DepartureBatch.query.filter_by(
+            id=transport.source_departure_batch_id, request_id=transport.request_id
+        ).first()
+        if dep:
+            dep.needs_transport = False
+
+
+def _sync_transport_from_arrival(arrival: ArrivalBatch) -> None:
+    """Create/update or remove InboundTransport stub for an arrival batch (after flush)."""
+    if not arrival or not arrival.id or not arrival.arrival_date:
+        return
+    req_id = arrival.request_id
+    need = arrival.needs_transport
+    if need is None:
+        need = True
+    if not need:
+        InboundTransport.query.filter_by(
+            request_id=req_id, source_arrival_batch_id=arrival.id
+        ).delete(synchronize_session=False)
+        return
+    t = InboundTransport.query.filter_by(
+        request_id=req_id, source_arrival_batch_id=arrival.id
+    ).first()
+    if not t:
+        t = InboundTransport(
+            request_id=req_id,
+            date=arrival.arrival_date,
+            end_date=arrival.arrival_date,
+            pax=arrival.pax_count or 0,
+            source_arrival_batch_id=arrival.id,
+        )
+        db.session.add(t)
+    t.date = arrival.arrival_date
+    t.end_date = arrival.arrival_date
+    t.pax = arrival.pax_count or 0
+    t.pickup_time = arrival.arrival_time
+    t.pickup_location = arrival.arrival_point
+    t.is_airport_transfer = True
+    t.is_arrival = True
+    t.is_departure = False
+
+
+def _sync_transport_from_departure(departure: DepartureBatch) -> None:
+    """Create/update or remove InboundTransport stub for a departure batch (after flush)."""
+    if not departure or not departure.id or not departure.departure_date:
+        return
+    req_id = departure.request_id
+    need = departure.needs_transport
+    if need is None:
+        need = True
+    if not need:
+        InboundTransport.query.filter_by(
+            request_id=req_id, source_departure_batch_id=departure.id
+        ).delete(synchronize_session=False)
+        return
+    t = InboundTransport.query.filter_by(
+        request_id=req_id, source_departure_batch_id=departure.id
+    ).first()
+    if not t:
+        t = InboundTransport(
+            request_id=req_id,
+            date=departure.departure_date,
+            end_date=departure.departure_date,
+            pax=departure.pax_count or 0,
+            source_departure_batch_id=departure.id,
+        )
+        db.session.add(t)
+    t.date = departure.departure_date
+    t.end_date = departure.departure_date
+    t.pax = departure.pax_count or 0
+    t.pickup_time = departure.departure_time
+    t.dropoff_location = departure.departure_point
+    t.is_airport_transfer = True
+    t.is_arrival = False
+    t.is_departure = True
+
+
+def _reconcile_flight_linked_transports(request_id: int) -> None:
+    """Create/remove InboundTransport stubs from arrival/departure batches (idempotent).
+
+    Call from read endpoints if saves ran without sync (e.g. server not restarted after deploy).
+    """
+    for arr in ArrivalBatch.query.filter_by(request_id=request_id).order_by(ArrivalBatch.id).all():
+        _sync_transport_from_arrival(arr)
+    for dep in DepartureBatch.query.filter_by(request_id=request_id).order_by(DepartureBatch.id).all():
+        _sync_transport_from_departure(dep)
+
+
+def _hub_status_scope_label(status_val):
+    """Human label for Hub status filter (?status=) — matches inbound list filter mapping."""
+    if not status_val:
+        return None
+    u = str(status_val).strip().upper()
+    if u == 'REQUEST':
+        return 'Request'
+    if u in ('SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS'):
+        return 'Confirmed'
+    if u in ('INVOICE', 'COMPLETED', 'INVOICED'):
+        return 'Invoiced'
+    return None
+
+
+def _inbound_list_context():
+    """Build template context for inbound list views (main index and /all-files)."""
+    path_tail = (request.path or '').rstrip('/')
+    all_files_view = path_tail.endswith('all-files')
+    query, queue = _build_inbound_list_query(all_files_view)
+
+    now_y = datetime.now().year
+    list_filter_years = list(range(now_y + 1, now_y - 16, -1))
+    list_filter_months = [(str(i), calendar.month_name[i]) for i in range(1, 13)]
+
+    # List order: newest first by default (req_sort=desc); req_sort=asc = oldest first
+    req_sort = (request.args.get('req_sort') or 'desc').strip().lower()
+    if req_sort not in ('asc', 'desc'):
+        req_sort = 'desc'
+    if req_sort == 'desc':
+        query = query.order_by(InboundRequest.created_at.desc(), InboundRequest.id.desc())
+    else:
+        query = query.order_by(InboundRequest.created_at.asc(), InboundRequest.id.asc())
+
+    page_raw = (request.args.get('page') or '1').strip()
+    try:
+        page = max(1, int(page_raw))
+    except ValueError:
+        page = 1
+    per_page = 50
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    requests = pagination.items
+
+    def _inbound_list_qs(updates):
+        d = request.args.to_dict(flat=True)
+        d.update(updates)
+        if 'page' not in updates:
+            d['page'] = '1'
+        return '?' + urlencode(d)
+
+    req_sort_qs_desc = _inbound_list_qs({'req_sort': 'desc'})
+    req_sort_qs_asc = _inbound_list_qs({'req_sort': 'asc'})
+    export_qs = _inbound_list_qs({})
+    page_qs = {p: _inbound_list_qs({'page': str(p)}) for p in range(1, pagination.pages + 1)}
+    prev_page_qs = _inbound_list_qs({'page': str(pagination.prev_num)}) if pagination.has_prev else None
+    next_page_qs = _inbound_list_qs({'page': str(pagination.next_num)}) if pagination.has_next else None
+    page_numbers = list(pagination.iter_pages(left_edge=1, left_current=1, right_current=2, right_edge=1))
+    filter_fields = ('request_number', 'agent', 'filter_year', 'filter_month', 'status')
+    has_active_filters = any((request.args.get(f) or '').strip() for f in filter_fields)
+    has_submitted_search = (request.args.get('search') or '').strip() == '1'
+    show_results_table = (not all_files_view) or has_active_filters or has_submitted_search
+
+    # Run-down plan: expensive (loads confirmed/booked requests + itinerary). The template only
+    # shows it on the main list without a Hub status filter and not on /inbound/all-files.
+    status_arg = (request.args.get('status') or '').strip()
+    base_page_title = 'All inbound files' if all_files_view else 'Inbound Tour Requests'
+    scope_label = _hub_status_scope_label(request.args.get('status'))
+    if queue == 'deleted':
+        inbound_page_title = 'All inbound files — Deleted' if all_files_view else 'Inbound tour Deleted'
+    elif scope_label:
+        inbound_page_title = f'{base_page_title} — {scope_label}' if all_files_view else f'Inbound tour {scope_label}'
+    else:
+        inbound_page_title = base_page_title
+    need_run_down = (
+        queue != 'deleted'
+        and not status_arg
+        and not all_files_view
+    )
+    run_down_data = get_run_down_data_by_date() if need_run_down else []
+
+    return {
+        'requests': requests,
+        'run_down_data': run_down_data,
+        'is_deleted_queue': queue == 'deleted',
+        'list_filter_years': list_filter_years,
+        'list_filter_months': list_filter_months,
+        'req_sort': req_sort,
+        'req_sort_qs_desc': req_sort_qs_desc,
+        'req_sort_qs_asc': req_sort_qs_asc,
+        'pagination': pagination,
+        'page_numbers': page_numbers,
+        'page_qs': page_qs,
+        'prev_page_qs': prev_page_qs,
+        'next_page_qs': next_page_qs,
+        'export_qs': export_qs,
+        'show_results_table': show_results_table,
+        'inbound_page_title': inbound_page_title,
+        'all_files_view': all_files_view,
+    }
+
+
+def _build_inbound_list_query(all_files_view: bool):
+    """Shared inbound list query (filters only, no sort/pagination)."""
+    from sqlalchemy import or_, func, case, and_
+
+    query = InboundRequest.query
 
     # Always exclude unsaved draft requests (temporary IN-NEW- numbers)
-    from sqlalchemy import or_
     query = query.filter(
         or_(
-            InboundRequest.is_saved == True,  # Explicitly saved requests
-            ~InboundRequest.request_number.like('IN-NEW-%')  # Legacy requests without is_saved flag but with proper numbers
+            InboundRequest.is_saved == True,
+            ~InboundRequest.request_number.like('IN-NEW-%')
         )
     )
 
-    # Apply filters
+    # Main list vs. Deleted queue (removed via trash on list; Hub tile "Deleted")
+    queue = (request.args.get('queue') or '').strip().lower()
+    if queue == 'to_invoice':
+        queue = 'deleted'
+    if queue == 'deleted':
+        query = query.filter(InboundRequest.pending_invoice_queue.is_(True))
+    elif not all_files_view:
+        query = query.filter(InboundRequest.pending_invoice_queue.isnot(True))
+
     request_number = request.args.get('request_number', '')
     if request_number:
         query = query.filter(InboundRequest.request_number.contains(request_number))
 
-    agent = request.args.get('agent', '')
+    agent = (request.args.get('agent') or '').strip()
     if agent:
-        query = query.filter(InboundRequest.agent_ref.contains(agent))
+        like = f'%{agent}%'
+        cust_full = func.trim(
+            func.concat(
+                Customer.first_name,
+                ' ',
+                func.coalesce(Customer.last_name, ''),
+            )
+        )
+        display_agent = case(
+            (InboundRequest.customer_id.isnot(None), cust_full),
+            else_=func.coalesce(InboundRequest.contact_name, ''),
+        )
+        query = query.outerjoin(Customer, InboundRequest.customer_id == Customer.id)
+        if agent.lower() == 'tba':
+            blank_agent_placeholder = and_(
+                InboundRequest.customer_id.is_(None),
+                or_(
+                    InboundRequest.contact_name.is_(None),
+                    func.trim(InboundRequest.contact_name) == '',
+                ),
+            )
+            query = query.filter(or_(display_agent.ilike(like), blank_agent_placeholder))
+        else:
+            query = query.filter(display_agent.ilike(like))
 
-    date_from = request.args.get('date_from', '')
-    if date_from:
-        query = query.filter(InboundRequest.from_date >= datetime.strptime(date_from, '%Y-%m-%d'))
-
-    date_to = request.args.get('date_to', '')
-    if date_to:
-        query = query.filter(InboundRequest.to_date <= datetime.strptime(date_to, '%Y-%m-%d'))
+    filter_year_raw = (request.args.get('filter_year') or '').strip()
+    filter_month_raw = (request.args.get('filter_month') or '').strip()
+    y = None
+    m = None
+    if filter_year_raw:
+        try:
+            y = int(filter_year_raw)
+        except ValueError:
+            y = None
+    if filter_month_raw:
+        try:
+            m = int(filter_month_raw)
+            if m < 1 or m > 12:
+                m = None
+        except ValueError:
+            m = None
+    if y is not None and m is not None:
+        month_start = date(y, m, 1)
+        month_end = date(y, m, calendar.monthrange(y, m)[1])
+        query = query.filter(
+            InboundRequest.from_date <= month_end,
+            InboundRequest.to_date >= month_start,
+        )
+    elif y is not None:
+        year_start = date(y, 1, 1)
+        year_end = date(y, 12, 31)
+        query = query.filter(
+            InboundRequest.from_date <= year_end,
+            InboundRequest.to_date >= year_start,
+        )
 
     status = request.args.get('status', '')
     if status:
-        # Map old statuses to new 3-state system for filtering
-        def map_status_for_filter(status_val):
-            """Map old statuses to new 3-state system"""
-            if not status_val:
-                return None
-            status_upper = str(status_val).upper()
-            if status_upper in ['REQUEST']:
-                return 'REQUEST'
-            if status_upper in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS']:
-                return 'CONFIRMED'
-            if status_upper in ['INVOICE', 'COMPLETED', 'INVOICED']:
-                return 'INVOICED'
-            return None
-
-        # Map the filter status to new system
-        mapped_filter_status = map_status_for_filter(status)
-
+        mapped_filter_status = _map_status_for_filter(status)
         if mapped_filter_status == 'REQUEST':
-            # Filter for REQUEST status and only show saved requests
-            # Exclude unsaved requests (temporary IN-NEW- numbers that haven't been saved)
-            from sqlalchemy import or_
             query = query.filter(
-                InboundRequest.status == 'REQUEST'
-            ).filter(
-                or_(
-                    InboundRequest.is_saved == True,  # Explicitly saved requests
-                    ~InboundRequest.request_number.like('IN-NEW-%')  # Legacy requests without is_saved flag but with proper numbers
-                )
+                InboundRequest.status == 'REQUEST',
+                InboundRequest.pending_invoice_queue.isnot(True),
             )
         elif mapped_filter_status == 'CONFIRMED':
-            # Filter for all statuses that map to CONFIRMED
-            query = query.filter(InboundRequest.status.in_(['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS']))
+            query = query.filter(
+                InboundRequest.status.in_(['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS']),
+                InboundRequest.pending_invoice_queue.isnot(True),
+            )
         elif mapped_filter_status == 'INVOICED':
-            # Filter for all statuses that map to INVOICED
-            query = query.filter(InboundRequest.status.in_(['INVOICE', 'COMPLETED', 'INVOICED']))
+            query = query.filter(
+                InboundRequest.status.in_(['INVOICE', 'COMPLETED', 'INVOICED']),
+                InboundRequest.pending_invoice_queue.isnot(True),
+            )
+        elif mapped_filter_status == 'DELETED':
+            query = query.filter(InboundRequest.pending_invoice_queue.is_(True))
 
-    # Order by most recent
-    requests = query.order_by(InboundRequest.created_at.desc()).all()
+    return query, queue
 
-    # Get run-down plan data for confirmed itineraries
-    run_down_data = get_run_down_data_by_date()
 
-    # Get status-filtered requests for dashboard cards (3-state system)
-    all_requests = InboundRequest.query.filter_by(user_id=1).order_by(InboundRequest.created_at.desc()).all()
-
-    def map_status_for_dashboard(status_val):
-        """Map old statuses to new 3-state system"""
-        if not status_val:
-            return 'REQUEST'
-        status_upper = str(status_val).upper()
-        if status_upper in ['REQUEST']:
-            return 'REQUEST'
-        if status_upper in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS']:
-            return 'CONFIRMED'
-        if status_upper in ['INVOICE', 'COMPLETED', 'INVOICED']:
-            return 'INVOICED'
+def _map_status_for_filter(status_val):
+    """Map old statuses to new 3-state system."""
+    if not status_val:
+        return None
+    status_upper = str(status_val).upper()
+    if status_upper in ['REQUEST']:
         return 'REQUEST'
+    if status_upper in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS']:
+        return 'CONFIRMED'
+    if status_upper in ['INVOICE', 'COMPLETED', 'INVOICED']:
+        return 'INVOICED'
+    if status_upper in ['DELETED']:
+        return 'DELETED'
+    return None
 
-    # Filter requests by mapped status for dashboard cards
-    # Only include saved requests (exclude unsaved drafts with IN-NEW- prefix)
-    requested_requests = [
-        r for r in all_requests 
-        if map_status_for_dashboard(r.status) == 'REQUEST' 
-        and (r.is_saved == True or not (r.request_number and r.request_number.startswith('IN-NEW-')))
-    ]
-    confirmed_requests = [
-        r for r in all_requests 
-        if map_status_for_dashboard(r.status) == 'CONFIRMED'
-    ]
-    invoiced_requests = [
-        r for r in all_requests 
-        if map_status_for_dashboard(r.status) == 'INVOICED'
-    ]
 
-    return render_template('inbound/index.html', 
-                         requests=requests,
-                         requested_requests=requested_requests,
-                         confirmed_requests=confirmed_requests,
-                         invoiced_requests=invoiced_requests,
-                         run_down_data=run_down_data)
+@inbound_bp.route('/')
+
+def index():
+    """List all inbound requests with filtering and run-down plan"""
+    ctx = _inbound_list_context()
+    return render_template(
+        'inbound/index.html',
+        inbound_hide_run_down=False,
+        **ctx,
+    )
+
+
+@inbound_bp.route('/export-list-excel')
+def export_list_excel():
+    """Export inbound list using current filters."""
+    import io
+
+    try:
+        import openpyxl
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    except ImportError:
+        flash('Excel export requires openpyxl package', 'error')
+        return redirect(request.referrer or url_for('inbound.index'))
+
+    all_files_view = (request.args.get('all_files_view') or '').strip() == '1'
+    query, queue = _build_inbound_list_query(all_files_view)
+
+    req_sort = (request.args.get('req_sort') or 'desc').strip().lower()
+    if req_sort not in ('asc', 'desc'):
+        req_sort = 'desc'
+    if req_sort == 'desc':
+        query = query.order_by(InboundRequest.created_at.desc(), InboundRequest.id.desc())
+    else:
+        query = query.order_by(InboundRequest.created_at.asc(), InboundRequest.id.asc())
+
+    rows = query.all()
+
+    wb = openpyxl.Workbook()
+    ws = cast(Any, wb.active)
+    ws.title = "Inbound Requests"
+
+    header_fill = PatternFill(start_color="FFBF00", end_color="FFBF00", fill_type="solid")
+    header_font = Font(bold=True, color="000000")
+    header_alignment = Alignment(horizontal="center", vertical="center")
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin'),
+    )
+
+    headers = ['Request No.', 'Agent', 'Contact', 'Nationality', 'Pax', 'Travel Dates', 'Days']
+    if all_files_view:
+        headers.append('Status')
+
+    for col, header in enumerate(headers, start=1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = header_alignment
+        cell.border = thin_border
+
+    def _status_label(inb):
+        if queue == 'deleted' or getattr(inb, 'pending_invoice_queue', False):
+            return 'Deleted'
+        status_val = str(inb.status or '').upper()
+        if status_val == 'REQUEST':
+            return 'Request'
+        if status_val in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS']:
+            return 'Confirmed'
+        if status_val in ['INVOICE', 'COMPLETED', 'INVOICED']:
+            return 'Invoiced'
+        return status_val.title() if status_val else ''
+
+    row_idx = 2
+    for inb in rows:
+        values = [
+            inb.request_number,
+            inb.agent or 'TBA',
+            inb.contact_name or 'TBA',
+            inb.nationality or 'TBA',
+            inb.pax or 0,
+            (
+                f"{inb.from_date.strftime('%d %b')} - {inb.to_date.strftime('%d %b %Y')}"
+                if inb.from_date and inb.to_date else ''
+            ),
+            inb.no_of_days or 0,
+        ]
+        if all_files_view:
+            values.append(_status_label(inb))
+
+        for col_idx, value in enumerate(values, start=1):
+            cell = ws.cell(row=row_idx, column=col_idx, value=value)
+            cell.border = thin_border
+        row_idx += 1
+
+    widths = [18, 24, 22, 15, 8, 24, 8, 14]
+    for idx, width in enumerate(widths[:len(headers)], start=1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(idx)].width = width
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    filename = f"Inbound_Requests_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name=filename,
+    )
 
 def get_run_down_data_by_date():
     """Get confirmed itineraries grouped by date with activities"""
@@ -149,10 +580,10 @@ def get_run_down_data_by_date():
     today = datetime.now().date()
     date_to = today + timedelta(days=30)
 
-    # Get all confirmed requests with their itinerary rows
+    # Get all confirmed requests with their itinerary rows (exclude Deleted queue)
     confirmed_requests = InboundRequest.query.filter(
-        InboundRequest.user_id == 1,
-        InboundRequest.status.in_(['CONFIRMED', 'BOOKED'])
+        InboundRequest.status.in_(['CONFIRMED', 'BOOKED']),
+        InboundRequest.pending_invoice_queue.isnot(True),
     ).all()
 
     # Group activities by date
@@ -259,9 +690,29 @@ def get_run_down_data_by_date():
     return sorted_data
 
 @inbound_bp.route('/new')
-
 def new_request():
     """Create new inbound request and go directly to itinerary creation"""
+    try:
+        return _new_request_impl()
+    except Exception as e:
+        import traceback
+        from flask import current_app
+        current_app.logger.error(f"new_request FAILED: {e}\n{traceback.format_exc()}")
+        traceback.print_exc()
+        flash(f'Failed to create new request: {str(e)}', 'error')
+        return redirect(url_for('inbound.index'))
+
+def _new_request_impl():
+    """Implementation of new inbound request creation"""
+    from app.models.user import User, create_test_data
+
+    # Ensure user id=1 exists (required for inbound_request.user_id FK)
+    if User.query.get(1) is None:
+        create_test_data()
+        db.session.commit()
+    if User.query.get(1) is None:
+        raise RuntimeError("Default user (id=1) is required but could not be created")
+
     # Create a new request with default values
     from_date = datetime.now().date()
     to_date = (datetime.now() + timedelta(days=3)).date()
@@ -274,7 +725,7 @@ def new_request():
         request_number=temp_request_number,
         from_date=from_date,
         to_date=to_date,
-        customer_type='AGENCY',  # Default customer type
+        customer_type='GROUP',  # Default - must match UI options (GROUP, INDIVIDUAL, INCENTIVE, OTHERS)
         contact_name='TBA',  # Default value
         nationality='TBA',  # Default value to avoid null constraint
         pax=1,
@@ -338,7 +789,6 @@ def edit_request(id):
 def view_request(id):
     """View inbound request details with unified edit functionality"""
     from flask import request as flask_request
-    from app.models.supplier import Supplier
 
     # Use eager loading for all service relationships to ensure they're loaded for template
     # Include subqueryload for hotel rooms to avoid N+1 queries
@@ -358,54 +808,121 @@ def view_request(id):
     mode = flask_request.args.get('mode', 'edit')  # Default to edit for backward compatibility
     view_only = (mode == 'view')
 
-    # Get hotel suppliers for dropdown, grouped by city
-    hotel_suppliers = Supplier.query.filter_by(supplier_type='HOTEL', is_active=True).order_by(Supplier.city, Supplier.name).all()
+    # Load supplier dropdown data from short-lived cache to keep navigation fast.
+    try:
+        dropdowns = _get_supplier_dropdown_data()
+        hotel_suppliers = dropdowns['hotel_suppliers']
+        sorted_hotels_by_city = dropdowns['hotels_by_city']
+        transport_suppliers = dropdowns['transport_suppliers']
+        guide_suppliers = dropdowns['guide_suppliers']
+        representatives = dropdowns['representatives']
+        restaurant_suppliers = dropdowns['restaurant_suppliers']
+        ground_handler_suppliers = dropdowns['ground_handler_suppliers']
+    except Exception as e:
+        # Fallback to empty lists if query fails
+        import traceback
+        print(f"[ERROR] Failed to load suppliers: {e}")
+        traceback.print_exc()
+        hotel_suppliers = []
+        sorted_hotels_by_city = {}
+        transport_suppliers = []
+        guide_suppliers = []
+        representatives = []
+        restaurant_suppliers = []
+        ground_handler_suppliers = []
 
-    # Group hotels by city for the dropdown
-    hotels_by_city = {}
-    city_order = ['Amman', 'Aqaba', 'Petra', 'Dead Sea', 'Other']
-    for hotel in hotel_suppliers:
-        city = hotel.city or 'Other'
-        if city not in hotels_by_city:
-            hotels_by_city[city] = []
-        hotels_by_city[city].append(hotel)
-
-    # Sort by preferred city order
-    sorted_hotels_by_city = {city: hotels_by_city.get(city, []) for city in city_order if city in hotels_by_city}
-
-    # Get suppliers for other service types
-    transport_suppliers = Supplier.query.filter_by(supplier_type='TRANSPORT', is_active=True).order_by(Supplier.name).all()
-    guide_suppliers = Supplier.query.filter_by(supplier_type='GUIDE', is_active=True).order_by(Supplier.name).all()
-    restaurant_suppliers = Supplier.query.filter_by(supplier_type='RESTAURANT', is_active=True).order_by(Supplier.name).all()
-    ground_handler_suppliers = Supplier.query.filter_by(supplier_type='GROUND_HANDLER', is_active=True).order_by(Supplier.name).all()
-
+    # Sort itinerary rows ensuring child rows appear directly below their parent
+    sorted_itinerary_rows = sort_itinerary_rows_with_children(request_obj.itinerary_rows)
+    
+    itinerary_guide_slot_saved = _itinerary_guide_slot_saved_map(request_obj)
+    itin_guide_slots = sum(
+        len(itinerary_row_guide_supplier_id_list(r)) for r in (request_obj.itinerary_rows or [])
+    )
+    guide_tab_badge_count = max(len(request_obj.inbound_guides or []), itin_guide_slots)
+    trip_summary_transports = _trip_summary_transports(request_obj.inbound_transports)
     return render_template('inbound/view_request.html', 
-                           request=request_obj, 
+                           request=request_obj,
+                           inbound_request=request_obj,  # Explicit variable to avoid Flask request confusion
                            view_only=view_only,
-                           rows=request_obj.itinerary_rows,
+                           rows=sorted_itinerary_rows,
                            hotel_suppliers=hotel_suppliers,
                            hotels_by_city=sorted_hotels_by_city,
                            transport_suppliers=transport_suppliers,
                            guide_suppliers=guide_suppliers,
+                           representatives=representatives,
                            restaurant_suppliers=restaurant_suppliers,
-                           ground_handler_suppliers=ground_handler_suppliers)
+                           ground_handler_suppliers=ground_handler_suppliers,
+                           itinerary_guide_slot_saved=itinerary_guide_slot_saved,
+                           guide_tab_badge_count=guide_tab_badge_count,
+                           trip_summary_transports=trip_summary_transports)
 
 
-@inbound_bp.route('/<int:id>/delete')
-@login_required
+@inbound_bp.route('/<int:id>/delete', methods=['GET', 'POST'])
+@csrf.exempt
 def delete_request(id):
-    """Delete an inbound request"""
+    """Permanently delete a request and all of its linked inbound records.
+    Returns JSON when called with AJAX (X-Requested-With: XMLHttpRequest or Accept: application/json).
+    """
     request_obj = InboundRequest.query.get_or_404(id)
+    is_ajax = (
+        request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        or 'application/json' in request.headers.get('Accept', '')
+    )
 
     try:
+        # Ensure invoices no longer reference this request before delete.
+        Invoice.query.filter_by(inbound_request_id=request_obj.id).update(
+            {'inbound_request_id': None},
+            synchronize_session=False
+        )
         db.session.delete(request_obj)
         db.session.commit()
-        flash('Request deleted successfully', 'success')
+        if is_ajax:
+            return jsonify({'success': True})
+        flash('Request deleted successfully.', 'success')
     except Exception as e:
         db.session.rollback()
+        if is_ajax:
+            return jsonify({'success': False, 'message': str(e)}), 500
         flash(f'Error deleting request: {str(e)}', 'error')
 
     return redirect(url_for('inbound.index'))
+
+
+@inbound_bp.route('/api/<int:request_id>/trash', methods=['POST'])
+@csrf.exempt
+def api_trash_inbound_request(request_id):
+    """Move request to Deleted queue (soft delete from main list)."""
+    request_obj = InboundRequest.query.get(request_id)
+    if not request_obj:
+        return jsonify({'success': False, 'message': 'Request not found'}), 404
+    try:
+        request_obj.pending_invoice_queue = True
+        db.session.commit()
+        return jsonify({
+            'success': True,
+            'message': 'Request moved to Deleted queue',
+            'pending_invoice_queue': True,
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@inbound_bp.route('/<int:id>/restore-queue')
+def restore_from_invoice_queue(id):
+    """Put request back on the main inbound list (undo trash / Deleted queue)."""
+    request_obj = InboundRequest.query.get_or_404(id)
+
+    try:
+        request_obj.pending_invoice_queue = False
+        db.session.commit()
+        flash(f'Request {request_obj.request_number} is back on the main list.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error restoring request: {str(e)}', 'error')
+
+    return redirect(url_for('inbound.index', queue='deleted'))
 
 
 # API Route for updating request details
@@ -483,6 +1000,93 @@ def api_update_request(request_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
+
+@inbound_bp.route('/api/<int:request_id>/update-restaurant-voucher-note', methods=['POST'])
+@csrf.exempt
+def api_update_restaurant_voucher_note(request_id):
+    """Update Note and Special Request for restaurant voucher only (per-voucher isolation)"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    try:
+        data = request.get_json() or {}
+        request_obj.restaurant_voucher_note = data.get('note', '')
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Restaurant voucher note saved'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@inbound_bp.route('/api/<int:request_id>/update-hotel-voucher-note', methods=['POST'])
+@csrf.exempt
+def api_update_hotel_voucher_note(request_id):
+    """Update Note and Special Request for hotel voucher only (per-voucher isolation)"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    try:
+        data = request.get_json() or {}
+        request_obj.hotel_voucher_note = data.get('note', '')
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Hotel voucher note saved'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@inbound_bp.route('/api/<int:request_id>/advance-expense-sheet', methods=['GET'])
+def api_get_advance_expense_sheet(request_id):
+    """Get saved advance expense sheet data for request"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    if request_obj.advance_expense_sheet_data:
+        try:
+            return jsonify(json.loads(request_obj.advance_expense_sheet_data))
+        except (ValueError, TypeError):
+            return jsonify({})
+    return jsonify({})
+
+@inbound_bp.route('/api/<int:request_id>/save-advance-expense-sheet', methods=['POST'])
+@csrf.exempt
+def api_save_advance_expense_sheet(request_id):
+    """Save advance expense sheet data for request (no user check)"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    try:
+        data = request.get_json() or {}
+        request_obj.advance_expense_sheet_data = json.dumps(data)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Advance expense sheet saved'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@inbound_bp.route('/api/<int:request_id>/closing-guide-payment-sheet', methods=['GET'])
+def api_get_closing_guide_payment_sheet(request_id):
+    """Get saved closing guide payment sheet data for request"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    if request_obj.closing_guide_payment_sheet_data:
+        try:
+            return jsonify(json.loads(request_obj.closing_guide_payment_sheet_data))
+        except (ValueError, TypeError):
+            return jsonify({})
+    return jsonify({})
+
+@inbound_bp.route('/api/<int:request_id>/save-closing-guide-payment-sheet', methods=['POST'])
+@csrf.exempt
+def api_save_closing_guide_payment_sheet(request_id):
+    """Save closing guide payment sheet data for request (no user check)"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    try:
+        data = request.get_json() or {}
+        if not hasattr(request_obj, 'closing_guide_payment_sheet_data'):
+            return jsonify({'success': False, 'message': 'Database schema outdated. Please restart the server to add the closing_guide_payment_sheet_data column.'}), 500
+        request_obj.closing_guide_payment_sheet_data = json.dumps(data)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Closing guide payment sheet saved'})
+    except Exception as e:
+        db.session.rollback()
+        err_msg = str(e)
+        if 'no such column' in err_msg.lower() or 'closing_guide_payment' in err_msg.lower():
+            err_msg = 'Database schema outdated. Please restart the server to apply the latest migration.'
+        return jsonify({'success': False, 'message': err_msg}), 500
 
 # API Route for saving itinerary
 @inbound_bp.route('/api/<int:request_id>/save-itinerary', methods=['POST'])
@@ -1033,7 +1637,10 @@ def api_update_master_details(request_id):
 @csrf.exempt
 def api_auto_save_and_regenerate(request_id):
     """Auto-save master details and regenerate itinerary rows"""
-    request_obj = InboundRequest.query.get_or_404(request_id)
+    request_obj = InboundRequest.query.options(
+        selectinload(InboundRequest.arrival_batches),
+        selectinload(InboundRequest.departure_batches)
+    ).get_or_404(request_id)
 
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
@@ -1094,24 +1701,23 @@ def api_auto_save_and_regenerate(request_id):
             current_date += timedelta(days=1)
             day_counter += 1
 
-        # Auto-update existing ArrivalBatch and DepartureBatch records when dates change
-        # Update all arrival records to use new from_date
-        if request_obj.from_date:
-            ArrivalBatch.query.filter_by(request_id=request_id).update(
-                {'arrival_date': request_obj.from_date}
-            )
-
-        # Update all departure records to use new to_date
-        if request_obj.to_date:
-            DepartureBatch.query.filter_by(request_id=request_id).update(
-                {'departure_date': request_obj.to_date}
-            )
+        # IMPORTANT: Do NOT auto-update ArrivalBatch and DepartureBatch dates when request dates change
+        # Arrival and Departure dates must ONLY be set from their respective tabs (Arrival/Departure)
+        # Request dates (from_date/to_date) are used ONLY for:
+        # 1. Generating itinerary rows (date range)
+        # 2. Calculating trip duration
+        # They should NEVER override actual arrival/departure service dates entered by the user
 
         db.session.commit()
 
     # Render the itinerary rows HTML using the component template
+    sorted_rows = sort_itinerary_rows_with_children(request_obj.itinerary_rows)
     rows_html = render_template('components/itinerary_rows.html', 
-                                rows=request_obj.itinerary_rows,
+                                rows=sorted_rows,
+                                request=request_obj,
+                                inbound_request=request_obj,  # Explicit variable to avoid Flask request confusion
+                                guide_suppliers=_guide_suppliers_for_itinerary_ui(),
+                                itinerary_guide_slot_saved=_itinerary_guide_slot_saved_map(request_obj),
                                 view_only=False)
 
     return jsonify({
@@ -1190,8 +1796,13 @@ def api_save_request(request_id):
         db.session.flush()
         
         # Render updated itinerary HTML
+        sorted_rows = sort_itinerary_rows_with_children(request_obj.itinerary_rows)
         itinerary_html = render_template('components/itinerary_rows.html', 
-                                        rows=request_obj.itinerary_rows,
+                                        rows=sorted_rows,
+                                        request=request_obj,
+                                        inbound_request=request_obj,  # Explicit variable to avoid Flask request confusion
+                                        guide_suppliers=_guide_suppliers_for_itinerary_ui(),
+                                        itinerary_guide_slot_saved=_itinerary_guide_slot_saved_map(request_obj),
                                         view_only=False)
 
     db.session.commit()
@@ -1209,11 +1820,217 @@ def api_save_request(request_id):
     
     return jsonify(response)
 
+
+def _check_guide_assigned_on_date(supplier_id, check_date, exclude_guide_id=None):
+    """Check if a guide (supplier) is already assigned to another trip on the given date.
+    Returns (conflict_found, conflicting_request_number) or (False, None).
+    Each guide can have only one trip per day. Excludes cancelled assignments.
+    When editing, exclude_guide_id is the row being updated so we don't count it.
+    A guide covers check_date if: date <= check_date <= (end_date or date).
+    """
+    if not supplier_id or not check_date:
+        return False, None
+    from sqlalchemy import or_
+    # Guide covers check_date when: date <= check_date AND (end_date >= check_date OR (end_date IS NULL AND date = check_date))
+    q = InboundGuide.query.filter(
+        InboundGuide.supplier_id == int(supplier_id),
+        InboundGuide.date <= check_date,
+        InboundGuide.is_cancelled == False,
+        or_(
+            (InboundGuide.end_date != None) & (InboundGuide.end_date >= check_date),
+            (InboundGuide.end_date == None) & (InboundGuide.date == check_date)
+        )
+    )
+    if exclude_guide_id is not None:
+        q = q.filter(InboundGuide.id != exclude_guide_id)
+    existing = q.first()
+    if existing:
+        req = InboundRequest.query.get(existing.request_id)
+        req_num = req.request_number if req else f"Request #{existing.request_id}"
+        return True, req_num
+    return False, None
+
+
+def _itinerary_guide_slot_saved_map(request_obj):
+    """Map 'itinerary_row_id:supplier_id' -> InboundGuide.id for itinerary-integrated guides."""
+    m = {}
+    guides = list(getattr(request_obj, 'inbound_guides', None) or [])
+    for g in guides:
+        if g.source_itinerary_id and g.supplier_id:
+            m[f'{g.source_itinerary_id}:{g.supplier_id}'] = g.id
+    # Backfill: supplier is on the itinerary row for that day but guide.source_itinerary_id was never set
+    for row in getattr(request_obj, 'itinerary_rows', None) or []:
+        row_date = getattr(row, 'date', None)
+        if not row_date:
+            continue
+        for sid in row.get_itinerary_guide_supplier_id_list():
+            try:
+                sid_i = int(sid)
+            except (TypeError, ValueError):
+                continue
+            k = f'{row.id}:{sid_i}'
+            if k in m:
+                continue
+            for g in guides:
+                if not g.supplier_id or not g.date:
+                    continue
+                try:
+                    if int(g.supplier_id) != sid_i:
+                        continue
+                except (TypeError, ValueError):
+                    continue
+                if g.date != row_date:
+                    continue
+                m[k] = g.id
+                break
+    return m
+
+
+def _ensure_guide_linked_to_itinerary_row(request_id, guide):
+    """If guide has no source_itinerary_id but matches an itinerary day that lists this supplier, link it."""
+    if not guide or guide.source_itinerary_id or not guide.supplier_id or not guide.date:
+        return
+    try:
+        sid = int(guide.supplier_id)
+    except (TypeError, ValueError):
+        return
+    for row in ItineraryRow.query.filter_by(request_id=request_id, date=guide.date).order_by(ItineraryRow.id):
+        rids = row.get_itinerary_guide_supplier_id_list()
+        rids_int = []
+        for x in rids:
+            try:
+                rids_int.append(int(x))
+            except (TypeError, ValueError):
+                continue
+        if sid in rids_int:
+            guide.source_itinerary_id = row.id
+            return
+
+
+def _relocate_itinerary_linked_guide_for_new_start_date(request_id, guide):
+    """
+    If a guide is tied to an itinerary row but its start date (guide.date) no longer matches
+    that row's day, move the supplier chip to the itinerary row for the new date and repoint
+    guide.source_itinerary_id. Returns (ok, error_message).
+    """
+    if not guide or not guide.source_itinerary_id or not guide.supplier_id or not guide.date:
+        return True, None
+    try:
+        sid = int(guide.supplier_id)
+    except (TypeError, ValueError):
+        return True, None
+    old_row = ItineraryRow.query.filter_by(
+        id=guide.source_itinerary_id, request_id=request_id
+    ).first()
+    if not old_row:
+        return True, None
+    if old_row.date == guide.date:
+        return True, None
+    target = ItineraryRow.query.filter_by(
+        request_id=request_id, date=guide.date
+    ).order_by(ItineraryRow.id).first()
+    if not target:
+        return False, (
+            'No itinerary day exists for the guide start date you entered. '
+            'Pick a date that matches a day on the itinerary, or add that day first.'
+        )
+    old_ids = old_row.get_itinerary_guide_supplier_id_list()
+    old_ids = [int(x) for x in old_ids if x is not None]
+    old_ids = [x for x in old_ids if x != sid]
+    old_row.set_itinerary_guide_supplier_id_list(old_ids)
+    new_ids = target.get_itinerary_guide_supplier_id_list()
+    new_ids = [int(x) for x in new_ids if x is not None]
+    if sid not in new_ids:
+        new_ids.append(sid)
+    target.set_itinerary_guide_supplier_id_list(new_ids)
+    guide.source_itinerary_id = target.id
+    return True, None
+
+
+def _guide_suppliers_for_itinerary_ui():
+    from app.models.supplier import Supplier
+    return Supplier.query.filter(
+        Supplier.supplier_type == 'GUIDE',
+        Supplier.is_active == True
+    ).order_by(Supplier.name).limit(500).all()
+
+
+@inbound_bp.route('/api/<int:request_id>/check-guide-availability', methods=['GET'])
+def api_check_guide_availability(request_id):
+    """Check if a guide can be assigned for given dates (one trip per day rule)."""
+    guide_supplier_id = request.args.get('guide_supplier_id', '').strip()
+    from_date_str = request.args.get('from_date', '').strip()
+    to_date_str = request.args.get('to_date', '').strip()
+    exclude_row_id = request.args.get('exclude_row_id')  # When editing, exclude current guide row
+    if not guide_supplier_id or not from_date_str:
+        return jsonify({'available': True})  # No guide/date selected - skip check
+    try:
+        from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
+        to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date() if to_date_str else from_date
+        if to_date < from_date:
+            to_date = from_date
+    except (ValueError, TypeError):
+        return jsonify({'available': True})
+    exclude_guide_id = int(exclude_row_id) if exclude_row_id else None
+    current = from_date
+    while current <= to_date:
+        conflict, req_num = _check_guide_assigned_on_date(
+            int(guide_supplier_id), current,
+            exclude_guide_id=exclude_guide_id
+        )
+        if conflict:
+            return jsonify({
+                'available': False,
+                'error': f'This guide cannot have more than one trip on the same day. They are already assigned to {req_num} on {current.strftime("%d %b %Y")}.'
+            }), 200
+        current += timedelta(days=1)
+    return jsonify({'available': True})
+
+
+@inbound_bp.route('/api/representatives', methods=['GET'])
+def api_list_representatives():
+    """List all representatives for dropdown population."""
+    reps = InboundRepresentative.query.order_by(InboundRepresentative.name).all()
+    return jsonify({'representatives': [{'id': r.id, 'name': r.name} for r in reps]})
+
+
+@inbound_bp.route('/api/representatives', methods=['POST'])
+@csrf.exempt
+def api_add_representative():
+    """Add a new representative. Returns the new rep and adds to dropdown."""
+    data = request.get_json() or {}
+    name = (data.get('name') or '').strip()
+    if not name:
+        return jsonify({'success': False, 'error': 'Name is required'}), 400
+    existing = InboundRepresentative.query.filter_by(name=name).first()
+    if existing:
+        return jsonify({
+            'success': True,
+            'representative': {'id': existing.id, 'name': existing.name},
+            'message': 'Representative already exists'
+        }), 200
+    rep = InboundRepresentative(name=name)
+    db.session.add(rep)
+    try:
+        db.session.commit()
+        return jsonify({
+            'success': True,
+            'representative': {'id': rep.id, 'name': rep.name}
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @inbound_bp.route('/api/<int:request_id>/save-service-data', methods=['POST'])
 @csrf.exempt
 def api_save_service_data(request_id):
     """Save service data (hotel, transport, guide, meal) for itinerary"""
     from datetime import date as date_type
+
+    # Initialize variables at function level to avoid UnboundLocalError
+    from_date = None
+    to_date = None
 
     request_obj = InboundRequest.query.get_or_404(request_id)
 
@@ -1273,6 +2090,7 @@ def api_save_service_data(request_id):
         }), 400
 
     try:
+        guide_record_id_for_json = None
         if service_type == 'hotel':
             # Check if editing an existing hotel (row_id or hotel_id provided) or adding new
             # row_id is passed when editing from Trip Summary
@@ -1284,134 +2102,163 @@ def api_save_service_data(request_id):
                     return jsonify({'success': False, 'error': 'Hotel not found'}), 404
                 print(f"[SAVE SERVICE] Updating existing hotel id={hotel_id}")
             else:
-                # Create new hotel entry
-                hotel = InboundHotel(
-                    request_id=request_id,
-                    check_in_date=request_obj.from_date or date_type.today(),
-                    check_out_date=request_obj.to_date or date_type.today()
-                )
-                db.session.add(hotel)
-                print(f"[SAVE SERVICE] Creating new hotel entry")
-
-            if True:  # Keep indentation for the rest of the hotel logic
-
-                hotel_name_value = form_data.get('hotel_name', '')
-                print(f"[SAVE SERVICE] Assigning hotel_name: '{hotel_name_value}' to hotel id: {hotel.id if hotel.id else 'NEW'}")
-                hotel.hotel_name = hotel_name_value
-                hotel.hotel_category = form_data.get('hotel_category', '')
-                hotel.meal_plan = form_data.get('hotel_board', 'BB')
-                hotel.status = form_data.get('hotel_status', 'REQUESTED')
-
-                # Parse dates
-                if form_data.get('hotel_check_in'):
-                    hotel.check_in_date = datetime.strptime(form_data['hotel_check_in'], '%Y-%m-%d').date()
-                if form_data.get('hotel_check_out'):
-                    hotel.check_out_date = datetime.strptime(form_data['hotel_check_out'], '%Y-%m-%d').date()
-
-                # Calculate nights and cost
-                if hotel.check_in_date and hotel.check_out_date:
-                    hotel.nights = (hotel.check_out_date - hotel.check_in_date).days
-
-                cost_per_night = float(form_data.get('hotel_cost', 0) or 0)
-                hotel.cost_per_night = cost_per_night
-                hotel.total_cost = cost_per_night * (hotel.nights or 1)
-
-                # Room distribution
-                hotel.single_rooms = int(form_data.get('hotel_single_rooms', 0) or 0)
-                hotel.double_rooms = int(form_data.get('hotel_double_rooms', 0) or 0)
-                hotel.triple_rooms = int(form_data.get('hotel_triple_rooms', 0) or 0)
-                hotel.notes = form_data.get('hotel_notes', '')
-
-                # Flush to get hotel ID before creating rooms
-                db.session.flush()
-
-                # Check if room_list data was provided from the Room List tab
-                room_list_data = data.get('room_list', [])
-
-                if room_list_data:
-                    # Use room list data provided by user (with guest names and new fields)
-                    HotelRoom.query.filter_by(hotel_id=hotel.id).delete()
-                    default_board_basis = form_data.get('hotel_board', 'BB')
-
-                    for room_data in room_list_data:
-                        room = HotelRoom(
-                            hotel_id=hotel.id,
-                            room_type=room_data.get('room_type', 'Double'),
-                            room_count=1,
-                            room_option=room_data.get('room_option', ''),
-                            board_basis=room_data.get('board_basis', default_board_basis),
-                            dietary_requirements=room_data.get('dietary_requirements', ''),
-                            adults=room_data.get('adults', 2),
-                            children=room_data.get('children', 0),
-                            guest_names=room_data.get('guest_names', '')
-                        )
-                        db.session.add(room)
-
-                    # Update room distribution counts based on room list
-                    hotel.single_rooms = sum(1 for r in room_list_data if r.get('room_type') == 'Single')
-                    hotel.double_rooms = sum(1 for r in room_list_data if r.get('room_type') in ['Double', 'Twin'])
-                    hotel.triple_rooms = sum(1 for r in room_list_data if r.get('room_type') in ['Triple', 'Suite'])
-                else:
-                    # Use distribution counts to create rooms (without guest names)
-                    total_rooms = hotel.single_rooms + hotel.double_rooms + hotel.triple_rooms
-                    if total_rooms > 0:
-                        # Check if existing rooms match new distribution
-                        existing_rooms = HotelRoom.query.filter_by(hotel_id=hotel.id).all()
-                        existing_count = len(existing_rooms)
-
-                        # Only recreate if distribution changed
-                        if existing_count != total_rooms:
-                            HotelRoom.query.filter_by(hotel_id=hotel.id).delete()
-
-                            # Create individual room records based on distribution
-                            board_basis = form_data.get('hotel_board', 'BB')
-                            for i in range(hotel.single_rooms):
-                                room = HotelRoom(hotel_id=hotel.id, room_type='Single', room_count=1, board_basis=board_basis, adults=1)
-                                db.session.add(room)
-                            for i in range(hotel.double_rooms):
-                                room = HotelRoom(hotel_id=hotel.id, room_type='Double', room_count=1, board_basis=board_basis, adults=2)
-                                db.session.add(room)
-                            for i in range(hotel.triple_rooms):
-                                room = HotelRoom(hotel_id=hotel.id, room_type='Triple', room_count=1, board_basis=board_basis, adults=3)
-                                db.session.add(room)
-            else:
-                # Apply to specific day
-                row = ItineraryRow.query.get(row_id)
-                if row:
-                    hotel = InboundHotel.query.filter_by(request_id=request_id, source_itinerary_id=row_id).first()
-                    if not hotel:
+                # Create new hotel entry - use only service-specific dates
+                check_in_str = form_data.get('hotel_check_in', '').strip()
+                check_out_str = form_data.get('hotel_check_out', '').strip()
+                hotel_name_value = form_data.get('hotel_name', '').strip()
+                
+                if not check_in_str or not check_out_str:
+                    field_errors = {}
+                    if not check_in_str:
+                        field_errors['hotel_check_in'] = 'Check-in date is required'
+                    if not check_out_str:
+                        field_errors['hotel_check_out'] = 'Check-out date is required'
+                    return jsonify({
+                        'success': False,
+                        'error': 'Hotel check-in and check-out dates are required',
+                        'field_errors': field_errors
+                    }), 400
+                
+                try:
+                    check_in_date = datetime.strptime(check_in_str, '%Y-%m-%d').date()
+                    check_out_date = datetime.strptime(check_out_str, '%Y-%m-%d').date()
+                except ValueError as e:
+                    return jsonify({
+                        'success': False,
+                        'error': f'Invalid date format: {str(e)}',
+                        'field_errors': {'hotel_check_in': 'Invalid date format', 'hotel_check_out': 'Invalid date format'}
+                    }), 400
+                
+                # Check for duplicate hotel entry before creating
+                # Prevent creating duplicate hotels with same name, check-in, and check-out dates
+                if hotel_name_value:
+                    existing_hotel = InboundHotel.query.filter_by(
+                        request_id=request_id,
+                        hotel_name=hotel_name_value,
+                        check_in_date=check_in_date,
+                        check_out_date=check_out_date
+                    ).first()
+                    
+                    if existing_hotel:
+                        print(f"[SAVE SERVICE] Duplicate hotel detected - using existing hotel id={existing_hotel.id}")
+                        hotel = existing_hotel
+                    else:
                         hotel = InboundHotel(
                             request_id=request_id,
-                            source_itinerary_id=row_id,
-                            check_in_date=row.date or date_type.today(),
-                            check_out_date=row.date or date_type.today()
+                            check_in_date=check_in_date,
+                            check_out_date=check_out_date
                         )
                         db.session.add(hotel)
+                        print(f"[SAVE SERVICE] Creating new hotel entry")
+                else:
+                    hotel = InboundHotel(
+                        request_id=request_id,
+                        check_in_date=check_in_date,
+                        check_out_date=check_out_date
+                    )
+                    db.session.add(hotel)
+                    print(f"[SAVE SERVICE] Creating new hotel entry (no hotel name yet)")
 
-                    hotel.hotel_name = form_data.get('hotel_name', '')
-                    hotel.hotel_category = form_data.get('hotel_category', '')
-                    hotel.meal_plan = form_data.get('hotel_board', 'BB')
-                    hotel.status = form_data.get('hotel_status', 'REQUESTED')
+            # Process hotel data (both new and existing)
+            hotel_name_value = form_data.get('hotel_name', '').strip()
+            print(f"[SAVE SERVICE] Assigning hotel_name: '{hotel_name_value}' to hotel id: {hotel.id if hotel.id else 'NEW'}")
+            hotel.hotel_name = hotel_name_value
+            hotel.hotel_category = form_data.get('hotel_category', '')
+            hotel.meal_plan = form_data.get('hotel_board', 'BB')
+            hotel.status = form_data.get('hotel_status', 'REQUESTED')
 
-                    # Parse dates
-                    if form_data.get('hotel_check_in'):
-                        hotel.check_in_date = datetime.strptime(form_data['hotel_check_in'], '%Y-%m-%d').date()
-                    if form_data.get('hotel_check_out'):
-                        hotel.check_out_date = datetime.strptime(form_data['hotel_check_out'], '%Y-%m-%d').date()
+            # Dates are already set when creating new hotel, but update them if provided in form_data
+            # (This handles the case when editing an existing hotel)
+            check_in_str = form_data.get('hotel_check_in', '')
+            check_out_str = form_data.get('hotel_check_out', '')
+            if check_in_str:
+                hotel.check_in_date = datetime.strptime(check_in_str, '%Y-%m-%d').date()
+            if check_out_str:
+                hotel.check_out_date = datetime.strptime(check_out_str, '%Y-%m-%d').date()
 
-                    # Calculate nights and cost
-                    if hotel.check_in_date and hotel.check_out_date:
-                        hotel.nights = (hotel.check_out_date - hotel.check_in_date).days
+            # Calculate nights and cost
+            if hotel.check_in_date and hotel.check_out_date:
+                hotel.nights = (hotel.check_out_date - hotel.check_in_date).days
 
-                    cost_per_night = float(form_data.get('hotel_cost', 0) or 0)
-                    hotel.cost_per_night = cost_per_night
-                    hotel.total_cost = cost_per_night * (hotel.nights or 1)
+            cost_per_night = float(form_data.get('hotel_cost', 0) or 0)
+            hotel.cost_per_night = cost_per_night
+            hotel.total_cost = cost_per_night * (hotel.nights or 1)
 
-                    # Room distribution
-                    hotel.single_rooms = int(form_data.get('hotel_single_rooms', 0) or 0)
-                    hotel.double_rooms = int(form_data.get('hotel_double_rooms', 0) or 0)
-                    hotel.triple_rooms = int(form_data.get('hotel_triple_rooms', 0) or 0)
-                    hotel.notes = form_data.get('hotel_notes', '')
+            # Room distribution
+            hotel.single_rooms = int(form_data.get('hotel_single_rooms', 0) or 0)
+            hotel.double_rooms = int(form_data.get('hotel_double_rooms', 0) or 0)
+            hotel.triple_rooms = int(form_data.get('hotel_triple_rooms', 0) or 0)
+            hotel.notes = form_data.get('hotel_notes', '')
+
+            # Flush to get hotel ID before creating rooms
+            db.session.flush()
+
+            # Check if room_list data was provided from the Room List tab
+            room_list_data = data.get('room_list', [])
+
+            if room_list_data:
+                # Use room list data provided by user (with guest names and new fields)
+                HotelRoom.query.filter_by(hotel_id=hotel.id).delete()
+                default_board_basis = form_data.get('hotel_board', 'BB')
+
+                for room_data in room_list_data:
+                    room = HotelRoom(
+                        hotel_id=hotel.id,
+                        room_type=room_data.get('room_type', 'Double'),
+                        room_count=1,
+                        room_category=room_data.get('room_category', ''),
+                        room_option=room_data.get('room_option', ''),
+                        board_basis=room_data.get('board_basis', default_board_basis),
+                        dietary_requirements=room_data.get('dietary_requirements', ''),
+                        adults=room_data.get('adults', 2),
+                        children=room_data.get('children', 0),
+                        guest_names=room_data.get('guest_names', '')
+                    )
+                    db.session.add(room)
+
+                # Update room distribution counts based on room list
+                hotel.single_rooms = sum(1 for r in room_list_data if r.get('room_type') == 'Single')
+                hotel.double_rooms = sum(1 for r in room_list_data if r.get('room_type') in ['Double', 'Twin'])
+                hotel.triple_rooms = sum(1 for r in room_list_data if r.get('room_type') in ['Triple', 'Suite'])
+            else:
+                # Use distribution counts to create rooms (without guest names)
+                # Get room categories from distribution if provided
+                room_categories = data.get('room_categories', {})
+                sgl_category = room_categories.get('single', '')
+                dbl_category = room_categories.get('double', '')
+                trp_category = room_categories.get('triple', '')
+
+                total_rooms = hotel.single_rooms + hotel.double_rooms + hotel.triple_rooms
+                if total_rooms > 0:
+                    # Check if existing rooms match new distribution or categories changed
+                    existing_rooms = HotelRoom.query.filter_by(hotel_id=hotel.id).all()
+                    existing_count = len(existing_rooms)
+
+                    # Recreate if distribution changed OR if room categories were provided
+                    needs_recreate = existing_count != total_rooms or (sgl_category or dbl_category or trp_category)
+                    if needs_recreate:
+                        HotelRoom.query.filter_by(hotel_id=hotel.id).delete()
+
+                        # Create individual room records based on distribution
+                        board_basis = form_data.get('hotel_board', 'BB')
+                        for i in range(hotel.single_rooms):
+                            room = HotelRoom(hotel_id=hotel.id, room_type='Single', room_count=1, board_basis=board_basis, adults=1, room_category=sgl_category)
+                            db.session.add(room)
+                        for i in range(hotel.double_rooms):
+                            room = HotelRoom(hotel_id=hotel.id, room_type='Double', room_count=1, board_basis=board_basis, adults=2, room_category=dbl_category)
+                            db.session.add(room)
+                        for i in range(hotel.triple_rooms):
+                            room = HotelRoom(hotel_id=hotel.id, room_type='Triple', room_count=1, board_basis=board_basis, adults=3, room_category=trp_category)
+                            db.session.add(room)
+
+            # Save confirmation number to first room (hotel-level field in UI)
+            confirmation = form_data.get('hotel_confirmation_number', '').strip()
+            rooms = HotelRoom.query.filter_by(hotel_id=hotel.id).all()
+            if rooms:
+                rooms[0].confirmation = confirmation
+            elif confirmation:
+                room = HotelRoom(hotel_id=hotel.id, room_type='Double', room_count=1, confirmation=confirmation)
+                db.session.add(room)
 
         elif service_type == 'transport':
             # Check if editing an existing transport record via row_id
@@ -1425,12 +2272,21 @@ def api_save_service_data(request_id):
                     transport.dropoff_location = form_data.get('transport_dropoff', '')
                     transport.driver_name = form_data.get('transport_driver', '')
                     transport.driver_phone = form_data.get('transport_phone', '')
-                    transport.status = form_data.get('transport_status', 'REQUESTED')
+                    transport.status = form_data.get('transport_status', STATUS_REQUEST)
                     transport.cost = float(form_data.get('transport_cost', 0) or 0)
+                    transport.note = form_data.get('transport_notes', '')
                     supplier_id = form_data.get('transport_supplier')
                     transport.supplier_id = int(supplier_id) if supplier_id else None
                     if form_data.get('transport_from_date'):
-                        transport.date = datetime.strptime(form_data['transport_from_date'], '%Y-%m-%d').date()
+                        try:
+                            transport.date = datetime.strptime(form_data['transport_from_date'], '%Y-%m-%d').date()
+                        except (ValueError, TypeError, OSError):
+                            pass  # Keep existing date on parse error
+                    if form_data.get('transport_to_date'):
+                        try:
+                            transport.end_date = datetime.strptime(form_data['transport_to_date'], '%Y-%m-%d').date()
+                        except (ValueError, TypeError, OSError):
+                            pass
                 else:
                     return jsonify({'success': False, 'error': 'Transport record not found'}), 404
             else:
@@ -1438,12 +2294,23 @@ def api_save_service_data(request_id):
                 from_date_str = form_data.get('transport_from_date', '')
                 to_date_str = form_data.get('transport_to_date', '')
 
-                if from_date_str and to_date_str:
+                # Use only service-specific dates, no fallback to request dates
+                if not from_date_str or not to_date_str:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Transport dates are required',
+                        'field_errors': {'transport_from_date': 'From date is required', 'transport_to_date': 'To date is required'}
+                    }), 400
+                
+                try:
                     from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
                     to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
-                else:
-                    from_date = request_obj.from_date or date_type.today()
-                    to_date = request_obj.to_date or date_type.today()
+                except (ValueError, TypeError, OSError) as e:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Invalid date format. Please use YYYY-MM-DD.',
+                        'field_errors': {'transport_from_date': 'Invalid date format', 'transport_to_date': 'Invalid date format'}
+                    }), 400
 
                 # Create a single transport entry with date range
                 supplier_id = form_data.get('transport_supplier')
@@ -1461,72 +2328,201 @@ def api_save_service_data(request_id):
                 transport.driver_phone = form_data.get('transport_phone', '')
                 transport.status = form_data.get('transport_status', 'REQUESTED')
                 transport.cost = float(form_data.get('transport_cost', 0) or 0)
+                transport.note = form_data.get('transport_notes', '')
                 transport.supplier_id = supplier_id
                 db.session.add(transport)
 
                 print(f"[SAVE SERVICE] Created single transport entry from {from_date} to {to_date}")
 
         elif service_type == 'guide':
-            # Check if editing an existing guide record via row_id
+            from app.models.supplier import Supplier
+
+            source_itinerary_id = data.get('source_itinerary_id')
+            try:
+                source_itinerary_id = int(source_itinerary_id) if source_itinerary_id not in (None, '') else None
+            except (TypeError, ValueError):
+                source_itinerary_id = None
+
+            itinerary_slot_supplier_id = data.get('itinerary_slot_supplier_id')
+            try:
+                itinerary_slot_supplier_id = int(itinerary_slot_supplier_id) if itinerary_slot_supplier_id not in (None, '') else None
+            except (TypeError, ValueError):
+                itinerary_slot_supplier_id = None
+
+            guide_supplier_id_val = form_data.get('guide_supplier_id')
+            try:
+                guide_supplier_id_val = int(guide_supplier_id_val) if guide_supplier_id_val and str(guide_supplier_id_val) != '__ADD_NEW__' else None
+            except (TypeError, ValueError):
+                guide_supplier_id_val = None
+
+            from_date_str = form_data.get('guide_from_date', '').strip()
+            to_date_str = (form_data.get('guide_to_date', '').strip() or from_date_str)
+
+            exclude_gid = None
+            if row_id:
+                try:
+                    exclude_gid = int(row_id)
+                except (TypeError, ValueError):
+                    exclude_gid = None
+            elif source_itinerary_id and guide_supplier_id_val:
+                existing_for_slot = InboundGuide.query.filter_by(
+                    request_id=request_id,
+                    source_itinerary_id=source_itinerary_id,
+                    supplier_id=guide_supplier_id_val
+                ).first()
+                if existing_for_slot:
+                    exclude_gid = existing_for_slot.id
+
+            if guide_supplier_id_val and from_date_str:
+                try:
+                    fd = datetime.strptime(from_date_str, '%Y-%m-%d').date()
+                    td = datetime.strptime(to_date_str, '%Y-%m-%d').date() if to_date_str else fd
+                    if td < fd:
+                        td = fd
+                    d = fd
+                    while d <= td:
+                        conflict, req_num = _check_guide_assigned_on_date(
+                            guide_supplier_id_val, d,
+                            exclude_guide_id=exclude_gid
+                        )
+                        if conflict:
+                            return jsonify({
+                                'success': False,
+                                'error': f'This guide cannot have more than one trip on the same day. They are already assigned to {req_num} on {d.strftime("%d %b %Y")}.'
+                            }), 400
+                        d += timedelta(days=1)
+                except (ValueError, TypeError):
+                    pass
+
+            def _apply_guide_form_fields(g):
+                gsup = form_data.get('guide_supplier_id')
+                gsup = int(gsup) if gsup and str(gsup) != '__ADD_NEW__' else None
+                if gsup:
+                    supplier = Supplier.query.get(gsup)
+                    g.guide_name = supplier.name if supplier else ''
+                else:
+                    g.guide_name = form_data.get('guide_name', '')
+                g.supplier_id = gsup
+                g.language = form_data.get('guide_language', '')
+                g.telephone_number = form_data.get('guide_phone', '')
+                g.cost = float(form_data.get('guide_cost', 0) or 0)
+                g.is_cancelled = form_data.get('guide_cancelled') in ['true', 'True', True, 'on', '1']
+                g.additional_comments = form_data.get('guide_notes', '')
+                g.status = form_data.get('guide_status', 'REQUESTED')
+                if form_data.get('guide_from_date'):
+                    g.date = datetime.strptime(form_data['guide_from_date'], '%Y-%m-%d').date()
+                if form_data.get('guide_to_date'):
+                    g.end_date = datetime.strptime(form_data['guide_to_date'], '%Y-%m-%d').date()
+                elif g.date:
+                    g.end_date = g.date
+
+            guide = None
             if row_id:
                 guide = InboundGuide.query.filter_by(id=row_id, request_id=request_id).first()
+                if not guide:
+                    return jsonify({'success': False, 'error': 'Guide record not found'}), 404
+                print(f"[SAVE SERVICE] Updating existing guide id={row_id}")
+                _apply_guide_form_fields(guide)
+            elif source_itinerary_id:
+                it_row = ItineraryRow.query.filter_by(id=source_itinerary_id, request_id=request_id).first()
+                if not it_row:
+                    return jsonify({'success': False, 'error': 'Invalid itinerary row'}), 400
+                if not guide_supplier_id_val:
+                    return jsonify({'success': False, 'error': 'Guide supplier is required'}), 400
+                if itinerary_slot_supplier_id and itinerary_slot_supplier_id != guide_supplier_id_val:
+                    return jsonify({'success': False, 'error': 'Guide supplier mismatch'}), 400
+                if not from_date_str or not to_date_str:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Guide dates are required',
+                        'field_errors': {'guide_from_date': 'From date is required', 'guide_to_date': 'To date is required'}
+                    }), 400
+                try:
+                    from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
+                    to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
+                except (ValueError, TypeError) as e:
+                    return jsonify({
+                        'success': False,
+                        'error': f'Invalid date format: {str(e)}',
+                        'field_errors': {'guide_from_date': 'Invalid date format', 'guide_to_date': 'Invalid date format'}
+                    }), 400
+                guide = InboundGuide.query.filter_by(
+                    request_id=request_id,
+                    source_itinerary_id=source_itinerary_id,
+                    supplier_id=guide_supplier_id_val
+                ).first()
                 if guide:
-                    # Update existing guide
-                    print(f"[SAVE SERVICE] Updating existing guide id={row_id}")
-                    guide_supplier_id = form_data.get('guide_supplier_id')
-                    guide_supplier_id = int(guide_supplier_id) if guide_supplier_id else None
-                    if guide_supplier_id:
-                        from app.models.supplier import Supplier
-                        supplier = Supplier.query.get(guide_supplier_id)
-                        guide.guide_name = supplier.name if supplier else ''
-                    else:
-                        guide.guide_name = form_data.get('guide_name', '')
-                    guide.supplier_id = guide_supplier_id
+                    print(f"[SAVE SERVICE] Updating itinerary-linked guide id={guide.id}")
+                    _apply_guide_form_fields(guide)
+                else:
+                    supplier = Supplier.query.get(guide_supplier_id_val)
+                    guide_name_text = supplier.name if supplier else (form_data.get('guide_name', '').strip() or '')
+                    guide = InboundGuide(
+                        request_id=request_id,
+                        date=from_date,
+                        end_date=to_date,
+                        source_itinerary_id=source_itinerary_id
+                    )
+                    guide.guide_name = guide_name_text
                     guide.language = form_data.get('guide_language', '')
                     guide.telephone_number = form_data.get('guide_phone', '')
                     guide.cost = float(form_data.get('guide_cost', 0) or 0)
                     guide.is_cancelled = form_data.get('guide_cancelled') in ['true', 'True', True, 'on', '1']
-                    if form_data.get('guide_from_date'):
-                        guide.date = datetime.strptime(form_data['guide_from_date'], '%Y-%m-%d').date()
-                else:
-                    return jsonify({'success': False, 'error': 'Guide record not found'}), 404
+                    guide.additional_comments = form_data.get('guide_notes', '')
+                    guide.status = form_data.get('guide_status', 'REQUESTED')
+                    guide.supplier_id = guide_supplier_id_val
+                    db.session.add(guide)
+                    print(f"[SAVE SERVICE] Created itinerary-linked guide for row {source_itinerary_id}")
             else:
-                # Create a single guide entry with date range (from_date → to_date)
                 from_date_str = form_data.get('guide_from_date', '')
                 to_date_str = form_data.get('guide_to_date', '')
-
-                if from_date_str and to_date_str:
+                if not from_date_str or not to_date_str:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Guide dates are required',
+                        'field_errors': {'guide_from_date': 'From date is required', 'guide_to_date': 'To date is required'}
+                    }), 400
+                try:
                     from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
                     to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
-                else:
-                    from_date = request_obj.from_date or date_type.today()
-                    to_date = request_obj.to_date or date_type.today()
+                except (ValueError, TypeError) as e:
+                    return jsonify({
+                        'success': False,
+                        'error': f'Invalid date format: {str(e)}',
+                        'field_errors': {'guide_from_date': 'Invalid date format', 'guide_to_date': 'Invalid date format'}
+                    }), 400
 
-                # Create a single guide entry with date range
                 guide_supplier_id = form_data.get('guide_supplier_id')
-                guide_supplier_id = int(guide_supplier_id) if guide_supplier_id else None
-                # Get guide name from direct input first, then from supplier if supplier is selected
+                guide_supplier_id = int(guide_supplier_id) if guide_supplier_id and str(guide_supplier_id) != '__ADD_NEW__' else None
                 guide_name_text = form_data.get('guide_name', '').strip()
                 if guide_supplier_id:
-                    from app.models.supplier import Supplier
                     supplier = Supplier.query.get(guide_supplier_id)
                     if supplier:
-                        guide_name_text = supplier.name  # Override with supplier name if supplier is selected
+                        guide_name_text = supplier.name
 
                 guide = InboundGuide(
                     request_id=request_id,
-                    date=from_date,  # Start date
-                    end_date=to_date  # End date for multi-day service
+                    date=from_date,
+                    end_date=to_date
                 )
                 guide.guide_name = guide_name_text
                 guide.language = form_data.get('guide_language', '')
                 guide.telephone_number = form_data.get('guide_phone', '')
                 guide.cost = float(form_data.get('guide_cost', 0) or 0)
                 guide.is_cancelled = form_data.get('guide_cancelled') in ['true', 'True', True, 'on', '1']
+                guide.additional_comments = form_data.get('guide_notes', '')
+                guide.status = form_data.get('guide_status', 'REQUESTED')
                 guide.supplier_id = guide_supplier_id
                 db.session.add(guide)
-
                 print(f"[SAVE SERVICE] Created single guide entry from {from_date} to {to_date}")
+
+            if guide:
+                _ensure_guide_linked_to_itinerary_row(request_id, guide)
+            if guide and guide.source_itinerary_id:
+                ok_reloc, reloc_err = _relocate_itinerary_linked_guide_for_new_start_date(request_id, guide)
+                if not ok_reloc:
+                    db.session.rollback()
+                    return jsonify({'success': False, 'error': reloc_err}), 400
 
         elif service_type == 'meal':
             # Check if editing an existing meal record via row_id
@@ -1535,68 +2531,137 @@ def api_save_service_data(request_id):
                 if meal:
                     # Update existing meal
                     print(f"[SAVE SERVICE] Updating existing meal id={row_id}")
-                    meal.restaurant = form_data.get('meal_restaurant', '')
+                    from app.models.supplier import Supplier
+                    # meal_restaurant select value is the supplier_id
+                    restaurant_val = form_data.get('meal_restaurant', '')
+                    supplier_id = form_data.get('meal_supplier') or restaurant_val
+                    if supplier_id:
+                        try:
+                            meal.supplier_id = int(supplier_id)
+                            supplier = Supplier.query.get(int(supplier_id))
+                            meal.restaurant = supplier.name if supplier else restaurant_val
+                        except (ValueError, TypeError):
+                            meal.supplier_id = None
+                            meal.restaurant = restaurant_val
+                    else:
+                        meal.supplier_id = None
+                        meal.restaurant = restaurant_val
                     meal.meal_type = form_data.get('meal_type', '')
                     meal.meal_note = form_data.get('meal_notes', '')
                     meal.total_cost = float(form_data.get('meal_cost', 0) or 0)
+                    meal.currency = form_data.get('meal_cost_currency', 'JOD')
+                    meal.location = form_data.get('meal_location', '')
+                    meal.status = form_data.get('meal_status', STATUS_REQUEST)
                     if form_data.get('meal_from_date'):
                         meal.date = datetime.strptime(form_data['meal_from_date'], '%Y-%m-%d').date()
+                    meal.end_date = None  # Restaurant uses single date only
                 else:
                     return jsonify({'success': False, 'error': 'Meal record not found'}), 404
             else:
-                # Create new meal entries for date range
+                # Create a single meal entry with single date
                 from_date_str = form_data.get('meal_from_date', '')
-                to_date_str = form_data.get('meal_to_date', '')
 
-                if from_date_str and to_date_str:
+                if not from_date_str:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Meal date is required',
+                        'field_errors': {'meal_from_date': 'Date is required'}
+                    }), 400
+
+                try:
                     from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
-                    to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
-                else:
-                    from_date = request_obj.from_date or date_type.today()
-                    to_date = request_obj.to_date or date_type.today()
+                    if not isinstance(from_date, date_type):
+                        raise ValueError('Invalid date object created')
+                except (ValueError, TypeError) as e:
+                    return jsonify({
+                        'success': False,
+                        'error': f'Invalid date format: {str(e)}',
+                        'field_errors': {'meal_from_date': 'Invalid date format'}
+                    }), 400
 
-                current_date = from_date
-                created_count = 0
-                while current_date <= to_date:
+                # Create a single meal entry with single date
+                from app.models.supplier import Supplier
+                # meal_restaurant select value is the supplier_id
+                restaurant_val = form_data.get('meal_restaurant', '')
+                supplier_id_val = form_data.get('meal_supplier') or restaurant_val
+                resolved_supplier_id = None
+                resolved_restaurant = restaurant_val
+                if supplier_id_val:
+                    try:
+                        resolved_supplier_id = int(supplier_id_val)
+                        supplier = Supplier.query.get(int(supplier_id_val))
+                        resolved_restaurant = supplier.name if supplier else restaurant_val
+                    except (ValueError, TypeError):
+                        resolved_supplier_id = None
+                        resolved_restaurant = restaurant_val
+
+                try:
                     meal = InboundMeal(
                         request_id=request_id,
-                        date=current_date
+                        date=from_date,
+                        end_date=None  # Restaurant uses single date only
                     )
-                    meal.restaurant = form_data.get('meal_restaurant', '')
+                    meal.restaurant = resolved_restaurant
                     meal.meal_type = form_data.get('meal_type', '')
                     meal.meal_note = form_data.get('meal_notes', '')
                     meal.total_cost = float(form_data.get('meal_cost', 0) or 0)
+                    meal.currency = form_data.get('meal_cost_currency', 'JOD')
+                    meal.location = form_data.get('meal_location', '')
+                    meal.status = form_data.get('meal_status', STATUS_REQUEST)
+                    meal.supplier_id = resolved_supplier_id
+                    
                     db.session.add(meal)
-                    created_count += 1
-                    current_date += timedelta(days=1)
-
-                print(f"[SAVE SERVICE] Created {created_count} meal entries from {from_date} to {to_date}")
+                    db.session.flush()  # Flush to get the ID and catch any errors early
+                    print(f"[SAVE SERVICE] Created single meal entry for date {from_date}")
+                except Exception as db_error:
+                    db.session.rollback()
+                    import traceback
+                    error_trace = traceback.format_exc()
+                    print(f"[SAVE SERVICE] Error creating meal: {str(db_error)}")
+                    print(f"[SAVE SERVICE] Traceback: {error_trace}")
+                    return jsonify({
+                        'success': False,
+                        'error': f'Database error: {str(db_error)}',
+                        'field_errors': {}
+                    }), 500
 
         elif service_type == 'arrival':
             from app.models.inbound import ArrivalBatch
 
-            # Validate required fields
+            # Validate required fields - date and point are both required
+            arrival_date_str = form_data.get('arrival_date', '').strip()
             arrival_point = form_data.get('arrival_point', '').strip()
+            
+            field_errors = {}
+            if not arrival_date_str:
+                field_errors['arrival_date'] = 'Arrival Date is required'
             if not arrival_point:
+                field_errors['arrival_point'] = 'Arrival Point is required'
+            
+            if field_errors:
                 return jsonify({
                     'success': False, 
-                    'error': 'Arrival Point is required',
-                    'field_errors': {'arrival_point': 'Arrival Point is required'}
+                    'error': 'Arrival Date and Arrival Point are required',
+                    'field_errors': field_errors
                 }), 400
 
-            # Parse date and time
+            # Parse date and time - date is required, time is optional
             arrival_date = None
             arrival_time = None
-            if form_data.get('arrival_date'):
-                try:
-                    arrival_date = datetime.strptime(form_data['arrival_date'], '%Y-%m-%d').date()
-                except:
-                    pass
+            try:
+                arrival_date = datetime.strptime(arrival_date_str, '%Y-%m-%d').date()
+            except (ValueError, TypeError) as e:
+                return jsonify({
+                    'success': False,
+                    'error': f'Invalid arrival date format: {str(e)}',
+                    'field_errors': {'arrival_date': 'Invalid date format'}
+                }), 400
+            
             if form_data.get('arrival_time'):
                 try:
                     arrival_time = datetime.strptime(form_data['arrival_time'], '%H:%M').time()
-                except:
-                    pass
+                except (ValueError, TypeError):
+                    pass  # Time is optional, so we don't fail if it's invalid
 
             # Check if we're updating an existing batch or creating new
             # Use row_id from main data (when editing from Trip Summary) or batch_id from form_data
@@ -1614,48 +2679,71 @@ def api_save_service_data(request_id):
             else:
                 print(f"[SAVE SERVICE] Updating existing arrival batch id={batch_id}")
 
-            # Update fields
-            arrival.arrival_date = arrival_date or request_obj.from_date
+            # Update fields - use only service-specific data, no fallbacks
+            arrival.arrival_date = arrival_date
             arrival.arrival_point = arrival_point
             arrival.arrival_time = arrival_time
             arrival.flight_number = form_data.get('arrival_flight_number', '')
             arrival.vehicle_details = form_data.get('arrival_vehicle_type', '')
-            # Use request.pax as fallback when pax_count is empty
+            # Use only arrival_pax_count, no fallback to request.pax
             pax_val = form_data.get('arrival_pax_count', '')
-            arrival.pax_count = int(pax_val) if pax_val else (request_obj.pax or 1)
+            arrival.pax_count = int(pax_val) if pax_val else None
             arrival.driver_name = form_data.get('arrival_driver_name', '')
 
-            # New fields: visa_status, meet_assist, representative_name
+            # New fields: visa_status, meet_assist, representative_name, notes
             arrival.visa_status = form_data.get('arrival_visa_status', 'NOT_INCLUDED')
             meet_assist_val = form_data.get('arrival_meet_assist', 'no')
             arrival.meet_assist = meet_assist_val in ['yes', 'true', 'True', True, 1, '1', 'on']
             arrival.representative_name = form_data.get('arrival_representative_name', '')
+            arrival.needs_transport = _parse_needs_transport(
+                form_data.get('arrival_needs_transport'), default=True
+            )
+            # Notes: Use same simple pattern as arrival_point - strip and assign directly
+            arrival.notes = form_data.get('arrival_notes', '').strip() or None
+            print(f"[SAVE SERVICE] ===== ARRIVAL NOTES DEBUG =====")
+            print(f"[SAVE SERVICE] Form data arrival_notes: {repr(form_data.get('arrival_notes'))}")
+            print(f"[SAVE SERVICE] Saved to arrival.notes: {repr(arrival.notes)}")
+            print(f"[SAVE SERVICE] Arrival ID: {arrival.id if arrival.id else 'NEW'}")
+            print(f"[SAVE SERVICE] Arrival Point (for comparison): {repr(arrival.arrival_point)}")
+            print(f"[SAVE SERVICE] ================================")
 
         elif service_type == 'departure':
             from app.models.inbound import DepartureBatch
 
-            # Validate required fields
+            # Validate required fields - date and point are both required
+            departure_date_str = form_data.get('departure_date', '').strip()
             departure_point = form_data.get('departure_point', '').strip()
+            
+            field_errors = {}
+            if not departure_date_str:
+                field_errors['departure_date'] = 'Departure Date is required'
             if not departure_point:
+                field_errors['departure_point'] = 'Departure Point is required'
+            
+            if field_errors:
                 return jsonify({
                     'success': False, 
-                    'error': 'Departure Point is required',
-                    'field_errors': {'departure_point': 'Departure Point is required'}
+                    'error': 'Departure Date and Departure Point are required',
+                    'field_errors': field_errors
                 }), 400
 
-            # Parse date and time
+            # Parse date and time - date is required, time is optional
             departure_date = None
             departure_time = None
-            if form_data.get('departure_date'):
-                try:
-                    departure_date = datetime.strptime(form_data['departure_date'], '%Y-%m-%d').date()
-                except:
-                    pass
+            try:
+                departure_date = datetime.strptime(departure_date_str, '%Y-%m-%d').date()
+            except (ValueError, TypeError) as e:
+                return jsonify({
+                    'success': False,
+                    'error': f'Invalid departure date format: {str(e)}',
+                    'field_errors': {'departure_date': 'Invalid date format'}
+                }), 400
+            
             if form_data.get('departure_time'):
                 try:
                     departure_time = datetime.strptime(form_data['departure_time'], '%H:%M').time()
-                except:
-                    pass
+                except (ValueError, TypeError):
+                    pass  # Time is optional, so we don't fail if it's invalid
 
             # Check if we're updating an existing batch or creating new
             # Use row_id from main data (when editing from Trip Summary) or batch_id from form_data
@@ -1673,21 +2761,25 @@ def api_save_service_data(request_id):
             else:
                 print(f"[SAVE SERVICE] Updating existing departure batch id={batch_id}")
 
-            # Update fields
-            departure.departure_date = departure_date or request_obj.to_date
+            # Update fields - use only service-specific data, no fallbacks
+            departure.departure_date = departure_date
             departure.departure_point = departure_point
             departure.departure_time = departure_time
             departure.flight_number = form_data.get('departure_flight_number', '')
-            # Use request.pax as fallback when pax_count is empty
+            # Use only departure_pax_count, no fallback to request.pax
             pax_val = form_data.get('departure_pax_count', '')
-            departure.pax_count = int(pax_val) if pax_val else (request_obj.pax or 1)
+            departure.pax_count = int(pax_val) if pax_val else None
             departure.driver_name = form_data.get('departure_driver_name', '')
             departure.departure_tax = form_data.get('departure_tax', 'NOT_INCLUDED')
 
-            # New fields: meet_assist, representative_name
+            # New fields: meet_assist, representative_name, notes
             meet_assist_val = form_data.get('departure_meet_assist', 'no')
             departure.meet_assist = meet_assist_val in ['yes', 'true', 'True', True, 1, '1', 'on']
             departure.representative_name = form_data.get('departure_representative_name', '')
+            departure.notes = form_data.get('departure_notes', '')
+            departure.needs_transport = _parse_needs_transport(
+                form_data.get('departure_needs_transport'), default=True
+            )
 
             # Parse program date
             if form_data.get('departure_program_date'):
@@ -1696,20 +2788,48 @@ def api_save_service_data(request_id):
                 except:
                     pass
 
+        # Ensure all changes are flushed before commit
+        db.session.flush()
+        if service_type == 'guide':
+            guide_record_id_for_json = guide.id
+        if service_type == 'arrival':
+            _sync_transport_from_arrival(arrival)
+        elif service_type == 'departure':
+            _sync_transport_from_departure(departure)
+        
+        # Debug: Check notes value before commit
+        if service_type == 'arrival':
+            print(f"[SAVE SERVICE] Before commit - arrival.notes: {repr(getattr(arrival, 'notes', 'NOT_FOUND'))}")
+            print(f"[SAVE SERVICE] Before commit - arrival.id: {arrival.id if arrival.id else 'NEW'}")
+        
         db.session.commit()
         print(f"[SAVE SERVICE] Commit successful for {service_type}")
+        
+        # Debug: Verify notes after commit
+        if service_type == 'arrival':
+            db.session.refresh(arrival)
+            print(f"[SAVE SERVICE] After commit - arrival.notes: {repr(getattr(arrival, 'notes', 'NOT_FOUND'))}")
+            print(f"[SAVE SERVICE] After commit - arrival.id: {arrival.id}")
 
         # Expire cached data and re-query with eager loading
         db.session.expire_all()
 
         # Re-query fresh request with all service relationships eagerly loaded
-        fresh_request = InboundRequest.query.options(
+        # Use filter_by().first() instead of .get() to ensure fresh query
+        # Include arrival_batches and departure_batches for flights summary
+        from app.models.inbound import ArrivalBatch, DepartureBatch
+        fresh_request = InboundRequest.query.filter_by(id=request_id).options(
             selectinload(InboundRequest.inbound_hotels),
             selectinload(InboundRequest.inbound_transports),
             selectinload(InboundRequest.inbound_guides),
             selectinload(InboundRequest.inbound_meals),
-            selectinload(InboundRequest.itinerary_rows)
-        ).get(request_id)
+            selectinload(InboundRequest.itinerary_rows),
+            selectinload(InboundRequest.arrival_batches),
+            selectinload(InboundRequest.departure_batches)
+        ).first()
+        
+        if not fresh_request:
+            return jsonify({'success': False, 'error': 'Request not found after save'}), 404
 
         # Build service lookup maps for template
         hotel_map = {h.source_itinerary_id: h for h in fresh_request.inbound_hotels}
@@ -1724,9 +2844,14 @@ def api_save_service_data(request_id):
         global_meal = meal_map.get(None)
 
         # Render updated HTML partials for instant DOM update
+        sorted_itin = sort_itinerary_rows_with_children(fresh_request.itinerary_rows)
         itinerary_html = render_template(
             'components/itinerary_rows.html',
-            rows=fresh_request.itinerary_rows,
+            rows=sorted_itin,
+            request=fresh_request,
+            inbound_request=fresh_request,
+            guide_suppliers=_guide_suppliers_for_itinerary_ui(),
+            itinerary_guide_slot_saved=_itinerary_guide_slot_saved_map(fresh_request),
             view_only=False,
             hotel_map=hotel_map,
             transport_map=transport_map,
@@ -1743,21 +2868,65 @@ def api_save_service_data(request_id):
         summary_entries_html = None
 
         if service_type == 'hotel':
+            # Always use direct query to ensure fresh data and avoid relationship duplicates
+            # This prevents duplicate entries that can occur with SQLAlchemy relationships
+            hotels_list = InboundHotel.query.filter_by(request_id=request_id).order_by(InboundHotel.check_in_date).all()
+            print(f"[SAVE SERVICE] Direct query found {len(hotels_list)} hotels")
+            
+            # Remove duplicates by hotel ID (safety check) - use dictionary for O(1) lookup
+            seen_ids = {}
+            unique_hotels = []
+            duplicate_count = 0
+            for hotel in hotels_list:
+                if hotel.id not in seen_ids:
+                    seen_ids[hotel.id] = True
+                    unique_hotels.append(hotel)
+                else:
+                    duplicate_count += 1
+                    print(f"[SAVE SERVICE] WARNING: Duplicate hotel detected (ID: {hotel.id}, Name: {hotel.hotel_name}) - skipping")
+            
+            if duplicate_count > 0:
+                print(f"[SAVE SERVICE] Removed {duplicate_count} duplicate hotels")
+            
+            hotels_list = unique_hotels
+            print(f"[SAVE SERVICE] After deduplication: {len(hotels_list)} unique hotels")
+            
+            # Final verification - ensure no duplicate IDs
+            hotel_ids = [h.id for h in hotels_list]
+            if len(hotel_ids) != len(set(hotel_ids)):
+                print(f"[SAVE SERVICE] ERROR: Still have duplicate IDs after deduplication!")
+                # Force unique by keeping first occurrence
+                seen = set()
+                hotels_list = [h for h in hotels_list if h.id not in seen and not seen.add(h.id)]
+                print(f"[SAVE SERVICE] Force deduplicated to {len(hotels_list)} hotels")
+            
+            # Log all hotels for debugging
+            for idx, h in enumerate(hotels_list):
+                print(f"[SAVE SERVICE] Hotel {idx+1}: id={h.id}, name={h.hotel_name}, check_in={h.check_in_date}")
+            
             service_entries_html = render_template(
                 'components/hotel_entries.html',
-                hotels=fresh_request.inbound_hotels,
+                hotels=hotels_list,
                 view_only=False
             )
             # Use Trip Summary format for summary_entries_html
+            req_status = fresh_request.status
+            mapped_status = 'CONFIRMED' if req_status in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS'] else ('INVOICED' if req_status in ['INVOICE', 'COMPLETED', 'INVOICED'] else req_status)
             summary_entries_html = render_template(
                 'components/hotel_summary_entries.html',
-                hotels=fresh_request.inbound_hotels,
-                view_only=False
+                hotels=hotels_list,
+                view_only=False,
+                mapped_status=mapped_status
             )
+            print(f"[SAVE SERVICE] summary_entries_html length: {len(summary_entries_html) if summary_entries_html else 0}")
+            print(f"[SAVE SERVICE] summary_entries_html preview: {summary_entries_html[:200] if summary_entries_html else 'None'}")
 
         elif service_type == 'transport':
-            # Convert to list to avoid multiple iterations consuming the relationship
-            transports_list = list(fresh_request.inbound_transports)
+            # Always use direct query to ensure fresh data (same pattern as hotels)
+            transports_list = InboundTransport.query.filter_by(request_id=request_id).order_by(InboundTransport.date).all()
+            print(f"[SAVE SERVICE] Direct query found {len(transports_list)} transports")
+            for t in transports_list:
+                print(f"[SAVE SERVICE] Transport id={t.id}, note={repr(t.note)}")
             service_entries_html = render_template(
                 'components/transport_entries.html',
                 transports=transports_list,
@@ -1784,42 +2953,25 @@ def api_save_service_data(request_id):
                 if dates:
                     dates.sort()
                     if len(dates) > 1:
-                        transport_groups[key]['date_range'] = f"{dates[0].strftime('%d %b')} - {dates[-1].strftime('%d %b')}"
+                        transport_groups[key]['date_range'] = f"{dates[0].strftime('%d %b %Y')} - {dates[-1].strftime('%d %b %Y')}"
                     else:
-                        transport_groups[key]['date_range'] = dates[0].strftime('%d %b')
+                        transport_groups[key]['date_range'] = dates[0].strftime('%d %b %Y')
                 else:
                     transport_groups[key]['date_range'] = '-'
 
-            # Generate individual transport records for Trip Summary (not grouped)
-            # Use properties: pickup_point, drop_off_point, service_date
-            summary_entries_html = render_template_string('''
-                {% for transport in transports %}
-                <tr class="hover:bg-gray-50" data-transport-key="{{ transport.vehicle_type or '' }}-{{ transport.pickup_point or '' }}-{{ transport.drop_off_point or '' }}" data-service-type="transport" data-record-id="{{ transport.id }}">
-                    <td class="border border-gray-300 px-2 py-1.5 text-center">{% if transport.end_date and transport.end_date != transport.date %}{{ transport.date.strftime('%d %b') if transport.date else '-' }} - {{ transport.end_date.strftime('%d %b') if transport.end_date else '-' }}{% else %}{{ transport.service_date.strftime('%d %b') if transport.service_date else '-' }}{% endif %}</td>
-                    <td class="border border-gray-300 px-2 py-1.5">{{ transport.vehicle_type or '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5">{{ transport.pickup_point or '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5">{{ transport.drop_off_point or '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5 text-center">
-                        <span class="px-2 py-0.5 rounded text-[10px] {% if transport.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif transport.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ transport.status or 'PENDING' }}</span>
-                    </td>
-                    <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
-                        <div class="flex items-center justify-center gap-2">
-                            <button onclick="handleEditServiceRow('transport', {{ transport.id }})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
-                            <button onclick="handleRemoveServiceRow('transport', {{ transport.id }})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
-                        </div>
-                    </td>
-                </tr>
-                {% else %}
-                <tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No transport added</td></tr>
-                {% endfor %}
-            ''', transports=transports_list)
+            # Use Trip Summary format for summary_entries_html (same as hotel pattern)
+            summary_entries_html = render_template(
+                'components/transport_summary_entries.html',
+                transports=_trip_summary_transports(transports_list),
+                view_only=False
+            )
 
         elif service_type == 'guide':
-            # Convert to list to avoid multiple iterations consuming the relationship
-            guides_list = list(fresh_request.inbound_guides)
-            print(f"[SAVE SERVICE] Guide count in fresh_request: {len(guides_list)}")
+            # Always use direct query to ensure fresh data (same pattern as hotels)
+            guides_list = InboundGuide.query.filter_by(request_id=request_id).order_by(InboundGuide.date).all()
+            print(f"[SAVE SERVICE] Direct query found {len(guides_list)} guides")
             for g in guides_list:
-                print(f"[SAVE SERVICE] Guide entry: id={g.id}, name={g.guide_name}, date={g.date}")
+                print(f"[SAVE SERVICE] Guide id={g.id}, name={g.guide_name}, additional_comments={repr(g.additional_comments)}")
 
             service_entries_html = render_template(
                 'components/guide_entries.html',
@@ -1846,36 +2998,43 @@ def api_save_service_data(request_id):
                 if dates:
                     dates.sort()
                     if len(dates) > 1:
-                        guide_groups[key]['date_range'] = f"{dates[0].strftime('%d %b')} - {dates[-1].strftime('%d %b')}"
+                        guide_groups[key]['date_range'] = f"{dates[0].strftime('%d %b %Y')} - {dates[-1].strftime('%d %b %Y')}"
                     else:
-                        guide_groups[key]['date_range'] = dates[0].strftime('%d %b')
+                        guide_groups[key]['date_range'] = dates[0].strftime('%d %b %Y')
                 else:
                     guide_groups[key]['date_range'] = '-'
 
             # Generate individual guide records for Trip Summary (not grouped)
             # Use properties: service_date, telephone
-            summary_entries_html = render_template_string('''
-                {% for guide in guides %}
-                <tr class="hover:bg-gray-50" data-guide-name="{{ guide.guide_name or '' }}" data-guide-supplier-id="{{ guide.supplier_id or '' }}" data-service-type="guide" data-record-id="{{ guide.id }}">
-                    <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ guide.guide_name or '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5 text-center">{% if guide.end_date and guide.end_date != guide.date %}{{ guide.date.strftime('%d %b') if guide.date else '-' }} - {{ guide.end_date.strftime('%d %b') if guide.end_date else '-' }}{% else %}{{ guide.service_date.strftime('%d %b') if guide.service_date else '-' }}{% endif %}</td>
-                    <td class="border border-gray-300 px-2 py-1.5">{{ guide.language or '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5">{{ guide.telephone or '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
-                        <div class="flex items-center justify-center gap-2">
-                            <button onclick="handleEditServiceRow('guide', {{ guide.id }})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
-                            <button onclick="handleRemoveServiceRow('guide', {{ guide.id }})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
-                        </div>
-                    </td>
-                </tr>
-                {% else %}
-                <tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No guides added</td></tr>
-                {% endfor %}
-            ''', guides=guides_list)
+            # Use Trip Summary format for summary_entries_html (same as hotel pattern)
+            # CRITICAL: Always generate summary_entries_html for guides (never None)
+            summary_entries_html = render_template(
+                'components/guide_summary_entries.html',
+                guides=guides_list,
+                view_only=False
+            )
+            # Ensure summary_entries_html is never None for guides
+            if not summary_entries_html:
+                summary_entries_html = '<tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No guides added</td></tr>'
+            print(f"[SAVE SERVICE] Guide summary_entries_html length: {len(summary_entries_html) if summary_entries_html else 0}")
+            print(f"[SAVE SERVICE] Guide summary_entries_html preview (first 500 chars): {summary_entries_html[:500] if summary_entries_html else 'None'}")
+            # Count <td> tags in first row to verify column count
+            if summary_entries_html and '<td' in summary_entries_html:
+                first_row_start = summary_entries_html.find('<tr')
+                first_row_end = summary_entries_html.find('</tr>', first_row_start)
+                if first_row_start != -1 and first_row_end != -1:
+                    first_row = summary_entries_html[first_row_start:first_row_end]
+                    td_count = first_row.count('<td')
+                    print(f"[SAVE SERVICE] Guide first row has {td_count} <td> tags (should be 6)")
+                    if td_count != 6:
+                        print(f"[SAVE SERVICE] ERROR: Guide row has wrong column count! First row HTML: {first_row}")
 
         elif service_type == 'meal':
-            # Convert to list to avoid multiple iterations consuming the relationship
-            meals_list = list(fresh_request.inbound_meals)
+            # Always use direct query to ensure fresh data (same pattern as hotels)
+            meals_list = InboundMeal.query.filter_by(request_id=request_id).order_by(InboundMeal.date).all()
+            print(f"[SAVE SERVICE] Direct query found {len(meals_list)} meals")
+            for m in meals_list:
+                print(f"[SAVE SERVICE] Meal id={m.id}, meal_note={repr(m.meal_note)}")
             service_entries_html = render_template(
                 'components/meal_entries.html',
                 meals=meals_list,
@@ -1891,10 +3050,15 @@ def api_save_service_data(request_id):
                         'restaurant': m.restaurant,
                         'location': getattr(m, 'location', None),
                         'total_cost': m.total_cost or 0,
+                        'meal_note': m.meal_note or '',  # Get notes from first meal in group
+                        'first_meal_id': m.id,  # Store first meal ID for edit/remove actions
                         'dates': []
                     }
                 if m.date:
                     meal_groups[key]['dates'].append(m.date)
+                # If this meal has notes and the group doesn't, use this meal's notes
+                if m.meal_note and not meal_groups[key]['meal_note']:
+                    meal_groups[key]['meal_note'] = m.meal_note
 
             # Format date ranges for summary
             for key in meal_groups:
@@ -1902,25 +3066,28 @@ def api_save_service_data(request_id):
                 if dates:
                     dates.sort()
                     if len(dates) > 1:
-                        meal_groups[key]['date_range'] = f"{dates[0].strftime('%d %b')} - {dates[-1].strftime('%d %b')}"
+                        meal_groups[key]['date_range'] = f"{dates[0].strftime('%d %b %Y')} - {dates[-1].strftime('%d %b %Y')}"
                     else:
-                        meal_groups[key]['date_range'] = dates[0].strftime('%d %b')
+                        meal_groups[key]['date_range'] = dates[0].strftime('%d %b %Y')
                 else:
                     meal_groups[key]['date_range'] = '-'
 
-            summary_entries_html = render_template_string('''
-                {% for key, m in groups.items() %}
-                <tr class="hover:bg-gray-50" data-meal-key="{{ key }}">
-                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ m.date_range }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5">{{ m.meal_type or '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ m.restaurant or '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5">{{ m.location or '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5 text-center">-</td>
-                </tr>
-                {% else %}
-                <tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No meals added</td></tr>
-                {% endfor %}
-            ''', groups=meal_groups)
+            # Use Trip Summary format for summary_entries_html (same as hotel pattern)
+            # Use individual meals instead of grouped meals for consistency
+            req_status = fresh_request.status
+            meal_mapped_status = 'CONFIRMED' if req_status in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS'] else ('INVOICED' if req_status in ['INVOICE', 'COMPLETED', 'INVOICED'] else req_status)
+            try:
+                summary_entries_html = render_template(
+                    'components/meal_summary_entries.html',
+                    meals=meals_list,
+                    request=fresh_request,
+                    view_only=False,
+                    mapped_status=meal_mapped_status
+                )
+            except Exception as template_error:
+                print(f"[SAVE SERVICE] Error rendering meal summary template: {str(template_error)}")
+                # Fallback to empty table row if template rendering fails
+                summary_entries_html = '<tr><td colspan="8" class="border border-gray-300 px-2 py-3 text-center text-gray-500">Error loading meals</td></tr>'
 
         elif service_type in ('arrival', 'departure'):
             from app.models.inbound import ArrivalBatch, DepartureBatch
@@ -1934,16 +3101,17 @@ def api_save_service_data(request_id):
                 {% for arr in arrivals %}
                 <tr class="hover:bg-gray-50" data-service-type="arrival" data-record-id="{{ arr.id }}">
                     <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-green-100 text-green-800"><i class="fas fa-plane-arrival mr-1"></i>Arrival</span></td>
-                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ arr.arrival_date.strftime('%d %b') if arr.arrival_date else '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ arr.arrival_date.strftime('%d %b %Y') if arr.arrival_date else '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">{{ arr.arrival_time.strftime('%H:%M') if arr.arrival_time else '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5">{{ arr.arrival_point or '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5">{{ arr.flight_number or '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ arr.pax_count or '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5">{{ arr.driver_name or '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
-                        <div class="flex items-center justify-center gap-1">
-                            <button onclick="handleEditServiceRow('arrival', {{ arr.id }})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
-                            <button onclick="handleRemoveServiceRow('arrival', {{ arr.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ arr.pax_count or 0 }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ arr.representative_name if arr.meet_assist else '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ arr.notes or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap print-hide-actions">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="handleEditServiceRow('arrival', {{ arr.id }})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                            <button onclick="handleRemoveServiceRow('arrival', {{ arr.id }})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
                         </div>
                     </td>
                 </tr>
@@ -1951,22 +3119,23 @@ def api_save_service_data(request_id):
                 {% for dep in departures %}
                 <tr class="hover:bg-gray-50" data-service-type="departure" data-record-id="{{ dep.id }}">
                     <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-orange-100 text-orange-800"><i class="fas fa-plane-departure mr-1"></i>Departure</span></td>
-                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ dep.departure_date.strftime('%d %b') if dep.departure_date else '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ dep.departure_date.strftime('%d %b %Y') if dep.departure_date else '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">{{ dep.departure_time.strftime('%H:%M') if dep.departure_time else '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5">{{ dep.departure_point or '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5">{{ dep.flight_number or '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ dep.pax_count or '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5">{{ dep.driver_name or '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
-                        <div class="flex items-center justify-center gap-1">
-                            <button onclick="handleEditServiceRow('departure', {{ dep.id }})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
-                            <button onclick="handleRemoveServiceRow('departure', {{ dep.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ dep.pax_count or 0 }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ dep.representative_name if dep.meet_assist else '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ dep.notes or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap print-hide-actions">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="handleEditServiceRow('departure', {{ dep.id }})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                            <button onclick="handleRemoveServiceRow('departure', {{ dep.id }})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
                         </div>
                     </td>
                 </tr>
                 {% endfor %}
                 {% if not arrivals and not departures %}
-                <tr><td colspan="8" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No flights added</td></tr>
+                <tr><td colspan="9" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No flights added</td></tr>
                 {% endif %}
             ''', arrivals=arrivals, departures=departures)
 
@@ -1982,6 +3151,18 @@ def api_save_service_data(request_id):
             'summary_entries_html': summary_entries_html,
             'service_type': service_type
         }
+        if service_type == 'guide':
+            response_data['itinerary_guide_slot_saved'] = _itinerary_guide_slot_saved_map(fresh_request)
+            if guide_record_id_for_json:
+                response_data['guide_id'] = guide_record_id_for_json
+
+        if service_type in ('arrival', 'departure'):
+            transports_list = InboundTransport.query.filter_by(request_id=request_id).order_by(InboundTransport.date).all()
+            response_data['transport_summary_entries_html'] = render_template(
+                'components/transport_summary_entries.html',
+                transports=_trip_summary_transports(transports_list),
+                view_only=False
+            )
 
         # For hotel: include hotel_id and rooms data for room distribution modal
         if service_type == 'hotel' and 'hotel' in locals():
@@ -1992,6 +3173,7 @@ def api_save_service_data(request_id):
                 response_data['rooms'] = [{
                     'id': r.id,
                     'room_type': r.room_type,
+                    'room_category': r.room_category or '',
                     'room_option': r.room_option or '',
                     'board_basis': r.board_basis or 'BB',
                     'dietary_requirements': r.dietary_requirements or '',
@@ -2002,9 +3184,17 @@ def api_save_service_data(request_id):
 
         return jsonify(response_data)
 
+    except OSError as os_err:
+        db.session.rollback()
+        # OSError [Errno 22] Invalid argument can occur on Windows with date/strftime operations
+        return jsonify({'success': False, 'error': 'An unexpected error occurred while saving. Please try again.'}), 500
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 500
+        # Sanitize internal errors for user display
+        err_msg = str(e)
+        if 'OSError' in err_msg or 'Errno 22' in err_msg or 'Werkzeug' in err_msg or 'Invalid argument' in err_msg:
+            err_msg = 'An unexpected error occurred while saving. Please try again.'
+        return jsonify({'success': False, 'error': err_msg}), 500
 
 @inbound_bp.route('/api/itinerary-row/<int:row_id>/update-field', methods=['POST'])
 @csrf.exempt
@@ -2018,12 +3208,25 @@ def api_update_itinerary_row_field(row_id):
         value = data.get('value')
 
         # Only allow specific fields to be updated
-        allowed_fields = ['description', 'restaurant', 'meal_type', 'comment', 'cash_expense', 'restaurant_supplier_id']
+        allowed_fields = ['description', 'restaurant', 'meal_type', 'comment', 'cash_expense', 'restaurant_supplier_id', 'note', 'current_pax', 'itinerary_guide_supplier_ids']
 
         if field not in allowed_fields:
             return jsonify({'success': False, 'error': f'Field {field} not allowed'}), 400
 
         # Update the field
+        if field == 'itinerary_guide_supplier_ids':
+            if isinstance(value, list):
+                row.set_itinerary_guide_supplier_id_list(value)
+            elif isinstance(value, str):
+                try:
+                    parsed = json.loads(value)
+                    row.set_itinerary_guide_supplier_id_list(parsed if isinstance(parsed, list) else [])
+                except (json.JSONDecodeError, TypeError):
+                    row.set_itinerary_guide_supplier_id_list([])
+            else:
+                row.set_itinerary_guide_supplier_id_list([])
+            db.session.commit()
+            return jsonify({'success': True})
         if field == 'cash_expense':
             try:
                 value = float(value) if value else 0.0
@@ -2034,8 +3237,26 @@ def api_update_itinerary_row_field(row_id):
                 value = int(value) if value else None
             except ValueError:
                 value = None
-
-        setattr(row, field, value)
+        elif field in ('note', 'current_pax'):
+            # Store in comment JSON
+            import json
+            comment_data = {}
+            if row.comment:
+                try:
+                    comment_data = json.loads(row.comment)
+                except (json.JSONDecodeError, TypeError):
+                    if row.comment and str(row.comment).strip():
+                        comment_data['_text'] = row.comment
+            if field == 'note':
+                comment_data['note'] = (value or '').strip() if isinstance(value, str) else ''
+            else:
+                try:
+                    comment_data['current_pax'] = int(value) if value else None
+                except (ValueError, TypeError):
+                    comment_data['current_pax'] = None
+            row.comment = json.dumps(comment_data)
+        else:
+            setattr(row, field, value)
         db.session.commit()
 
         return jsonify({'success': True})
@@ -2062,6 +3283,9 @@ def api_save_itinerary_row(request_id):
         description = data.get('description', '')
         meal_type = data.get('meal_type', '')
         restaurant_supplier_id = data.get('restaurant_supplier_id')
+        current_pax = data.get('current_pax')
+        parent_row_id = data.get('parent_row_id')  # For child rows
+        note = data.get('note').strip() if isinstance(data.get('note'), str) else ''
 
         # Parse date (use from_date as default for new rows)
         date_obj = None
@@ -2091,15 +3315,55 @@ def api_save_itinerary_row(request_id):
             row.description = description
             row.meal_type = meal_type
             row.restaurant_supplier_id = restaurant_supplier_id
+            
+            # Handle current_pax and note - store in comment field as JSON (keep each row isolated)
+            import json
+            comment_data = {}
+            if row.comment:
+                try:
+                    comment_data = json.loads(row.comment)
+                except (json.JSONDecodeError, TypeError):
+                    if row.comment and str(row.comment).strip():
+                        comment_data['_text'] = row.comment
+            if current_pax is not None:
+                try:
+                    comment_data['current_pax'] = int(current_pax)
+                except (ValueError, TypeError):
+                    pass
+            if 'note' in data:
+                comment_data['note'] = note
+            if comment_data:
+                row.comment = json.dumps(comment_data)
         else:
             # Create new row
+            # If parent_row_id exists, allow empty description (for repeated/duplicated rows)
+            # Otherwise, use default description for new standalone rows
+            default_description = '' if parent_row_id else 'New day'
             row = ItineraryRow(
                 request_id=request_id,
                 date=date_obj,
-                description=description or 'New day',
+                description=description if description is not None else default_description,
                 meal_type=meal_type,
                 restaurant_supplier_id=restaurant_supplier_id
             )
+            
+            # Handle current_pax and parent_row_id for new row - store in comment as JSON
+            import json
+            comment_data = {}
+            if current_pax is not None:
+                try:
+                    comment_data['current_pax'] = int(current_pax)
+                except (ValueError, TypeError):
+                    pass
+            if parent_row_id:
+                try:
+                    comment_data['parent_row_id'] = int(parent_row_id)
+                except (ValueError, TypeError):
+                    pass
+            
+            if comment_data:
+                row.comment = json.dumps(comment_data)
+            
             db.session.add(row)
 
         db.session.commit()
@@ -2131,25 +3395,155 @@ def api_delete_itinerary_row_by_id(row_id):
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+def sort_itinerary_rows_with_children(rows):
+    """Sort itinerary rows ensuring child rows appear directly below their parent"""
+    all_rows = list(rows)
+    
+    # Build parent-child mapping from comment field
+    parent_child_map = {}  # parent_id -> list of child rows
+    row_by_id = {}  # id -> row for quick lookup
+    orphan_rows = []  # Child rows whose parent doesn't exist
+    root_rows = []  # Rows without parent_row_id
+    
+    # First pass: build row_by_id map
+    for row in all_rows:
+        row_by_id[row.id] = row
+    
+    # Second pass: classify rows
+    for row in all_rows:
+        parent_id = None
+        if row.comment:
+            try:
+                comment_data = json.loads(row.comment)
+                parent_id = comment_data.get('parent_row_id')
+            except (json.JSONDecodeError, TypeError):
+                pass
+        
+        if parent_id:
+            # Check if parent exists
+            if parent_id in row_by_id:
+                # Parent exists - add to parent_child_map
+                if parent_id not in parent_child_map:
+                    parent_child_map[parent_id] = []
+                parent_child_map[parent_id].append(row)
+            else:
+                # Parent doesn't exist - treat as orphan (add to root)
+                orphan_rows.append(row)
+        else:
+            # No parent - this is a root row
+            root_rows.append(row)
+    
+    # Sort root rows by date, then by ID
+    root_rows.sort(key=lambda r: (r.date or date(1900, 1, 1), r.id))
+    
+    # Sort orphan rows by date, then by ID (treat as root rows)
+    orphan_rows.sort(key=lambda r: (r.date or date(1900, 1, 1), r.id))
+    
+    # Sort children within each parent group by ID (creation order)
+    for parent_id in parent_child_map:
+        parent_child_map[parent_id].sort(key=lambda r: r.id)
+    
+    # Rebuild sorted list maintaining parent-child relationships
+    sorted_rows = []
+    processed_ids = set()
+    
+    def add_row_and_children(row):
+        """Add a row and all its children recursively"""
+        if row.id in processed_ids:
+            return
+        
+        # Add the row
+        sorted_rows.append(row)
+        processed_ids.add(row.id)
+        
+        # Add all children of this row (they will appear directly below)
+        if row.id in parent_child_map:
+            for child in parent_child_map[row.id]:
+                add_row_and_children(child)
+    
+    # Process all root rows (rows without parents) in date order
+    for row in root_rows:
+        add_row_and_children(row)
+    
+    # Add orphan rows at the end
+    for row in orphan_rows:
+        add_row_and_children(row)
+    
+    return sorted_rows
+
 @inbound_bp.route('/api/<int:request_id>/itinerary-rows-html', methods=['GET'])
 def api_get_itinerary_rows_html(request_id):
     """Get the HTML for the itinerary rows table"""
     from app.models.supplier import Supplier
     try:
-        request_obj = InboundRequest.query.get_or_404(request_id)
-        rows = request_obj.itinerary_rows
+        request_obj = InboundRequest.query.options(
+            selectinload(InboundRequest.itinerary_rows),
+            selectinload(InboundRequest.inbound_guides),
+            selectinload(InboundRequest.arrival_batches),
+            selectinload(InboundRequest.departure_batches)
+        ).get_or_404(request_id)
+        # Custom sorting to ensure child rows appear directly below their parent
+        rows = sort_itinerary_rows_with_children(request_obj.itinerary_rows)
 
         # Get restaurant suppliers for the dropdown
         restaurant_suppliers = Supplier.query.filter_by(supplier_type='RESTAURANT', is_active=True).order_by(Supplier.name).all()
 
         return render_template('components/itinerary_rows.html',
             rows=rows,
+            request=request_obj,
+            inbound_request=request_obj,  # Explicit variable to avoid Flask request confusion
             restaurant_suppliers=restaurant_suppliers,
+            guide_suppliers=_guide_suppliers_for_itinerary_ui(),
+            itinerary_guide_slot_saved=_itinerary_guide_slot_saved_map(request_obj),
             view_only=False
         )
 
     except Exception as e:
-        return f'<tr><td colspan="6" class="text-center text-red-500">Error loading itinerary: {str(e)}</td></tr>', 500
+        return f'<tr><td colspan="7" class="text-center text-red-500">Error loading itinerary: {str(e)}</td></tr>', 500
+
+@inbound_bp.route('/api/<int:request_id>/itinerary-row-html/<int:row_id>', methods=['GET'])
+def api_get_itinerary_row_html(request_id, row_id):
+    """Get HTML for a single itinerary row (for inserting without full refresh)"""
+    from app.models.supplier import Supplier
+    try:
+        request_obj = InboundRequest.query.options(
+            selectinload(InboundRequest.itinerary_rows),
+            selectinload(InboundRequest.inbound_hotels),
+            selectinload(InboundRequest.inbound_transports),
+            selectinload(InboundRequest.inbound_guides),
+            selectinload(InboundRequest.inbound_meals),
+        ).get_or_404(request_id)
+        row = ItineraryRow.query.filter_by(id=row_id, request_id=request_id).first()
+        if not row:
+            return '', 404
+        hotel_map = {h.source_itinerary_id: h for h in (request_obj.inbound_hotels or [])}
+        transport_map = {t.source_itinerary_id: t for t in (request_obj.inbound_transports or [])}
+        guide_map = {g.source_itinerary_id: g for g in (request_obj.inbound_guides or [])}
+        meal_map = {m.source_itinerary_id: m for m in (request_obj.inbound_meals or [])}
+        global_hotel = hotel_map.get(None)
+        global_transport = transport_map.get(None)
+        global_guide = guide_map.get(None)
+        global_meal = meal_map.get(None)
+        restaurant_suppliers = Supplier.query.filter_by(supplier_type='RESTAURANT', is_active=True).order_by(Supplier.name).all()
+        return render_template('components/itinerary_rows.html',
+            rows=[row],
+            request=request_obj,
+            inbound_request=request_obj,
+            hotel_map=hotel_map,
+            transport_map=transport_map,
+            guide_map=guide_map,
+            meal_map=meal_map,
+            global_hotel=global_hotel,
+            global_transport=global_transport,
+            global_guide=global_guide,
+            global_meal=global_meal,
+            restaurant_suppliers=restaurant_suppliers,
+            guide_suppliers=_guide_suppliers_for_itinerary_ui(),
+            itinerary_guide_slot_saved=_itinerary_guide_slot_saved_map(request_obj),
+            view_only=False
+        )
+    except Exception as e:
+        return '', 500
 
 @inbound_bp.route('/api/<int:request_id>/itinerary-summary-html', methods=['GET'])
 def api_get_itinerary_summary_html(request_id):
@@ -2159,29 +3553,55 @@ def api_get_itinerary_summary_html(request_id):
         request_obj = InboundRequest.query.get_or_404(request_id)
         rows = request_obj.itinerary_rows
 
-        # Build HTML rows for the summary table - only show rows with meal or restaurant, sorted by date
+        # Build HTML rows for the summary table - show ALL itinerary rows
         html_rows = []
         if rows:
-            # Sort rows by date and filter for meal/restaurant entries
-            sorted_rows = sorted([r for r in rows], key=lambda x: x.date or date(1900, 1, 1))
+            # Sort rows with parent-child relationships maintained
+            sorted_rows = sort_itinerary_rows_with_children(rows)
 
             for row in sorted_rows:
-                # Skip rows that have no meal_type AND no restaurant
-                if not row.meal_type and not row.restaurant_supplier_id:
-                    continue
+                # Extract PAX from comment field if it exists
+                pax_value = ''
+                if row.comment:
+                    try:
+                        comment_data = json.loads(row.comment)
+                        if comment_data.get('current_pax') is not None:
+                            pax_value = str(comment_data.get('current_pax'))
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+                
+                date_str = row.date.strftime('%d %b %Y') if row.date else '-'
+                description = escape(row.description) if row.description else '-'
+                note_value = ''
+                if row.comment:
+                    try:
+                        comment_data = json.loads(row.comment)
+                        note_value = escape(comment_data.get('note', '') or '')
+                    except (json.JSONDecodeError, TypeError):
+                        if row.comment.strip() and '{' not in (row.comment or ''):
+                            note_value = escape(row.comment) or ''
 
-                date_str = row.date.strftime('%d %b') if row.date else '-'
-                meal_type = escape(row.meal_type) if row.meal_type else '-'
-                restaurant = escape(row.restaurant_name) if row.restaurant_name else '-'
-                pax = request_obj.pax or 0
+                description_block = f'''
+                    <div class="flex flex-col gap-1">
+                        <div>{description}</div>
+                    </div>
+                '''
+                if note_value:
+                    description_block = f'''
+                        <div class="flex flex-col gap-1">
+                            <div>{description}</div>
+                            <div class="text-slate-600 border-t border-slate-200 pt-1" style="border-top: 1px solid #e2e8f0; padding-top: 0.25rem;">
+                                <i class="fas fa-sticky-note mr-1 text-amber-500"></i>{note_value}
+                            </div>
+                        </div>
+                    '''
 
                 html_rows.append(f'''
                     <tr class="hover:bg-gray-50" data-service-type="itinerary" data-record-id="{row.id}">
-                        <td class="border border-gray-300 px-2 py-1.5 text-center">{date_str}</td>
-                        <td class="border border-gray-300 px-2 py-1.5">{meal_type}</td>
-                        <td class="border border-gray-300 px-2 py-1.5 font-medium">{restaurant}</td>
-                        <td class="border border-gray-300 px-2 py-1.5 text-center">{pax}</td>
-                        <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                        <td class="text-center summary-date-col">{date_str}</td>
+                        <td>{description_block}</td>
+                        <td class="text-center summary-compact-col">{pax_value}</td>
+                        <td class="text-center summary-compact-col whitespace-nowrap print-hide-actions">
                             <div class="flex items-center justify-center gap-1">
                                 <button onclick="handleEditServiceRow('itinerary', {row.id})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
                                 <button onclick="handleRemoveServiceRow('itinerary', {row.id})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
@@ -2192,12 +3612,12 @@ def api_get_itinerary_summary_html(request_id):
             if html_rows:
                 return ''.join(html_rows)
             else:
-                return '<tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No meal/restaurant entries found</td></tr>'
+                return '<tr><td colspan="4" class="px-4 py-3 text-center text-gray-500">No itinerary rows added</td></tr>'
         else:
-            return '<tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No itinerary rows added</td></tr>'
+            return '<tr><td colspan="4" class="px-4 py-3 text-center text-gray-500">No itinerary rows added</td></tr>'
 
     except Exception as e:
-        return f'<tr><td colspan="6" class="text-center text-red-500">Error loading itinerary: {escape(str(e))}</td></tr>', 500
+        return f'<tr><td colspan="4" class="text-center text-red-500">Error loading itinerary: {escape(str(e))}</td></tr>', 500
 
 @inbound_bp.route('/api/<int:request_id>/itinerary-rows-bulk', methods=['POST'])
 def api_save_itinerary_rows_bulk(request_id):
@@ -2234,10 +3654,56 @@ def api_save_itinerary_rows_bulk(request_id):
                     row.restaurant_supplier_id = None
             else:
                 row.restaurant_supplier_id = None
+            
+            # Handle current_pax, status and note - store in comment field as JSON
+            current_pax = update.get('current_pax')
+            note_val = (update.get('note', '') or '').strip()
+            status_val = update.get('status', 'REQUEST')
+            if current_pax is not None or 'note' in update or 'status' in update:
+                try:
+                    comment_data = json.loads(row.comment) if row.comment else {}
+                except (json.JSONDecodeError, TypeError):
+                    comment_data = {}
+                try:
+                    if current_pax is not None:
+                        comment_data['current_pax'] = int(current_pax)
+                    comment_data['note'] = note_val
+                    comment_data['status'] = status_val
+                    row.comment = json.dumps(comment_data)
+                except (ValueError, TypeError):
+                    fallback = {}
+                    if current_pax is not None:
+                        fallback['current_pax'] = int(current_pax)
+                    fallback['note'] = note_val
+                    fallback['status'] = status_val
+                    row.comment = json.dumps(fallback)
+
+            raw_guides = update.get('itinerary_guide_supplier_ids')
+            if raw_guides is not None:
+                if isinstance(raw_guides, list):
+                    row.set_itinerary_guide_supplier_id_list(raw_guides)
+                elif isinstance(raw_guides, str):
+                    try:
+                        parsed = json.loads(raw_guides)
+                        row.set_itinerary_guide_supplier_id_list(parsed if isinstance(parsed, list) else [])
+                    except (json.JSONDecodeError, TypeError):
+                        row.set_itinerary_guide_supplier_id_list([])
+                else:
+                    row.set_itinerary_guide_supplier_id_list([])
 
         db.session.commit()
 
-        return jsonify({'success': True, 'message': 'Itinerary saved successfully'})
+        fresh_req = InboundRequest.query.filter_by(id=request_id).options(
+            selectinload(InboundRequest.inbound_guides),
+            selectinload(InboundRequest.itinerary_rows),
+        ).first()
+        slot_saved = _itinerary_guide_slot_saved_map(fresh_req) if fresh_req else {}
+
+        return jsonify({
+            'success': True,
+            'message': 'Itinerary saved successfully',
+            'itinerary_guide_slot_saved': slot_saved,
+        })
 
     except Exception as e:
         db.session.rollback()
@@ -2248,47 +3714,386 @@ def api_save_itinerary_rows_bulk(request_id):
 def api_add_hotel():
     """Add a new hotel to the suppliers list"""
     from app.models.supplier import Supplier
+
+    def _request_payload():
+        return request.get_json(silent=True) or request.form
+
+    def _save_contract_upload():
+        file = request.files.get('contract_file')
+        if not file or not file.filename:
+            return None
+        safe_name = secure_filename(file.filename)
+        upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'supplier_contracts')
+        os.makedirs(upload_dir, exist_ok=True)
+        stamped = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{safe_name}"
+        file.save(os.path.join(upload_dir, stamped))
+        return stamped
+
     try:
-        data = request.get_json()
+        data = _request_payload()
         hotel_name = data.get('name', '').strip()
-        hotel_city = data.get('city', 'Amman')
+        hotel_city = data.get('city', '').strip() or 'Amman'  # Default to Amman if empty
 
         if not hotel_name:
             return jsonify({'success': False, 'error': 'Hotel name is required'}), 400
 
-        # Check if hotel already exists
-        existing = Supplier.query.filter_by(name=hotel_name, supplier_type='HOTEL').first()
-        if existing:
-            return jsonify({'success': False, 'error': 'Hotel already exists'}), 400
+        # Check if hotel already exists (with timeout protection)
+        try:
+            existing = Supplier.query.filter(
+                Supplier.name == hotel_name,
+                Supplier.supplier_type == 'HOTEL'
+            ).first()
+            if existing:
+                return jsonify({'success': False, 'error': 'Hotel already exists'}), 400
+        except Exception as e:
+            print(f"[ERROR] Failed to check existing hotel: {e}")
+            # Continue anyway - worst case is duplicate
 
-        # Generate unique code
+        # Generate unique code (with timeout protection)
         import re
         city_code = re.sub(r'[^A-Z]', '', hotel_city.upper()[:3]) or 'OTH'
-        count = Supplier.query.filter(Supplier.code.like(f'HTL-{city_code}-%')).count()
-        new_code = f'HTL-{city_code}-{count + 1:03d}'
+        try:
+            # Check for existing codes with this pattern (limit query to prevent timeout)
+            count = Supplier.query.filter(Supplier.code.like(f'HTL-{city_code}-%')).limit(1000).count()
+            new_code = f'HTL-{city_code}-{count + 1:03d}'
 
-        # Create new supplier
+            # Ensure code is unique (in case of race condition) - limit iterations
+            max_iterations = 100
+            iteration = 0
+            while Supplier.query.filter_by(code=new_code).first() and iteration < max_iterations:
+                count += 1
+                new_code = f'HTL-{city_code}-{count + 1:03d}'
+                iteration += 1
+            
+            if iteration >= max_iterations:
+                # Fallback to timestamp-based code
+                import time
+                new_code = f'HTL-{city_code}-{int(time.time())}'
+        except Exception as e:
+            print(f"[ERROR] Failed to generate code: {e}")
+            # Fallback to timestamp-based code
+            import time
+            new_code = f'HTL-{city_code}-{int(time.time())}'
+
+        payment_terms = data.get('payment_terms', '').strip() or None
+        cliq_alias = data.get('cliq_alias', '').strip()
+        bank_name_val = ('Cliq' if payment_terms == 'Cliq' else (data.get('bank_name', '').strip() or None))
+        bank_account_val = (cliq_alias if payment_terms == 'Cliq' else (data.get('bank_account', '').strip() or None))
+        contract_file = _save_contract_upload()
+
+        # Create new supplier with all provided fields
+        # Use provided city or None if empty (don't use default 'Amman' for storage)
+        city_value = data.get('city', '').strip() or None
+        # Store category and room_category in notes field as JSON if provided
+        category = data.get('category', '').strip()
+        room_category = data.get('room_category', '').strip()
+        notes_value = data.get('notes', '').strip() or None
+        if category or room_category:
+            import json
+            notes_dict = {}
+            if notes_value:
+                notes_dict['original_notes'] = notes_value
+            if category:
+                notes_dict['category'] = category
+            if room_category:
+                notes_dict['room_category'] = room_category
+                # Also store in room_categories list for consistency with Room List fetching
+                default_categories = ['Standard Rooms', 'Junior Suites', 'Executive Suites', 'Presidential Suites']
+                if room_category not in default_categories:
+                    notes_dict['room_categories'] = [room_category]
+            if contract_file:
+                notes_dict['contract_file'] = contract_file
+            notes_value = json.dumps(notes_dict)
+        elif contract_file:
+            notes_value = json.dumps({'contract_file': contract_file})
+        
         new_hotel = Supplier(
             name=hotel_name,
             code=new_code,
             supplier_type='HOTEL',
-            city=hotel_city,
+            city=city_value,
+            country=data.get('country', '').strip() or None,
+            contact_person=data.get('contact_person', '').strip() or None,
+            email=data.get('email', '').strip() or None,
+            phone=data.get('phone', '').strip() or None,
+            website=data.get('website', '').strip() or None,
+            payment_terms=payment_terms,
+            default_currency=data.get('default_currency', 'USD') or 'USD',
+            address=data.get('address', '').strip() or None,
+            bank_name=bank_name_val,
+            bank_account=bank_account_val,
+            tax_number=data.get('tax_number', '').strip() or None,
+            notes=notes_value,
             is_active=True
         )
         db.session.add(new_hotel)
         db.session.commit()
+        _invalidate_supplier_dropdown_cache()
 
         return jsonify({
             'success': True,
             'hotel': {
                 'id': new_hotel.id,
                 'name': new_hotel.name,
-                'city': new_hotel.city
+                'city': new_hotel.city,
+                'category': category,  # Return category for immediate use
+                'room_category': room_category
             }
         })
 
     except Exception as e:
         db.session.rollback()
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@inbound_bp.route('/api/hotel/<int:supplier_id>/room-categories', methods=['GET'])
+@csrf.exempt
+def api_get_hotel_room_categories(supplier_id):
+    """Get room categories for a hotel supplier"""
+    from app.models.supplier import Supplier
+    import json
+    try:
+        supplier = Supplier.query.get_or_404(supplier_id)
+        default_categories = ['Standard Rooms', 'Junior Suites', 'Executive Suites', 'Presidential Suites']
+        custom_categories = []
+        
+        # Extract custom categories from supplier notes JSON
+        if supplier.notes:
+            try:
+                notes_dict = json.loads(supplier.notes)
+                # Read from room_categories (list) - added via + button
+                custom_categories = notes_dict.get('room_categories', [])
+                # Also read from room_category (singular string) - added via Add Hotel modal
+                single_cat = notes_dict.get('room_category', '')
+                if single_cat and single_cat not in custom_categories and single_cat not in default_categories:
+                    custom_categories.append(single_cat)
+            except (json.JSONDecodeError, TypeError):
+                pass
+        
+        # Also scan existing hotel rooms for any categories in use (catches categories
+        # that were saved to rooms but might not be in the supplier notes)
+        try:
+            hotels = InboundHotel.query.filter_by(hotel_name=supplier.name).all()
+            for hotel in hotels:
+                for room in hotel.rooms:
+                    if room.room_category and room.room_category not in custom_categories and room.room_category not in default_categories:
+                        custom_categories.append(room.room_category)
+        except Exception:
+            pass  # Non-critical; don't fail the whole request
+        
+        # Merge defaults + custom, preserving order and uniqueness
+        all_categories = list(default_categories)
+        for cat in custom_categories:
+            if cat not in all_categories:
+                all_categories.append(cat)
+        
+        return jsonify({'success': True, 'categories': all_categories})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@inbound_bp.route('/api/hotel/<int:supplier_id>/room-categories', methods=['POST'])
+@csrf.exempt
+def api_add_hotel_room_category(supplier_id):
+    """Add a custom room category for a hotel supplier"""
+    from app.models.supplier import Supplier
+    import json
+    try:
+        supplier = Supplier.query.get_or_404(supplier_id)
+        data = request.get_json()
+        new_category = data.get('category', '').strip()
+        
+        if not new_category:
+            return jsonify({'success': False, 'error': 'Category name is required'}), 400
+        
+        # Parse existing notes
+        notes_dict = {}
+        if supplier.notes:
+            try:
+                notes_dict = json.loads(supplier.notes)
+            except (json.JSONDecodeError, TypeError):
+                notes_dict = {'original_notes': supplier.notes}
+        
+        # Add to custom room_categories list
+        room_categories = notes_dict.get('room_categories', [])
+        default_categories = ['Standard Rooms', 'Junior Suites', 'Executive Suites', 'Presidential Suites']
+        
+        if new_category in room_categories or new_category in default_categories:
+            return jsonify({'success': False, 'error': 'Category already exists'}), 400
+        
+        room_categories.append(new_category)
+        notes_dict['room_categories'] = room_categories
+        supplier.notes = json.dumps(notes_dict)
+        db.session.commit()
+        
+        # Return full list
+        all_categories = list(default_categories)
+        for cat in room_categories:
+            if cat not in all_categories:
+                all_categories.append(cat)
+        
+        return jsonify({'success': True, 'categories': all_categories})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@inbound_bp.route('/api/hotel/room-categories/global', methods=['GET'])
+@csrf.exempt
+def api_get_global_hotel_room_categories():
+    """Get globally shared room categories across browsers/devices."""
+    default_categories = ['Standard Rooms', 'Junior Suites', 'Executive Suites', 'Presidential Suites']
+    try:
+        global_path = os.path.join(current_app.instance_path, 'global_room_categories.json')
+        categories = []
+        if os.path.exists(global_path):
+            try:
+                with open(global_path, 'r', encoding='utf-8') as f:
+                    parsed = json.load(f)
+                if isinstance(parsed, list):
+                    categories = [str(v).strip() for v in parsed if str(v).strip()]
+            except Exception:
+                categories = []
+        merged = list(default_categories)
+        for cat in categories:
+            if cat not in merged:
+                merged.append(cat)
+        return jsonify({'success': True, 'categories': merged})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@inbound_bp.route('/api/hotel/room-categories/global', methods=['POST'])
+@csrf.exempt
+def api_add_global_hotel_room_category():
+    """Persist a global room category shared by all browsers/devices."""
+    default_categories = ['Standard Rooms', 'Junior Suites', 'Executive Suites', 'Presidential Suites']
+    try:
+        data = request.get_json(silent=True) or {}
+        new_category = str(data.get('category', '')).strip()
+        if not new_category:
+            return jsonify({'success': False, 'error': 'Category name is required'}), 400
+
+        global_path = os.path.join(current_app.instance_path, 'global_room_categories.json')
+        os.makedirs(current_app.instance_path, exist_ok=True)
+
+        categories = []
+        if os.path.exists(global_path):
+            try:
+                with open(global_path, 'r', encoding='utf-8') as f:
+                    parsed = json.load(f)
+                if isinstance(parsed, list):
+                    categories = [str(v).strip() for v in parsed if str(v).strip()]
+            except Exception:
+                categories = []
+
+        all_existing = default_categories + categories
+        if any(c.lower() == new_category.lower() for c in all_existing):
+            merged_existing = list(default_categories)
+            for cat in categories:
+                if cat not in merged_existing:
+                    merged_existing.append(cat)
+            return jsonify({'success': True, 'categories': merged_existing})
+
+        categories.append(new_category)
+        unique = []
+        for cat in categories:
+            if not any(x.lower() == cat.lower() for x in unique):
+                unique.append(cat)
+
+        with open(global_path, 'w', encoding='utf-8') as f:
+            json.dump(unique, f, ensure_ascii=False)
+
+        merged = list(default_categories)
+        for cat in unique:
+            if cat not in merged:
+                merged.append(cat)
+        return jsonify({'success': True, 'categories': merged})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@inbound_bp.route('/api/supplier-option-values/global', methods=['GET'])
+@csrf.exempt
+def api_get_global_supplier_option_values():
+    """Return globally shared custom select values by field key."""
+    try:
+        key = str(request.args.get('key', '')).strip()
+        if not key:
+            return jsonify({'success': False, 'error': 'key is required'}), 400
+
+        global_path = os.path.join(current_app.instance_path, 'global_supplier_option_values.json')
+        values_map = {}
+        if os.path.exists(global_path):
+            try:
+                with open(global_path, 'r', encoding='utf-8') as f:
+                    parsed = json.load(f)
+                if isinstance(parsed, dict):
+                    values_map = parsed
+            except Exception:
+                values_map = {}
+
+        values = values_map.get(key, [])
+        if not isinstance(values, list):
+            values = []
+        cleaned = [str(v).strip() for v in values if str(v).strip()]
+        return jsonify({'success': True, 'values': cleaned})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@inbound_bp.route('/api/supplier-option-values/global', methods=['POST'])
+@csrf.exempt
+def api_add_global_supplier_option_value():
+    """Persist a globally shared custom select value by field key."""
+    try:
+        payload = request.get_json(silent=True) or {}
+        key = str(payload.get('key', '')).strip()
+        value = str(payload.get('value', '')).strip()
+        if not key or not value:
+            return jsonify({'success': False, 'error': 'key and value are required'}), 400
+
+        global_path = os.path.join(current_app.instance_path, 'global_supplier_option_values.json')
+        os.makedirs(current_app.instance_path, exist_ok=True)
+
+        values_map = {}
+        if os.path.exists(global_path):
+            try:
+                with open(global_path, 'r', encoding='utf-8') as f:
+                    parsed = json.load(f)
+                if isinstance(parsed, dict):
+                    values_map = parsed
+            except Exception:
+                values_map = {}
+
+        existing = values_map.get(key, [])
+        if not isinstance(existing, list):
+            existing = []
+        existing_clean = [str(v).strip() for v in existing if str(v).strip()]
+
+        if not any(v.lower() == value.lower() for v in existing_clean):
+            existing_clean.append(value)
+        values_map[key] = existing_clean
+
+        with open(global_path, 'w', encoding='utf-8') as f:
+            json.dump(values_map, f, ensure_ascii=False)
+
+        return jsonify({'success': True, 'values': existing_clean})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@inbound_bp.route('/api/supplier/<int:supplier_id>', methods=['GET'])
+@csrf.exempt
+def api_get_supplier(supplier_id):
+    """Get supplier details by ID"""
+    from app.models.supplier import Supplier
+    try:
+        supplier = Supplier.query.get_or_404(supplier_id)
+        return jsonify({
+            'success': True,
+            'supplier': {
+                'id': supplier.id,
+                'name': supplier.name,
+                'notes': supplier.notes
+            }
+        })
+    except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @inbound_bp.route('/api/add-guide', methods=['POST'])
@@ -2296,10 +4101,24 @@ def api_add_hotel():
 def api_add_guide():
     """Add a new guide to the suppliers list"""
     from app.models.supplier import Supplier
+
+    def _request_payload():
+        return request.get_json(silent=True) or request.form
+
+    def _save_contract_upload():
+        file = request.files.get('contract_file')
+        if not file or not file.filename:
+            return None
+        safe_name = secure_filename(file.filename)
+        upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'supplier_contracts')
+        os.makedirs(upload_dir, exist_ok=True)
+        stamped = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{safe_name}"
+        file.save(os.path.join(upload_dir, stamped))
+        return stamped
+
     try:
-        data = request.get_json()
+        data = _request_payload()
         guide_name = data.get('name', '').strip()
-        guide_phone = data.get('phone', '').strip()
 
         if not guide_name:
             return jsonify({'success': False, 'error': 'Guide name is required'}), 400
@@ -2313,16 +4132,42 @@ def api_add_guide():
         count = Supplier.query.filter(Supplier.code.like('GDE-%')).count()
         new_code = f'GDE-{count + 1:03d}'
 
-        # Create new supplier
+        # Validate languages (mandatory for guides)
+        languages = data.get('languages', '').strip()
+        if not languages:
+            return jsonify({'success': False, 'error': 'At least one language is required'}), 400
+        
+        payment_terms = data.get('payment_terms', '').strip() or None
+        cliq_alias = data.get('cliq_alias', '').strip()
+        bank_name_val = ('Cliq' if payment_terms == 'Cliq' else (data.get('bank_name', '').strip() or None))
+        bank_account_val = (cliq_alias if payment_terms == 'Cliq' else (data.get('bank_account', '').strip() or None))
+        contract_file = _save_contract_upload()
+        notes_value = data.get('notes', '').strip() or ''
+        if contract_file:
+            notes_value = f"Contract file: {contract_file}\n{notes_value}".strip()
+
+        # Create new supplier with all provided fields
         new_guide = Supplier(
             name=guide_name,
             code=new_code,
             supplier_type='GUIDE',
-            phone=guide_phone,
+            languages=languages,  # Store comma-separated languages
+            phone=data.get('phone', '').strip() or None,
+            email=data.get('email', '').strip() or None,
+            city=data.get('city', '').strip() or None,
+            country=data.get('country', '').strip() or None,
+            payment_terms=payment_terms,
+            default_currency=data.get('default_currency', 'USD') or 'USD',
+            address=data.get('address', '').strip() or None,
+            bank_name=bank_name_val,
+            bank_account=bank_account_val,
+            tax_number=data.get('tax_number', '').strip() or None,
+            notes=notes_value or None,
             is_active=True
         )
         db.session.add(new_guide)
         db.session.commit()
+        _invalidate_supplier_dropdown_cache()
 
         return jsonify({
             'success': True,
@@ -2330,7 +4175,20 @@ def api_add_guide():
             'guide': {
                 'id': new_guide.id,
                 'name': new_guide.name,
-                'phone': new_guide.phone
+                'languages': new_guide.languages,
+                'phone': new_guide.phone,
+                'email': new_guide.email,
+                'contact_person': new_guide.contact_person,
+                'website': new_guide.website,
+                'address': new_guide.address,
+                'city': new_guide.city,
+                'country': new_guide.country,
+                'payment_terms': new_guide.payment_terms,
+                'default_currency': new_guide.default_currency,
+                'bank_name': new_guide.bank_name,
+                'bank_account': new_guide.bank_account,
+                'tax_number': new_guide.tax_number,
+                'notes': new_guide.notes,
             }
         })
 
@@ -2343,10 +4201,24 @@ def api_add_guide():
 def api_add_restaurant():
     """Add a new restaurant to the suppliers list"""
     from app.models.supplier import Supplier
+
+    def _request_payload():
+        return request.get_json(silent=True) or request.form
+
+    def _save_contract_upload():
+        file = request.files.get('contract_file')
+        if not file or not file.filename:
+            return None
+        safe_name = secure_filename(file.filename)
+        upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'supplier_contracts')
+        os.makedirs(upload_dir, exist_ok=True)
+        stamped = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{safe_name}"
+        file.save(os.path.join(upload_dir, stamped))
+        return stamped
+
     try:
-        data = request.get_json()
+        data = _request_payload()
         restaurant_name = data.get('name', '').strip()
-        restaurant_location = data.get('location', '').strip()
 
         if not restaurant_name:
             return jsonify({'success': False, 'error': 'Restaurant name is required'}), 400
@@ -2360,16 +4232,38 @@ def api_add_restaurant():
         count = Supplier.query.filter(Supplier.code.like('RST-%')).count()
         new_code = f'RST-{count + 1:03d}'
 
-        # Create new supplier
+        payment_terms = data.get('payment_terms', '').strip() or None
+        cliq_alias = data.get('cliq_alias', '').strip()
+        bank_name_val = ('Cliq' if payment_terms == 'Cliq' else (data.get('bank_name', '').strip() or None))
+        bank_account_val = (cliq_alias if payment_terms == 'Cliq' else (data.get('bank_account', '').strip() or None))
+        contract_file = _save_contract_upload()
+        notes_value = data.get('notes', '').strip() or ''
+        if contract_file:
+            notes_value = f"Contract file: {contract_file}\n{notes_value}".strip()
+
+        # Create new supplier with all provided fields
         new_restaurant = Supplier(
             name=restaurant_name,
             code=new_code,
             supplier_type='RESTAURANT',
-            address=restaurant_location,
+            address=data.get('address', '').strip() or data.get('location', '').strip() or None,
+            city=data.get('city', '').strip() or None,
+            country=data.get('country', '').strip() or None,
+            contact_person=data.get('contact_person', '').strip() or None,
+            email=data.get('email', '').strip() or None,
+            phone=data.get('phone', '').strip() or None,
+            website=data.get('website', '').strip() or None,
+            payment_terms=payment_terms,
+            default_currency=data.get('default_currency', 'USD') or 'USD',
+            bank_name=bank_name_val,
+            bank_account=bank_account_val,
+            tax_number=data.get('tax_number', '').strip() or None,
+            notes=notes_value or None,
             is_active=True
         )
         db.session.add(new_restaurant)
         db.session.commit()
+        _invalidate_supplier_dropdown_cache()
 
         return jsonify({
             'success': True,
@@ -2390,10 +4284,24 @@ def api_add_restaurant():
 def api_add_transport():
     """Add a new transport supplier to the suppliers list"""
     from app.models.supplier import Supplier
+
+    def _request_payload():
+        return request.get_json(silent=True) or request.form
+
+    def _save_contract_upload():
+        file = request.files.get('contract_file')
+        if not file or not file.filename:
+            return None
+        safe_name = secure_filename(file.filename)
+        upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'supplier_contracts')
+        os.makedirs(upload_dir, exist_ok=True)
+        stamped = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{safe_name}"
+        file.save(os.path.join(upload_dir, stamped))
+        return stamped
+
     try:
-        data = request.get_json()
+        data = _request_payload()
         transport_name = data.get('name', '').strip()
-        transport_phone = data.get('phone', '').strip()
 
         if not transport_name:
             return jsonify({'success': False, 'error': 'Supplier name is required'}), 400
@@ -2407,16 +4315,38 @@ def api_add_transport():
         count = Supplier.query.filter(Supplier.code.like('TRN-%')).count()
         new_code = f'TRN-{count + 1:03d}'
 
-        # Create new supplier
+        payment_terms = data.get('payment_terms', '').strip() or None
+        cliq_alias = data.get('cliq_alias', '').strip()
+        bank_name_val = ('Cliq' if payment_terms == 'Cliq' else (data.get('bank_name', '').strip() or None))
+        bank_account_val = (cliq_alias if payment_terms == 'Cliq' else (data.get('bank_account', '').strip() or None))
+        contract_file = _save_contract_upload()
+        notes_value = data.get('notes', '').strip() or ''
+        if contract_file:
+            notes_value = f"Contract file: {contract_file}\n{notes_value}".strip()
+
+        # Create new supplier with all provided fields
         new_transport = Supplier(
             name=transport_name,
             code=new_code,
             supplier_type='TRANSPORT',
-            phone=transport_phone,
+            phone=data.get('phone', '').strip() or None,
+            contact_person=data.get('contact_person', '').strip() or None,
+            email=data.get('email', '').strip() or None,
+            website=data.get('website', '').strip() or None,
+            city=data.get('city', '').strip() or None,
+            country=data.get('country', '').strip() or None,
+            payment_terms=payment_terms,
+            default_currency=data.get('default_currency', 'USD') or 'USD',
+            address=data.get('address', '').strip() or None,
+            bank_name=bank_name_val,
+            bank_account=bank_account_val,
+            tax_number=data.get('tax_number', '').strip() or None,
+            notes=notes_value or None,
             is_active=True
         )
         db.session.add(new_transport)
         db.session.commit()
+        _invalidate_supplier_dropdown_cache()
 
         return jsonify({
             'success': True,
@@ -2425,6 +4355,92 @@ def api_add_transport():
                 'id': new_transport.id,
                 'name': new_transport.name,
                 'phone': new_transport.phone
+            }
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@inbound_bp.route('/api/add-ground-handler', methods=['POST'])
+@csrf.exempt
+def api_add_ground_handler():
+    """Add a new ground handler supplier to the suppliers list"""
+    from app.models.supplier import Supplier
+
+    def _request_payload():
+        return request.get_json(silent=True) or request.form
+
+    def _save_contract_upload():
+        file = request.files.get('contract_file')
+        if not file or not file.filename:
+            return None
+        safe_name = secure_filename(file.filename)
+        upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'supplier_contracts')
+        os.makedirs(upload_dir, exist_ok=True)
+        stamped = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{safe_name}"
+        file.save(os.path.join(upload_dir, stamped))
+        return stamped
+
+    try:
+        data = _request_payload()
+        supplier_name = data.get('name', '').strip()
+
+        if not supplier_name:
+            return jsonify({'success': False, 'error': 'Supplier name is required'}), 400
+
+        # Check if ground handler supplier already exists
+        existing = Supplier.query.filter_by(name=supplier_name, supplier_type='GROUND_HANDLER').first()
+        if existing:
+            return jsonify({'success': False, 'error': 'Ground handler supplier already exists'}), 400
+
+        # Generate unique code
+        count = Supplier.query.filter(Supplier.code.like('GHD-%')).count()
+        new_code = f'GHD-{count + 1:03d}'
+
+        languages_val = data.get('languages', '').strip() or None
+
+        payment_terms = data.get('payment_terms', '').strip() or None
+        cliq_alias = data.get('cliq_alias', '').strip()
+        bank_name_val = ('Cliq' if payment_terms == 'Cliq' else (data.get('bank_name', '').strip() or None))
+        bank_account_val = (cliq_alias if payment_terms == 'Cliq' else (data.get('bank_account', '').strip() or None))
+        contract_file = _save_contract_upload()
+        notes_value = data.get('notes', '').strip() or ''
+        if contract_file:
+            notes_value = f"Contract file: {contract_file}\n{notes_value}".strip()
+
+        # Create new supplier with all provided fields
+        new_supplier = Supplier(
+            name=supplier_name,
+            code=new_code,
+            supplier_type='GROUND_HANDLER',
+            languages=languages_val,
+            phone=data.get('phone', '').strip() or None,
+            contact_person=data.get('contact_person', '').strip() or None,
+            email=data.get('email', '').strip() or None,
+            website=data.get('website', '').strip() or None,
+            city=data.get('city', '').strip() or None,
+            country=data.get('country', '').strip() or None,
+            payment_terms=payment_terms,
+            default_currency=data.get('default_currency', 'USD') or 'USD',
+            address=data.get('address', '').strip() or None,
+            bank_name=bank_name_val,
+            bank_account=bank_account_val,
+            tax_number=data.get('tax_number', '').strip() or None,
+            notes=notes_value or None,
+            is_active=True
+        )
+        db.session.add(new_supplier)
+        db.session.commit()
+        _invalidate_supplier_dropdown_cache()
+
+        return jsonify({
+            'success': True,
+            'supplier_id': new_supplier.id,
+            'supplier': {
+                'id': new_supplier.id,
+                'name': new_supplier.name,
+                'phone': new_supplier.phone
             }
         })
 
@@ -2457,6 +4473,7 @@ def api_save_hotel_rooms(hotel_id):
                 # Update existing room
                 room = existing_rooms[room_id]
                 room.room_type = room_data.get('room_type', room.room_type)
+                room.room_category = room_data.get('room_category', '')
                 room.room_option = room_data.get('room_option', '')
                 room.board_basis = room_data.get('board_basis', 'BB')
                 room.dietary_requirements = room_data.get('dietary_requirements', '')
@@ -2470,6 +4487,7 @@ def api_save_hotel_rooms(hotel_id):
                     hotel_id=hotel_id,
                     room_type=room_data.get('room_type', 'Single'),
                     room_count=1,
+                    room_category=room_data.get('room_category', ''),
                     room_option=room_data.get('room_option', ''),
                     board_basis=room_data.get('board_basis', 'BB'),
                     dietary_requirements=room_data.get('dietary_requirements', ''),
@@ -2522,6 +4540,8 @@ def api_delete_service(request_id):
             service = InboundHotel.query.filter_by(id=service_id, request_id=request_id).first()
         elif service_type == 'transport':
             service = InboundTransport.query.filter_by(id=service_id, request_id=request_id).first()
+            if service:
+                _detach_individual_transport_from_batch(service)
         elif service_type == 'guide':
             service = InboundGuide.query.filter_by(id=service_id, request_id=request_id).first()
         elif service_type == 'meal':
@@ -2530,6 +4550,18 @@ def api_delete_service(request_id):
             return jsonify({'success': False, 'error': f'Unknown service type: {service_type}'}), 400
 
         if service:
+            if service_type == 'guide':
+                g = cast(InboundGuide, service)
+                if g.source_itinerary_id and g.supplier_id:
+                    it_row = ItineraryRow.query.filter_by(
+                        id=g.source_itinerary_id, request_id=request_id
+                    ).first()
+                    if it_row:
+                        cur = itinerary_row_guide_supplier_id_list(it_row)
+                        if g.supplier_id in cur:
+                            it_row.set_itinerary_guide_supplier_id_list(
+                                [i for i in cur if i != g.supplier_id]
+                            )
             db.session.delete(service)
             db.session.commit()
 
@@ -2540,7 +4572,9 @@ def api_delete_service(request_id):
                 selectinload(InboundRequest.inbound_transports),
                 selectinload(InboundRequest.inbound_guides),
                 selectinload(InboundRequest.inbound_meals),
-                selectinload(InboundRequest.itinerary_rows)
+                selectinload(InboundRequest.itinerary_rows),
+                selectinload(InboundRequest.arrival_batches),
+                selectinload(InboundRequest.departure_batches)
             ).get(request_id)
 
             # Build service lookup maps for template
@@ -2550,9 +4584,14 @@ def api_delete_service(request_id):
             meal_map = {m.source_itinerary_id: m for m in fresh_request.inbound_meals}
 
             # Render updated HTML partials for instant DOM update
+            sorted_itin = sort_itinerary_rows_with_children(fresh_request.itinerary_rows)
             itinerary_html = render_template(
                 'components/itinerary_rows.html',
-                rows=fresh_request.itinerary_rows,
+                rows=sorted_itin,
+                request=fresh_request,
+                inbound_request=fresh_request,
+                guide_suppliers=_guide_suppliers_for_itinerary_ui(),
+                itinerary_guide_slot_saved=_itinerary_guide_slot_saved_map(fresh_request),
                 view_only=False,
                 hotel_map=hotel_map,
                 transport_map=transport_map,
@@ -2593,6 +4632,7 @@ def api_get_service_record(request_id, service_type, record_id):
         if service_type == 'arrival':
             record = ArrivalBatch.query.filter_by(id=record_id, request_id=request_id).first()
             if record:
+                nt = getattr(record, 'needs_transport', None)
                 record_data = {
                     'id': record.id,
                     'arrival_date': record.arrival_date.strftime('%Y-%m-%d') if record.arrival_date else '',
@@ -2604,12 +4644,15 @@ def api_get_service_record(request_id, service_type, record_id):
                     'visa_status': record.visa_status or '',
                     'meet_assist': record.meet_assist or False,
                     'representative_name': record.representative_name or '',
-                    'supplier_id': record.supplier_id
+                    'notes': getattr(record, 'notes', '') or '',
+                    'supplier_id': record.supplier_id,
+                    'needs_transport': True if nt is None else bool(nt),
                 }
 
         elif service_type == 'departure':
             record = DepartureBatch.query.filter_by(id=record_id, request_id=request_id).first()
             if record:
+                nt = getattr(record, 'needs_transport', None)
                 record_data = {
                     'id': record.id,
                     'departure_date': record.departure_date.strftime('%Y-%m-%d') if record.departure_date else '',
@@ -2620,12 +4663,17 @@ def api_get_service_record(request_id, service_type, record_id):
                     'departure_tax': record.departure_tax or '',
                     'meet_assist': record.meet_assist or False,
                     'representative_name': record.representative_name or '',
-                    'supplier_id': record.supplier_id
+                    'notes': getattr(record, 'notes', '') or '',
+                    'supplier_id': record.supplier_id,
+                    'needs_transport': True if nt is None else bool(nt),
                 }
 
         elif service_type == 'hotel':
             record = InboundHotel.query.filter_by(id=record_id, request_id=request_id).first()
             if record:
+                confirmation = ''
+                if record.rooms:
+                    confirmation = (record.rooms[0].confirmation or '').strip()
                 record_data = {
                     'id': record.id,
                     'hotel_name': record.hotel_name or '',
@@ -2638,7 +4686,8 @@ def api_get_service_record(request_id, service_type, record_id):
                     'single_rooms': record.single_rooms or 0,
                     'double_rooms': record.double_rooms or 0,
                     'triple_rooms': record.triple_rooms or 0,
-                    'notes': record.notes or ''
+                    'notes': record.notes or '',
+                    'hotel_confirmation_number': confirmation
                 }
 
         elif service_type == 'transport':
@@ -2646,6 +4695,7 @@ def api_get_service_record(request_id, service_type, record_id):
             if record:
                 # Use end_date for to_date if it exists, otherwise use date
                 to_date = record.end_date if record.end_date else record.date
+                pending_fill = _is_individual_transport_from_flight(record) and not _transport_flight_stub_complete(record)
                 record_data = {
                     'id': record.id,
                     'service_date': record.date.strftime('%Y-%m-%d') if record.date else '',
@@ -2656,8 +4706,14 @@ def api_get_service_record(request_id, service_type, record_id):
                     'drop_off_point': record.dropoff_location or '',
                     'driver_name': record.driver_name or '',
                     'driver_phone': record.driver_phone or '',
+                    'transport_notes': record.note or '',
                     'status': record.status or 'REQUESTED',
-                    'supplier_id': record.supplier_id
+                    'supplier_id': record.supplier_id,
+                    'cost': float(record.cost) if record.cost is not None else 0,
+                    'currency': record.currency or 'JOD',
+                    'pending_transport_fill': pending_fill,
+                    'source_arrival_batch_id': record.source_arrival_batch_id,
+                    'source_departure_batch_id': record.source_departure_batch_id,
                 }
 
         elif service_type == 'guide':
@@ -2673,7 +4729,12 @@ def api_get_service_record(request_id, service_type, record_id):
                     'guide_name': record.guide_name or '',
                     'language': record.language or '',
                     'telephone': record.telephone_number or '',
-                    'supplier_id': record.supplier_id
+                    'guide_notes': record.additional_comments or '',
+                    'supplier_id': record.supplier_id,
+                    'status': record.status or 'REQUESTED',
+                    'source_itinerary_id': record.source_itinerary_id,
+                    'guide_cost': float(record.cost) if record.cost is not None else 0,
+                    'guide_cost_currency': record.currency or 'JOD',
                 }
 
         elif service_type == 'meal':
@@ -2683,11 +4744,14 @@ def api_get_service_record(request_id, service_type, record_id):
                     'id': record.id,
                     'service_date': record.date.strftime('%Y-%m-%d') if record.date else '',
                     'from_date': record.date.strftime('%Y-%m-%d') if record.date else '',
-                    'to_date': record.date.strftime('%Y-%m-%d') if record.date else '',
                     'meal_type': record.meal_type or '',
-                    'restaurant_name': record.restaurant_name or '',
+                    'meal_status': record.status or 'REQUESTED',
+                    'meal_cost': record.total_cost,
+                    'meal_cost_currency': record.currency or 'JOD',
+                    'restaurant_name': (record.supplier_ref.name if record.supplier_ref else None) or record.restaurant or '',
                     'location': record.location or '',
-                    'pax_count': record.pax_count or 0,
+                    'meal_notes': record.meal_note or '',
+                    'pax_count': getattr(record, 'pax_count', None) or 0,
                     'supplier_id': record.supplier_id
                 }
 
@@ -2728,8 +4792,14 @@ def api_delete_service_record(request_id, service_type, record_id):
         service = None
 
         if service_type == 'arrival':
+            InboundTransport.query.filter_by(
+                request_id=request_id, source_arrival_batch_id=record_id
+            ).delete(synchronize_session=False)
             service = ArrivalBatch.query.filter_by(id=record_id, request_id=request_id).first()
         elif service_type == 'departure':
+            InboundTransport.query.filter_by(
+                request_id=request_id, source_departure_batch_id=record_id
+            ).delete(synchronize_session=False)
             service = DepartureBatch.query.filter_by(id=record_id, request_id=request_id).first()
         elif service_type == 'hotel':
             service = InboundHotel.query.filter_by(id=record_id, request_id=request_id).first()
@@ -2738,6 +4808,8 @@ def api_delete_service_record(request_id, service_type, record_id):
                 HotelRoom.query.filter_by(hotel_id=record_id).delete()
         elif service_type == 'transport':
             service = InboundTransport.query.filter_by(id=record_id, request_id=request_id).first()
+            if service:
+                _detach_individual_transport_from_batch(service)
         elif service_type == 'guide':
             service = InboundGuide.query.filter_by(id=record_id, request_id=request_id).first()
         elif service_type == 'meal':
@@ -2748,6 +4820,18 @@ def api_delete_service_record(request_id, service_type, record_id):
             return jsonify({'success': False, 'error': f'Unknown service type: {service_type}'}), 400
 
         if service:
+            if service_type == 'guide':
+                g = cast(InboundGuide, service)
+                if g.source_itinerary_id and g.supplier_id:
+                    it_row = ItineraryRow.query.filter_by(
+                        id=g.source_itinerary_id, request_id=request_id
+                    ).first()
+                    if it_row:
+                        cur = itinerary_row_guide_supplier_id_list(it_row)
+                        if g.supplier_id in cur:
+                            it_row.set_itinerary_guide_supplier_id_list(
+                                [i for i in cur if i != g.supplier_id]
+                            )
             db.session.delete(service)
             db.session.commit()
             return jsonify({
@@ -2915,6 +4999,7 @@ def api_submit_request(request_id):
             request_obj.status = 'CONFIRMED'
         elif target_status == 'INVOICED':
             request_obj.status = 'INVOICED'
+            request_obj.pending_invoice_queue = False
 
             # Automatically create invoice record when status changes to INVOICED
             from app.models.invoice import Invoice
@@ -3124,7 +5209,101 @@ def generate_invoice(request_id):
     if request_obj.status == STATUS_REQUEST:
         abort(400, 'Cannot generate invoice for request status')
 
-    return render_template('inbound/invoice.html', request=request_obj)
+    try:
+        saved_admin = json.loads(request_obj.admin_invoice_data) if request_obj.admin_invoice_data else None
+    except (TypeError, ValueError):
+        saved_admin = None
+    return render_template('inbound/invoice.html', request=request_obj, saved_admin_invoice=saved_admin)
+
+@inbound_bp.route('/<int:request_id>/customer-invoice')
+def customer_invoice(request_id):
+    """Generate customer-facing invoice (Windows of Jordan format)"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    if request_obj.user_id != 1:
+        abort(403)
+    if request_obj.status == STATUS_REQUEST:
+        abort(400, 'Cannot generate invoice for request status')
+    # Build rooms summary: e.g. "1 Dbl & 1 Single on BB"
+    rooms_parts = []
+    board = "BB"
+    for h in request_obj.inbound_hotels:
+        if h.meal_plan:
+            board = h.meal_plan
+        for r in h.rooms:
+            if r.room_type == "SINGLE" and r.room_count:
+                rooms_parts.append(f"{r.room_count} Single")
+            elif r.room_type == "DOUBLE" and r.room_count:
+                rooms_parts.append(f"{r.room_count} Dbl")
+            elif r.room_type == "TRIPLE" and r.room_count:
+                rooms_parts.append(f"{r.room_count} Triple")
+        if not h.rooms and (h.single_rooms or h.double_rooms or h.triple_rooms):
+            if h.single_rooms:
+                rooms_parts.append(f"{h.single_rooms} Single")
+            if h.double_rooms:
+                rooms_parts.append(f"{h.double_rooms} Dbl")
+            if h.triple_rooms:
+                rooms_parts.append(f"{h.triple_rooms} Triple")
+    rooms_display = " & ".join(rooms_parts) + f" on {board}" if rooms_parts else "TBA"
+    # Tour ref display: first itinerary description if short, else "X Days" or document_sequence
+    tour_ref_display = None
+    if request_obj.itinerary_rows:
+        first_desc = request_obj.itinerary_rows[0].description or ''
+        if first_desc and len(first_desc) <= 60:
+            tour_ref_display = first_desc
+    if not tour_ref_display and request_obj.no_of_days:
+        tour_ref_display = f"{request_obj.no_of_days} Days"
+    try:
+        saved_customer = json.loads(request_obj.customer_invoice_data) if request_obj.customer_invoice_data else None
+    except (TypeError, ValueError):
+        saved_customer = None
+    return render_template('inbound/customer_invoice.html', request=request_obj, rooms_display=rooms_display, tour_ref_display=tour_ref_display, saved_customer_invoice=saved_customer)
+
+@inbound_bp.route('/<int:request_id>/save-admin-invoice', methods=['POST'])
+@csrf.exempt
+def save_admin_invoice(request_id):
+    """Save editable admin invoice content as JSON"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    if request_obj.user_id != 1:
+        abort(403)
+    data = request.get_json(silent=True) or {}
+    request_obj.admin_invoice_data = json.dumps(data) if data else None
+    db.session.commit()
+    return jsonify({'ok': True})
+
+@inbound_bp.route('/<int:request_id>/save-customer-invoice', methods=['POST'])
+@csrf.exempt
+def save_customer_invoice(request_id):
+    """Save editable customer invoice content as JSON"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    if request_obj.user_id != 1:
+        abort(403)
+    data = request.get_json(silent=True) or {}
+    request_obj.customer_invoice_data = json.dumps(data) if data else None
+    db.session.commit()
+    return jsonify({'ok': True})
+
+@inbound_bp.route('/<int:id>/hotel-voucher')
+def generate_hotel_voucher(id):
+    """Generate hotel services voucher for the request (print layout)"""
+    request_obj = InboundRequest.query.get_or_404(id)
+    if request_obj.user_id != 1:
+        abort(403)
+    # Show only when request status is confirmed (CONFIRMED, SUPPLIER_CONFIRMED, QUOTED, etc.)
+    confirmed_statuses = ['CONFIRMED', 'SUPPLIER_CONFIRMED', 'QUOTED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS', 'INVOICE', 'COMPLETED', 'INVOICED']
+    if request_obj.status not in confirmed_statuses:
+        abort(400, 'Hotel voucher is only available when request is confirmed')
+    return render_template('inbound/hotel_voucher.html', request=request_obj)
+
+@inbound_bp.route('/<int:id>/restaurant-voucher')
+def generate_restaurant_voucher(id):
+    """Generate restaurant services voucher for the request (print layout)"""
+    request_obj = InboundRequest.query.get_or_404(id)
+    if request_obj.user_id != 1:
+        abort(403)
+    confirmed_statuses = ['CONFIRMED', 'SUPPLIER_CONFIRMED', 'QUOTED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS', 'INVOICE', 'COMPLETED', 'INVOICED']
+    if request_obj.status not in confirmed_statuses:
+        abort(400, 'Restaurant voucher is only available when request is confirmed')
+    return render_template('inbound/restaurant_voucher.html', request=request_obj)
 
 @inbound_bp.route('/<int:request_id>/voucher')
 def generate_voucher(request_id):
@@ -3378,7 +5557,8 @@ def api_get_departures(request_id):
             'meet_greet': batch.meet_greet if hasattr(batch, 'meet_greet') else False,
             'meet_assist': getattr(batch, 'meet_assist', False),
             'representative_name': getattr(batch, 'representative_name', ''),
-            'departure_tax': getattr(batch, 'departure_tax', 'NOT_INCLUDED')
+            'departure_tax': getattr(batch, 'departure_tax', 'NOT_INCLUDED'),
+            'notes': getattr(batch, 'notes', '')
         })
 
     return jsonify({'success': True, 'batches': batches_data})
@@ -3394,6 +5574,10 @@ def api_get_flights_data(request_id):
 
     from app.models.inbound import ArrivalBatch, DepartureBatch
 
+    # Expire any cached data to ensure fresh query
+    db.session.expire_all()
+    
+    # Query fresh data from database
     arrivals = ArrivalBatch.query.filter_by(request_id=request_id).order_by(ArrivalBatch.arrival_date).all()
     departures = DepartureBatch.query.filter_by(request_id=request_id).order_by(DepartureBatch.departure_date).all()
 
@@ -3406,8 +5590,14 @@ def api_get_flights_data(request_id):
             'arrival_point': arr.arrival_point or '',
             'flight_number': arr.flight_number or '',
             'pax_count': arr.pax_count or 0,
-            'driver_name': arr.driver_name or ''
+            'driver_name': arr.driver_name or '',
+            'meet_assist': bool(getattr(arr, 'meet_assist', False)),
+            'representative_name': getattr(arr, 'representative_name', '') or '',
+            'notes': arr.notes or ''  # Same pattern as arrival_point - direct attribute access with or fallback
         })
+        
+        # Debug logging for each arrival
+        print(f"[API GET FLIGHTS] Arrival ID {arr.id}: arrival_point={repr(arr.arrival_point)}, notes={repr(arr.notes)}, notes_in_response={repr(arr.notes or '')}")
 
     departures_data = []
     for dep in departures:
@@ -3418,7 +5608,10 @@ def api_get_flights_data(request_id):
             'departure_point': dep.departure_point or '',
             'flight_number': dep.flight_number or '',
             'pax_count': dep.pax_count or 0,
-            'driver_name': dep.driver_name or ''
+            'driver_name': dep.driver_name or '',
+            'meet_assist': bool(getattr(dep, 'meet_assist', False)),
+            'representative_name': getattr(dep, 'representative_name', '') or '',
+            'notes': getattr(dep, 'notes', '') or ''
         })
 
     return jsonify({
@@ -3426,6 +5619,70 @@ def api_get_flights_data(request_id):
         'arrivals': arrivals_data,
         'departures': departures_data
     })
+
+
+@inbound_bp.route('/api/<int:request_id>/transport-flight-chips', methods=['GET'])
+@csrf.exempt
+def api_transport_flight_chips(request_id):
+    """Chips for Transport tab: one per flight-linked InboundTransport stub (arrival/departure)."""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    try:
+        _reconcile_flight_linked_transports(request_id)
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.exception('transport-flight-chips reconcile: %s', exc)
+    from sqlalchemy import or_
+    rows = InboundTransport.query.filter(
+        InboundTransport.request_id == request_id,
+        or_(
+            InboundTransport.source_arrival_batch_id.isnot(None),
+            InboundTransport.source_departure_batch_id.isnot(None),
+        ),
+    ).order_by(InboundTransport.date, InboundTransport.id).all()
+    chips = []
+    for t in rows:
+        d = t.date
+        tm = t.pickup_time
+        pax = t.pax or 0
+        date_s = d.strftime('%m/%d/%Y') if d else '-'
+        time_s = tm.strftime('%H:%M') if tm else '--:--'
+        kind = 'arrival' if t.source_arrival_batch_id else 'departure'
+        src_id = t.source_arrival_batch_id or t.source_departure_batch_id
+        chips.append({
+            'transport_id': t.id,
+            'kind': kind,
+            'source_batch_id': src_id,
+            'label': f'{date_s} – {time_s} – {pax} Pax',
+            'complete': _transport_flight_stub_complete(t),
+            'pending_fill': not _transport_flight_stub_complete(t),
+        })
+    return jsonify({'success': True, 'chips': chips})
+
+
+@inbound_bp.route('/api/<int:request_id>/transport-summary-html', methods=['GET'])
+@csrf.exempt
+def api_transport_summary_html(request_id):
+    """Refresh Trip Summary transport tbody HTML."""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    try:
+        _reconcile_flight_linked_transports(request_id)
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.exception('transport-summary-html reconcile: %s', exc)
+    transports_list = InboundTransport.query.filter_by(request_id=request_id).order_by(InboundTransport.date).all()
+    html = render_template(
+        'components/transport_summary_entries.html',
+        transports=_trip_summary_transports(transports_list),
+        view_only=False
+    )
+    return html, 200, {'Content-Type': 'text/html; charset=utf-8'}
+
 
 @inbound_bp.route('/api/<int:request_id>/arrivals/<int:arrival_id>', methods=['DELETE'])
 @csrf.exempt
@@ -3442,6 +5699,9 @@ def api_delete_arrival(request_id, arrival_id):
         # Find and delete the specific arrival
         arrival = ArrivalBatch.query.filter_by(id=arrival_id, request_id=request_id).first()
         if arrival:
+            InboundTransport.query.filter_by(
+                request_id=request_id, source_arrival_batch_id=arrival_id
+            ).delete(synchronize_session=False)
             db.session.delete(arrival)
             db.session.commit()
 
@@ -3483,6 +5743,9 @@ def api_delete_departure(request_id, departure_id):
         # Find and delete the specific departure
         departure = DepartureBatch.query.filter_by(id=departure_id, request_id=request_id).first()
         if departure:
+            InboundTransport.query.filter_by(
+                request_id=request_id, source_departure_batch_id=departure_id
+            ).delete(synchronize_session=False)
             db.session.delete(departure)
             db.session.commit()
 
@@ -4475,8 +6738,10 @@ def api_export_proforma_doc(request_id):
                 'total': hotel.total_cost
             })
 
-        # Add transport
+        # Add transport (exclude unsaved individual-transport stubs from flights)
         for transport in request_obj.inbound_transports:
+            if not _include_transport_in_trip_summary(transport):
+                continue
             service_items.append({
                 'description': f"Transport: {transport.vehicle_type or 'Vehicle'} - {transport.pickup_location or ''} to {transport.dropoff_location or ''}",
                 'date_from': transport.date,
@@ -4579,7 +6844,7 @@ def api_export_voucher_doc(request_id):
         arrivals_data = []
         arrival_departure_transports = [
             t for t in request_obj.inbound_transports 
-            if t.is_arrival or t.is_departure
+            if (t.is_arrival or t.is_departure) and _include_transport_in_trip_summary(t)
         ]
 
         if arrival_departure_transports:
@@ -4679,6 +6944,8 @@ def api_export_voucher_doc(request_id):
 
         # Add transport
         for transport in request_obj.inbound_transports:
+            if not _include_transport_in_trip_summary(transport):
+                continue
             date_key = transport.date.strftime('%d-%b-%y')
             if date_key not in services_by_date:
                 services_by_date[date_key] = []
@@ -4744,6 +7011,8 @@ def api_export_voucher_doc(request_id):
         # Collect transport data
         transport_data = []
         for transport in request_obj.inbound_transports:
+            if not _include_transport_in_trip_summary(transport):
+                continue
             start_date = transport.date
             end_date = transport.end_date if transport.end_date else transport.date
 
@@ -4944,11 +7213,11 @@ def run_down_plan():
 
     # Get counts by status for stats bar
     status_counts = {
-        'REQUEST': InboundRequest.query.filter_by(user_id=1, status='REQUEST').count(),
-        'QUOTED': InboundRequest.query.filter_by(user_id=1, status='QUOTED').count(),
-        'CONFIRMED': InboundRequest.query.filter_by(user_id=1, status='CONFIRMED').count(),
-        'PROCESSING': InboundRequest.query.filter_by(user_id=1, status='PROCESSING').count(),
-        'COMPLETED': InboundRequest.query.filter_by(user_id=1, status='COMPLETED').count()
+        'REQUEST': InboundRequest.query.filter_by(status='REQUEST').count(),
+        'QUOTED': InboundRequest.query.filter_by(status='QUOTED').count(),
+        'CONFIRMED': InboundRequest.query.filter_by(status='CONFIRMED').count(),
+        'PROCESSING': InboundRequest.query.filter_by(status='PROCESSING').count(),
+        'COMPLETED': InboundRequest.query.filter_by(status='COMPLETED').count()
     }
 
     return render_template('inbound/run_down.html',
@@ -5725,10 +7994,8 @@ def wizard_step3():
                         itinerary_by_date[transport_date]['flag_transport'] = True
 
                 elif service_type == 'meal':
-                    # Meal: single date or date range (FROM/TO dates)
+                    # Meal: single date only
                     meal_from = datetime.strptime(service['from_date'], '%Y-%m-%d').date()
-                    meal_to_str = service.get('to_date', '')
-                    meal_to = datetime.strptime(meal_to_str, '%Y-%m-%d').date() if meal_to_str else meal_from
                     meal_type = service.get('meal_type', 'Meal')
                     restaurant = service.get('restaurant', 'TBD')
                     cost = safe_float(service.get('cost'))
@@ -5736,29 +8003,27 @@ def wizard_step3():
 
                     desc = f"{meal_type} at {restaurant}"
 
-                    # Create row for each day in range (inclusive)
-                    meal_to_inclusive = meal_to + timedelta(days=1)
-                    for meal_date in date_range(meal_from, meal_to_inclusive):
-                        if meal_date not in itinerary_by_date:
-                            itinerary_by_date[meal_date] = {
-                                'date': meal_date,
-                                'description': desc,
-                                'base_cost': cost,
-                                'cost_unit': cost_unit,
-                                'flag_hotel': False,
-                                'hotel_single_rooms': 0,
-                                'hotel_double_rooms': 0,
-                                'hotel_triple_rooms': 0,
-                                'hotel_other_rooms': 0,
-                                'flag_transport': False,
-                                'flag_meal': True,
-                                'flag_guide': False
-                            }
-                        else:
-                            # Merge with existing
-                            itinerary_by_date[meal_date]['description'] += f" | {desc}"
-                            itinerary_by_date[meal_date]['base_cost'] += cost
-                            itinerary_by_date[meal_date]['flag_meal'] = True
+                    # Single date only
+                    meal_date = meal_from
+                    if meal_date not in itinerary_by_date:
+                        itinerary_by_date[meal_date] = {
+                            'date': meal_date,
+                            'description': desc,
+                            'base_cost': cost,
+                            'cost_unit': cost_unit,
+                            'flag_hotel': False,
+                            'hotel_single_rooms': 0,
+                            'hotel_double_rooms': 0,
+                            'hotel_triple_rooms': 0,
+                            'hotel_other_rooms': 0,
+                            'flag_transport': False,
+                            'flag_meal': True,
+                            'flag_guide': False
+                        }
+                    else:
+                        itinerary_by_date[meal_date]['description'] += f" | {desc}"
+                        itinerary_by_date[meal_date]['base_cost'] += cost
+                        itinerary_by_date[meal_date]['flag_meal'] = True
 
                 elif service_type == 'guide':
                     # Guide: single date or date range (optional TO date)
@@ -5859,15 +8124,13 @@ def wizard_step3():
                     db.session.add(transport)
 
                 elif service_type == 'meal':
-                    # Create InboundMeal records
-                    meal_from = datetime.strptime(service['from_date'], '%Y-%m-%d').date()
-                    meal_to_str = service.get('to_date', '')
-                    meal_to = datetime.strptime(meal_to_str, '%Y-%m-%d').date() if meal_to_str else meal_from
+                    # Create InboundMeal record (single date only)
+                    meal_date = datetime.strptime(service['from_date'], '%Y-%m-%d').date()
 
                     meal = InboundMeal(
                         request_id=request_obj.id,
-                        date=meal_from,
-                        end_date=meal_to if meal_to != meal_from else None,
+                        date=meal_date,
+                        end_date=None,
                         meal_type=service.get('meal_type'),
                         restaurant=service.get('restaurant'),
                         cost_per_person=safe_float(service.get('cost', 0)),
@@ -6501,7 +8764,7 @@ def api_update_hotel(hotel_id):
         if request_obj.user_id != 1:
             return jsonify({'success': False, 'message': 'Unauthorized'}), 403
 
-        data = request.get_json()
+        data = request.get_json() or {}
 
         # Update hotel fields
         if 'supplier_name' in data:
@@ -6514,6 +8777,8 @@ def api_update_hotel(hotel_id):
             hotel.currency = data['currency']
         if 'notes' in data:
             hotel.notes = data['notes']
+        if 'voucher_notes' in data:
+            hotel.voucher_notes = data['voucher_notes']
 
         # Update check-in/check-out dates
         if 'check_in_date' in data and data['check_in_date']:
@@ -6531,6 +8796,42 @@ def api_update_hotel(hotel_id):
         check_and_update_request_status(request_obj.id)
 
         return jsonify({'success': True, 'message': 'Hotel updated successfully'})
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@inbound_bp.route('/api/meal/<int:meal_id>/update', methods=['POST'])
+@csrf.exempt
+def api_update_meal(meal_id):
+    """Update meal voucher_notes for restaurant voucher"""
+    try:
+        data = request.get_json() or {}
+        req_id = data.get('request_id')
+        meal = InboundMeal.query.filter_by(id=meal_id).first()
+        if not meal:
+            from sqlalchemy import text
+            r = db.session.execute(text("SELECT id, request_id FROM inbound_meal WHERE id = :mid"), {"mid": meal_id}).fetchone()
+            print(f"[MEAL UPDATE] 404 meal_id={meal_id} direct_sql={r}")
+            return jsonify({'success': False, 'message': 'Meal not found'}), 404
+        
+        if req_id and int(req_id) != meal.request_id:
+            return jsonify({'success': False, 'message': 'Meal does not belong to this request'}), 403
+
+        request_obj = InboundRequest.query.get(meal.request_id)
+        if not request_obj:
+            return jsonify({'success': False, 'message': 'Request not found'}), 404
+
+        # Allow when user_id is 1 or None (legacy/unassigned requests)
+        if request_obj.user_id is not None and request_obj.user_id != 1:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+
+        if 'voucher_notes' in data:
+            meal.voucher_notes = data['voucher_notes']
+
+        db.session.commit()
+
+        return jsonify({'success': True, 'message': 'Meal voucher notes saved successfully'})
 
     except Exception as e:
         db.session.rollback()
@@ -6634,7 +8935,7 @@ def analytics_dashboard():
     service_stats = {}
 
     # Hotels stats
-    hotel_query = InboundHotel.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+    hotel_query = InboundHotel.query.join(InboundRequest)
     if date_from_str:
         hotel_query = hotel_query.filter(InboundHotel.check_in_date >= date_from)
     if date_to_str:
@@ -6649,7 +8950,7 @@ def analytics_dashboard():
     }
 
     # Transport stats
-    transport_query = InboundTransport.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+    transport_query = InboundTransport.query.join(InboundRequest)
     if date_from_str:
         transport_query = transport_query.filter(InboundTransport.date >= date_from)
     if date_to_str:
@@ -6664,7 +8965,7 @@ def analytics_dashboard():
     }
 
     # Guides stats
-    guide_query = InboundGuide.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+    guide_query = InboundGuide.query.join(InboundRequest)
     if date_from_str:
         guide_query = guide_query.filter(InboundGuide.date >= date_from)
     if date_to_str:
@@ -6679,7 +8980,7 @@ def analytics_dashboard():
     }
 
     # Meals stats
-    meal_query = InboundMeal.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+    meal_query = InboundMeal.query.join(InboundRequest)
     if date_from_str:
         meal_query = meal_query.filter(InboundMeal.date >= date_from)
     if date_to_str:
@@ -6694,7 +8995,7 @@ def analytics_dashboard():
     }
 
     # Optionals stats
-    optional_query = InboundOptional.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+    optional_query = InboundOptional.query.join(InboundRequest)
     if date_from_str and date_to_str:
         optional_query = optional_query.filter(
             db.or_(
@@ -6728,7 +9029,7 @@ def analytics_dashboard():
 
     # 1. Hotels
     if not service_types or 'HOTEL' in service_types:
-        hotels_query = InboundHotel.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+        hotels_query = InboundHotel.query.join(InboundRequest)
         if date_from_str:
             hotels_query = hotels_query.filter(InboundHotel.check_in_date >= date_from)
         if date_to_str:
@@ -6764,7 +9065,7 @@ def analytics_dashboard():
 
     # 2. Transport
     if not service_types or 'TRANSPORT' in service_types:
-        transport_query = InboundTransport.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+        transport_query = InboundTransport.query.join(InboundRequest)
         if date_from_str:
             transport_query = transport_query.filter(InboundTransport.date >= date_from)
         if date_to_str:
@@ -6802,7 +9103,7 @@ def analytics_dashboard():
 
     # 3. Guides
     if not service_types or 'GUIDE' in service_types:
-        guides_query = InboundGuide.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+        guides_query = InboundGuide.query.join(InboundRequest)
         if date_from_str:
             guides_query = guides_query.filter(InboundGuide.date >= date_from)
         if date_to_str:
@@ -6838,7 +9139,7 @@ def analytics_dashboard():
 
     # 4. Meals
     if not service_types or 'MEAL' in service_types:
-        meals_query = InboundMeal.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+        meals_query = InboundMeal.query.join(InboundRequest)
         if date_from_str:
             meals_query = meals_query.filter(InboundMeal.date >= date_from)
         if date_to_str:
@@ -6874,7 +9175,7 @@ def analytics_dashboard():
 
     # 5. Optional Services
     if not service_types or 'OPTIONAL' in service_types:
-        optionals_query = InboundOptional.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+        optionals_query = InboundOptional.query.join(InboundRequest)
         if date_from_str and date_to_str:
             optionals_query = optionals_query.filter(
                 db.or_(
@@ -6916,11 +9217,11 @@ def analytics_dashboard():
 
     # Get status counts
     status_counts = {
-        'REQUEST': InboundRequest.query.filter_by(user_id=1, status='REQUEST').count(),
-        'QUOTED': InboundRequest.query.filter_by(user_id=1, status='QUOTED').count(),
-        'CONFIRMED': InboundRequest.query.filter_by(user_id=1, status='CONFIRMED').count(),
-        'PROCESSING': InboundRequest.query.filter_by(user_id=1, status='PROCESSING').count(),
-        'COMPLETED': InboundRequest.query.filter_by(user_id=1, status='COMPLETED').count()
+        'REQUEST': InboundRequest.query.filter_by(status='REQUEST').count(),
+        'QUOTED': InboundRequest.query.filter_by(status='QUOTED').count(),
+        'CONFIRMED': InboundRequest.query.filter_by(status='CONFIRMED').count(),
+        'PROCESSING': InboundRequest.query.filter_by(status='PROCESSING').count(),
+        'COMPLETED': InboundRequest.query.filter_by(status='COMPLETED').count()
     }
 
     return render_template('inbound/analytics.html',
@@ -6960,7 +9261,7 @@ def analytics_export_excel():
 
     # Hotels
     if not service_type or service_type == 'HOTEL':
-        hotels_query = InboundHotel.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+        hotels_query = InboundHotel.query.join(InboundRequest)
         if date_from_str:
             hotels_query = hotels_query.filter(InboundHotel.check_in_date >= date_from)
         if date_to_str:
@@ -6994,7 +9295,7 @@ def analytics_export_excel():
 
     # Transport
     if not service_type or service_type == 'TRANSPORT':
-        transport_query = InboundTransport.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+        transport_query = InboundTransport.query.join(InboundRequest)
         if date_from_str:
             transport_query = transport_query.filter(InboundTransport.date >= date_from)
         if date_to_str:
@@ -7028,7 +9329,7 @@ def analytics_export_excel():
 
     # Guides
     if not service_type or service_type == 'GUIDE':
-        guides_query = InboundGuide.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+        guides_query = InboundGuide.query.join(InboundRequest)
         if date_from_str:
             guides_query = guides_query.filter(InboundGuide.date >= date_from)
         if date_to_str:
@@ -7062,7 +9363,7 @@ def analytics_export_excel():
 
     # Meals
     if not service_type or service_type == 'MEAL':
-        meals_query = InboundMeal.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+        meals_query = InboundMeal.query.join(InboundRequest)
         if date_from_str:
             meals_query = meals_query.filter(InboundMeal.date >= date_from)
         if date_to_str:
@@ -7096,7 +9397,7 @@ def analytics_export_excel():
 
     # Optionals
     if not service_type or service_type == 'OPTIONAL':
-        optionals_query = InboundOptional.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+        optionals_query = InboundOptional.query.join(InboundRequest)
         if date_from_str and date_to_str:
             optionals_query = optionals_query.filter(
                 db.or_(

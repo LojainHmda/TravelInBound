@@ -1,0 +1,36 @@
+{% if hotels %}
+{% for hotel in hotels %}
+<tr class="hover:bg-gray-50" data-hotel-name="{{ hotel.hotel_name or '' }}" data-service-type="hotel" data-record-id="{{ hotel.id }}">
+    <td class="font-medium">{{ hotel.hotel_name or '-' }}</td>
+    <td class="text-center hotel-date-col"><span style="white-space:nowrap">{{ hotel.check_in_date.strftime('%d %b %Y') if hotel.check_in_date else '-' }}</span></td>
+    <td class="text-center hotel-date-col"><span style="white-space:nowrap">{{ hotel.check_out_date.strftime('%d %b %Y') if hotel.check_out_date else '-' }}</span></td>
+    <td class="text-center hotel-compact-col">{{ hotel.nights or 0 }}</td>
+    <td class="text-center hotel-compact-col">
+        {% if hotel.single_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Sgl:{{ hotel.single_rooms }}</span>{% endif %}
+        {% if hotel.double_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Dbl:{{ hotel.double_rooms }}</span>{% endif %}
+        {% if hotel.triple_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Tpl:{{ hotel.triple_rooms }}</span>{% endif %}
+    </td>
+    <td class="text-center hotel-compact-col">{{ (hotel.rooms[0].confirmation if hotel.rooms else '') or '-' }}</td>
+    <td class="text-center hotel-compact-col">{{ (hotel.rooms|map(attribute='room_category')|select|list|join(', ')) if hotel.rooms and (hotel.rooms|map(attribute='room_category')|select|list) else '-' }}</td>
+    <td class="text-center hotel-compact-col print-hide-status">
+        <span class="px-2 py-0.5 rounded text-[10px] {% if hotel.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif hotel.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% elif hotel.status == 'WAITING_LIST' %}bg-blue-100 text-blue-700{% elif hotel.status == 'CANCELLED' %}bg-red-100 text-red-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ hotel.status or 'PENDING' }}</span>
+    </td>
+    <td class="hotel-notes-col">{{ hotel.notes or '-' }}</td>
+    <td class="text-center hotel-compact-col whitespace-nowrap print-hide-actions">
+        {% if not view_only %}
+        <div class="flex items-center justify-center gap-2">
+            <button onclick="handleEditServiceRow('hotel', {{ hotel.id }})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+            <button onclick="handleRemoveServiceRow('hotel', {{ hotel.id }})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
+            {% if mapped_status is defined and (mapped_status == 'CONFIRMED' or mapped_status == 'INVOICED') %}
+            <button onclick="openHotelVoucherModal({{ hotel.id }})" class="p-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-slate-700 transition-colors" title="Voucher"><i class="fas fa-file-alt text-sm"></i></button>
+            {% endif %}
+        </div>
+        {% else %}
+        <span class="text-gray-400 text-xs">-</span>
+        {% endif %}
+    </td>
+</tr>
+{% endfor %}
+{% else %}
+<tr><td colspan="10" class="px-4 py-3 text-center text-gray-500">No hotels added</td></tr>
+{% endif %}

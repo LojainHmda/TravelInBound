@@ -1,0 +1,26 @@
+{% if guides %}
+{% for guide in guides %}
+<tr class="hover:bg-gray-50" data-guide-name="{{ guide.guide_name or '' }}" data-guide-supplier-id="{{ guide.supplier_id or '' }}" data-service-type="guide" data-record-id="{{ guide.id }}">
+    <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ guide.guide_name or '-' }}</td>
+    <td class="border border-gray-300 px-2 py-1.5 text-center">{% if guide.end_date and guide.end_date != guide.date %}{{ guide.date.strftime('%d %b %Y') if guide.date else '-' }} - {{ guide.end_date.strftime('%d %b %Y') if guide.end_date else '-' }}{% else %}{{ guide.service_date.strftime('%d %b %Y') if guide.service_date else '-' }}{% endif %}</td>
+    <td class="border border-gray-300 px-2 py-1.5">{{ guide.language or '-' }}</td>
+    <td class="border border-gray-300 px-2 py-1.5">{{ guide.telephone_number or guide.telephone or '-' }}</td>
+    <td class="border border-gray-300 px-2 py-1.5 text-center">
+        <span class="px-2 py-0.5 rounded text-[10px] {% if guide.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif guide.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% elif guide.status == 'WAITING_LIST' %}bg-blue-100 text-blue-700{% elif guide.status == 'CANCELLED' %}bg-red-100 text-red-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ guide.status or 'PENDING' }}</span>
+    </td>
+    <td class="border border-gray-300 px-2 py-1.5">{{ guide.additional_comments or '-' }}</td>
+    <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap print-hide-actions">
+        {% if not view_only %}
+        <div class="flex items-center justify-center gap-2">
+            <button onclick="handleEditServiceRow('guide', {{ guide.id }})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+            <button onclick="handleRemoveServiceRow('guide', {{ guide.id }})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
+        </div>
+        {% else %}
+        <span class="text-gray-400 text-xs">-</span>
+        {% endif %}
+    </td>
+</tr>
+{% endfor %}
+{% else %}
+<tr><td colspan="7" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No guides added</td></tr>
+{% endif %}

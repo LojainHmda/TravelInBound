@@ -6,6 +6,7 @@ from dateutil.relativedelta import relativedelta
 from io import StringIO
 from calendar import monthrange
 from sqlalchemy import extract, func, case, and_, or_
+from werkzeug.utils import secure_filename
 from flask import (
     Blueprint, render_template, request, redirect, url_for, 
     flash, jsonify, current_app, send_file, Response
@@ -18,13 +19,53 @@ from app.models import (
     EXPENSE_CATEGORY_RENT, EXPENSE_CATEGORY_UTILITIES
 )
 from app.models.booking import Booking
-from app.models.supplier import SupplierPayment, Supplier, SupplierPrepaymentLine
+from app.models.supplier import SupplierPayment, Supplier, SupplierPrepaymentLine, SupplierService
 from app.forms.expense import (
     ExpenseCategoryForm, ExpenseForm, ExpenseFilterForm,
     ExpenseAttachmentForm, FinancialReportFilterForm
 )
 
 finance = Blueprint('finance', __name__, url_prefix='/finance')
+
+def safe_log_error(message, error=None):
+    """Safely log errors to avoid Windows encoding issues with sys.stderr"""
+    try:
+        from flask import has_request_context, current_app
+        if has_request_context():
+            if error:
+                error_str = str(error).encode('ascii', 'replace').decode('ascii')
+                current_app.logger.error(f"{message}: {error_str}")
+            else:
+                msg_str = str(message).encode('ascii', 'replace').decode('ascii')
+                current_app.logger.error(msg_str)
+    except:
+        pass  # If logging fails, continue silently
+
+def validate_date_for_query(date_value, default=None, param_name="date"):
+    """Validate and normalize date for SQL queries
+    
+    Ensures date_value is a date object (not datetime or string) before using in queries.
+    This prevents OSError: [Errno 22] Invalid argument on Windows when date types mismatch.
+    
+    Args:
+        date_value: The date value to validate (can be date, datetime, or None)
+        default: Default date to return if validation fails (defaults to today)
+        param_name: Name of parameter for logging purposes
+    
+    Returns:
+        date: Validated date object
+    """
+    if date_value is None:
+        safe_log_error(f"{param_name} is None, using default", None)
+        return default or date.today()
+    
+    if isinstance(date_value, datetime):
+        return date_value.date()
+    elif isinstance(date_value, date):
+        return date_value
+    else:
+        safe_log_error(f"{param_name} is invalid type: {type(date_value)}, value: {date_value}", None)
+        return default or date.today()
 
 @finance.route('/')
 def index():
@@ -41,30 +82,77 @@ def dashboard():
     selected_month = request.args.get('month', 'current')
 
     # Determine date range based on selected month
-    if selected_month == 'current':
-        first_day = date(today.year, today.month, 1)
-        last_day = date(today.year, today.month, monthrange(today.year, today.month)[1])
-    elif selected_month == 'all':
-        # All time data - use a wide range
-        first_day = date(2020, 1, 1)  # Far in the past
-        last_day = today
-    else:
-        # Handle relative months (-1, -2, -3)
-        try:
-            months_offset = int(selected_month)
-            target_date = today + relativedelta(months=months_offset)
-            first_day = date(target_date.year, target_date.month, 1)
-            last_day = date(target_date.year, target_date.month, 
-                          monthrange(target_date.year, target_date.month)[1])
-        except (ValueError, TypeError):
-            # Default to current month if invalid value
-            first_day = date(today.year, today.month, 1)
-            last_day = date(today.year, today.month, monthrange(today.year, today.month)[1])
+    # Use defensive date calculations to prevent OSError on Windows
+    try:
+        if selected_month == 'current':
+            first_day = validate_date_for_query(
+                date(today.year, today.month, 1),
+                default=date.today().replace(day=1),
+                param_name="first_day (current)"
+            )
+            try:
+                last_day = validate_date_for_query(
+                    date(today.year, today.month, monthrange(today.year, today.month)[1]),
+                    default=date.today(),
+                    param_name="last_day (current)"
+                )
+            except (OSError, ValueError, TypeError) as e:
+                safe_log_error("Error calculating last_day for current month", e)
+                last_day = date.today()
+        elif selected_month == 'all':
+            # All time data - use a wide range
+            first_day = date(2020, 1, 1)  # Far in the past
+            last_day = today
+        else:
+            # Handle relative months (-1, -2, -3)
+            try:
+                months_offset = int(selected_month)
+                target_date = today + relativedelta(months=months_offset)
+                first_day = validate_date_for_query(
+                    date(target_date.year, target_date.month, 1),
+                    default=date.today().replace(day=1),
+                    param_name=f"first_day (month {months_offset})"
+                )
+                try:
+                    last_day = validate_date_for_query(
+                        date(target_date.year, target_date.month, monthrange(target_date.year, target_date.month)[1]),
+                        default=date.today(),
+                        param_name=f"last_day (month {months_offset})"
+                    )
+                except (OSError, ValueError, TypeError) as e:
+                    safe_log_error(f"Error calculating last_day for month {months_offset}", e)
+                    last_day = date.today()
+            except (ValueError, TypeError, OSError) as e:
+                safe_log_error("Error parsing selected_month or calculating dates", e)
+                # Default to current month if invalid value
+                first_day = date.today().replace(day=1)
+                last_day = date.today()
+    except Exception as e:
+        safe_log_error("Error in date range calculation", e)
+        first_day = date.today().replace(day=1)
+        last_day = date.today()
 
     # Get previous period for comparison (always one month before the selected period)
-    prev_month = first_day - timedelta(days=1)
-    prev_first = date(prev_month.year, prev_month.month, 1)
-    prev_last = date(prev_month.year, prev_month.month, monthrange(prev_month.year, prev_month.month)[1])
+    try:
+        prev_month = first_day - timedelta(days=1)
+        prev_first = validate_date_for_query(
+            date(prev_month.year, prev_month.month, 1),
+            default=date.today().replace(day=1),
+            param_name="prev_first"
+        )
+        try:
+            prev_last = validate_date_for_query(
+                date(prev_month.year, prev_month.month, monthrange(prev_month.year, prev_month.month)[1]),
+                default=date.today(),
+                param_name="prev_last"
+            )
+        except (OSError, ValueError, TypeError) as e:
+            safe_log_error("Error calculating prev_last", e)
+            prev_last = date.today()
+    except Exception as e:
+        safe_log_error("Error calculating previous period dates", e)
+        prev_first = date.today().replace(day=1)
+        prev_last = date.today()
 
     # Calculate KPIs
     # 1. Revenue - based on invoiced bookings (single source of truth: booking table)
@@ -124,25 +212,39 @@ def dashboard():
         current_app.logger.error(f"Error fetching previous month expenses: {str(e)}")
         prev_month_expenses = 0
 
-    # 3. Supplier Costs - with error handling for schema mismatches
+    # 3. Supplier Costs - with error handling for schema mismatches and date validation
+    # Validate dates before using in queries
+    first_day_valid = validate_date_for_query(first_day, default=date.today().replace(day=1), param_name="first_day")
+    last_day_valid = validate_date_for_query(last_day, default=date.today(), param_name="last_day")
+    prev_first_valid = validate_date_for_query(prev_first, default=date.today().replace(day=1), param_name="prev_first")
+    prev_last_valid = validate_date_for_query(prev_last, default=date.today(), param_name="prev_last")
+    
     try:
         current_month_supplier_costs = db.session.query(func.sum(SupplierPayment.amount)).filter(
-            SupplierPayment.payment_date >= first_day,
-            SupplierPayment.payment_date <= last_day
+            SupplierPayment.payment_date.isnot(None),
+            SupplierPayment.payment_date >= first_day_valid,
+            SupplierPayment.payment_date <= last_day_valid
         ).scalar() or 0
 
         # Count of supplier payments for the current month
         supplier_payments_count = db.session.query(func.count(SupplierPayment.id)).filter(
-            SupplierPayment.payment_date >= first_day,
-            SupplierPayment.payment_date <= last_day
+            SupplierPayment.payment_date.isnot(None),
+            SupplierPayment.payment_date >= first_day_valid,
+            SupplierPayment.payment_date <= last_day_valid
         ).scalar() or 0
 
         prev_month_supplier_costs = db.session.query(func.sum(SupplierPayment.amount)).filter(
-            SupplierPayment.payment_date >= prev_first,
-            SupplierPayment.payment_date <= prev_last
+            SupplierPayment.payment_date.isnot(None),
+            SupplierPayment.payment_date >= prev_first_valid,
+            SupplierPayment.payment_date <= prev_last_valid
         ).scalar() or 0
+    except OSError as os_err:
+        safe_log_error("OSError querying supplier payments", os_err)
+        current_month_supplier_costs = 0
+        supplier_payments_count = 0
+        prev_month_supplier_costs = 0
     except Exception as e:
-        print(f"Error querying supplier payments: {e}", file=sys.stderr)
+        safe_log_error("Error querying supplier payments", e)
         current_month_supplier_costs = 0
         supplier_payments_count = 0
         prev_month_supplier_costs = 0
@@ -219,13 +321,39 @@ def dashboard():
         except (ValueError, TypeError):
             pass  # Invalid date format, ignore filter
 
-    # Get the filtered results
-    revenue_bookings = booking_query.order_by(Booking.total_amount.desc()).all()
+    # Get the filtered results - with robust ordering
+    try:
+        revenue_bookings = booking_query.order_by(
+            func.coalesce(Booking.total_amount, 0).desc(),
+            Booking.id.desc()
+        ).all()
+    except (OSError, Exception) as e:
+        safe_log_error("Error ordering revenue bookings", e)
+        try:
+            # Fallback: order by ID only
+            revenue_bookings = booking_query.order_by(Booking.id.desc()).all()
+        except:
+            revenue_bookings = []
     last_12_months = []
     for i in range(11, -1, -1):
-        month_date = date.today() - relativedelta(months=i)
-        month_first = date(month_date.year, month_date.month, 1)
-        month_last = date(month_date.year, month_date.month, monthrange(month_date.year, month_date.month)[1])
+        # Calculate month dates with validation and error handling
+        try:
+            month_date = date.today() - relativedelta(months=i)
+            month_first = validate_date_for_query(
+                date(month_date.year, month_date.month, 1),
+                default=date.today().replace(day=1),
+                param_name=f"month_first for month {i}"
+            )
+            month_last = validate_date_for_query(
+                date(month_date.year, month_date.month, monthrange(month_date.year, month_date.month)[1]),
+                default=date.today(),
+                param_name=f"month_last for month {i}"
+            )
+        except Exception as calc_err:
+            safe_log_error(f"Error calculating dates for month {i}", calc_err)
+            month_first = date.today().replace(day=1)
+            month_last = date.today()
+            month_date = date.today()
 
         month_revenue = db.session.query(func.sum(Payment.amount)).filter(
             Payment.payment_date >= month_first,
@@ -237,13 +365,18 @@ def dashboard():
             Expense.date_incurred <= month_last
         ).scalar() or 0
 
+        # Defensive query with NULL check and OSError handling
         try:
             month_supplier_costs = db.session.query(func.sum(SupplierPayment.amount)).filter(
+                SupplierPayment.payment_date.isnot(None),
                 SupplierPayment.payment_date >= month_first,
                 SupplierPayment.payment_date <= month_last
             ).scalar() or 0
+        except OSError as os_err:
+            safe_log_error(f"OSError querying supplier costs for month {month_date} (first={month_first}, last={month_last})", os_err)
+            month_supplier_costs = 0
         except Exception as e:
-            print(f"Error querying supplier costs for month {month_date}: {e}", file=sys.stderr)
+            safe_log_error(f"Error querying supplier costs for month {month_date}", e)
             month_supplier_costs = 0
 
         month_profit = month_revenue - month_expenses - month_supplier_costs
@@ -255,17 +388,55 @@ def dashboard():
             'profit': month_profit
         })
 
-    # Get recent expenses
-    recent_expenses = Expense.query.order_by(Expense.date_incurred.desc()).limit(5).all()
-
-    # Get recent supplier payments - with error handling
+    # Get recent expenses - with robust ordering to handle NULL dates
     try:
-        upcoming_payments = SupplierPayment.query.filter(
-            SupplierPayment.payment_date >= today - timedelta(days=30)
-        ).order_by(SupplierPayment.payment_date.desc()).limit(5).all()
+        recent_expenses = db.session.query(Expense).order_by(
+            func.coalesce(Expense.date_incurred, date(1970, 1, 1)).desc(),
+            Expense.id.desc()
+        ).limit(5).all()
+    except (OSError, Exception) as e:
+        safe_log_error("Error loading recent expenses", e)
+        try:
+            # Fallback: order by ID only
+            recent_expenses = db.session.query(Expense).order_by(Expense.id.desc()).limit(5).all()
+        except:
+            recent_expenses = []
+
+    # Get recent supplier payments - with robust ordering to handle NULL dates
+    # Validate date calculation
+    thirty_days_ago = validate_date_for_query(
+        today - timedelta(days=30),
+        default=date.today() - timedelta(days=30),
+        param_name="thirty_days_ago"
+    )
+    try:
+        upcoming_payments = db.session.query(SupplierPayment).filter(
+            SupplierPayment.payment_date.isnot(None),
+            SupplierPayment.payment_date >= thirty_days_ago
+        ).order_by(
+            func.coalesce(SupplierPayment.payment_date, date(1970, 1, 1)).desc(),
+            SupplierPayment.id.desc()
+        ).limit(5).all()
+    except OSError as os_err:
+        safe_log_error("OSError loading recent supplier payments", os_err)
+        try:
+            # Fallback: order by ID only
+            upcoming_payments = db.session.query(SupplierPayment).filter(
+                SupplierPayment.payment_date.isnot(None),
+                SupplierPayment.payment_date >= thirty_days_ago
+            ).order_by(SupplierPayment.id.desc()).limit(5).all()
+        except:
+            upcoming_payments = []
     except Exception as e:
-        print(f"Error loading recent supplier payments: {e}", file=sys.stderr)
-        upcoming_payments = []
+        safe_log_error("Error loading recent supplier payments", e)
+        try:
+            # Fallback: order by ID only
+            upcoming_payments = db.session.query(SupplierPayment).filter(
+                SupplierPayment.payment_date.isnot(None),
+                SupplierPayment.payment_date >= thirty_days_ago
+            ).order_by(SupplierPayment.id.desc()).limit(5).all()
+        except:
+            upcoming_payments = []
 
     # Get supplier payments for the selected period for the breakdown modal
     from app.models.service import ServiceConfirmation
@@ -277,50 +448,116 @@ def dashboard():
     from app.models.service import ServiceItem
 
     # SQLAlchemy in newer versions doesn't accept string relationship names
-    # Use defensive query to handle missing columns
+    # Use defensive query to handle missing columns and NULL dates
+    # Use validated dates from earlier calculations
     try:
-        supplier_payments = SupplierPayment.query.options(
+        supplier_payments = db.session.query(SupplierPayment).options(
             # Use basic queries without joinedloads to avoid errors
             db.joinedload(SupplierPayment.prepayment_lines),
             db.joinedload(SupplierPayment.service_confirmation)
         ).filter(
-            SupplierPayment.payment_date >= first_day,
-            SupplierPayment.payment_date <= last_day
-        ).order_by(SupplierPayment.payment_date.desc()).all()
-    except Exception as e:
-        # If there's a schema mismatch (missing columns), use a simpler query
-        print(f"Error loading supplier payments with relationships: {e}", file=sys.stderr)
-        # Try querying without relationships first
+            SupplierPayment.payment_date.isnot(None),
+            SupplierPayment.payment_date >= first_day_valid,
+            SupplierPayment.payment_date <= last_day_valid
+        ).order_by(
+            func.coalesce(SupplierPayment.payment_date, date(1970, 1, 1)).desc(),
+            SupplierPayment.id.desc()
+        ).all()
+    except OSError as os_err:
+        # If there's a schema mismatch (missing columns) or encoding issue, use a simpler query
+        safe_log_error("OSError loading supplier payments with relationships", os_err)
+        # Try querying without relationships first, with robust ordering
         try:
             supplier_payments = db.session.query(SupplierPayment).filter(
-                SupplierPayment.payment_date >= first_day,
-                SupplierPayment.payment_date <= last_day
-            ).order_by(SupplierPayment.payment_date.desc()).all()
+                SupplierPayment.payment_date.isnot(None),
+                SupplierPayment.payment_date >= first_day_valid,
+                SupplierPayment.payment_date <= last_day_valid
+            ).order_by(
+                func.coalesce(SupplierPayment.payment_date, date(1970, 1, 1)).desc(),
+                SupplierPayment.id.desc()
+            ).all()
+        except OSError as os_err2:
+            safe_log_error("OSError loading supplier payments (fallback 1)", os_err2)
+            # If ordering by date fails, try ordering by ID only
+            try:
+                supplier_payments = db.session.query(SupplierPayment).filter(
+                    SupplierPayment.payment_date.isnot(None),
+                    SupplierPayment.payment_date >= first_day_valid,
+                    SupplierPayment.payment_date <= last_day_valid
+                ).order_by(SupplierPayment.id.desc()).all()
+            except Exception as e3:
+                # If even basic query fails, return empty list
+                safe_log_error("Error with basic supplier payment query", e3)
+                supplier_payments = []
         except Exception as e2:
-            # If even basic query fails, use raw SQL or return empty list
-            print(f"Error with basic supplier payment query: {e2}", file=sys.stderr)
-            supplier_payments = []
+            safe_log_error("Error loading supplier payments (fallback 1)", e2)
+            try:
+                supplier_payments = db.session.query(SupplierPayment).filter(
+                    SupplierPayment.payment_date.isnot(None),
+                    SupplierPayment.payment_date >= first_day_valid,
+                    SupplierPayment.payment_date <= last_day_valid
+                ).order_by(SupplierPayment.id.desc()).all()
+            except Exception as e3:
+                safe_log_error("Error with basic supplier payment query", e3)
+                supplier_payments = []
+    except Exception as e:
+        # If there's a schema mismatch (missing columns) or encoding issue, use a simpler query
+        safe_log_error("Error loading supplier payments with relationships", e)
+        # Try querying without relationships first, with robust ordering
+        try:
+            supplier_payments = db.session.query(SupplierPayment).filter(
+                SupplierPayment.payment_date.isnot(None),
+                SupplierPayment.payment_date >= first_day_valid,
+                SupplierPayment.payment_date <= last_day_valid
+            ).order_by(
+                func.coalesce(SupplierPayment.payment_date, date(1970, 1, 1)).desc(),
+                SupplierPayment.id.desc()
+            ).all()
+        except OSError as os_err2:
+            safe_log_error("OSError loading supplier payments (fallback 1)", os_err2)
+            try:
+                supplier_payments = db.session.query(SupplierPayment).filter(
+                    SupplierPayment.payment_date.isnot(None),
+                    SupplierPayment.payment_date >= first_day_valid,
+                    SupplierPayment.payment_date <= last_day_valid
+                ).order_by(SupplierPayment.id.desc()).all()
+            except Exception as e3:
+                safe_log_error("Error with basic supplier payment query", e3)
+                supplier_payments = []
+        except Exception as e2:
+            safe_log_error("Error with supplier payment query ordering", e2)
+            try:
+                supplier_payments = db.session.query(SupplierPayment).filter(
+                    SupplierPayment.payment_date.isnot(None),
+                    SupplierPayment.payment_date >= first_day_valid,
+                    SupplierPayment.payment_date <= last_day_valid
+                ).order_by(SupplierPayment.id.desc()).all()
+            except Exception as e3:
+                # If even basic query fails, return empty list
+                safe_log_error("Error with basic supplier payment query", e3)
+                supplier_payments = []
 
     # Debug output to verify prepayment lines are loaded
-    print(f"Loaded {len(supplier_payments)} supplier payments for breakdown", file=sys.stderr)
+    # Debug logging (commented out to avoid Windows encoding issues)
+    # current_app.logger.debug(f"Loaded {len(supplier_payments)} supplier payments for breakdown")
     for payment in supplier_payments:
         prepayment_count = len(payment.prepayment_lines) if payment.prepayment_lines else 0
-        print(f"Payment ID {payment.id}: {prepayment_count} prepayment lines", file=sys.stderr)
+        # current_app.logger.debug(f"Payment ID {payment.id}: {prepayment_count} prepayment lines")
 
-        # Print booking references for each prepayment line
+        # Get booking references for each prepayment line
         if payment.prepayment_lines:
             for line in payment.prepayment_lines:
                 # Get booking reference using the booking_id directly
                 # Booking already imported at top of file
                 booking = Booking.query.get(line.booking_id)
-                if booking:
-                    print(f"  → Booking reference: {booking.reference_number}", file=sys.stderr)
-                else:
-                    print(f"  → No booking found for line {line.id}", file=sys.stderr)
+                # if booking:
+                #     current_app.logger.debug(f"  → Booking reference: {booking.reference_number}")
+                # else:
+                #     current_app.logger.debug(f"  → No booking found for line {line.id}")
 
         # Also verify service confirmation path for backwards compatibility
-        if payment.service_confirmation and payment.service_confirmation.service_item and payment.service_confirmation.service_item.booking:
-            print(f"  → Service confirmation booking reference: {payment.service_confirmation.service_item.booking.reference_number}", file=sys.stderr)
+        # if payment.service_confirmation and payment.service_confirmation.service_item and payment.service_confirmation.service_item.booking:
+        #     current_app.logger.debug(f"  → Service confirmation booking reference: {payment.service_confirmation.service_item.booking.reference_number}")
 
     # Get display name for the selected period
     if selected_month == 'current':
@@ -415,8 +652,19 @@ def expenses():
         query = query.filter(Expense.amount <= max_amount)
         filter_form.max_amount.data = max_amount
 
-    # Order expenses by date (most recent first)
-    expenses = query.order_by(Expense.date_incurred.desc()).all()
+    # Order expenses by date (most recent first) - with robust ordering to handle NULL dates
+    try:
+        expenses = query.order_by(
+            func.coalesce(Expense.date_incurred, date(1970, 1, 1)).desc(),
+            Expense.id.desc()
+        ).all()
+    except (OSError, Exception) as e:
+        safe_log_error("Error ordering expenses", e)
+        try:
+            # Fallback: order by ID only
+            expenses = query.order_by(Expense.id.desc()).all()
+        except:
+            expenses = []
 
     # Calculate totals
     total_amount = sum(expense.amount for expense in expenses)
@@ -441,17 +689,34 @@ def expenses():
 def cash_flow():
     """Cash flow dashboard showing payments in and out"""
     try:
-        # Get payments received from customers
-        payments_in = db.session.query(
-            Payment.payment_date,
-            Payment.amount,
-            Payment.payment_method,
-            Booking.reference_number,
-            Payment.notes
-        ).join(Booking).order_by(Payment.payment_date.desc()).limit(50).all()
+        # Get payments received from customers - with robust ordering to handle NULL dates
+        try:
+            payments_in = db.session.query(
+                Payment.payment_date,
+                Payment.amount,
+                Payment.payment_method,
+                Booking.reference_number,
+                Payment.notes
+            ).join(Booking).order_by(
+                func.coalesce(Payment.payment_date, date(1970, 1, 1)).desc(),
+                Payment.id.desc()
+            ).limit(50).all()
+        except (OSError, Exception) as e:
+            safe_log_error("Error ordering customer payments", e)
+            try:
+                # Fallback: order by ID only
+                payments_in = db.session.query(
+                    Payment.payment_date,
+                    Payment.amount,
+                    Payment.payment_method,
+                    Booking.reference_number,
+                    Payment.notes
+                ).join(Booking).order_by(Payment.id.desc()).limit(50).all()
+            except:
+                payments_in = []
 
         # Get payments made to suppliers (only actually paid ones)
-        # Use defensive query to handle missing columns
+        # Use defensive query to handle missing columns and NULL dates
         try:
             payments_out = db.session.query(
                 SupplierPayment.payment_date,
@@ -460,29 +725,84 @@ def cash_flow():
                 Supplier.name.label('supplier_name'),
                 SupplierPayment.notes
             ).join(Supplier).filter(
-                SupplierPayment.status == 'PAID'
-            ).order_by(SupplierPayment.payment_date.desc()).limit(50).all()
+                SupplierPayment.status == 'PAID',
+                SupplierPayment.payment_date.isnot(None)
+            ).order_by(
+                func.coalesce(SupplierPayment.payment_date, date(1970, 1, 1)).desc(),
+                SupplierPayment.id.desc()
+            ).limit(50).all()
+        except OSError as os_err:
+            safe_log_error("OSError loading supplier payments for cash flow", os_err)
+            try:
+                # Fallback: order by ID only
+                payments_out = db.session.query(
+                    SupplierPayment.payment_date,
+                    SupplierPayment.amount,
+                    SupplierPayment.payment_method,
+                    Supplier.name.label('supplier_name'),
+                    SupplierPayment.notes
+                ).join(Supplier).filter(
+                    SupplierPayment.status == 'PAID',
+                    SupplierPayment.payment_date.isnot(None)
+                ).order_by(SupplierPayment.id.desc()).limit(50).all()
+            except:
+                payments_out = []
         except Exception as e:
-            print(f"Error loading supplier payments for cash flow: {e}", file=sys.stderr)
-            payments_out = []
+            safe_log_error("Error loading supplier payments for cash flow", e)
+            try:
+                # Fallback: order by ID only
+                payments_out = db.session.query(
+                    SupplierPayment.payment_date,
+                    SupplierPayment.amount,
+                    SupplierPayment.payment_method,
+                    Supplier.name.label('supplier_name'),
+                    SupplierPayment.notes
+                ).join(Supplier).filter(
+                    SupplierPayment.status == 'PAID',
+                    SupplierPayment.payment_date.isnot(None)
+                ).order_by(SupplierPayment.id.desc()).limit(50).all()
+            except:
+                payments_out = []
 
         # Calculate totals for current month
-        current_month_start = date.today().replace(day=1)
-        next_month = current_month_start + relativedelta(months=1)
+        # Validate dates before using in queries
+        try:
+            current_month_start = validate_date_for_query(
+                date.today().replace(day=1),
+                default=date.today().replace(day=1),
+                param_name="current_month_start"
+            )
+            next_month = validate_date_for_query(
+                current_month_start + relativedelta(months=1),
+                default=date.today(),
+                param_name="next_month"
+            )
+        except Exception as calc_err:
+            safe_log_error("Error calculating current month dates in cash_flow", calc_err)
+            current_month_start = date.today().replace(day=1)
+            next_month = date.today()
 
         total_in = db.session.query(func.sum(Payment.amount)).filter(
             Payment.payment_date >= current_month_start,
             Payment.payment_date < next_month
         ).scalar() or 0
 
+        # Defensive query with NULL check and OSError handling
         try:
             total_out = db.session.query(func.sum(SupplierPayment.amount)).filter(
+                SupplierPayment.payment_date.isnot(None),
                 SupplierPayment.payment_date >= current_month_start,
                 SupplierPayment.payment_date < next_month,
                 SupplierPayment.status == 'PAID'
             ).scalar() or 0
+        except OSError as os_err:
+            safe_log_error("OSError calculating total supplier payments for current month", os_err)
+            total_out = 0
         except Exception as e:
-            print(f"Error calculating total supplier payments: {e}", file=sys.stderr)
+            safe_log_error("Error calculating total supplier payments for current month", e)
+            total_out = 0
+        except Exception as e:
+            safe_log_error("Error calculating total supplier payments", e)
             total_out = 0
 
         net_cash_flow = total_in - total_out
@@ -609,13 +929,28 @@ def upload_attachment(expense_id):
 def expense_categories():
     """List and manage expense categories"""
     categories = ExpenseCategory.query.all()
-    return render_template('finance/categories.html', categories=categories)
+    form = ExpenseCategoryForm()
+
+    edit_category_id = request.args.get('edit_id', type=int)
+    edit_category_obj = None
+    if edit_category_id:
+        edit_category_obj = ExpenseCategory.query.get(edit_category_id)
+
+    return render_template(
+        'finance/categories.html',
+        categories=categories,
+        form=form,
+        edit_category=edit_category_obj
+    )
 
 @finance.route('/categories/new', methods=['GET', 'POST'])
 
 def new_category():
     """Create a new expense category"""
     form = ExpenseCategoryForm()
+
+    if request.method == 'GET':
+        return redirect(url_for('finance.expense_categories', open='new'))
 
     if form.validate_on_submit():
         category = ExpenseCategory(
@@ -631,13 +966,25 @@ def new_category():
         flash('Category created successfully.', 'success')
         return redirect(url_for('finance.expense_categories'))
 
-    return render_template('finance/category_form.html', form=form, category=None)
+    categories = ExpenseCategory.query.all()
+    return render_template(
+        'finance/categories.html',
+        categories=categories,
+        form=form,
+        edit_category=None,
+        force_modal_open=True,
+        modal_mode='create'
+    )
 
 @finance.route('/categories/<int:category_id>/edit', methods=['GET', 'POST'])
 
 def edit_category(category_id):
     """Edit an existing expense category"""
     category = ExpenseCategory.query.get_or_404(category_id)
+
+    if request.method == 'GET':
+        return redirect(url_for('finance.expense_categories', edit_id=category.id))
+
     form = ExpenseCategoryForm(obj=category)
 
     if form.validate_on_submit():
@@ -647,7 +994,15 @@ def edit_category(category_id):
         flash('Category updated successfully.', 'success')
         return redirect(url_for('finance.expense_categories'))
 
-    return render_template('finance/category_form.html', form=form, category=category)
+    categories = ExpenseCategory.query.all()
+    return render_template(
+        'finance/categories.html',
+        categories=categories,
+        form=form,
+        edit_category=category,
+        force_modal_open=True,
+        modal_mode='edit'
+    )
 
 @finance.route('/reports')
 
@@ -656,9 +1011,27 @@ def reports():
     form = FinancialReportFilterForm()
 
     # Default to this month if no date range provided
-    today = date.today()
-    first_day = date(today.year, today.month, 1)
-    last_day = date(today.year, today.month, monthrange(today.year, today.month)[1])
+    # Use defensive date calculations to prevent OSError on Windows
+    try:
+        today = date.today()
+        first_day = validate_date_for_query(
+            date(today.year, today.month, 1),
+            default=date.today().replace(day=1),
+            param_name="first_day (reports)"
+        )
+        try:
+            last_day = validate_date_for_query(
+                date(today.year, today.month, monthrange(today.year, today.month)[1]),
+                default=date.today(),
+                param_name="last_day (reports)"
+            )
+        except (OSError, ValueError, TypeError) as e:
+            safe_log_error("Error calculating last_day in reports()", e)
+            last_day = date.today()
+    except Exception as e:
+        safe_log_error("Error calculating dates in reports()", e)
+        first_day = date.today().replace(day=1)
+        last_day = date.today()
 
     form.date_from.data = first_day
     form.date_to.data = last_day
@@ -675,36 +1048,125 @@ def generate_report():
         # Process date range
         today = date.today()
 
-        if request.method == 'GET' or form.date_range.data == 'this_month':
-            start_date = date(today.year, today.month, 1)
-            end_date = date(today.year, today.month, monthrange(today.year, today.month)[1])
-        elif form.date_range.data == 'last_month':
-            last_month = today - relativedelta(months=1)
-            start_date = date(last_month.year, last_month.month, 1)
-            end_date = date(last_month.year, last_month.month, monthrange(last_month.year, last_month.month)[1])
-        elif form.date_range.data == 'this_quarter':
-            quarter = (today.month - 1) // 3 + 1
-            start_date = date(today.year, (quarter - 1) * 3 + 1, 1)
-            end_month = quarter * 3
-            end_date = date(today.year, end_month, monthrange(today.year, end_month)[1])
-        elif form.date_range.data == 'last_quarter':
-            last_quarter_end = today - relativedelta(months=((today.month - 1) % 3) + 1)
-            last_quarter_start = date(last_quarter_end.year, last_quarter_end.month - 2, 1)
-            start_date = last_quarter_start
-            end_date = date(last_quarter_end.year, last_quarter_end.month, monthrange(last_quarter_end.year, last_quarter_end.month)[1])
-        elif form.date_range.data == 'this_year':
-            start_date = date(today.year, 1, 1)
-            end_date = date(today.year, 12, 31)
-        elif form.date_range.data == 'last_year':
-            start_date = date(today.year - 1, 1, 1)
-            end_date = date(today.year - 1, 12, 31)
-        elif form.date_range.data == 'custom':
-            start_date = form.date_from.data
-            end_date = form.date_to.data
-        else:
-            # Default to this month
-            start_date = date(today.year, today.month, 1)
-            end_date = date(today.year, today.month, monthrange(today.year, today.month)[1])
+        # Use defensive date calculations to prevent OSError on Windows
+        try:
+            if request.method == 'GET' or form.date_range.data == 'this_month':
+                start_date = validate_date_for_query(
+                    date(today.year, today.month, 1),
+                    default=date.today().replace(day=1),
+                    param_name="start_date (this_month)"
+                )
+                try:
+                    end_date = validate_date_for_query(
+                        date(today.year, today.month, monthrange(today.year, today.month)[1]),
+                        default=date.today(),
+                        param_name="end_date (this_month)"
+                    )
+                except (OSError, ValueError, TypeError) as e:
+                    safe_log_error("Error calculating end_date for this_month", e)
+                    end_date = date.today()
+            elif form.date_range.data == 'last_month':
+                try:
+                    last_month = today - relativedelta(months=1)
+                    start_date = validate_date_for_query(
+                        date(last_month.year, last_month.month, 1),
+                        default=date.today().replace(day=1),
+                        param_name="start_date (last_month)"
+                    )
+                    try:
+                        end_date = validate_date_for_query(
+                            date(last_month.year, last_month.month, monthrange(last_month.year, last_month.month)[1]),
+                            default=date.today(),
+                            param_name="end_date (last_month)"
+                        )
+                    except (OSError, ValueError, TypeError) as e:
+                        safe_log_error("Error calculating end_date for last_month", e)
+                        end_date = date.today()
+                except Exception as e:
+                    safe_log_error("Error calculating last_month dates", e)
+                    start_date = date.today().replace(day=1)
+                    end_date = date.today()
+            elif form.date_range.data == 'this_quarter':
+                try:
+                    quarter = (today.month - 1) // 3 + 1
+                    start_date = validate_date_for_query(
+                        date(today.year, (quarter - 1) * 3 + 1, 1),
+                        default=date.today().replace(day=1),
+                        param_name="start_date (this_quarter)"
+                    )
+                    end_month = quarter * 3
+                    try:
+                        end_date = validate_date_for_query(
+                            date(today.year, end_month, monthrange(today.year, end_month)[1]),
+                            default=date.today(),
+                            param_name="end_date (this_quarter)"
+                        )
+                    except (OSError, ValueError, TypeError) as e:
+                        safe_log_error("Error calculating end_date for this_quarter", e)
+                        end_date = date.today()
+                except Exception as e:
+                    safe_log_error("Error calculating this_quarter dates", e)
+                    start_date = date.today().replace(day=1)
+                    end_date = date.today()
+            elif form.date_range.data == 'last_quarter':
+                try:
+                    last_quarter_end = today - relativedelta(months=((today.month - 1) % 3) + 1)
+                    last_quarter_start = date(last_quarter_end.year, last_quarter_end.month - 2, 1)
+                    start_date = validate_date_for_query(
+                        last_quarter_start,
+                        default=date.today().replace(day=1),
+                        param_name="start_date (last_quarter)"
+                    )
+                    try:
+                        end_date = validate_date_for_query(
+                            date(last_quarter_end.year, last_quarter_end.month, monthrange(last_quarter_end.year, last_quarter_end.month)[1]),
+                            default=date.today(),
+                            param_name="end_date (last_quarter)"
+                        )
+                    except (OSError, ValueError, TypeError) as e:
+                        safe_log_error("Error calculating end_date for last_quarter", e)
+                        end_date = date.today()
+                except Exception as e:
+                    safe_log_error("Error calculating last_quarter dates", e)
+                    start_date = date.today().replace(day=1)
+                    end_date = date.today()
+            elif form.date_range.data == 'this_year':
+                start_date = date(today.year, 1, 1)
+                end_date = date(today.year, 12, 31)
+            elif form.date_range.data == 'last_year':
+                start_date = date(today.year - 1, 1, 1)
+                end_date = date(today.year - 1, 12, 31)
+            elif form.date_range.data == 'custom':
+                start_date = validate_date_for_query(
+                    form.date_from.data,
+                    default=date.today().replace(day=1),
+                    param_name="start_date (custom)"
+                )
+                end_date = validate_date_for_query(
+                    form.date_to.data,
+                    default=date.today(),
+                    param_name="end_date (custom)"
+                )
+            else:
+                # Default to this month
+                start_date = validate_date_for_query(
+                    date(today.year, today.month, 1),
+                    default=date.today().replace(day=1),
+                    param_name="start_date (default)"
+                )
+                try:
+                    end_date = validate_date_for_query(
+                        date(today.year, today.month, monthrange(today.year, today.month)[1]),
+                        default=date.today(),
+                        param_name="end_date (default)"
+                    )
+                except (OSError, ValueError, TypeError) as e:
+                    safe_log_error("Error calculating end_date (default)", e)
+                    end_date = date.today()
+        except Exception as e:
+            safe_log_error("Error in date range calculation in generate_report()", e)
+            start_date = date.today().replace(day=1)
+            end_date = date.today()
 
         # Set form date fields
         form.date_from.data = start_date
@@ -878,67 +1340,238 @@ def export_supplier_payments_csv(report_data, start_date, end_date):
 @finance.route('/suppliers')
 def list_suppliers():
     """List all suppliers with prepayment data - same as supplier costs"""
+    # Wrap entire function in try-except to catch any unhandled OSError
+    try:
+        return _list_suppliers_impl()
+    except OSError as os_err:
+        safe_log_error("OSError in list_suppliers (top-level catch)", os_err)
+        # Return empty data to allow page to render
+        from app.forms.supplier import SupplierSearchForm
+        form = SupplierSearchForm()
+        return render_template('finance/suppliers_simple.html', 
+                             supplier_stats=[],
+                             form=form,
+                             query='',
+                             country='',
+                             supplier_type='')
+    except Exception as e:
+        safe_log_error("Unexpected error in list_suppliers (top-level catch)", e)
+        # Return empty data to allow page to render
+        from app.forms.supplier import SupplierSearchForm
+        form = SupplierSearchForm()
+        return render_template('finance/suppliers_simple.html', 
+                             supplier_stats=[],
+                             form=form,
+                             query='',
+                             country='',
+                             supplier_type='')
+
+def _list_suppliers_impl():
+    """Implementation of list_suppliers - separated for error handling"""
     # Get search/filter parameters
     query = request.args.get('query', '').strip()
     country = request.args.get('country', '')
     supplier_type = request.args.get('supplier_type', '')
 
     # Build base query for suppliers with filters
-    suppliers_query = Supplier.query
+    # Wrap in try-except to catch any OSError during query construction
+    try:
+        suppliers_query = Supplier.query
 
-    # Apply search filter (name, code, email)
-    if query:
-        search_term = f'%{query}%'
-        suppliers_query = suppliers_query.filter(
-            db.or_(
-                Supplier.name.ilike(search_term),
-                Supplier.code.ilike(search_term),
-                Supplier.email.ilike(search_term),
-                Supplier.contact_person.ilike(search_term)
-            )
-        )
+        # Apply search filter (name, code, email)
+        if query:
+            try:
+                search_term = f'%{query}%'
+                suppliers_query = suppliers_query.filter(
+                    db.or_(
+                        Supplier.name.ilike(search_term),
+                        Supplier.code.ilike(search_term),
+                        Supplier.email.ilike(search_term),
+                        Supplier.contact_person.ilike(search_term)
+                    )
+                )
+            except OSError as os_err:
+                safe_log_error(f"OSError applying search filter for query '{query}'", os_err)
+                # Continue without search filter
+            except Exception as e:
+                safe_log_error(f"Error applying search filter for query '{query}'", e)
+                # Continue without search filter
 
-    # Apply country filter
-    if country:
-        suppliers_query = suppliers_query.filter(Supplier.country == country)
+        # Apply country filter
+        if country:
+            try:
+                suppliers_query = suppliers_query.filter(Supplier.country == country)
+            except OSError as os_err:
+                safe_log_error(f"OSError applying country filter '{country}'", os_err)
+                # Continue without country filter
+            except Exception as e:
+                safe_log_error(f"Error applying country filter '{country}'", e)
+                # Continue without country filter
 
-    # Apply supplier type filter
-    if supplier_type:
-        suppliers_query = suppliers_query.filter(Supplier.supplier_type == supplier_type)
+        # Apply supplier type filter
+        if supplier_type:
+            try:
+                suppliers_query = suppliers_query.filter(Supplier.supplier_type == supplier_type)
+            except OSError as os_err:
+                safe_log_error(f"OSError applying supplier_type filter '{supplier_type}'", os_err)
+                # Continue without supplier type filter
+            except Exception as e:
+                safe_log_error(f"Error applying supplier_type filter '{supplier_type}'", e)
+                # Continue without supplier type filter
 
-    # Get filtered suppliers
-    all_suppliers = suppliers_query.order_by(Supplier.name).all()
+        # Get filtered suppliers - with defensive ordering to handle NULL names and encoding issues
+        try:
+            # Try ordering by name with NULL handling
+            all_suppliers = suppliers_query.order_by(
+                func.coalesce(Supplier.name, '').asc(),
+                Supplier.id.asc()
+            ).all()
+        except OSError as os_err:
+            safe_log_error("OSError ordering suppliers by name", os_err)
+            try:
+                # Fallback: order by ID only
+                all_suppliers = suppliers_query.order_by(Supplier.id.asc()).all()
+            except OSError as os_err2:
+                safe_log_error("OSError ordering suppliers by ID", os_err2)
+                # Last resort: no ordering
+                try:
+                    all_suppliers = suppliers_query.all()
+                    # Sort in Python instead
+                    try:
+                        all_suppliers.sort(key=lambda s: (s.name or '', s.id or 0))
+                    except:
+                        pass  # If sorting fails, use unsorted list
+                except OSError as os_err3:
+                    safe_log_error("OSError loading suppliers without ordering", os_err3)
+                    all_suppliers = []
+                except Exception as e3:
+                    safe_log_error("Error loading suppliers without ordering", e3)
+                    all_suppliers = []
+            except Exception as e2:
+                safe_log_error("Error ordering suppliers by ID", e2)
+                try:
+                    all_suppliers = suppliers_query.all()
+                except:
+                    all_suppliers = []
+        except Exception as e:
+            safe_log_error("Error ordering suppliers", e)
+            try:
+                # Fallback: order by ID only
+                all_suppliers = suppliers_query.order_by(Supplier.id.asc()).all()
+            except:
+                # Last resort: no ordering
+                try:
+                    all_suppliers = suppliers_query.all()
+                except:
+                    all_suppliers = []
+    except OSError as os_err:
+        safe_log_error("OSError in supplier query construction", os_err)
+        all_suppliers = []
+    except Exception as e:
+        safe_log_error("Error in supplier query construction", e)
+        all_suppliers = []
 
     # Get all prepayment lines with supplier info
-    # Use outerjoin to handle cases where prepayment lines might not have payments
+    # Use a simpler approach to avoid Windows encoding issues with complex queries
+    prepayment_data = []
     try:
-        prepayment_query = db.session.query(
-            SupplierPrepaymentLine,
-            SupplierPayment,
-            Supplier
-        ).outerjoin(
-            SupplierPayment, SupplierPrepaymentLine.supplier_payment_id == SupplierPayment.id
-        ).outerjoin(
-            Supplier, SupplierPayment.supplier_id == Supplier.id
-        )
-
-        # Order by Supplier.name, handling NULLs
-        prepayment_query = prepayment_query.order_by(
-            case((Supplier.name.is_(None), ''), else_=Supplier.name)
-        )
-
-        prepayment_data = prepayment_query.all()
+        # Get all prepayment lines first
+        # Handle NULL created_at values and potential encoding issues
+        prepayment_lines = []
+        
+        # Try multiple ordering strategies, falling back if one fails
+        ordering_strategies = [
+            # Strategy 1: Order by created_at with NULL handling using coalesce
+            lambda: db.session.query(SupplierPrepaymentLine).order_by(
+                func.coalesce(SupplierPrepaymentLine.created_at, datetime(1970, 1, 1)).desc(),
+                SupplierPrepaymentLine.id.desc()
+            ),
+            # Strategy 2: Order by ID only (most reliable)
+            lambda: db.session.query(SupplierPrepaymentLine).order_by(
+                SupplierPrepaymentLine.id.desc()
+            ),
+            # Strategy 3: No ordering (last resort)
+            lambda: db.session.query(SupplierPrepaymentLine)
+        ]
+        
+        for strategy in ordering_strategies:
+            try:
+                prepayment_lines = strategy().all()
+                break  # Success, exit the loop
+            except OSError as os_err:
+                # Log OSError specifically for Windows encoding issues
+                safe_log_error("OSError in prepayment lines ordering strategy", os_err)
+                # Try next strategy
+                continue
+            except Exception as order_err:
+                # Log other errors
+                safe_log_error("Error in prepayment lines ordering strategy", order_err)
+                # Try next strategy
+                continue
+        
+        # If all strategies failed, prepayment_lines will be empty list
+        if not prepayment_lines:
+            # Last resort: try without any ordering
+            try:
+                prepayment_lines = db.session.query(SupplierPrepaymentLine).all()
+                # Sort in Python instead, handling None values safely
+                def sort_key(x):
+                    try:
+                        created = x.created_at if x.created_at else datetime(1970, 1, 1)
+                        return (created, x.id or 0)
+                    except:
+                        return (datetime(1970, 1, 1), x.id or 0)
+                prepayment_lines.sort(key=sort_key, reverse=True)
+            except OSError as os_err:
+                safe_log_error("OSError loading prepayment lines without ordering", os_err)
+                prepayment_lines = []
+            except Exception as e:
+                safe_log_error("Error loading prepayment lines without ordering", e)
+                prepayment_lines = []
+        
+        # Then manually join with payments and suppliers
+        # Add defensive handling for each iteration to prevent OSError from corrupting data
+        for line in prepayment_lines:
+            payment = None
+            supplier = None
+            if line.supplier_payment_id:
+                try:
+                    payment = SupplierPayment.query.get(line.supplier_payment_id)
+                    if payment and payment.supplier_id:
+                        try:
+                            supplier = Supplier.query.get(payment.supplier_id)
+                        except OSError as os_err:
+                            safe_log_error(f"OSError loading supplier {payment.supplier_id} for prepayment line {line.id}", os_err)
+                            supplier = None
+                        except Exception as e:
+                            safe_log_error(f"Error loading supplier {payment.supplier_id} for prepayment line {line.id}", e)
+                            supplier = None
+                except OSError as os_err:
+                    safe_log_error(f"OSError loading payment {line.supplier_payment_id} for prepayment line {line.id}", os_err)
+                    payment = None
+                except Exception as e:
+                    safe_log_error(f"Error loading payment {line.supplier_payment_id} for prepayment line {line.id}", e)
+                    payment = None
+            
+            # Safely append the data, handling any encoding issues
+            try:
+                prepayment_data.append((line, payment, supplier))
+            except OSError as os_err:
+                safe_log_error(f"OSError appending prepayment data for line {line.id}", os_err)
+                # Skip this line if appending fails
+                continue
+            except Exception as e:
+                safe_log_error(f"Error appending prepayment data for line {line.id}", e)
+                # Skip this line if appending fails
+                continue
+    except OSError as os_err:
+        # Catch Windows encoding errors - use empty list
+        safe_log_error("OSError in prepayment data loading (outer catch)", os_err)
+        prepayment_data = []
     except Exception as e:
-        # If there's a database schema issue, fall back to a simpler query
-        print(f"Error loading prepayment data: {e}", file=sys.stderr)
-        # Try a simpler query without joins
-        try:
-            prepayment_data = db.session.query(SupplierPrepaymentLine).all()
-            # Create dummy payment and supplier objects for compatibility
-            prepayment_data = [(line, None, None) for line in prepayment_data]
-        except Exception as e2:
-            print(f"Error with fallback query: {e2}", file=sys.stderr)
-            prepayment_data = []
+        # If there's any other error, log it safely and use empty list
+        safe_log_error("Error loading prepayment data (outer catch)", e)
+        prepayment_data = []
 
     # Group by supplier and calculate totals
     supplier_stats = {}
@@ -970,7 +1603,7 @@ def list_suppliers():
                     supplier_stats[supplier.id]['active_services'] += 1
         except (AttributeError, Exception) as e:
             # If service_item relationship fails, skip counting
-            print(f"Error accessing service_item for line {line.id}: {e}", file=sys.stderr)
+            safe_log_error(f"Error accessing service_item for line {line.id}", e)
             pass
 
     # Build final stats list from filtered suppliers
@@ -998,6 +1631,193 @@ def list_suppliers():
                           country=country,
                           supplier_type=supplier_type)
 
+@finance.route('/suppliers/type/<type_key>')
+def supplier_type_page(type_key):
+    """Dedicated page for a supplier type"""
+    type_map = {
+        'accommodation': {
+            'label': 'Accommodation',
+            'icon': 'fa-hotel',
+            'patterns': ['HOTEL', 'ACCOMMODATION'],
+            'new_supplier_type': 'HOTEL'
+        },
+        'airline': {
+            'label': 'Airline',
+            'icon': 'fa-plane',
+            'patterns': ['AIRLINE'],
+            'new_supplier_type': 'AIRLINE'
+        },
+        'transportation': {
+            'label': 'Transportation',
+            'icon': 'fa-bus',
+            'patterns': ['TRANSPORT', 'TRANSPORTATION', 'TRANSFER'],
+            'new_supplier_type': 'TRANSPORT'
+        },
+        'guides': {
+            'label': 'Guides',
+            'icon': 'fa-user-tie',
+            'patterns': ['GUIDE'],
+            'new_supplier_type': 'GUIDE'
+        },
+        'meet-assist': {
+            'label': 'Meet and assist',
+            'icon': 'fa-handshake',
+            'patterns': ['GROUND_HANDLER', 'MEET', 'ASSIST'],
+            'new_supplier_type': 'GROUND_HANDLER'
+        },
+        'restaurant': {
+            'label': 'Restaurant',
+            'icon': 'fa-utensils',
+            'patterns': ['RESTAURANT', 'MEAL', 'FOOD'],
+            'new_supplier_type': 'RESTAURANT'
+        },
+        'others': {
+            'label': 'Others',
+            'icon': 'fa-layer-group',
+            'patterns': [],
+            'new_supplier_type': ''
+        }
+    }
+
+    config = type_map.get(type_key)
+    if not config:
+        return redirect(url_for('finance.list_suppliers'))
+
+    suppliers_query = Supplier.query
+    search_query = request.args.get('q', '').strip()
+
+    try:
+        if config['patterns']:
+            filters = [Supplier.supplier_type.ilike(f'%{p}%') for p in config['patterns']]
+            suppliers_query = suppliers_query.filter(or_(*filters))
+        else:
+            suppliers_query = suppliers_query.filter(
+                ~or_(
+                    Supplier.supplier_type.ilike('%HOTEL%'),
+                    Supplier.supplier_type.ilike('%ACCOMMODATION%'),
+                    Supplier.supplier_type.ilike('%AIRLINE%'),
+                    Supplier.supplier_type.ilike('%TRANSPORT%'),
+                    Supplier.supplier_type.ilike('%TRANSFER%'),
+                    Supplier.supplier_type.ilike('%GUIDE%'),
+                    Supplier.supplier_type.ilike('%GROUND_HANDLER%'),
+                    Supplier.supplier_type.ilike('%MEET%'),
+                    Supplier.supplier_type.ilike('%ASSIST%'),
+                    Supplier.supplier_type.ilike('%RESTAURANT%'),
+                    Supplier.supplier_type.ilike('%MEAL%'),
+                    Supplier.supplier_type.ilike('%FOOD%')
+                )
+            )
+    except Exception as e:
+        safe_log_error(f"Error applying supplier type page filter {type_key}", e)
+        suppliers_query = Supplier.query.filter(db.text('1=0'))
+
+    if search_query:
+        suppliers_query = suppliers_query.filter(Supplier.name.ilike(f'%{search_query}%'))
+
+    suppliers = suppliers_query.order_by(func.coalesce(Supplier.name, '').asc()).all()
+    return render_template(
+        'finance/suppliers_type_page.html',
+        type_key=type_key,
+        type_label=config['label'],
+        type_icon=config['icon'],
+        suppliers=suppliers,
+        query=search_query,
+        new_supplier_type=config['new_supplier_type']
+    )
+
+@finance.route('/suppliers/type/<type_key>/quick-add', methods=['POST'])
+def quick_add_supplier(type_key):
+    """Create supplier from the type-page popup modal."""
+    type_map = {
+        'accommodation': 'HOTEL',
+        'airline': 'AIRLINE',
+        'transportation': 'TRANSPORT',
+        'guides': 'GUIDE',
+        'meet-assist': 'GROUND_HANDLER',
+        'restaurant': 'RESTAURANT',
+        'others': ''
+    }
+
+    base_supplier_type = type_map.get(type_key)
+    if base_supplier_type is None:
+        flash('Invalid supplier type page.', 'error')
+        return redirect(url_for('finance.list_suppliers'))
+
+    name = (request.form.get('name') or '').strip()
+    if not name:
+        flash('Name is required.', 'error')
+        return redirect(url_for('finance.supplier_type_page', type_key=type_key))
+
+    requested_type = (request.form.get('supplier_type') or '').strip().upper()
+    supplier_type = requested_type or base_supplier_type
+    payment_terms = (request.form.get('payment_terms') or '').strip() or None
+    cliq_alias = (request.form.get('cliq_alias') or '').strip()
+    guide_languages = (request.form.get('guide_languages') or '').strip()
+
+    # Generate unique supplier code similar to SUP001 style.
+    base_code = ''.join([c for c in name.upper() if c.isalnum()])[:4] or 'SUP'
+    candidate_code = f"{base_code}{datetime.utcnow().strftime('%H%M%S')}"
+    code = candidate_code
+    suffix = 1
+    while Supplier.query.filter_by(code=code).first():
+        code = f"{candidate_code}{suffix}"
+        suffix += 1
+
+    category = (request.form.get('category') or '').strip()
+    room_category = (request.form.get('room_category') or '').strip()
+    notes = (request.form.get('notes') or '').strip()
+    merged_notes = notes
+    if category:
+        merged_notes = f"Category: {category}\n{merged_notes}".strip()
+    if room_category:
+        merged_notes = f"Room Category: {room_category}\n{merged_notes}".strip()
+
+    contract_file = request.files.get('contract_file')
+    contract_saved_name = None
+    if contract_file and contract_file.filename:
+        try:
+            safe_name = secure_filename(contract_file.filename)
+            upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'supplier_contracts')
+            os.makedirs(upload_dir, exist_ok=True)
+            timestamped_name = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{safe_name}"
+            contract_file.save(os.path.join(upload_dir, timestamped_name))
+            contract_saved_name = timestamped_name
+        except Exception as e:
+            safe_log_error('Could not save contract attachment', e)
+
+    try:
+        supplier = Supplier(
+            name=name,
+            code=code,
+            supplier_type=supplier_type,
+            contact_person=(request.form.get('contact_person') or '').strip() or None,
+            email=(request.form.get('email') or '').strip() or None,
+            phone=(request.form.get('phone') or '').strip() or None,
+            website=(request.form.get('website') or '').strip() or None,
+            address=(request.form.get('address') or '').strip() or None,
+            city=(request.form.get('city') or '').strip() or None,
+            country=(request.form.get('country') or '').strip() or None,
+            payment_terms=payment_terms,
+            default_currency=(request.form.get('default_currency') or 'USD').strip() or 'USD',
+            bank_name=('Cliq' if payment_terms == 'Cliq' else (request.form.get('bank_name') or '').strip()) or None,
+            bank_account=(cliq_alias if payment_terms == 'Cliq' else (request.form.get('bank_account') or '').strip()) or None,
+            tax_number=(request.form.get('tax_number') or '').strip() or None,
+            notes=merged_notes or None,
+            languages=guide_languages or None
+        )
+        if contract_saved_name:
+            supplier.notes = (supplier.notes or '')
+            supplier.notes = f"Contract file: {contract_saved_name}\n{supplier.notes}".strip()
+        db.session.add(supplier)
+        db.session.commit()
+        flash(f'{name} added successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        safe_log_error(f'Error quick-adding supplier on {type_key}', e)
+        flash('Could not add supplier. Please try again.', 'error')
+
+    return redirect(url_for('finance.supplier_type_page', type_key=type_key))
+
 @finance.route('/new-supplier', methods=['GET', 'POST'])
 
 def new_supplier():
@@ -1006,6 +1826,9 @@ def new_supplier():
     from app.models.supplier import Supplier
 
     form = SupplierForm()
+    default_supplier_type = (request.args.get('supplier_type') or '').strip().upper()
+    if request.method == 'GET' and default_supplier_type:
+        form.supplier_type.data = default_supplier_type
 
     if form.validate_on_submit():
         try:
@@ -1102,8 +1925,19 @@ def supplier_costs():
         except (ValueError, TypeError):
             flash('Invalid to date format', 'warning')
 
-    # Order by date descending
-    prepayment_lines = query.order_by(SupplierPrepaymentLine.created_at.desc()).all()
+    # Order by date descending - with robust ordering to handle NULL dates
+    try:
+        prepayment_lines = query.order_by(
+            func.coalesce(SupplierPrepaymentLine.created_at, datetime(1970, 1, 1)).desc(),
+            SupplierPrepaymentLine.id.desc()
+        ).all()
+    except (OSError, Exception) as e:
+        safe_log_error("Error ordering prepayment lines", e)
+        try:
+            # Fallback: order by ID only
+            prepayment_lines = query.order_by(SupplierPrepaymentLine.id.desc()).all()
+        except:
+            prepayment_lines = []
 
     # Calculate total amount
     total_amount = sum(line.amount for line in prepayment_lines)
@@ -1118,6 +1952,65 @@ def supplier_costs():
         suppliers=suppliers
     )
 
+@finance.route('/clear-all-suppliers', methods=['POST'])
+def clear_all_suppliers():
+    """Clear all supplier data from the database"""
+    try:
+        from sqlalchemy import text
+        
+        # Count existing records BEFORE deletion
+        supplier_count_before = Supplier.query.count()
+        service_count_before = SupplierService.query.count()
+        payment_count_before = SupplierPayment.query.count()
+        prepayment_count_before = SupplierPrepaymentLine.query.count()
+        
+        if supplier_count_before == 0:
+            flash('No suppliers found. Nothing to delete.', 'info')
+            return redirect(url_for('finance.list_suppliers'))
+        
+        # Handle ServiceConfirmation references (set supplier_id to NULL)
+        with db.engine.connect() as conn:
+            conn.execute(text("UPDATE service_confirmation SET supplier_id = NULL WHERE supplier_id IS NOT NULL"))
+            conn.commit()
+        
+        # Delete prepayment lines
+        prepayment_deleted = db.session.query(SupplierPrepaymentLine).delete()
+        db.session.commit()
+        
+        # Delete supplier payments
+        payment_deleted = db.session.query(SupplierPayment).delete()
+        db.session.commit()
+        
+        # Delete supplier services
+        service_deleted = db.session.query(SupplierService).delete()
+        db.session.commit()
+        
+        # Finally, delete all suppliers - use direct SQL to ensure it works
+        with db.engine.connect() as conn:
+            # Delete all suppliers using direct SQL
+            result = conn.execute(text("DELETE FROM supplier"))
+            supplier_deleted = result.rowcount
+            conn.commit()
+        
+        # Verify deletion
+        supplier_count_after = Supplier.query.count()
+        service_count_after = SupplierService.query.count()
+        payment_count_after = SupplierPayment.query.count()
+        prepayment_count_after = SupplierPrepaymentLine.query.count()
+        
+        if supplier_count_after > 0:
+            flash(f'Warning: {supplier_count_after} suppliers still remain after deletion. This may be a caching issue - please hard refresh the page (Ctrl+F5) or clear your browser cache.', 'warning')
+        else:
+            flash(f'Successfully deleted all supplier data: {supplier_deleted} suppliers, {service_deleted} services, {payment_deleted} payments, {prepayment_deleted} prepayment lines. Please refresh any open pages to see the changes.', 'success')
+        
+        return redirect(url_for('finance.list_suppliers'))
+        
+    except Exception as e:
+        db.session.rollback()
+        safe_log_error("Error clearing all suppliers", e)
+        flash(f'Error clearing supplier data: {str(e)}', 'error')
+        return redirect(url_for('finance.list_suppliers'))
+
 @finance.route('/supplier/<int:supplier_id>')
 
 def supplier_details(supplier_id):
@@ -1128,13 +2021,27 @@ def supplier_details(supplier_id):
 
     # Get prepayment lines for this supplier
     # This is our new approach - show costs directly from prepayment lines
-    prepayment_lines = SupplierPrepaymentLine.query.filter(
-        SupplierPrepaymentLine.supplier_name == supplier.name
-    ).options(
-        db.joinedload(SupplierPrepaymentLine.service_item)
-    ).order_by(
-        SupplierPrepaymentLine.created_at.desc()
-    ).all()
+    # With robust ordering to handle NULL dates
+    try:
+        prepayment_lines = SupplierPrepaymentLine.query.filter(
+            SupplierPrepaymentLine.supplier_name == supplier.name
+        ).options(
+            db.joinedload(SupplierPrepaymentLine.service_item)
+        ).order_by(
+            func.coalesce(SupplierPrepaymentLine.created_at, datetime(1970, 1, 1)).desc(),
+            SupplierPrepaymentLine.id.desc()
+        ).all()
+    except (OSError, Exception) as e:
+        safe_log_error("Error loading prepayment lines for supplier", e)
+        try:
+            # Fallback: order by ID only
+            prepayment_lines = SupplierPrepaymentLine.query.filter(
+                SupplierPrepaymentLine.supplier_name == supplier.name
+            ).options(
+                db.joinedload(SupplierPrepaymentLine.service_item)
+            ).order_by(SupplierPrepaymentLine.id.desc()).all()
+        except:
+            prepayment_lines = []
 
     # Also get legacy supplier payments for this supplier
     supplier_payments = SupplierPayment.query.filter_by(
@@ -1144,7 +2051,8 @@ def supplier_details(supplier_id):
     ).all()
 
     # Debug output
-    print(f"Loaded {len(prepayment_lines)} supplier prepayment lines for supplier {supplier_id}", file=sys.stderr)
+    # Debug logging (commented out to avoid Windows encoding issues)
+    # current_app.logger.debug(f"Loaded {len(prepayment_lines)} supplier prepayment lines for supplier {supplier_id}")
     for line in prepayment_lines:
         booking_ref = "Unknown"
         try:
@@ -1154,9 +2062,9 @@ def supplier_details(supplier_id):
             if booking:
                 booking_ref = booking.reference_number
         except Exception as e:
-            print(f"Error getting booking: {str(e)}", file=sys.stderr)
+            safe_log_error("Error getting booking", e)
 
-        print(f"Prepayment line ID {line.id}: {line.service_type} for booking {booking_ref}", file=sys.stderr)
+        # current_app.logger.debug(f"Prepayment line ID {line.id}: {line.service_type} for booking {booking_ref}")
 
     # Calculate financial metrics
     total_paid = sum(payment.amount for payment in supplier_payments if payment.status == 'PAID')
@@ -1172,3 +2080,19 @@ def supplier_details(supplier_id):
         total_due=total_due,
         total_confirmed=total_confirmed
     )
+
+@finance.route('/supplier/<int:supplier_id>/delete', methods=['POST'])
+def delete_supplier(supplier_id):
+    """Delete one supplier from type page table."""
+    supplier = Supplier.query.get_or_404(supplier_id)
+    supplier_name = supplier.name
+    try:
+        db.session.delete(supplier)
+        db.session.commit()
+        flash(f'Supplier "{supplier_name}" deleted.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        safe_log_error(f'Error deleting supplier {supplier_id}', e)
+        flash('Could not delete supplier. Please try again.', 'error')
+
+    return redirect(request.referrer or url_for('finance.list_suppliers'))

@@ -1,0 +1,82 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+instance/*.db
+instance/*.db-journal
+*.db
+*.db-journal
+migrations/
+*.log
+*.pyc
+
+# Generated files
+generated_invoices/
+generated_vouchers/
+app/static/uploads/
+*.pdf
+*.png
+*.jpg
+*.jpeg
+
+# Test files
+test_*.py
+*_test.py
+test_*.html
+test_*.json
+test_*.pdf
+
+# Documentation
+*.md
+!README.md
+
+# Git
+.git/
+.gitignore
+
+# Environment files
+.env
+.env.local
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# Lock files (keep pyproject.toml but ignore lock)
+uv.lock
+
+# Temporary files
+*.tmp
+*.temp
+cookies.txt
+
+# Replit specific
+.replit
+replit.nix

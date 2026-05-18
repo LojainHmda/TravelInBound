@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Hotel Voucher - {{ request.request_number }}{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+@media print {
+    @page { size: A4; margin: 0.5in; }
+    .no-print { display: none !important; }
+    .top-navbar, #sidebar, #sidebar-overlay, .hotel-voucher-screen { display: none !important; }
+    .hotel-voucher-print { display: block !important; }
+    body { background: white !important; }
+    #content, main { padding: 0 !important; margin: 0 !important; }
+}
+.hotel-voucher-print {
+    display: none;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #000;
+}
+.hotel-voucher-header {
+    text-align: center;
+    margin-bottom: 16px;
+}
+.hotel-voucher-header img {
+    display: block;
+    width: 3cm;
+    height: 3cm;
+    object-fit: contain;
+    margin: 0 auto 8px auto;
+}
+.hotel-voucher-header .company-name-below-logo {
+    font-size: 11px;
+    color: #000;
+    margin-bottom: 12px;
+}
+.hotel-voucher-company {
+    text-align: center;
+    margin-bottom: 16px;
+}
+.hotel-voucher-company h1 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    font-weight: normal;
+    color: #000;
+}
+.hotel-voucher-company p {
+    margin: 2px 0;
+    font-size: 11px;
+    color: #000;
+}
+.hotel-voucher-form-title {
+    text-align: center;
+    border: 1px solid #000;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-weight: bold;
+    font-size: 14px;
+    letter-spacing: 0.05em;
+}
+.hotel-voucher-booking {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    font-size: 12px;
+}
+.hotel-voucher-booking-left p { margin: 2px 0; }
+.hotel-voucher-booking-right {
+    display: flex;
+    gap: 12px;
+}
+.hotel-voucher-booking-right .voucher-box, .hotel-voucher-booking-right .guests-box {
+    border: 1px solid #000;
+    padding: 2px 12px;
+    height: fit-content;
+}
+.hotel-voucher-booking-right .guests-box { font-size: 11px; }
+.hotel-voucher-provide { margin-bottom: 16px; font-size: 12px; }
+.hotel-voucher-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+    font-size: 11px;
+}
+.hotel-voucher-table th, .hotel-voucher-table td {
+    border: 1px solid #000;
+    padding: 6px 4px;
+    text-align: center;
+    empty-cells: show;
+}
+.hotel-voucher-table th { font-weight: bold; background: #f5f5f5; }
+.hotel-voucher-table .col-date { width: 10%; }
+.hotel-voucher-table .col-meal { width: 8%; }
+.hotel-voucher-table .col-room { width: 12%; }
+.hotel-voucher-table .col-sgl, .hotel-voucher-table .col-dbl, .hotel-voucher-table .col-twn,
+.hotel-voucher-table .col-trpl, .hotel-voucher-table .col-other { width: 6%; }
+.hotel-voucher-table .col-note { width: 20%; }
+.hotel-voucher-notes-section {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    align-items: flex-start;
+}
+.hotel-voucher-notes-section .notes-title { flex-shrink: 0; font-weight: bold; }
+.hotel-voucher-notes-section .notes-box {
+    flex: 1;
+    border: 1px solid #000;
+    min-height: 3.5cm;
+    padding: 8px;
+    font-size: 11px;
+}
+.hotel-voucher-meal-types {
+    font-size: 10px;
+    margin-bottom: 20px;
+    color: #333;
+}
+.hotel-voucher-disclaimer {
+    font-size: 10px;
+    margin-bottom: 16px;
+    color: #333;
+}
+.hotel-voucher-signature {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 11px;
+}
+.hotel-voucher-signature .sig-line {
+    flex: 1;
+    border-bottom: 1px solid #000;
+    min-height: 20px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row no-print mb-3 hotel-voucher-screen">
+        <div class="col-12">
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Request
+                </a>
+                <button onclick="window.print()" class="btn btn-primary">
+                    <i class="fas fa-print"></i> Print Voucher
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="hotel-voucher-print">
+        <!-- 1. Header: Logo + Company name -->
+        <div class="hotel-voucher-header">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Windows of Jordan" onerror="this.style.display='none'">
+            <div class="company-name-below-logo">Windows of Jordan Tours</div>
+        </div>
+        <!-- 2. Company Information -->
+        <div class="hotel-voucher-company">
+            <h1>Windows of Jordan Tours</h1>
+            <p>Jabal Amman - Prince Mhd Street</p>
+            <p>Building number 247 - Office 500</p>
+            <p>Tel. +9626 4619402 - Fax +9626 4619404</p>
+        </div>
+        <!-- 3. Form Title -->
+        <div class="hotel-voucher-form-title">HOTEL SERVICES VOUCHER</div>
+        <!-- 4. Booking Information -->
+        <div class="hotel-voucher-booking">
+            <div class="hotel-voucher-booking-left">
+                <p><strong>To:</strong> Reservation Department.</p>
+                <p><strong>Date:</strong> {{ (request.from_date.strftime('%d %b %Y') if request.from_date else '') or '-' }}</p>
+            </div>
+            <div class="hotel-voucher-booking-right">
+                <div class="voucher-box">Reference Number: {{ request.request_number or request.document_sequence or '-' }}</div>
+                <div class="guests-box">Pax: {{ request.pax or 0 }}</div>
+            </div>
+        </div>
+        <!-- 5. Please provide -->
+        <p class="hotel-voucher-provide">Please provide with the following.</p>
+        <!-- 6. Accommodation Details Table -->
+        <table class="hotel-voucher-table">
+            <thead>
+                <tr>
+                    <th class="col-date">Check In</th>
+                    <th class="col-date">Check Out</th>
+                    <th class="col-meal">Meal</th>
+                    <th class="col-room">Room Type</th>
+                    <th class="col-sgl">SGL</th>
+                    <th class="col-dbl">DBL</th>
+                    <th class="col-twn">TWN</th>
+                    <th class="col-trpl">TRPL</th>
+                    <th class="col-other">OTHER</th>
+                    <th class="col-note">Note</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if request.inbound_hotels %}
+                {% for hotel in request.inbound_hotels %}
+                <tr>
+                    <td>{{ hotel.check_in_date.strftime('%d %b %Y') if hotel.check_in_date else '-' }}</td>
+                    <td>{{ hotel.check_out_date.strftime('%d %b %Y') if hotel.check_out_date else '-' }}</td>
+                    <td>{{ hotel.meal_plan or 'BB' }}</td>
+                    <td>{{ hotel.hotel_name or '-' }}</td>
+                    <td>{{ hotel.single_rooms or 0 }}</td>
+                    <td>{{ hotel.double_rooms or 0 }}</td>
+                    <td>0</td>
+                    <td>{{ hotel.triple_rooms or 0 }}</td>
+                    <td>0</td>
+                    <td>{{ hotel.notes or '&nbsp;'|safe }}</td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="10" style="text-align: center;">No hotel accommodations</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <!-- 7. Note and Special Request -->
+        <div class="hotel-voucher-notes-section">
+            <span class="notes-title">Note and Special Request</span>
+            <div class="notes-box" id="hotelVoucherNoteBox" contenteditable="true">{{ request.hotel_voucher_note or '' }}</div>
+        </div>
+        <!-- 8. Meal Types Explanation -->
+        <div class="hotel-voucher-meal-types">
+            BB = Bed and Breakfast &nbsp;|&nbsp; HB = Half Board &nbsp;|&nbsp; FB = Full Board &nbsp;|&nbsp; RO = Room Only
+        </div>
+        <!-- 9. Company Disclaimer -->
+        <div class="hotel-voucher-disclaimer">
+            Our Company is responsible only for service listed above.<br>
+            The presentation of this voucher must be attached to your invoice otherwise payment may be delayed.
+        </div>
+        <!-- 10. Signature -->
+        <div class="hotel-voucher-signature">
+            <span>Authorised Signature :</span>
+            <div class="sig-line"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

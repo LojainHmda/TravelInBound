@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, date
 from app import db
 from app.models import STATUS_REQUEST, STATUS_QUOTED, STATUS_RESERVED, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED
@@ -42,15 +43,23 @@ class InboundRequest(db.Model):
     departure_tax = db.Column(db.String(50), nullable=True, default='NOT_INCLUDED')  # INCLUDED, NOT_INCLUDED
 
     # Client information
-    customer_type = db.Column(db.String(20), nullable=False, default='AGENCY')  # AGENCY, GROUP, COMPANY, CORPORATE
+    customer_type = db.Column(db.String(20), nullable=False, default='GROUP')  # GROUP, INDIVIDUAL, INCENTIVE, OTHERS
     contact_name = db.Column(db.String(100), nullable=False)
     agent_ref = db.Column(db.String(50), nullable=True)
-    nationality = db.Column(db.String(50), nullable=False)
+    nationality = db.Column(db.String(500), nullable=False)  # single label or "Name (n), Name (n)" for mixed groups
     pax = db.Column(db.Integer, nullable=False, default=1)
     special_note = db.Column(db.Text, nullable=True)
+    restaurant_voucher_note = db.Column(db.Text, nullable=True)  # Note and Special Request for restaurant voucher only
+    hotel_voucher_note = db.Column(db.Text, nullable=True)  # Note and Special Request for hotel voucher only
+    advance_expense_sheet_data = db.Column(db.Text, nullable=True)  # JSON: expense rows, file, pax, guide, date, method, approved
+    closing_guide_payment_sheet_data = db.Column(db.Text, nullable=True)  # JSON: closing guide payment sheet (Guide Fees, Guide Overnights, etc.)
+    admin_invoice_data = db.Column(db.Text, nullable=True)  # JSON: editable admin invoice content
+    customer_invoice_data = db.Column(db.Text, nullable=True)  # JSON: editable customer invoice content
 
     # Status and tracking
     status = db.Column(db.String(20), default=STATUS_REQUEST)
+    # When True, hidden from main inbound lists; shown under Hub "Deleted" until restored or invoiced.
+    pending_invoice_queue = db.Column(db.Boolean, default=False, nullable=False)
     is_saved = db.Column(db.Boolean, default=False)  # True when user explicitly saves with final sequence number
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=True)  # Link to customer
@@ -65,7 +74,7 @@ class InboundRequest(db.Model):
 
     # Relationships
     customer = db.relationship('Customer', backref='inbound_requests', lazy=True)
-    itinerary_rows = db.relationship('ItineraryRow', backref='request', lazy=True, cascade="all, delete-orphan")
+    itinerary_rows = db.relationship('ItineraryRow', backref='request', lazy=True, cascade="all, delete-orphan", order_by="ItineraryRow.date, ItineraryRow.id")
     inbound_hotels = db.relationship('InboundHotel', backref='request', lazy=True, cascade="all, delete-orphan")
     inbound_transports = db.relationship('InboundTransport', backref='request', lazy=True, cascade="all, delete-orphan")
     inbound_meals = db.relationship('InboundMeal', backref='request', lazy=True, cascade="all, delete-orphan")
@@ -81,6 +90,20 @@ class InboundRequest(db.Model):
 
     def __repr__(self):
         return f'<InboundRequest {self.request_number}>'
+
+    @property
+    def agent(self):
+        """Agent/bill-to name: from _agent (form), customer, or contact_name fallback"""
+        if '_agent' in self.__dict__ and self.__dict__['_agent']:
+            return self.__dict__['_agent']
+        if self.customer:
+            return self.customer.name
+        return self.contact_name
+
+    @agent.setter
+    def agent(self, value):
+        """Allow setting agent (for forms); stored in _agent since no DB column"""
+        self.__dict__['_agent'] = value
 
     @classmethod
     def generate_request_number(cls, from_date=None):
@@ -163,6 +186,38 @@ class InboundRequest(db.Model):
                 self.no_of_days = 0  # Invalid range
         return self.no_of_days
 
+
+def itinerary_row_guide_supplier_id_list(row):
+    """Return guide supplier IDs for an itinerary row (reads column only).
+
+    Used by Jinja templates and routes so pages work even if a running worker loaded
+    an older ItineraryRow class (missing get_itinerary_guide_supplier_id_list).
+    Do not call row.get_itinerary_guide_supplier_id_list() from here (delegates to this).
+    """
+    if row is None:
+        return []
+    raw = getattr(row, 'itinerary_guide_supplier_ids', None)
+    if not raw:
+        return []
+    try:
+        data = json.loads(raw)
+        if not isinstance(data, list):
+            return []
+        out = []
+        seen = set()
+        for x in data:
+            try:
+                i = int(x)
+            except (TypeError, ValueError):
+                continue
+            if i not in seen:
+                seen.add(i)
+                out.append(i)
+        return out
+    except (json.JSONDecodeError, TypeError):
+        return []
+
+
 class ItineraryRow(db.Model):
     """Individual itinerary items with service flags and costing"""
     __tablename__ = 'itinerary_row'
@@ -202,6 +257,8 @@ class ItineraryRow(db.Model):
     restaurant_supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=True)  # FK to Supplier (Restaurant)
     cash_expense = db.Column(db.Float, default=0.0)
     comment = db.Column(db.Text, nullable=True)
+    # JSON array of guide supplier IDs (Supplier.supplier_type == GUIDE) assigned to this day
+    itinerary_guide_supplier_ids = db.Column(db.Text, nullable=True)
 
     # Tracking
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -238,6 +295,27 @@ class ItineraryRow(db.Model):
             return (self.base_cost or 0) * pax_count
         else:  # PER_GROUP
             return self.base_cost or 0
+
+    def get_itinerary_guide_supplier_id_list(self):
+        """Ordered unique supplier IDs selected for this itinerary day (guides)."""
+        return itinerary_row_guide_supplier_id_list(self)
+
+    def set_itinerary_guide_supplier_id_list(self, id_list):
+        """Persist guide supplier IDs as JSON (deduped, order preserved)."""
+        if not id_list:
+            self.itinerary_guide_supplier_ids = None
+            return
+        seen = set()
+        clean = []
+        for x in id_list:
+            try:
+                i = int(x)
+            except (TypeError, ValueError):
+                continue
+            if i not in seen:
+                seen.add(i)
+                clean.append(i)
+        self.itinerary_guide_supplier_ids = json.dumps(clean) if clean else None
 
     @property
     def linked_hotel(self):
@@ -342,6 +420,7 @@ class InboundHotel(db.Model):
     double_rooms = db.Column(db.Integer, default=0)
     triple_rooms = db.Column(db.Integer, default=0)
     notes = db.Column(db.Text, nullable=True)
+    voucher_notes = db.Column(db.Text, nullable=True)  # Notes specific to voucher (separate from hotel notes)
 
     # Costing
     cost_per_night = db.Column(db.Float, default=0.0)
@@ -399,6 +478,7 @@ class HotelRoom(db.Model):
     confirmation = db.Column(db.String(200), nullable=True)  # Confirmation code/number from supplier
 
     # Room details for guest assignment
+    room_category = db.Column(db.String(100), nullable=True)  # e.g., Standard Rooms, Junior Suites, Executive Suites, Presidential Suites
     room_option = db.Column(db.String(100), nullable=True)  # e.g., Sea View, Premium, Standard
     board_basis = db.Column(db.String(20), nullable=True)  # BB, HB, FB, RO
     dietary_requirements = db.Column(db.String(200), nullable=True)  # e.g., Vegetarian, Halal
@@ -443,6 +523,8 @@ class InboundTransport(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     request_id = db.Column(db.Integer, db.ForeignKey('inbound_request.id'), nullable=False)
     source_itinerary_id = db.Column(db.Integer, db.ForeignKey('itinerary_row.id'), nullable=True)
+    source_arrival_batch_id = db.Column(db.Integer, db.ForeignKey('arrival_batch.id'), nullable=True)
+    source_departure_batch_id = db.Column(db.Integer, db.ForeignKey('departure_batch.id'), nullable=True)
 
     # Transport details
     date = db.Column(db.Date, nullable=False)  # From Date
@@ -502,8 +584,8 @@ class InboundTransport(db.Model):
     def date_range_display(self):
         """Return formatted date range string (from_date → to_date) if end_date exists, otherwise just date"""
         if self.end_date and self.end_date != self.date:
-            return f"{self.date.strftime('%d %b') if self.date else '-'} - {self.end_date.strftime('%d %b') if self.end_date else '-'}"
-        return self.date.strftime('%d %b') if self.date else '-'
+            return f"{self.date.strftime('%d %b %Y') if self.date else '-'} - {self.end_date.strftime('%d %b %Y') if self.end_date else '-'}"
+        return self.date.strftime('%d %b %Y') if self.date else '-'
 
     def __repr__(self):
         return f'<InboundTransport {self.vehicle_type} - {self.date}>'
@@ -528,6 +610,7 @@ class InboundMeal(db.Model):
     location = db.Column(db.String(200), nullable=True)
     meal_time = db.Column(db.Time, nullable=True)
     meal_note = db.Column(db.Text, nullable=True)  # Additional notes for restaurant/meal
+    voucher_notes = db.Column(db.Text, nullable=True)  # Notes specific to voucher (editable, saved per restaurant)
 
     # Costing
     cost_per_person = db.Column(db.Float, default=0.0)
@@ -550,6 +633,12 @@ class InboundMeal(db.Model):
         """Get supplier name from relationship or legacy text field"""
         if self.supplier_ref:
             return self.supplier_ref.name
+        # If restaurant field contains a numeric ID (legacy data), try to resolve it
+        if self.restaurant and self.restaurant.isdigit():
+            from app.models.supplier import Supplier
+            supplier = Supplier.query.get(int(self.restaurant))
+            if supplier:
+                return supplier.name
         return self.restaurant
 
     def __repr__(self):
@@ -620,8 +709,8 @@ class InboundGuide(db.Model):
     def date_range_display(self):
         """Return formatted date range string (from_date → to_date) if end_date exists, otherwise just date"""
         if self.end_date and self.end_date != self.date:
-            return f"{self.date.strftime('%d %b') if self.date else '-'} - {self.end_date.strftime('%d %b') if self.end_date else '-'}"
-        return self.date.strftime('%d %b') if self.date else '-'
+            return f"{self.date.strftime('%d %b %Y') if self.date else '-'} - {self.end_date.strftime('%d %b %Y') if self.end_date else '-'}"
+        return self.date.strftime('%d %b %Y') if self.date else '-'
 
     def __repr__(self):
         return f'<InboundGuide {self.guide_name} - {self.date}>'
@@ -736,7 +825,9 @@ class ArrivalBatch(db.Model):
     visa_status = db.Column(db.String(50), default='NOT_INCLUDED')  # VISA_FREE, RESTRICTED, INCLUDED, NOT_INCLUDED
     meet_assist = db.Column(db.Boolean, default=False)  # Meet & Assist Yes/No
     representative_name = db.Column(db.String(200), nullable=True)  # Representative Name for Meet & Assist
+    notes = db.Column(db.Text, nullable=True)  # Notes field
     supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=True)  # FK to Supplier (Ground handler)
+    needs_transport = db.Column(db.Boolean, default=True)  # If True, saving creates/keeps a linked Transport stub
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -776,7 +867,9 @@ class DepartureBatch(db.Model):
     meet_assist = db.Column(db.Boolean, default=False)  # Meet & Assist Yes/No
     representative_name = db.Column(db.String(200), nullable=True)  # Representative Name for Meet & Assist
     departure_tax = db.Column(db.String(50), default='NOT_INCLUDED')  # INCLUDED, NOT_INCLUDED, NONE
+    notes = db.Column(db.Text, nullable=True)  # Notes field
     supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=True)  # FK to Supplier (Ground handler)
+    needs_transport = db.Column(db.Boolean, default=True)  # If True, saving creates/keeps a linked Transport stub
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -793,6 +886,19 @@ class DepartureBatch(db.Model):
 
     def __repr__(self):
         return f'<DepartureBatch {self.batch_name or self.id}>'
+
+
+class InboundRepresentative(db.Model):
+    """Lookup table for representative names used in arrivals, departures, and tour expenses"""
+    __tablename__ = 'inbound_representative'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<InboundRepresentative {self.name}>'
+
 
 class InboundOptional(db.Model):
     """Optional/Extra services purchased independently by passenger - not restricted to itinerary dates"""

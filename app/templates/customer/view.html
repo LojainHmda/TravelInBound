@@ -21,11 +21,15 @@
         <div class="card-body">
           <div class="row">
             <div class="col-md-6">
-              <h6 class="fw-bold">Personal Information</h6>
+              <h6 class="fw-bold">Customer Information</h6>
               <table class="table table-borderless">
                 <tr>
-                  <th style="width: 35%">Name:</th>
+                  <th style="width: 35%">Agent name:</th>
                   <td>{{ customer.name }}</td>
+                </tr>
+                <tr>
+                  <th>Contact person:</th>
+                  <td>{{ customer.company_name or '—' }}</td>
                 </tr>
                 <tr>
                   <th>Email:</th>
@@ -36,21 +40,38 @@
                   <td>{{ customer.phone or 'Not provided' }}</td>
                 </tr>
                 <tr>
+                  <th>Customer type:</th>
+                  <td>{{ customer.customer_type }}</td>
+                </tr>
+                <tr>
+                  <th>Payment terms:</th>
+                  <td>{{ customer.payment_terms or '—' }}</td>
+                </tr>
+                {% if customer.payment_terms == 'Cliq' and (customer.cliq_alias or customer.bank_account) %}
+                <tr>
+                  <th>Cliq alias:</th>
+                  <td>{{ customer.cliq_alias or customer.bank_account }}</td>
+                </tr>
+                {% elif customer.bank_name or customer.bank_account %}
+                <tr>
+                  <th>Bank name:</th>
+                  <td>{{ customer.bank_name or '—' }}</td>
+                </tr>
+                <tr>
+                  <th>Bank account:</th>
+                  <td>{{ customer.bank_account or '—' }}</td>
+                </tr>
+                {% endif %}
+                {% if customer.address or customer.city or customer.country %}
+                <tr>
                   <th>Address:</th>
                   <td>{{ customer.get_full_address() }}</td>
                 </tr>
+                {% endif %}
+                {% if customer.tax_number %}
                 <tr>
-                  <th>Customer Type:</th>
-                  <td>{{ customer.customer_type }}</td>
-                </tr>
-                {% if customer.customer_type == 'Corporate' or customer.customer_type == 'Group' %}
-                <tr>
-                  <th>Company Name:</th>
-                  <td>{{ customer.company_name or 'Not provided' }}</td>
-                </tr>
-                <tr>
-                  <th>Tax Number:</th>
-                  <td>{{ customer.tax_number or 'Not provided' }}</td>
+                  <th>Tax number:</th>
+                  <td>{{ customer.tax_number }}</td>
                 </tr>
                 {% endif %}
               </table>

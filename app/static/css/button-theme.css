@@ -2,7 +2,7 @@
 
 /* Universal button override - apply to all buttons across the application */
 .btn, 
-button:not(.btn-reset):not(.close):not([data-dismiss]), 
+button:not(.btn-reset):not(.close):not([data-dismiss]):not(.guide-itin-slot-main):not(.guide-itin-slot-remove):not(.transport-flight-chip), 
 input[type="submit"], 
 input[type="button"],
 .btn-new-request,
@@ -34,7 +34,7 @@ input[type="button"],
 
 /* Hover states for all buttons */
 .btn:hover, 
-button:not(.btn-reset):not(.close):not([data-dismiss]):hover, 
+button:not(.btn-reset):not(.close):not([data-dismiss]):not(.guide-itin-slot-main):not(.guide-itin-slot-remove):not(.transport-flight-chip):hover, 
 input[type="submit"]:hover, 
 input[type="button"]:hover,
 .btn-new-request:hover,
@@ -269,6 +269,18 @@ table .action-buttons button:hover {
     color: #000 !important;
 }
 
+table .action-buttons a.btn-restore {
+    background: white !important;
+    border: 2px solid #e9ecef !important;
+    color: #0d6efd !important;
+}
+
+table .action-buttons a.btn-restore:hover {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%) !important;
+    color: white !important;
+    border-color: #0d6efd !important;
+}
+
 /* View Invoice Button Styling */
 .action-btn-view-invoice {
     background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
@@ -295,4 +307,79 @@ table .action-buttons button:hover {
     border-color: #adb5bd !important;
     color: #6c757d !important;
     transform: none !important;
+}
+
+/* Guide tab — “From itinerary” slot chips (wrapper is a div; inner controls are buttons — avoid nested <button>) */
+.guide-itin-slot-chip {
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 0 !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    line-height: 1.25 !important;
+    border-radius: 0.5rem !important;
+    box-shadow: none !important;
+    gap: 0 !important;
+    background: #ffffff !important;
+    border: 1px solid #99f6e4 !important;
+    color: #134e4a !important;
+}
+.guide-itin-slot-chip[data-inbound-guide-id]:not([data-inbound-guide-id=""]) {
+    background: #d1fae5 !important;
+    border: 1px solid #22c55e !important;
+    color: #14532d !important;
+}
+.guide-itin-slot-chip[data-inbound-guide-id]:not([data-inbound-guide-id=""]):hover {
+    background: #a7f3d0 !important;
+    color: #14532d !important;
+}
+.guide-itin-slot-chip:not([data-inbound-guide-id]):hover,
+.guide-itin-slot-chip[data-inbound-guide-id=""]:hover {
+    background: #f0fdfa !important;
+    color: #134e4a !important;
+    box-shadow: none !important;
+}
+button.guide-itin-slot-main {
+    padding: 0.25rem 0.35rem 0.25rem 0.5rem !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    line-height: 1.25 !important;
+    border-radius: 0.5rem 0 0 0.5rem !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    border: none !important;
+    color: inherit !important;
+    cursor: pointer !important;
+    flex: 1 1 auto !important;
+    text-align: left !important;
+    min-width: 0 !important;
+}
+button.guide-itin-slot-main:hover {
+    background: rgba(0, 0, 0, 0.04) !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+button.guide-itin-slot-remove {
+    padding: 0 2px !important;
+    min-width: auto !important;
+    font-weight: 400 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+    color: #64748b !important;
+}
+button.guide-itin-slot-remove:hover {
+    background: transparent !important;
+    color: #dc2626 !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Transport tab — flight-linked chips (Tailwind sets colors; exclude from global gray button rule) */
+button.transport-flight-chip {
+    font-weight: 600 !important;
+    box-shadow: none !important;
+    cursor: pointer !important;
 }

@@ -93,22 +93,7 @@ body {
         </div>
         <div class="card-body">
             <form method="GET" action="{{ url_for('finance.list_suppliers') }}" class="row g-3">
-                <div class="col-md-4">
-                    <label for="query" class="form-label">Search</label>
-                    <input type="text" id="query" name="query" class="form-control" value="{{ query or '' }}" placeholder="Name, code, email...">
-                </div>
-                <div class="col-md-3">
-                    <label for="country" class="form-label">Country</label>
-                    <select id="country" name="country" class="form-select">
-                        <option value="">All Countries</option>
-                        <option value="Jordan">Jordan</option>
-                        <option value="UAE">UAE</option>
-                        <option value="Qatar">Qatar</option>
-                        <option value="Egypt">Egypt</option>
-                        <option value="Saudi Arabia">Saudi Arabia</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
+                <div class="col-md-8">
                     <label for="supplier_type" class="form-label">Supplier Type</label>
                     <select id="supplier_type" name="supplier_type" class="form-select">
                         <option value="">All Types</option>
@@ -123,7 +108,7 @@ body {
                         <option value="OTHER">Other</option>
                     </select>
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
+                <div class="col-md-4 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary w-100">
                         <i class="fas fa-search me-1"></i> Search
                     </button>

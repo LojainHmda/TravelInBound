@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Inbound Tour Requests - Windows of Jordan{% endblock %}
+{% block title %}{{ inbound_page_title|default('Inbound Tour Requests') }} - Windows of Jordan{% endblock %}
 
 {% block content %}
 <script src="{{ url_for('static', filename='js/smart_search.js') }}"></script>
@@ -83,12 +83,6 @@
     color: white !important;
 }
 
-.header-buttons {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
 /* Filter Section */
 .filter-section {
     background: white;
@@ -109,6 +103,12 @@
 .filter-group {
     display: flex;
     flex-direction: column;
+}
+
+.filter-actions-group {
+    grid-column: 1 / -1;
+    align-items: flex-start;
+    margin-top: -4px;
 }
 
 .filter-group label {
@@ -138,20 +138,42 @@
 .filter-buttons {
     display: flex;
     gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.filter-buttons-right {
+    margin-left: auto;
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.filter-buttons-right .btn-search[type="submit"] {
+    margin-left: auto;
 }
 
 .btn-search {
     background: linear-gradient(135deg, #ffd93d 0%, #ffb700 100%);
     color: #333;
     border: none;
-    padding: 10px 20px;
+    padding: 8px 16px;
+    min-height: 38px;
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
-    display: flex;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+.btn-search i {
+    pointer-events: none;
 }
 
 .btn-search:hover {
@@ -163,19 +185,44 @@
     background: white;
     color: #6c757d;
     border: 2px solid #dee2e6;
-    padding: 10px 20px;
+    padding: 8px 16px;
+    min-height: 38px;
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
-    display: flex;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
+    line-height: 1.1;
+    white-space: nowrap;
 }
 
 .btn-reset:hover {
     background: #f8f9fa;
     border-color: #adb5bd;
+}
+
+.inbound-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+
+.pagination-link,
+.pagination-current {
+    min-width: 40px;
+    text-align: center;
+}
+
+.pagination-ellipsis {
+    color: #6c757d;
+    font-weight: 600;
+    padding: 0 4px;
 }
 
 /* Table Section */
@@ -204,6 +251,55 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     border-bottom: 2px solid #dee2e6;
+}
+
+.th-request-no {
+    vertical-align: middle;
+}
+.th-request-no-inner {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.req-sort-arrows {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0;
+    margin-left: 2px;
+    vertical-align: middle;
+}
+.req-sort-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 16px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #adb5bd;
+    cursor: pointer;
+    line-height: 1;
+    border-radius: 3px;
+    text-decoration: none;
+    font: inherit;
+    transition: color 0.15s, background 0.15s;
+}
+button.req-sort-btn {
+    -webkit-appearance: none;
+    appearance: none;
+}
+.req-sort-btn:hover {
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.12);
+}
+.req-sort-btn.active {
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.18);
+}
+.req-sort-btn i {
+    font-size: 0.7rem;
 }
 
 .requests-table tbody tr {
@@ -264,6 +360,11 @@
     color: #155724;
 }
 
+.status-deleted {
+    background: linear-gradient(135deg, #f8d7da 0%, #f1bfc4 100%);
+    color: #842029;
+}
+
 /* Pax and Days Badges */
 .badge-light {
     background: #f8f9fa;
@@ -280,7 +381,48 @@
     gap: 8px;
 }
 
-.btn-view, .btn-edit {
+.invoice-menu-wrapper {
+    position: relative;
+}
+
+.invoice-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 170px;
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    padding: 6px;
+    display: none;
+    z-index: 50;
+}
+
+.invoice-menu.show {
+    display: block;
+}
+
+.invoice-menu-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 7px 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #495057;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.invoice-menu-option:hover {
+    background: #f8f9fa;
+    color: #212529;
+}
+
+.btn-view, .btn-edit, .btn-print {
     width: 32px;
     height: 32px;
     border-radius: 8px;
@@ -315,6 +457,32 @@
     transform: translateY(-2px);
 }
 
+.btn-print {
+    color: #0d6efd;
+}
+
+button.btn-print {
+    cursor: pointer;
+}
+
+.btn-print:hover {
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    color: #333;
+    border-color: #FFA500;
+    transform: translateY(-2px);
+}
+
+.btn-print-invoice {
+    color: #198754;
+}
+
+.btn-print-invoice:hover {
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    color: #333;
+    border-color: #FFA500;
+    transform: translateY(-2px);
+}
+
 .btn-delete {
     width: 32px;
     height: 32px;
@@ -333,6 +501,48 @@
     background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
     color: white;
     border-color: #dc3545;
+    transform: translateY(-2px);
+}
+
+.btn-submit {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    border: 2px solid #e9ecef;
+    background: white;
+    color: #28a745;
+    cursor: pointer;
+}
+
+.btn-submit:hover {
+    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+    color: white;
+    border-color: #28a745;
+    transform: translateY(-2px);
+}
+
+.btn-restore {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    border: 2px solid #e9ecef;
+    background: white;
+    color: #0d6efd;
+    text-decoration: none;
+}
+
+.btn-restore:hover {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+    color: white;
+    border-color: #0d6efd;
     transform: translateY(-2px);
 }
 
@@ -369,19 +579,26 @@
     <div class="inbound-header">
         <h1>
             <i class="fas fa-map-marked-alt"></i>
-            Inbound Tour Requests
+            {{ inbound_page_title|default('Inbound Tour Requests') }}
+            {% if is_deleted_queue|default(false) %}
+            <span style="display: block; font-size: 0.95rem; font-weight: 500; margin-top: 8px; color: #6c757d;">
+                <i class="fas fa-trash-alt"></i> Removed from the main table — open a request to continue work, restore it to the list, or mark it invoiced.
+            </span>
+            {% endif %}
         </h1>
-        <div class="header-buttons">
-            <a href="{{ url_for('inbound.new_request') }}" class="btn-new-request">
-                <i class="fas fa-plus"></i>
-                New Inbound Request
-            </a>
-        </div>
     </div>
 
     <!-- Filter Section -->
     <div class="filter-section">
-        <form method="GET" action="{{ url_for('inbound.index') }}" class="filter-form">
+        <form method="GET" action="{{ request.path }}" class="filter-form" id="inboundFilterForm">
+            {% if is_deleted_queue|default(false) %}
+            <input type="hidden" name="queue" value="deleted">
+            {% endif %}
+            {# Preserve the current status scope (set by the Hub tile) without showing a duplicate filter. #}
+            {% if request.args.get('status') and not all_files_view|default(false) %}
+            <input type="hidden" name="status" value="{{ request.args.get('status') }}">
+            {% endif %}
+            <input type="hidden" name="req_sort" value="{{ req_sort|default('desc') }}">
             <div class="filter-group">
                 <label>Request Number</label>
                 <input type="text" name="request_number" placeholder="e.g., INB-202501-0001" 
@@ -389,43 +606,59 @@
             </div>
             <div class="filter-group">
                 <label>Agent</label>
-                <input type="text" name="agent" placeholder="Agent name" 
+                <input type="text" name="agent" placeholder="Start typing agent name…" autocomplete="off"
                        value="{{ request.args.get('agent', '') }}">
             </div>
             <div class="filter-group">
-                <label>Date From</label>
-                <input type="date" name="date_from" 
-                       value="{{ request.args.get('date_from', '') }}">
-            </div>
-            <div class="filter-group">
-                <label>Date To</label>
-                <input type="date" name="date_to" 
-                       value="{{ request.args.get('date_to', '') }}">
-            </div>
-            <div class="filter-group">
-                <label>Status</label>
-                <select name="status">
-                    <option value="">All Status</option>
-                    <option value="REQUEST" {% if request.args.get('status') == 'REQUEST' %}selected{% endif %}>Request</option>
-                    <option value="CONFIRMED" {% if request.args.get('status') == 'CONFIRMED' %}selected{% endif %}>Confirmed</option>
-                    <option value="INVOICED" {% if request.args.get('status') == 'INVOICED' %}selected{% endif %}>Invoiced</option>
+                <label>Year</label>
+                <select name="filter_year">
+                    <option value="">Any year</option>
+                    {% for y in list_filter_years|default([]) %}
+                    <option value="{{ y }}" {% if request.args.get('filter_year', '') == (y|string) %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="filter-group">
+                <label>Month</label>
+                <select name="filter_month">
+                    <option value="">Any month</option>
+                    {% for mval, mlabel in list_filter_months|default([]) %}
+                    <option value="{{ mval }}" {% if request.args.get('filter_month', '') == mval %}selected{% endif %}>{{ mlabel }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% if all_files_view|default(false) %}
+            <div class="filter-group">
+                <label>Status</label>
+                <select name="status">
+                    <option value="">Any status</option>
+                    <option value="REQUEST" {% if request.args.get('status', '')|upper == 'REQUEST' %}selected{% endif %}>Request</option>
+                    <option value="CONFIRMED" {% if request.args.get('status', '')|upper == 'CONFIRMED' %}selected{% endif %}>Confirmed</option>
+                    <option value="INVOICED" {% if request.args.get('status', '')|upper == 'INVOICED' %}selected{% endif %}>Invoiced</option>
+                    <option value="DELETED" {% if request.args.get('status', '')|upper == 'DELETED' %}selected{% endif %}>Deleted</option>
+                </select>
+            </div>
+            {% endif %}
+            <div class="filter-group filter-actions-group">
                 <div class="filter-buttons">
-                    <button type="submit" class="btn-search">
-                        <i class="fas fa-search"></i> Search
+                    <button type="button" class="btn-search" onclick="exportFilteredRequestsToExcel()">
+                        <i class="fas fa-file-excel"></i> Export to Excel
                     </button>
-                    <button type="button" class="btn-reset" onclick="window.location.href='{{ url_for('inbound.index') }}'">
-                        <i class="fas fa-undo"></i> Reset
-                    </button>
+                    <div class="filter-buttons-right">
+                        <button type="button" class="btn-reset" onclick="window.location.href='{{ request.path }}?{% if is_deleted_queue|default(false) %}queue=deleted{% elif request.args.get('status') and not all_files_view|default(false) %}status={{ request.args.get('status') }}{% endif %}'">
+                            <i class="fas fa-undo"></i> Reset
+                        </button>
+                        <button type="submit" class="btn-search" name="search" value="1" onclick="submitInboundFilters()">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
                 </div>
             </div>
         </form>
     </div>
 
     <!-- Run-Down Plan Section -->
-    {% if run_down_data and not request.args.get('status') %}
+    {% if run_down_data and not request.args.get('status') and not inbound_hide_run_down|default(false) %}
     <div class="run-down-section" style="margin-bottom: 30px;">
         <h2 style="font-size: 1.5rem; margin-bottom: 20px; color: #495057;">
             <i class="fas fa-calendar-day"></i> Daily Run-Down Plan (Next 30 Days)
@@ -484,84 +717,135 @@
     {% endif %}
 
     <!-- Table Section -->
-    {% if requests %}
+    {% if requests and show_results_table|default(true) %}
     <div class="table-section">
         <table class="requests-table">
             <thead>
                 <tr>
-                    <th>Request No.</th>
+                    <th class="th-request-no" scope="col">
+                        <div class="th-request-no-inner">
+                            {% set is_invoiced_status_view = request.args.get('status', '')|upper == 'INVOICED' %}
+                            <span>{{ 'File No.' if is_invoiced_status_view else 'Request No.' }}</span>
+                            <span class="req-sort-arrows" role="group" aria-label="Sort list by date created">
+                                <button type="button" class="req-sort-btn{% if (req_sort|default('desc')) == 'asc' %} active{% endif %}" data-req-sort="asc" title="Oldest first"{% if (req_sort|default('desc')) == 'asc' %} aria-current="true"{% endif %}>
+                                    <i class="fas fa-chevron-up" aria-hidden="true"></i>
+                                </button>
+                                <button type="button" class="req-sort-btn{% if (req_sort|default('desc')) == 'desc' %} active{% endif %}" data-req-sort="desc" title="Newest first"{% if (req_sort|default('desc')) == 'desc' %} aria-current="true"{% endif %}>
+                                    <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                                </button>
+                            </span>
+                        </div>
+                    </th>
                     <th>Agent</th>
                     <th>Contact</th>
                     <th>Nationality</th>
                     <th>Pax</th>
                     <th>Travel Dates</th>
                     <th>Days</th>
+                    {% if all_files_view|default(false) %}
                     <th>Status</th>
-                    <th>Total</th>
+                    {% endif %}
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                {% for request in requests %}
-                <tr>
+                {% for inb in requests %}
+                <tr data-request-id="{{ inb.id }}" data-created-ts="{{ inb.created_at.isoformat() if inb.created_at else '' }}">
                     <td>
-                        <span class="request-number">{{ request.request_number }}</span>
-                        <span class="request-date">{{ request.created_at.strftime('%d %b %Y') }}</span>
+                        <span class="request-number">{{ inb.request_number }}</span>
+                        <span class="request-date">{{ inb.created_at.strftime('%d %b %Y') }}</span>
                     </td>
-                    <td>{{ request.agent or 'TBA' }}</td>
-                    <td>{{ request.contact_name or 'TBA' }}</td>
-                    <td>{{ request.nationality or 'TBA' }}</td>
-                    <td><span class="badge-light">{{ request.pax }}</span></td>
+                    <td>{{ inb.agent or 'TBA' }}</td>
+                    <td>{{ inb.contact_name or 'TBA' }}</td>
+                    <td>{{ inb.nationality or 'TBA' }}</td>
+                    <td><span class="badge-light">{{ inb.pax }}</span></td>
                     <td>
-                        {{ request.from_date.strftime('%d %b') }} - 
-                        {{ request.to_date.strftime('%d %b %Y') }}
+                        {{ inb.from_date.strftime('%d %b') }} - 
+                        {{ inb.to_date.strftime('%d %b %Y') }}
                     </td>
-                    <td><span class="badge-light">{{ request.no_of_days }} days</span></td>
+                    <td><span class="badge-light">{{ inb.no_of_days }} days</span></td>
+                    {% if all_files_view|default(false) %}
                     <td>
-                        {% if request.status == 'REQUEST' %}
+                        {% if is_deleted_queue|default(false) or inb.pending_invoice_queue %}
+                            <span class="status-badge status-deleted">Deleted</span>
+                        {% elif inb.status == 'REQUEST' %}
                             <span class="status-badge status-request">Request</span>
-                        {% elif request.status == 'BOOKED' %}
+                        {% elif inb.status == 'BOOKED' %}
                             <span class="status-badge status-booked">Booked</span>
-                        {% elif request.status == 'IN_PROGRESS' %}
+                        {% elif inb.status == 'IN_PROGRESS' %}
                             <span class="status-badge status-in-progress">In Progress</span>
-                        {% elif request.status == 'CONFIRMED' %}
+                        {% elif inb.status == 'CONFIRMED' %}
                             <span class="status-badge status-confirmed">Confirmed</span>
                         {% endif %}
                     </td>
-                    <td>
-                        {% if request.total_amount > 0 %}
-                            <strong>${{ "%.2f"|format(request.total_amount) }}</strong>
-                        {% else %}
-                            <span style="color: #6c757d;">-</span>
-                        {% endif %}
-                    </td>
+                    {% endif %}
                     <td>
                         <div class="action-buttons">
-                            {% set mapped_status = request.status %}
-                            {% if request.status in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS'] %}
+                            {% set mapped_status = inb.status %}
+                            {% set is_deleted_row = is_deleted_queue|default(false) or inb.pending_invoice_queue %}
+                            {% if inb.status in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS'] %}
                                 {% set mapped_status = 'CONFIRMED' %}
-                            {% elif request.status in ['INVOICE', 'COMPLETED', 'INVOICED'] %}
+                            {% elif inb.status in ['INVOICE', 'COMPLETED', 'INVOICED'] %}
                                 {% set mapped_status = 'INVOICED' %}
                             {% endif %}
                             
-                            {% if mapped_status == 'INVOICED' %}
-                            <a href="{{ url_for('inbound.generate_invoice', request_id=request.id) }}" 
-                               class="btn-view" title="View Invoice">
-                                <i class="fas fa-file-invoice"></i>
-                            </a>
+                            {% if mapped_status == 'INVOICED' and not is_deleted_row %}
+                            <div class="invoice-menu-wrapper">
+                                <button type="button" class="btn-view invoice-menu-toggle" title="View Invoice Options" aria-label="View Invoice Options">
+                                    <i class="fas fa-folder-open"></i>
+                                </button>
+                                <div class="invoice-menu">
+                                    <a href="{{ url_for('inbound.generate_invoice', request_id=inb.id) }}" class="invoice-menu-option">
+                                        <i class="fas fa-file-invoice"></i>
+                                        <span>Invoice</span>
+                                    </a>
+                                    <a href="{{ url_for('inbound.customer_invoice', request_id=inb.id) }}" class="invoice-menu-option">
+                                        <i class="fas fa-receipt"></i>
+                                        <span>Details Invoiced</span>
+                                    </a>
+                                </div>
+                            </div>
+                            <button type="button"
+                               class="btn-print btn-print-invoice" title="Print Invoice"
+                               onclick="printInPlace('{{ url_for('inbound.generate_invoice', request_id=inb.id) }}?auto_print=1')">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                            </button>
+                            <button type="button"
+                               class="btn-print btn-print-invoice" title="Print Details Invoice"
+                               onclick="printInPlace('{{ url_for('inbound.customer_invoice', request_id=inb.id) }}?auto_print=1')">
+                                <i class="fas fa-receipt"></i>
+                            </button>
                             {% else %}
-                            <a href="{{ url_for('inbound.view_request', id=request.id) }}?mode=view" 
+                            <a href="{{ url_for('inbound.view_request', id=inb.id) }}?mode=view" 
                                class="btn-view" title="View Only">
                                 <i class="fas fa-eye"></i>
                             </a>
                             {% endif %}
-                            <a href="{{ url_for('inbound.view_request', id=request.id) }}?mode=edit" 
+                            <button type="button"
+                               class="btn-print" title="Tour File"
+                               onclick="printInPlace('{{ url_for('inbound.view_request', id=inb.id) }}?mode=view&print_tour_file=1')">
+                                <i class="fas fa-file-lines"></i>
+                            </button>
+                            {% if not is_deleted_row %}
+                            <a href="{{ url_for('inbound.view_request', id=inb.id) }}?mode=edit" 
                                class="btn-edit" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <button type="button" class="btn-delete" title="Delete" onclick="confirmDelete({{ request.id }}, '{{ request.request_number }}')">
+                            {% if inb.status == 'REQUEST' or inb.status in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS'] %}
+                            <button type="button" class="btn-submit" title="Submit to Next State" onclick="submitToNextState({{ inb.id }}, '{{ inb.status }}', '{{ inb.request_number }}')">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                            {% endif %}
+                            {% if is_deleted_queue|default(false) or (all_files_view|default(false) and inb.pending_invoice_queue) %}
+                            <a href="{{ url_for('inbound.restore_from_invoice_queue', id=inb.id) }}" class="btn-restore" title="Restore to main list">
+                                <i class="fas fa-undo"></i>
+                            </a>
+                            {% else %}
+                            <button type="button" class="btn-delete" title="Move request to Deleted queue" onclick="confirmDelete({{ inb.id }}, '{{ inb.request_number }}')">
                                 <i class="fas fa-trash"></i>
                             </button>
+                            {% endif %}
+                            {% endif %}
                         </div>
                     </td>
                 </tr>
@@ -569,16 +853,45 @@
             </tbody>
         </table>
     </div>
+    {% set _page_qs = page_qs|default({}) %}
+    {% if pagination and pagination.pages > 1 %}
+    <div class="inbound-pagination">
+        {% if pagination.has_prev %}
+        <a href="{{ request.path }}{{ prev_page_qs|default('?page=' ~ (pagination.prev_num|string)) }}" class="btn-reset pagination-link" style="text-decoration: none;">Prev</a>
+        {% endif %}
+        {% for p in page_numbers %}
+            {% if p %}
+                {% if p == pagination.page %}
+                <span class="btn-search pagination-current">{{ p }}</span>
+                {% else %}
+                <a href="{{ request.path }}{{ _page_qs.get(p, '?page=' ~ (p|string)) }}" class="btn-reset pagination-link" style="text-decoration: none;">{{ p }}</a>
+                {% endif %}
+            {% else %}
+            <span class="pagination-ellipsis">...</span>
+            {% endif %}
+        {% endfor %}
+        {% if pagination.has_next %}
+        <a href="{{ request.path }}{{ next_page_qs|default('?page=' ~ (pagination.next_num|string)) }}" class="btn-reset pagination-link" style="text-decoration: none;">Next</a>
+        {% endif %}
+    </div>
+    {% endif %}
     {% else %}
     <div class="empty-state">
         <div class="empty-icon">
             <i class="fas fa-map-marked-alt"></i>
         </div>
-        <h3 class="empty-title">No Inbound Requests</h3>
-        <p class="empty-text">Start by creating your first inbound tour request.</p>
+        {% if all_files_view|default(false) and not show_results_table|default(true) %}
+        <h3 class="empty-title">Apply filters to view results</h3>
+        <p class="empty-text">Select at least one filter above, then click Search to show matching inbound files.</p>
+        {% else %}
+        <h3 class="empty-title">{% if is_deleted_queue|default(false) %}No deleted requests{% else %}No Inbound Requests{% endif %}</h3>
+        <p class="empty-text">{% if is_deleted_queue|default(false) %}Nothing is in Deleted yet. Use the trash icon on the main list to remove a request from the table; it will appear here until you restore it.{% else %}Start by creating your first inbound tour request.{% endif %}</p>
+        {% if request.args.get('status', '')|upper != 'REQUEST' %}
         <a href="{{ url_for('inbound.new_request') }}" class="btn-new-request" style="display: inline-flex;">
             <i class="fas fa-plus"></i> Create New Request
         </a>
+        {% endif %}
+        {% endif %}
     </div>
     {% endif %}
 </div>
@@ -625,6 +938,100 @@ document.addEventListener('DOMContentLoaded', function() {
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
+
+    // Invoiced row: view icon opens a small menu with two invoice options.
+    document.querySelectorAll('.invoice-menu-toggle').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const wrapper = btn.closest('.invoice-menu-wrapper');
+            if (!wrapper) return;
+            const menu = wrapper.querySelector('.invoice-menu');
+            if (!menu) return;
+            document.querySelectorAll('.invoice-menu.show').forEach(function(openMenu) {
+                if (openMenu !== menu) openMenu.classList.remove('show');
+            });
+            menu.classList.toggle('show');
+        });
+    });
+    document.addEventListener('click', function() {
+        document.querySelectorAll('.invoice-menu.show').forEach(function(menu) {
+            menu.classList.remove('show');
+        });
+    });
+    document.querySelectorAll('.invoice-menu').forEach(function(menu) {
+        menu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    });
+
+    (function initInboundRequestSort() {
+        var tbody = document.querySelector('.requests-table tbody');
+        if (!tbody) return;
+
+        var ascBtn = document.querySelector('.req-sort-btn[data-req-sort="asc"]');
+        var descBtn = document.querySelector('.req-sort-btn[data-req-sort="desc"]');
+        var hiddenSort = document.querySelector('form.filter-form input[name="req_sort"]');
+
+        function rowCreatedMs(tr) {
+            var raw = tr.getAttribute('data-created-ts');
+            if (!raw) return 0;
+            var ms = Date.parse(raw);
+            return isNaN(ms) ? 0 : ms;
+        }
+
+        function rowId(tr) {
+            var id = tr.getAttribute('data-request-id');
+            var n = parseInt(id, 10);
+            return isNaN(n) ? 0 : n;
+        }
+
+        function setActiveUI(direction) {
+            [ascBtn, descBtn].forEach(function (btn) {
+                if (!btn) return;
+                var d = btn.getAttribute('data-req-sort');
+                var on = d === direction;
+                btn.classList.toggle('active', on);
+                if (on) btn.setAttribute('aria-current', 'true');
+                else btn.removeAttribute('aria-current');
+            });
+            if (hiddenSort) hiddenSort.value = direction;
+            try {
+                var u = new URL(window.location.href);
+                u.searchParams.set('req_sort', direction);
+                history.replaceState({}, '', u.toString());
+            } catch (e) { /* ignore */ }
+        }
+
+        function sortRows(direction) {
+            var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr'));
+            rows.sort(function (a, b) {
+                var ta = rowCreatedMs(a);
+                var tb = rowCreatedMs(b);
+                if (ta !== tb) {
+                    return direction === 'asc' ? ta - tb : tb - ta;
+                }
+                var ia = rowId(a);
+                var ib = rowId(b);
+                return direction === 'asc' ? ia - ib : ib - ia;
+            });
+            rows.forEach(function (r) {
+                tbody.appendChild(r);
+            });
+            setActiveUI(direction);
+        }
+
+        if (ascBtn) {
+            ascBtn.addEventListener('click', function () {
+                sortRows('asc');
+            });
+        }
+        if (descBtn) {
+            descBtn.addEventListener('click', function () {
+                sortRows('desc');
+            });
+        }
+    })();
 });
 
 // Show service modal with details - safely escape HTML
@@ -726,10 +1133,294 @@ function getServiceIcon(type) {
     return icons[type] || 'fa-info-circle';
 }
 
-function confirmDelete(requestId, requestNumber) {
-    if (confirm('Are you sure you want to delete request ' + requestNumber + '? This action cannot be undone.')) {
-        window.location.href = '/inbound/' + requestId + '/delete';
+function submitToNextState(requestId, currentStatus, requestNumber) {
+    // Determine target status based on current status
+    let targetStatus = '';
+    let statusDisplay = currentStatus.replace('_', ' ');
+    
+    if (currentStatus === 'REQUEST') {
+        targetStatus = 'CONFIRMED';
+    } else if (['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS'].includes(currentStatus)) {
+        targetStatus = 'INVOICED';
+    } else {
+        alert('Invalid status for submission');
+        return;
     }
+    
+    const targetDisplay = targetStatus.replace('_', ' ');
+    const confirmMessage = `Are you sure you want to submit request ${requestNumber}?\n\nStatus will change from "${statusDisplay}" to "${targetDisplay}".\n\nThis action cannot be undone.`;
+    
+    if (!confirm(confirmMessage)) {
+        return; // User cancelled
+    }
+    
+    // Show loading state
+    const button = event.target.closest('.btn-submit');
+    const originalHTML = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+    fetch(`/inbound/api/${requestId}/submit-request`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ target_status: targetStatus })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Request ${requestNumber} has been successfully submitted to ${targetDisplay}.`);
+            // Reload the page to reflect the status change
+            window.location.reload();
+        } else {
+            alert(`Error: ${data.message || 'Failed to submit request'}`);
+            button.disabled = false;
+            button.innerHTML = originalHTML;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while submitting the request. Please try again.');
+        button.disabled = false;
+        button.innerHTML = originalHTML;
+    });
+}
+
+{# Trash API URL built from inbound.index so we never depend on url_for for the POST handler (avoids BuildError if the server is stale). #}
+var INBOUND_LIST_ROOT = {{ url_for('inbound.index')|tojson }};
+
+function inboundTrashApiUrl(requestId) {
+    var id = parseInt(requestId, 10);
+    if (isNaN(id)) return null;
+    var base = INBOUND_LIST_ROOT.replace(/\/*$/, '');
+    return base + '/api/' + id + '/trash';
+}
+
+function confirmDelete(requestId, requestNumber) {
+    if (!confirm('Move request ' + requestNumber + ' to Deleted queue? It will be removed from this table and visible in Deleted and All inbound files.')) {
+        return;
+    }
+
+    var trashUrl = inboundTrashApiUrl(requestId);
+    if (!trashUrl) {
+        alert('Invalid request id.');
+        return;
+    }
+
+    const row = document.querySelector('tr[data-request-id="' + requestId + '"]');
+
+    // Fade the row out immediately so it feels instant
+    if (row) {
+        row.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+        row.style.opacity = '0';
+        row.style.transform = 'translateX(20px)';
+    }
+
+    fetch(trashUrl, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: '{}'
+    })
+    .then(function(res) {
+        return res.text().then(function(text) {
+            var data = null;
+            try {
+                data = text ? JSON.parse(text) : null;
+            } catch (e) {
+                data = null;
+            }
+            return { ok: res.ok, data: data, raw: text, status: res.status };
+        });
+    })
+    .then(function(result) {
+        var data = result.data || {};
+        if (result.ok && data.success) {
+            if (row) {
+                // Remove after fade completes
+                setTimeout(function() {
+                    row.remove();
+
+                    // If tbody is now empty, show empty-state and hide table
+                    const tbody = document.querySelector('.requests-table tbody');
+                    if (tbody && tbody.querySelectorAll('tr').length === 0) {
+                        const tableSection = document.querySelector('.table-section');
+                        const emptyState = document.querySelector('.empty-state');
+                        if (tableSection) tableSection.style.display = 'none';
+                        if (emptyState) emptyState.style.display = 'block';
+                    }
+                }, 380);
+            }
+
+            // Brief toast-style confirmation without blocking the UI
+            const toast = document.createElement('div');
+            toast.textContent = 'Moved to Deleted queue';
+            toast.style.cssText = [
+                'position:fixed', 'bottom:24px', 'right:24px',
+                'background:#1a1a1a', 'color:#fff',
+                'padding:12px 20px', 'border-radius:10px',
+                'font-size:0.9rem', 'font-weight:600',
+                'box-shadow:0 4px 16px rgba(0,0,0,0.25)',
+                'opacity:0', 'transition:opacity 0.3s ease',
+                'z-index:9999'
+            ].join(';');
+            document.body.appendChild(toast);
+            requestAnimationFrame(function() { toast.style.opacity = '1'; });
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                setTimeout(function() { toast.remove(); }, 350);
+            }, 2500);
+        } else {
+            // Restore row visibility on failure
+            if (row) { row.style.opacity = '1'; row.style.transform = ''; }
+            var msg = (data && data.message) ? data.message : (result.raw ? 'Server error (HTTP ' + result.status + ')' : 'Could not remove request');
+            alert('Error: ' + msg);
+        }
+    })
+    .catch(function(err) {
+        console.error(err);
+        if (row) { row.style.opacity = '1'; row.style.transform = ''; }
+        alert('Could not reach the server. Check your connection and try again.');
+    });
+}
+
+function exportFilteredRequestsToExcel() {
+    const exportUrl = new URL('/inbound/export-list-excel', window.location.origin);
+    const current = new URL(window.location.href);
+
+    current.searchParams.forEach(function (value, key) {
+        if (key !== 'page') {
+            exportUrl.searchParams.set(key, value);
+        }
+    });
+
+    if (current.pathname.endsWith('/all-files')) {
+        exportUrl.searchParams.set('all_files_view', '1');
+    }
+
+    window.location.href = exportUrl.toString();
+}
+
+function submitInboundFilters() {
+    const form = document.getElementById('inboundFilterForm');
+    if (form) {
+        form.requestSubmit();
+    }
+}
+
+// Print target pages without leaving/opening a new tab.
+function printInPlace(url) {
+    if (!url) return;
+    let frame = document.getElementById('inbound-print-frame');
+    if (!frame) {
+        frame = document.createElement('iframe');
+        frame.id = 'inbound-print-frame';
+        frame.style.position = 'fixed';
+        frame.style.right = '0';
+        frame.style.bottom = '0';
+        frame.style.width = '0';
+        frame.style.height = '0';
+        frame.style.border = '0';
+        frame.style.visibility = 'hidden';
+        document.body.appendChild(frame);
+    }
+    const isTourFilePrint = url.indexOf('print_tour_file=1') !== -1;
+    // Tour file: call the exact same function used by the Tour File button
+    // inside the request page (`printFullSummary()`).
+    if (isTourFilePrint) {
+        let done = false;
+        frame.onload = function() {
+            if (done) return;
+            const maxAttempts = 25;
+            let attempt = 0;
+            const tryPrintTourFile = function() {
+                if (done) return true;
+                attempt += 1;
+                try {
+                    const w = frame.contentWindow;
+                    const d = w && w.document ? w.document : null;
+                    if (w && typeof w.printFullSummary === 'function') {
+                        const runPrint = function() {
+                            if (done) return;
+                            done = true;
+                            w.printFullSummary(true);
+                        };
+                        const fullSummarySection = d ? d.getElementById('fullSummarySection') : null;
+                        const needsOpen = !!(fullSummarySection && fullSummarySection.classList.contains('hidden'));
+                        if (needsOpen && typeof w.toggleFullSummary === 'function') {
+                            w.toggleFullSummary();
+                            setTimeout(function() {
+                                if (done) return;
+                                if (typeof w.refreshItinerarySummaryTable === 'function') {
+                                    Promise.resolve(w.refreshItinerarySummaryTable()).finally(function() {
+                                        setTimeout(runPrint, 220);
+                                    });
+                                } else {
+                                    setTimeout(runPrint, 220);
+                                }
+                            }, 220);
+                            return true;
+                        }
+                        if (typeof w.refreshItinerarySummaryTable === 'function') {
+                            Promise.resolve(w.refreshItinerarySummaryTable()).finally(function() {
+                                setTimeout(runPrint, 180);
+                            });
+                        } else {
+                            runPrint();
+                        }
+                        return true;
+                    }
+                    if (d) {
+                        const directBtn = d.querySelector('button[onclick="printFullSummary()"]');
+                        if (directBtn) {
+                            done = true;
+                            directBtn.click();
+                            return true;
+                        }
+                        const allButtons = d.querySelectorAll('button');
+                        for (let i = 0; i < allButtons.length; i++) {
+                            const text = (allButtons[i].textContent || '').trim().toLowerCase();
+                            if (text === 'tour file') {
+                                done = true;
+                                allButtons[i].click();
+                                return true;
+                            }
+                        }
+                    }
+                } catch (err) {
+                    // Keep retrying until attempts are exhausted.
+                }
+                if (attempt < maxAttempts) {
+                    setTimeout(tryPrintTourFile, 150);
+                } else {
+                    done = true;
+                    console.error('Tour file print failed: printFullSummary/button not found in time');
+                    alert('Could not print Tour File. Please try again.');
+                }
+                return false;
+            };
+            tryPrintTourFile();
+        };
+        // Ensure onload runs each click with a fresh URL.
+        const sep = url.indexOf('?') === -1 ? '?' : '&';
+        frame.src = url + sep + '_print_ts=' + Date.now();
+        return;
+    }
+    frame.onload = function() {
+        try {
+            frame.contentWindow.focus();
+            frame.contentWindow.print();
+        } catch (e) {
+            console.error('Print failed:', e);
+            alert('Could not open print dialog. Please try again.');
+        }
+    };
+    frame.src = url;
 }
 </script>
 

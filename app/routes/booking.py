@@ -1397,11 +1397,13 @@ def confirm_service(item_id):
             document.notes = json.dumps(insurance_details)
             
         elif service_item.service_type == 'RESTAURANT':
+            from_date_val = request.form.get('from_date', '')
+            # Restaurant uses single date only - to_date = from_date
             restaurant_details = {
                 'restaurant_name': request.form.get('restaurant_name', ''),
                 'meal_type': request.form.get('meal_type', ''),
-                'from_date': request.form.get('from_date', ''),
-                'to_date': request.form.get('to_date', ''),
+                'from_date': from_date_val,
+                'to_date': from_date_val,
                 'reservation_time': request.form.get('reservation_time', ''),
                 'pax': request.form.get('pax', ''),
                 'dietary_restrictions': request.form.get('dietary_restrictions', ''),

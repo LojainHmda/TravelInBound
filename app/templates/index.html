@@ -229,61 +229,18 @@ body {
             <p class="tile-label">New Inbound Request</p>
         </a>
         
-        <!-- View Bookings -->
-        <a href="{{ url_for('inbound.index') }}" class="hub-tile">
+        <!-- All inbound files (request + confirmed + invoiced) -->
+        <a href="/inbound/all-files" class="hub-tile" title="All saved inbound files">
             <div class="tile-icon">
-                <i class="fas fa-list"></i>
+                <i class="fas fa-folder-open"></i>
             </div>
-            <p class="tile-label">Bookings</p>
-        </a>
-        
-        <!-- Run-Down Analytics -->
-        <a href="{{ url_for('inbound.analytics_dashboard') }}" class="hub-tile">
-            <div class="tile-icon">
-                <i class="fas fa-chart-line"></i>
-            </div>
-            <p class="tile-label">Run Down Analytics</p>
-            <p class="tile-brief" style="font-size: 0.7rem; color: #666; margin-top: 0.5rem; line-height: 1.3;">Active operations dashboard</p>
-        </a>
-        
-        <!-- Customers -->
-        <a href="{{ url_for('customer.list_customers') }}" class="hub-tile">
-            <div class="tile-icon">
-                <i class="fas fa-users"></i>
-            </div>
-            <p class="tile-label">Customers</p>
-        </a>
-        
-        <!-- Finance -->
-        <a href="{{ url_for('finance.index') }}" class="hub-tile">
-            <div class="tile-icon">
-                <i class="fas fa-dollar-sign"></i>
-            </div>
-            <p class="tile-label">Finance</p>
-        </a>
-        
-        <!-- Suppliers -->
-        <a href="{{ url_for('finance.list_suppliers') }}" class="hub-tile">
-            <div class="tile-icon">
-                <i class="fas fa-truck"></i>
-            </div>
-            <p class="tile-label">Suppliers</p>
-        </a>
-        
-        <!-- Documents -->
-        <a href="{{ url_for('main.find_bookings') }}" class="hub-tile">
-            <div class="tile-icon">
-                <i class="fas fa-file-alt"></i>
-            </div>
-            <p class="tile-label">Documents</p>
-        </a>
-        
-        <!-- Reports -->
-        <a href="{{ url_for('main.dashboard') }}" class="hub-tile">
-            <div class="tile-icon">
-                <i class="fas fa-chart-bar"></i>
-            </div>
-            <p class="tile-label">Reports</p>
+            <p class="tile-label">All files</p>
+            <p class="tile-brief" style="font-size: 0.7rem; color: #666; margin-top: 0.5rem; line-height: 1.35;">
+                {{ total_all_files_count|default(status_counts.REQUEST + status_counts.CONFIRMED + status_counts.INVOICED) }} orders
+                <span style="display: block; font-size: 0.65rem; margin-top: 0.35rem; color: #888;">
+                    Request · Confirmed · Invoiced · Deleted
+                </span>
+            </p>
         </a>
         
         <!-- Requested Status Card -->
@@ -317,6 +274,69 @@ body {
             <p class="tile-brief" style="font-size: 0.7rem; color: #666; margin-top: 0.5rem;">
                 {{ status_counts.INVOICED }} orders
             </p>
+        </a>
+        
+        <!-- Deleted: removed from main list (trash on inbound table) -->
+        <a href="{{ url_for('inbound.index', queue='deleted') }}" class="hub-tile" style="border: 2px solid #f59e0b;">
+            <div class="tile-icon">
+                <i class="fas fa-trash-alt"></i>
+            </div>
+            <p class="tile-label">Deleted</p>
+            <p class="tile-brief" style="font-size: 0.7rem; color: #666; margin-top: 0.5rem; line-height: 1.35;">
+                {{ deleted_queue_count|default(0) }} order{% if deleted_queue_count|default(0) != 1 %}s{% endif %}
+                <span style="display: block; font-size: 0.65rem; margin-top: 0.35rem; color: #888;">
+                    Removed from main list — follow up here
+                </span>
+            </p>
+        </a>
+        
+        <!-- Run-Down Analytics -->
+        <a href="{{ url_for('inbound.analytics_dashboard') }}" class="hub-tile">
+            <div class="tile-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <p class="tile-label">Run Down Analytics</p>
+            <p class="tile-brief" style="font-size: 0.7rem; color: #666; margin-top: 0.5rem; line-height: 1.3;">Active operations dashboard</p>
+        </a>
+        
+        <!-- Customers -->
+        <a href="{{ url_for('customer.list_customers') }}" class="hub-tile">
+            <div class="tile-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <p class="tile-label">Customers</p>
+        </a>
+        
+        <!-- Finance -->
+        <a href="{{ url_for('finance.index') }}" class="hub-tile">
+            <div class="tile-icon">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <p class="tile-label">Finance</p>
+        </a>
+        
+        <!-- Suppliers -->
+        <a href="{{ url_for('finance.list_suppliers') }}" class="hub-tile">
+            <div class="tile-icon">
+                <i class="fas fa-truck"></i>
+            </div>
+            <p class="tile-label">Suppliers type</p>
+        </a>
+        
+        <!-- Documents -->
+        <a href="{{ url_for('main.find_bookings') }}" class="hub-tile">
+            <div class="tile-icon">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <p class="tile-label">Documents</p>
+        </a>
+        
+        <!-- Reports -->
+        <a href="{{ url_for('main.dashboard') }}" class="hub-tile">
+            <div class="tile-icon">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+            <p class="tile-label">Reports</p>
         </a>
     </div>
     

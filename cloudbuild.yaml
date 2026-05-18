@@ -1,0 +1,57 @@
+# Optional: set _DATABASE_URL and _CLOUD_SQL_INSTANCE for persistent database
+# gcloud builds submit --substitutions=_DATABASE_URL="postgresql://user:pass@/db?host=/cloudsql/PROJECT:REGION:INSTANCE",_CLOUD_SQL_INSTANCE="PROJECT:REGION:INSTANCE"
+substitutions:
+  _DATABASE_URL: ''
+  _CLOUD_SQL_INSTANCE: ''
+
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/travel-inbound:$BUILD_ID', '-t', 'gcr.io/$PROJECT_ID/travel-inbound:latest', '.']
+  
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/travel-inbound:$BUILD_ID']
+  
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/travel-inbound:latest']
+  
+  # Deploy container image to Cloud Run (generates session secret for production)
+  # REQUIRED: Pass _DATABASE_URL - use deploy-cloudbuild.ps1 or:
+  #   gcloud builds submit --substitutions=_DATABASE_URL="postgresql://...",_CLOUD_SQL_INSTANCE="project:region:instance"
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        if [ -z "${_DATABASE_URL}" ]; then
+          echo "ERROR: _DATABASE_URL is required. Use: gcloud builds submit --substitutions=_DATABASE_URL=postgresql://user:pass@host/db"
+          exit 1
+        fi
+        SESSION_SECRET=$$(openssl rand -hex 32)
+        ENV_VARS="SESSION_SECRET=$$SESSION_SECRET,SESSION_COOKIE_SECURE=true,DATABASE_URL=${_DATABASE_URL}"
+        DEPLOY_CMD="gcloud run deploy travel-inbound \
+          --image gcr.io/$PROJECT_ID/travel-inbound:$BUILD_ID \
+          --region us-central1 \
+          --platform managed \
+          --allow-unauthenticated \
+          --memory 2Gi \
+          --cpu 2 \
+          --timeout 300 \
+          --max-instances 10 \
+          --min-instances 0 \
+          --set-env-vars \"$$ENV_VARS\""
+        if [ -n "${_CLOUD_SQL_INSTANCE}" ]; then
+          DEPLOY_CMD="$$DEPLOY_CMD --add-cloudsql-instances ${_CLOUD_SQL_INSTANCE}"
+        fi
+        eval $$DEPLOY_CMD
+
+images:
+  - 'gcr.io/$PROJECT_ID/travel-inbound:$BUILD_ID'
+  - 'gcr.io/$PROJECT_ID/travel-inbound:latest'
+
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: '1200s'

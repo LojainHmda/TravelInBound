@@ -1,0 +1,5 @@
+-- Queue for requests removed from main inbound list (Hub → To invoice).
+-- SQLite:
+-- ALTER TABLE inbound_request ADD COLUMN pending_invoice_queue BOOLEAN DEFAULT 0;
+-- PostgreSQL:
+-- ALTER TABLE inbound_request ADD COLUMN IF NOT EXISTS pending_invoice_queue BOOLEAN NOT NULL DEFAULT FALSE;

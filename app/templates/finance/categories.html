@@ -8,9 +8,16 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">Expense Categories</h1>
         <div>
-            <a href="{{ url_for('finance.new_category') }}" class="btn btn-primary btn-sm">
+            <button
+                type="button"
+                class="btn btn-primary btn-sm"
+                id="openCategoryCreateModalBtn"
+                data-bs-toggle="modal"
+                data-bs-target="#categoryModal"
+                data-mode="create"
+            >
                 <i class="fas fa-plus me-1"></i> New Category
-            </a>
+            </button>
             <a href="{{ url_for('finance.expenses') }}" class="btn btn-outline-secondary btn-sm">
                 <i class="fas fa-arrow-left me-1"></i> Back to Expenses
             </a>
@@ -51,9 +58,20 @@
                             </td>
                             <td>{{ category.created_at.strftime('%b %d, %Y') }}</td>
                             <td>
-                                <a href="{{ url_for('finance.edit_category', category_id=category.id) }}" class="btn btn-sm btn-outline-primary">
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-primary open-category-modal-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#categoryModal"
+                                    data-mode="edit"
+                                    data-id="{{ category.id }}"
+                                    data-name="{{ category.name }}"
+                                    data-code="{{ category.code }}"
+                                    data-description="{{ category.description or '' }}"
+                                    data-active="{{ 'true' if category.is_active else 'false' }}"
+                                >
                                     <i class="fas fa-edit"></i>
-                                </a>
+                                </button>
                             </td>
                         </tr>
                         {% else %}
@@ -62,9 +80,15 @@
                                 <div class="text-muted">
                                     <i class="fas fa-tags fa-3x mb-3"></i>
                                     <p>No expense categories found.</p>
-                                    <a href="{{ url_for('finance.new_category') }}" class="btn btn-primary btn-sm">
+                                    <button
+                                        type="button"
+                                        class="btn btn-primary btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#categoryModal"
+                                        data-mode="create"
+                                    >
                                         <i class="fas fa-plus me-1"></i> Create Category
-                                    </a>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -90,4 +114,182 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <form id="categoryModalForm" method="POST" action="{{ url_for('finance.new_category') }}">
+                {{ form.csrf_token if form else '' }}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="categoryModalTitle">New Expense Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="modal_category_name" class="form-label">Category Name *</label>
+                            <input
+                                type="text"
+                                class="form-control{% if form and form.name.errors %} is-invalid{% endif %}"
+                                id="modal_category_name"
+                                name="name"
+                                maxlength="100"
+                                required
+                                value="{{ form.name.data if form else '' }}"
+                            >
+                            {% if form %}
+                                {% for error in form.name.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="modal_category_code" class="form-label">Category Code *</label>
+                            <input
+                                type="text"
+                                class="form-control{% if form and form.code.errors %} is-invalid{% endif %}"
+                                id="modal_category_code"
+                                name="code"
+                                maxlength="50"
+                                pattern="^[A-Za-z0-9_-]{2,50}$"
+                                required
+                                value="{{ form.code.data if form else '' }}"
+                            >
+                            {% if form %}
+                                {% for error in form.code.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                            <div class="form-text">Use 2-50 letters, numbers, underscore, or dash.</div>
+                        </div>
+                        <div class="col-12">
+                            <label for="modal_category_description" class="form-label">Description</label>
+                            <textarea
+                                class="form-control{% if form and form.description.errors %} is-invalid{% endif %}"
+                                id="modal_category_description"
+                                name="description"
+                                rows="3"
+                                maxlength="255"
+                            >{{ form.description.data if form else '' }}</textarea>
+                            {% if form %}
+                                {% for error in form.description.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    id="modal_category_is_active"
+                                    name="is_active"
+                                    {% if form and form.is_active.data %}checked{% elif not form %}checked{% endif %}
+                                >
+                                <label class="form-check-label" for="modal_category_is_active">Active</label>
+                                <div class="form-text">Inactive categories are hidden from new expense selection.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="categoryModalSubmitBtn">Save Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    (function () {
+        const modalEl = document.getElementById('categoryModal');
+        const modalForm = document.getElementById('categoryModalForm');
+        const modalTitle = document.getElementById('categoryModalTitle');
+        const submitBtn = document.getElementById('categoryModalSubmitBtn');
+        const inputName = document.getElementById('modal_category_name');
+        const inputCode = document.getElementById('modal_category_code');
+        const inputDescription = document.getElementById('modal_category_description');
+        const inputIsActive = document.getElementById('modal_category_is_active');
+
+        if (!modalEl || !modalForm) return;
+
+        function setModalMode(mode, payload) {
+            const isEdit = mode === 'edit';
+            if (isEdit && payload && payload.id) {
+                modalTitle.textContent = 'Edit Expense Category';
+                submitBtn.innerHTML = '<i class="fas fa-save me-1"></i> Update Category';
+                modalForm.action = "{{ url_for('finance.edit_category', category_id=0) }}".replace('0', payload.id);
+                inputName.value = payload.name || '';
+                inputCode.value = payload.code || '';
+                inputDescription.value = payload.description || '';
+                inputIsActive.checked = payload.active === 'true';
+            } else {
+                modalTitle.textContent = 'New Expense Category';
+                submitBtn.innerHTML = '<i class="fas fa-save me-1"></i> Save Category';
+                modalForm.action = "{{ url_for('finance.new_category') }}";
+                inputName.value = '';
+                inputCode.value = '';
+                inputDescription.value = '';
+                inputIsActive.checked = true;
+            }
+        }
+
+        modalEl.addEventListener('show.bs.modal', function (event) {
+            const trigger = event.relatedTarget;
+            const mode = trigger?.dataset?.mode || 'create';
+            const payload = {
+                id: trigger?.dataset?.id || '',
+                name: trigger?.dataset?.name || '',
+                code: trigger?.dataset?.code || '',
+                description: trigger?.dataset?.description || '',
+                active: trigger?.dataset?.active || 'true'
+            };
+            setModalMode(mode, payload);
+        });
+
+        {% if force_modal_open %}
+        document.addEventListener('DOMContentLoaded', function () {
+            const bootstrapModal = new bootstrap.Modal(modalEl);
+            {% if modal_mode == 'edit' and edit_category %}
+            setModalMode('edit', {
+                id: {{ edit_category.id|tojson }},
+                name: {{ (form.name.data if form and form.name.data is not none else edit_category.name)|tojson }},
+                code: {{ (form.code.data if form and form.code.data is not none else edit_category.code)|tojson }},
+                description: {{ (form.description.data if form and form.description.data is not none else (edit_category.description or ''))|tojson }},
+                active: "{{ 'true' if (form and form.is_active.data) else ('true' if edit_category.is_active else 'false') }}"
+            });
+            {% else %}
+            setModalMode('create', {
+                id: '',
+                name: {{ (form.name.data if form and form.name.data is not none else '')|tojson }},
+                code: {{ (form.code.data if form and form.code.data is not none else '')|tojson }},
+                description: {{ (form.description.data if form and form.description.data is not none else '')|tojson }},
+                active: "{{ 'true' if (form and form.is_active.data) else 'true' }}"
+            });
+            {% endif %}
+            bootstrapModal.show();
+        });
+        {% elif request.args.get('open') == 'new' %}
+        document.addEventListener('DOMContentLoaded', function () {
+            setModalMode('create');
+            new bootstrap.Modal(modalEl).show();
+        });
+        {% elif request.args.get('edit_id') and edit_category %}
+        document.addEventListener('DOMContentLoaded', function () {
+            setModalMode('edit', {
+                id: {{ edit_category.id|tojson }},
+                name: {{ edit_category.name|tojson }},
+                code: {{ edit_category.code|tojson }},
+                description: {{ (edit_category.description or '')|tojson }},
+                active: "{{ 'true' if edit_category.is_active else 'false' }}"
+            });
+            new bootstrap.Modal(modalEl).show();
+        });
+        {% endif %}
+    })();
+</script>
 {% endblock %}

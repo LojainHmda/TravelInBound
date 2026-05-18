@@ -1,7 +1,9 @@
 {% if transports %}
 {% for transport in transports %}
-<tr class="hover:bg-slate-50" data-transport-id="{{ transport.id }}" data-transport-key="{{ transport.vehicle_type or '' }}-{{ transport.pickup_location or '' }}-{{ transport.dropoff_location or '' }}">
-    <td class="px-4 py-3 text-slate-500">{{ transport.date.strftime('%d %b') if transport.date else '-' }}</td>
+{% set _flight_stub = transport.source_arrival_batch_id or transport.source_departure_batch_id or (transport.is_airport_transfer and (transport.is_arrival or transport.is_departure)) %}
+{% set _stub_complete = transport.supplier_id and transport.vehicle_type and transport.vehicle_type.strip() %}
+<tr class="hover:bg-slate-50" data-transport-id="{{ transport.id }}" data-transport-key="{{ transport.vehicle_type or '' }}-{{ transport.pickup_location or '' }}-{{ transport.dropoff_location or '' }}" data-transport-supplier="{{ transport.supplier_name or (transport.supplier.name if transport.supplier else '-') }}"{% if _flight_stub and not _stub_complete %} data-trip-summary-skip="1"{% endif %}>
+    <td class="px-4 py-3 text-slate-500">{{ transport.date.strftime('%d %b %Y') if transport.date else '-' }}</td>
     <td class="px-4 py-3 text-slate-700">{{ transport.vehicle_type or '-' }}</td>
     <td class="px-4 py-3 text-slate-500">{{ transport.pickup_location or '-' }}</td>
     <td class="px-4 py-3 text-slate-500">{{ transport.dropoff_location or '-' }}</td>

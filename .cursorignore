@@ -1,0 +1,34 @@
+﻿# Reduce Cursor memory usage - exclude from indexing
+
+# Python virtual environments (large)
+.venv/
+venv/
+env/
+ENV/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Database files
+instance/
+*.db
+*.db-journal
+
+# Uploads and generated files
+app/static/uploads/
+generated_invoices/
+generated_vouchers/
+
+# Node (if any)
+node_modules/
+
+# Git
+.git/
+
+# Local / temp
+.local/
+*.log
+*.tmp
+*.temp

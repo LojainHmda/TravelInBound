@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from app import db
 from app.models.booking import Booking
 from app.models.customer import Customer
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 
 search_api = Blueprint('search_api', __name__)
 
@@ -68,19 +68,41 @@ def search_suggestions():
         from app.models.inbound import InboundRequest
         from sqlalchemy import distinct
         
-        # Get unique agent references from inbound requests
-        agents = db.session.query(distinct(InboundRequest.agent_ref))\
+        # Agent filter suggestions: ref, contact, and linked customer names (matches Agent column / search)
+        agent_refs = db.session.query(distinct(InboundRequest.agent_ref))\
             .filter(InboundRequest.agent_ref.isnot(None))\
             .filter(InboundRequest.agent_ref != '')\
             .all()
-        agents = [agent[0] for agent in agents if agent[0]]
-        
-        # Get unique contact names from inbound requests
+        agent_refs = [a[0] for a in agent_refs if a[0]]
+
         contact_names = db.session.query(distinct(InboundRequest.contact_name))\
             .filter(InboundRequest.contact_name.isnot(None))\
             .filter(InboundRequest.contact_name != '')\
             .all()
-        contact_names = [contact[0] for contact in contact_names if contact[0]]
+        contact_names = [c[0] for c in contact_names if c[0]]
+
+        cust_display = db.session.query(
+            distinct(
+                func.trim(
+                    func.concat(
+                        Customer.first_name,
+                        ' ',
+                        func.coalesce(Customer.last_name, ''),
+                    )
+                )
+            )
+        ).join(InboundRequest, InboundRequest.customer_id == Customer.id).all()
+        customer_display_names = [c[0] for c in cust_display if c[0] and str(c[0]).strip()]
+
+        company_names = db.session.query(distinct(Customer.company_name))\
+            .join(InboundRequest, InboundRequest.customer_id == Customer.id)\
+            .filter(Customer.company_name.isnot(None))\
+            .filter(Customer.company_name != '')\
+            .all()
+        company_names = [c[0] for c in company_names if c[0]]
+
+        agents_set = set(agent_refs) | set(contact_names) | set(customer_display_names) | set(company_names)
+        agents = sorted(agents_set, key=lambda s: s.lower())[:500]
         
         # Get unique request numbers
         request_numbers = db.session.query(InboundRequest.request_number)\
@@ -96,25 +118,25 @@ def search_suggestions():
             .all()
         nationalities = [nat[0] for nat in nationalities if nat[0]]
         
-        # Also get customer data for additional suggestions
+        # Extra first/last tokens for other consumers (optional)
         customers = Customer.query.with_entities(
-            distinct(Customer.first_name), 
+            distinct(Customer.first_name),
             distinct(Customer.last_name)
         ).limit(30).all()
-        
-        customer_names = []
+
+        customer_name_tokens = []
         for customer in customers:
             if customer[0]:
-                customer_names.append(customer[0])
+                customer_name_tokens.append(customer[0])
             if customer[1]:
-                customer_names.append(customer[1])
-        
+                customer_name_tokens.append(customer[1])
+
         return jsonify({
             'agents': agents,
             'contactNames': contact_names,
             'requestNumbers': request_numbers,
             'nationalities': nationalities,
-            'customerNames': customer_names
+            'customerNames': customer_name_tokens,
         })
         
     except Exception as e:

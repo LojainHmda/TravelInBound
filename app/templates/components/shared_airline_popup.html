@@ -1,0 +1,125 @@
+{% set popup_context = popup_context|default('finance') %}
+{% set modal_id = modal_id|default('addAirlineModal') %}
+{% set title_text = title_text|default('Add New Airline') %}
+{% set submit_label = submit_label|default('Add Airline') %}
+{% set submit_url = submit_url|default('') %}
+<div id="{{ modal_id }}" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50" style="display: none; align-items: center; justify-content: center; padding: 1rem;" {% if submit_url %}data-submit-url="{{ submit_url }}"{% endif %}>
+    <div class="bg-white rounded-lg shadow-2xl max-w-md sm:max-w-lg w-full flex flex-col overflow-hidden relative" style="max-height: 80vh; margin: auto;">
+        <div class="px-3 sm:px-4 py-2 sm:py-2.5 border-b border-slate-200 flex items-center justify-between bg-white z-20 flex-shrink-0 rounded-t-lg">
+            <h3 class="text-xs sm:text-sm font-semibold text-slate-800">
+                <i class="fas fa-plus-circle text-cyan-500 mr-1.5"></i>{{ title_text }}
+            </h3>
+            <button type="button" id="closeQuickAirlineModal" class="text-slate-400 hover:text-slate-600 p-1" aria-label="Close">
+                <i class="fas fa-times text-sm sm:text-base"></i>
+            </button>
+        </div>
+        <div class="p-2 sm:p-3 overflow-y-auto flex-1 min-h-0" style="max-height: calc(80vh - 120px);">
+            <div id="add-airline-error" class="hidden mb-2 p-1.5 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs"></div>
+            <input type="hidden" name="supplier_type" value="AIRLINE">
+
+            <div class="space-y-2">
+                <div class="px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs font-semibold text-slate-700">Airline Information</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Airline Name <span class="text-red-500">*</span></label>
+                        <input type="text" id="new_airline_name" name="name" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500" placeholder="Enter airline name" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">IATA Code</label>
+                        <input type="text" id="new_airline_iata_code" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500" placeholder="e.g. RJ, EK">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">ICAO Code</label>
+                        <input type="text" id="new_airline_icao_code" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500" placeholder="e.g. RJA">
+                    </div>
+                </div>
+
+                <div class="px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs font-semibold text-slate-700">Contact Information</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Phone Number</label>
+                        <input type="text" id="new_airline_phone" name="phone" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500" placeholder="+962 7 123 4567">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Email</label>
+                        <input type="email" id="new_airline_email" name="email" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500" placeholder="email@airline.com">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Location</label>
+                        <input type="text" id="new_airline_city" name="city" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500" placeholder="City / Base location">
+                    </div>
+                </div>
+
+                <div class="px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs font-semibold text-slate-700">Business Details</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Default Currency</label>
+                        <select id="new_airline_default_currency" name="default_currency" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="JOD">JOD</option>
+                            <option value="GBP">GBP</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Payment Terms</label>
+                        <select id="new_airline_payment_terms" name="payment_terms" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500">
+                            <option value="">select payment terms...</option>
+                            <option value="Cash before arrival">Cash before arrival</option>
+                            <option value="Credit">Credit</option>
+                            <option value="NET 15">NET 15</option>
+                            <option value="NET 30">NET 30</option>
+                            <option value="NET 45">NET 45</option>
+                            <option value="NET 60">NET 60</option>
+                            <option value="Prepaid">Prepaid</option>
+                            <option value="Cash on Delivery">Cash on Delivery</option>
+                            <option value="Cliq">Cliq</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs font-semibold text-slate-700">Financial Information</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
+                    <div id="airlineBankNameWrap">
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Bank Name</label>
+                        <input type="text" id="new_airline_bank_name" name="bank_name" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500" placeholder="bank name">
+                    </div>
+                    <div id="airlineBankAccountWrap">
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Bank Account</label>
+                        <input type="text" id="new_airline_bank_account" name="bank_account" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500" placeholder="Account number">
+                    </div>
+                    <div id="airlineCliqWrap" style="display:none;">
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Cliq num/Alias</label>
+                        <input type="text" id="new_airline_cliq_alias" name="cliq_alias" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500" placeholder="Enter cliq num or alias">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Tax Number</label>
+                        <input type="text" id="new_airline_tax_number" name="tax_number" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500" placeholder="Tax ID">
+                    </div>
+                </div>
+
+                <div class="px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs font-semibold text-slate-700">Additional Info</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Notes</label>
+                        <textarea id="new_airline_notes" name="notes" rows="1" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500 resize-none" placeholder="Additional notes"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-xs text-slate-500 mt-2">
+                <span class="text-red-500">*</span> required fields. Other fields are optional but recommended.
+            </div>
+        </div>
+        <div class="px-3 sm:px-4 py-2 sm:py-2.5 border-t border-slate-200 flex justify-end gap-2 bg-white z-20 flex-shrink-0 rounded-b-lg">
+            <button type="button" id="cancelQuickAirlineModal" class="px-3 py-1.5 text-slate-600 hover:bg-slate-100 rounded transition-colors text-xs">
+                Cancel
+            </button>
+            <button type="button" id="submitQuickAirlineModal" class="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-xs">
+                <i class="fas fa-save mr-1"></i>{{ submit_label }}
+            </button>
+        </div>
+    </div>
+</div>

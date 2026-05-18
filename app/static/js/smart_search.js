@@ -9,20 +9,23 @@ class SmartSearch {
     }
 
     init() {
-        this.loadSearchData();
-        this.setupAutocomplete();
+        // Load suggestions first; setupAutocomplete used a stale empty list if run immediately (race).
+        this.loadSearchData().then(() => this.setupAutocomplete());
     }
 
     async loadSearchData() {
         try {
-            // Load existing data from the page or make API call
-            const response = await fetch('/api/search-suggestions');
+            const response = await fetch('/api/search-suggestions', { credentials: 'same-origin' });
             if (response.ok) {
-                this.searchData = await response.json();
+                const raw = await response.json();
+                this.searchData.agents = Array.isArray(raw.agents) ? raw.agents.filter(Boolean) : [];
+                this.searchData.requestNumbers = Array.isArray(raw.requestNumbers) ? raw.requestNumbers.filter(Boolean) : [];
+                this.searchData.nationalities = Array.isArray(raw.nationalities) ? raw.nationalities.filter(Boolean) : [];
+            } else {
+                this.extractDataFromPage();
             }
         } catch (error) {
-            console.log('Using fallback search data');
-            // Fallback data extraction from current page
+            console.log('Using fallback search data', error);
             this.extractDataFromPage();
         }
     }
@@ -63,23 +66,22 @@ class SmartSearch {
     }
 
     setupAutocomplete() {
-        // Setup autocomplete for agent field
         const agentInput = document.querySelector('input[name="agent"]');
-        if (agentInput) {
-            this.createAutocomplete(agentInput, this.searchData.agents, 'agents');
+        if (agentInput && !agentInput.dataset.autocompleteBound) {
+            agentInput.dataset.autocompleteBound = '1';
+            this.createAutocomplete(agentInput, () => this.searchData.agents);
         }
 
-        // Setup autocomplete for request number field
         const requestInput = document.querySelector('input[name="request_number"]');
-        if (requestInput) {
-            this.createAutocomplete(requestInput, this.searchData.requestNumbers, 'requests');
+        if (requestInput && !requestInput.dataset.autocompleteBound) {
+            requestInput.dataset.autocompleteBound = '1';
+            this.createAutocomplete(requestInput, () => this.searchData.requestNumbers);
         }
 
-        // Add smart suggestion for common search patterns
         this.addSmartSuggestions();
     }
 
-    createAutocomplete(input, data, type) {
+    createAutocomplete(input, getDataFn) {
         const wrapper = document.createElement('div');
         wrapper.className = 'autocomplete-wrapper';
         wrapper.style.position = 'relative';
@@ -108,50 +110,48 @@ class SmartSearch {
         wrapper.appendChild(dropdown);
 
         input.addEventListener('input', (e) => {
-            const value = e.target.value.toLowerCase();
-            if (value.length === 0) {
+            const q = (e.target.value || '').trim().toLowerCase();
+            const data = (getDataFn.call(this) || []).map((s) => String(s).trim()).filter(Boolean);
+
+            if (q.length === 0) {
                 dropdown.style.display = 'none';
                 return;
             }
 
-            const matches = data.filter(item => 
-                item.toLowerCase().includes(value)
-            ).slice(0, 8); // Limit to 8 suggestions
+            const matches = data
+                .filter((item) => item.toLowerCase().includes(q))
+                .slice(0, 15);
 
             if (matches.length === 0) {
                 dropdown.style.display = 'none';
                 return;
             }
 
-            dropdown.innerHTML = matches.map(match => 
-                `<div class="autocomplete-item" style="
-                    padding: 10px 15px;
-                    cursor: pointer;
-                    border-bottom: 1px solid #f1f3f5;
-                    transition: all 0.2s;
-                " data-value="${match}">
-                    ${this.highlightMatch(match, value)}
-                </div>`
-            ).join('');
-
-            dropdown.style.display = 'block';
-
-            // Add click listeners to items
-            dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
-                item.addEventListener('mouseenter', () => {
-                    item.style.background = 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)';
-                    item.style.color = '#333';
+            dropdown.innerHTML = '';
+            matches.forEach((match) => {
+                const row = document.createElement('div');
+                row.className = 'autocomplete-item';
+                row.style.cssText =
+                    'padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #f1f3f5; transition: all 0.2s;';
+                row.dataset.value = match;
+                row.innerHTML = this.highlightMatch(match, q);
+                row.addEventListener('mouseenter', () => {
+                    row.style.background = 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)';
+                    row.style.color = '#333';
                 });
-                item.addEventListener('mouseleave', () => {
-                    item.style.background = 'white';
-                    item.style.color = 'inherit';
+                row.addEventListener('mouseleave', () => {
+                    row.style.background = 'white';
+                    row.style.color = 'inherit';
                 });
-                item.addEventListener('click', () => {
-                    input.value = item.dataset.value;
+                row.addEventListener('click', () => {
+                    input.value = row.dataset.value;
                     dropdown.style.display = 'none';
                     input.focus();
                 });
+                dropdown.appendChild(row);
             });
+
+            dropdown.style.display = 'block';
         });
 
         // Hide dropdown when clicking outside
@@ -195,15 +195,30 @@ class SmartSearch {
         });
     }
 
-    highlightMatch(text, query) {
-        const index = text.toLowerCase().indexOf(query);
-        if (index === -1) return text;
-        
-        return text.substring(0, index) + 
-               `<strong style="color: #333; background-color: #FFD700; padding: 1px 2px; border-radius: 2px;">` +
-               text.substring(index, index + query.length) + 
-               '</strong>' + 
-               text.substring(index + query.length);
+    escapeHtml(s) {
+        return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    highlightMatch(text, queryLower) {
+        const t = String(text);
+        const lower = t.toLowerCase();
+        const index = lower.indexOf(queryLower);
+        if (index === -1) return this.escapeHtml(t);
+
+        const before = this.escapeHtml(t.substring(0, index));
+        const mid = this.escapeHtml(t.substring(index, index + queryLower.length));
+        const after = this.escapeHtml(t.substring(index + queryLower.length));
+        return (
+            before +
+            '<strong style="color: #333; background-color: #FFD700; padding: 1px 2px; border-radius: 2px;">' +
+            mid +
+            '</strong>' +
+            after
+        );
     }
 
     addSmartSuggestions() {

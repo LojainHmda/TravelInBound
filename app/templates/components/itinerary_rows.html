@@ -1,4 +1,6 @@
-{% for row in rows|sort(attribute='date') %}
+{% set guide_suppliers = guide_suppliers or [] %}
+{% set itinerary_guide_slot_saved = itinerary_guide_slot_saved or {} %}
+{% for row in rows %}
 {% set row_hotel = hotel_map.get(row.id) if hotel_map else none %}
 {% set row_transport = transport_map.get(row.id) if transport_map else none %}
 {% set row_guide = guide_map.get(row.id) if guide_map else none %}
@@ -7,9 +9,33 @@
 {% set eff_transport = row_transport or global_transport or row.linked_transport %}
 {% set eff_guide = row_guide or global_guide or row.linked_guide %}
 {% set eff_meal = row_meal or global_meal or row.linked_meal %}
-<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors" 
+{% set row_date = row.itinerary_date if row.itinerary_date else row.date %}
+{% set row_date_key = row_date.strftime('%Y-%m-%d') if row_date else '' %}
+{% set row_meta = (row.comment|from_json|default({})) %}
+{% set row_note = row_meta.get('note', '') or '' %}
+
+{# Check if this row is a child row (duplicate) - store comment for JavaScript parsing #}
+{# Jinja2 doesn't support try/except, so we'll check in JavaScript instead #}
+{% set is_child_row = false %}
+{% if row.comment and '{' in (row.comment|string) and 'parent_row_id' in (row.comment|string) %}
+    {% set is_child_row = true %}
+{% endif %}
+{# Get the InboundRequest object - prioritize explicit inbound_request variable, fallback to request #}
+{% if not inbound_request %}
+    {% if request and request.request_number|default(none) %}
+        {% set inbound_request = request %}
+    {% elif row.request and row.request.request_number|default(none) %}
+        {% set inbound_request = row.request %}
+    {% endif %}
+{% endif %}
+{# Arrival and Departure columns removed - no longer calculating arrival/departure pax #}
+<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors {% if is_child_row %}itinerary-child-row{% endif %}" 
     data-row-id="{{ row.id }}"
     data-date="{{ row.itinerary_date.strftime('%Y-%m-%d') if row.itinerary_date else '' }}"
+    data-day-number="{{ row.day_number }}"
+    data-itinerary-guide-ids="{{ itinerary_row_guide_ids(row) | join(',') }}"
+    data-itinerary-guide-ids-committed="{{ itinerary_row_guide_ids(row) | join(',') }}"
+    data-comment="{{ row.comment if row.comment else '' }}"
     data-hotel-name="{{ eff_hotel.hotel_name if eff_hotel else '' }}"
     data-hotel-cat="{{ eff_hotel.hotel_category if eff_hotel else '' }}"
     data-transport-vehicle="{{ eff_transport.vehicle_type if eff_transport else '' }}"
@@ -18,48 +44,110 @@
     data-guide-name="{{ eff_guide.guide_name if eff_guide else '' }}"
     data-meal-restaurant="{{ eff_meal.restaurant if eff_meal else '' }}"
     data-meal-type="{{ eff_meal.meal_type if eff_meal else '' }}">
-    <td class="py-2 px-2 w-14">
+    <td class="py-2 px-2 w-14 itinerary-day-col">
         <span class="font-medium text-slate-700 text-xs">Day {{ row.day_number }}{% if row.description and ('Arrival' in row.description or 'Departure' in row.description) %} - {{ 'Arr' if 'Arrival' in row.description else 'Dep' }}{% endif %}</span>
     </td>
-    <td class="py-2 px-2 w-20">
+    <td class="py-2 px-2 w-20 itinerary-date-col">
         <span class="text-slate-600 text-xs">{{ row.itinerary_date.strftime('%d/%m') if row.itinerary_date else '' }}</span>
     </td>
-    <td class="py-2 px-2">
+    <td class="py-2 px-2 w-20 text-center">
         {% if view_only %}
-        <span class="text-slate-700 text-xs">{{ row.description or '' }}</span>
+        <span class="font-medium text-slate-700 text-xs itinerary-current-pax" 
+              data-date="{{ row_date_key }}" 
+              data-day="{{ row.day_number }}"
+              data-saved-pax="{{ row.comment if (row.comment and '{' in (row.comment|string)) else '' }}"></span>
         {% else %}
-        <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs itinerary-field" 
-               value="{{ row.description or '' }}"
-               data-field="description"
-               placeholder="Description...">
+        <input type="number" 
+               class="font-medium text-slate-700 text-xs itinerary-current-pax w-full text-center border border-slate-300 rounded px-1 py-0.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+               data-date="{{ row_date_key }}" 
+               data-day="{{ row.day_number }}"
+               data-row-id="{{ row.id }}"
+               data-field="current_pax"
+               data-saved-pax="{{ row.comment if (row.comment and '{' in (row.comment|string)) else '' }}"
+               min="0"
+               value=""
+               placeholder=""
+               style="max-width: 50px;">
         {% endif %}
     </td>
-    <td class="py-2 px-2 w-24">
+    <td class="py-2 px-2 itinerary-desc-col">
         {% if view_only %}
-        <span class="text-slate-600 text-xs">{{ row.meal_type or '' }}</span>
+        <div class="flex flex-col gap-1">
+            <span class="text-slate-700 text-xs">{{ row.description or '' }}</span>
+            {% if row_note %}
+            <div class="text-slate-600 text-xs border-t border-slate-200 pt-1">
+                <i class="fas fa-sticky-note mr-1 text-amber-500"></i>{{ row_note }}
+            </div>
+            {% endif %}
+        </div>
         {% else %}
-        <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs itinerary-field" data-field="meal_type">
-            <option value="">Select...</option>
-            <option value="Breakfast" {{ 'selected' if row.meal_type == 'Breakfast' else '' }}>Breakfast</option>
-            <option value="Lunch" {{ 'selected' if row.meal_type == 'Lunch' else '' }}>Lunch</option>
-            <option value="Dinner" {{ 'selected' if row.meal_type == 'Dinner' else '' }}>Dinner</option>
-        </select>
+        <div class="description-inputs-container" data-row-id="{{ row.id }}" data-description="{{ row.description or '' }}">
+            <div class="flex gap-1 items-start mb-1">
+                <div class="flex-1 min-w-0">
+                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs itinerary-field description-input" 
+                           value="{{ row.description or '' }}"
+                           data-field="description"
+                           placeholder="Description...">
+                    <div class="itinerary-inline-note-wrap w-full mt-1 {% if not row_note %}hidden{% endif %}">
+                        <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs itinerary-field itinerary-inline-note-input" data-field="note" placeholder="Notes..." value="{{ row_note }}">
+                    </div>
+                </div>
+                <button type="button" class="add-description-btn px-2 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg text-slate-600 flex-shrink-0 transition-colors" 
+                        onclick="addDescriptionInput(this)" 
+                        title="Repeat Day (add empty row below)">
+                    <i class="fas fa-plus text-xs"></i>
+                </button>
+                <button type="button" class="delete-row-btn px-2 py-1.5 bg-red-100 hover:bg-red-200 border border-red-300 rounded-lg text-red-600 flex-shrink-0 transition-colors" 
+                        onclick="deleteItineraryRow({{ row.id }})" 
+                        title="Delete this row">
+                    <i class="fas fa-trash text-xs"></i>
+                </button>
+                <button type="button" class="toggle-note-btn px-2 py-1.5 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-lg text-amber-700 flex-shrink-0 transition-colors {% if row_note %}is-open{% endif %}" 
+                        onclick="toggleItineraryNoteInput(this)" 
+                        title="Toggle note">
+                    <i class="fas fa-sticky-note text-xs"></i>
+                </button>
+            </div>
+        </div>
         {% endif %}
     </td>
-    <td class="py-2 px-2 w-[150px]">
+    <td class="py-2 px-2 min-w-[168px] align-top itinerary-guide-col">
+        {% set sel_guides = itinerary_row_guide_ids(row) %}
         {% if view_only %}
-        <span class="text-slate-600 text-xs">{{ row.restaurant_name or row.restaurant or '' }}</span>
+        <div class="flex flex-wrap gap-1">
+            {% for sid in sel_guides %}
+            {% set ns = namespace(lbl='') %}
+            {% for s in guide_suppliers %}
+                {% if s.id == sid %}{% set ns.lbl = s.name %}{% endif %}
+            {% endfor %}
+            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-teal-100 text-teal-800 border border-teal-200">{{ ns.lbl or ('#' ~ sid) }}</span>
+            {% endfor %}
+            {% if not sel_guides %}<span class="text-slate-400 text-[10px]">—</span>{% endif %}
+        </div>
         {% else %}
-        <div class="flex gap-1 items-center">
-            <select class="flex-1 px-2 py-1.5 border border-slate-300 rounded-lg text-xs itinerary-field" data-field="restaurant_supplier_id">
-                <option value="">Select...</option>
-                {% for supplier in restaurant_suppliers %}
-                <option value="{{ supplier.id }}" {{ 'selected' if row.restaurant_supplier_id == supplier.id else '' }}>{{ supplier.name }}</option>
+        <div class="itinerary-guide-picker" data-row-id="{{ row.id }}">
+            <div class="itinerary-guide-chips flex flex-wrap gap-1 mb-1 min-h-[22px]">
+                {% for sid in sel_guides %}
+                {% set ns = namespace(lbl='') %}
+                {% for s in guide_suppliers %}
+                    {% if s.id == sid %}{% set ns.lbl = s.name %}{% endif %}
+                {% endfor %}
+                {% set slot_key = row.id|string ~ ':' ~ sid|string %}
+                {% set db_gid = itinerary_guide_slot_saved.get(slot_key) %}
+                <span class="itinerary-guide-chip inline-flex items-center gap-0.5 pl-1.5 pr-0.5 py-0.5 rounded text-[10px] border {% if db_gid %}bg-green-50 border-green-400 text-green-900{% else %}bg-teal-50 border-teal-200 text-teal-900{% endif %}"
+                    data-supplier-id="{{ sid }}"
+                    data-inbound-guide-id="{{ db_gid or '' }}">
+                    <span class="itinerary-guide-chip-label">{{ ns.lbl or ('#' ~ sid) }}</span>
+                    <button type="button" class="itinerary-guide-chip-remove ml-0.5 text-slate-500 hover:text-red-600 p-0 leading-none" title="Remove" aria-label="Remove guide from day"><i class="fas fa-times text-[9px]"></i></button>
+                </span>
+                {% endfor %}
+            </div>
+            <select class="itinerary-guide-add w-full text-[10px] px-1.5 py-1 border border-slate-300 rounded-lg bg-white text-slate-700">
+                <option value="">Add guide…</option>
+                {% for supplier in guide_suppliers %}
+                <option value="{{ supplier.id }}">{{ supplier.name }}</option>
                 {% endfor %}
             </select>
-            <button type="button" class="px-1.5 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg text-slate-600 text-xs flex-shrink-0" onclick="openAddRestaurantModal()" title="Add New Restaurant">
-                <i class="fas fa-plus"></i>
-            </button>
         </div>
         {% endif %}
     </td>

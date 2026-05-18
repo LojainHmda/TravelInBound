@@ -1,0 +1,203 @@
+{% set popup_context = popup_context|default('finance') %}
+{% set modal_id = modal_id|default('addHotelModal') %}
+{% set title_text = title_text|default('Add New Hotel') %}
+{% set submit_label = submit_label|default('Add Hotel') %}
+{% set submit_url = submit_url|default('') %}
+{% set name_label = name_label|default('Hotel Name') %}
+{% set address_label = address_label|default('Address') %}
+<style>
+#{{ modal_id }} .shared-accommodation-grid label {
+    display: block;
+    font-size: 12px;
+    line-height: 1.25;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 2px;
+}
+#{{ modal_id }} .shared-accommodation-grid input,
+#{{ modal_id }} .shared-accommodation-grid select,
+#{{ modal_id }} .shared-accommodation-grid textarea {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 6px 10px;
+    min-height: 40px;
+    font-size: 14px;
+    color: #334155;
+    background: #fff;
+}
+#{{ modal_id }} .shared-accommodation-grid textarea {
+    resize: none;
+}
+</style>
+<div
+    id="{{ modal_id }}"
+    class="hidden fixed inset-0 bg-black bg-opacity-50 z-50"
+    style="display: none; align-items: center; justify-content: center; padding: 1rem;"
+    {% if popup_context != 'inbound' %}aria-hidden="true"{% endif %}
+    {% if submit_url %}data-submit-url="{{ submit_url }}"{% endif %}
+>
+    <div class="bg-white rounded-lg shadow-2xl w-full flex flex-col overflow-hidden relative" style="max-width: 512px; max-height: 75vh; margin: auto;">
+        <div class="px-3 sm:px-4 py-2 sm:py-2.5 border-b border-slate-200 flex items-center justify-between bg-white z-20 flex-shrink-0 rounded-t-lg">
+            <h3 class="text-xs sm:text-sm font-semibold text-slate-800">
+                <i class="fas fa-plus-circle text-blue-500 mr-1.5"></i>{{ title_text }}
+            </h3>
+            <button
+                type="button"
+                {% if popup_context == 'inbound' %}onclick="closeAddHotelModal()"{% else %}id="closeQuickSupplierModal" aria-label="Close"{% endif %}
+                class="text-slate-400 hover:text-slate-600 p-1"
+            >
+                <i class="fas fa-times text-sm sm:text-base"></i>
+            </button>
+        </div>
+        <div class="p-2 sm:p-3 overflow-y-auto flex-1 min-h-0" style="max-height: calc(75vh - 120px);">
+            {% if popup_context == 'inbound' %}
+            <div id="add-hotel-error" class="hidden mb-2 p-1.5 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs"></div>
+            {% else %}
+            <input type="hidden" id="quick_supplier_type" name="supplier_type" value="{{ new_supplier_type }}">
+            {% endif %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 quick-sup-grid shared-accommodation-grid">
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">City</label>
+                    <select id="new_hotel_city" name="city">
+                        <option value="">Select city...</option>
+                        <option value="Amman">Amman</option>
+                        <option value="Aqaba">Aqaba</option>
+                        <option value="Petra">Petra</option>
+                        <option value="Dead Sea">Dead Sea</option>
+                        <option value="Jerash">Jerash</option>
+                        <option value="Madaba">Madaba</option>
+                        <option value="Wadi Rum">Wadi Rum</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">Country</label>
+                    <input type="text" id="new_hotel_country" name="country" value="Jordan" placeholder="Enter country">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">{{ name_label }} <span class="text-danger">*</span></label>
+                    <input type="text" id="new_hotel_name" name="name" placeholder="Enter accommodation name" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">Category</label>
+                    <select name="category" id="new_hotel_category">
+                        <option value="">Select...</option>
+                        <option value="5-Star">5-Star</option>
+                        <option value="4-Star">4-Star</option>
+                        <option value="3-Star">3-Star</option>
+                        <option value="Boutique">Boutique</option>
+                        <option value="Camp">Camp</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">Room Category</label>
+                    <div class="flex gap-1">
+                        <select name="room_category" id="new_hotel_room_category" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select...</option>
+                        </select>
+                        <button
+                            type="button"
+                            {% if popup_context == 'inbound' %}onclick="addCustomRoomCategory()"{% else %}id="popupAddRoomCategoryBtn"{% endif %}
+                            class="px-2 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-slate-600 flex-shrink-0"
+                            title="Add New Room Category"
+                        >
+                            <i class="fas fa-plus text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">Contact Person</label>
+                    <input type="text" id="new_hotel_contact_person" name="contact_person" placeholder="Contact person name">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">Email</label>
+                    <input type="email" id="new_hotel_email" name="email" placeholder="email@example.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">Phone</label>
+                    <input type="text" id="new_hotel_phone" name="phone" placeholder="+962 6 123 4567">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">Website</label>
+                    <input type="text" id="new_hotel_website" name="website" placeholder="www.example.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">Payment Terms</label>
+                    <select id="new_hotel_payment_terms" name="payment_terms">
+                        <option value="">Select payment terms...</option>
+                        <option value="Cash before arrival">Cash before arrival</option>
+                        <option value="Credit">Credit</option>
+                        <option value="Cliq">Cliq</option>
+                        <option value="NET 15">NET 15</option>
+                        <option value="NET 30">NET 30</option>
+                        <option value="NET 45">NET 45</option>
+                        <option value="NET 60">NET 60</option>
+                        <option value="Prepaid">Prepaid</option>
+                        <option value="Cash on Delivery">Cash on Delivery</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">Default Currency</label>
+                    <select id="new_hotel_default_currency" name="default_currency">
+                        <option value="USD" selected>USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="JOD">JOD</option>
+                        <option value="GBP">GBP</option>
+                    </select>
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">{{ address_label }}</label>
+                    <input type="text" id="new_hotel_address" name="address" placeholder="Street address">
+                </div>
+                <div id="bankNameFieldWrap">
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">Bank Name</label>
+                    <input type="text" id="new_hotel_bank_name" name="bank_name" placeholder="Bank name">
+                </div>
+                <div id="bankAccountFieldWrap">
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">Bank Account</label>
+                    <input type="text" id="new_hotel_bank_account" name="bank_account" placeholder="Account number">
+                </div>
+                <div id="cliqFieldWrap" style="display:none;">
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">cilq num/Alias</label>
+                    <input type="text" id="new_hotel_cliq_alias" name="cliq_alias" placeholder="Enter cliq num or alias">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">Tax Number</label>
+                    <input type="text" id="new_hotel_tax_number" name="tax_number" placeholder="Tax ID">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">Contract Attachment</label>
+                    <input type="file" id="new_hotel_contract_file" name="contract_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">Notes</label>
+                    <textarea id="new_hotel_notes" name="notes" rows="2" placeholder="Additional notes"></textarea>
+                </div>
+            </div>
+            <div style="font-size:12px;color:#64748b;margin-top:6px;">
+                <span class="text-danger">*</span> Required fields. Other fields are optional but recommended.
+            </div>
+        </div>
+        <div class="px-3 sm:px-4 py-2 sm:py-2.5 border-t border-slate-200 flex justify-end gap-2 bg-white z-20 flex-shrink-0 rounded-b-lg">
+            <button
+                type="button"
+                class="px-3 py-1.5 text-slate-600 hover:bg-slate-100 rounded transition-colors text-xs"
+                {% if popup_context == 'inbound' %}onclick="closeAddHotelModal()"{% else %}id="cancelQuickSupplierModal"{% endif %}
+            >
+                Cancel
+            </button>
+            <button
+                type="button"
+                class="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-xs"
+                {% if popup_context == 'inbound' %}onclick="saveNewHotel()"{% else %}id="submitQuickSupplierModal"{% endif %}
+            >
+                <i class="fas fa-save mr-1"></i>{{ submit_label }}
+            </button>
+        </div>
+    </div>
+</div>

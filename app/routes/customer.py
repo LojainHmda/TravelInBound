@@ -6,9 +6,13 @@ from flask import (
     url_for, flash, jsonify, current_app, send_file
 )
 from werkzeug.utils import secure_filename
+from sqlalchemy import delete
+from sqlalchemy.exc import IntegrityError, OperationalError
 from app import db, csrf
 from app.forms.customer import CustomerForm, CustomerDocumentForm, CustomerSearchForm
 from app.models.customer import Customer, CustomerDocument
+from app.models.booking import Booking
+from app.models.inbound import InboundRequest
 from app.services.passport_scanner import PassportScanner
 
 # Create blueprint
@@ -20,78 +24,80 @@ def ensure_upload_dir(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
+
+def _apply_customer_financial_from_form(form, customer):
+    """Match supplier popups: Cliq maps alias → bank_account; else use bank fields."""
+    pt = (form.payment_terms.data or '').strip()
+    if pt == 'Cliq':
+        ca = (form.cliq_alias.data or '').strip()
+        customer.bank_name = 'Cliq'
+        customer.bank_account = ca or None
+        customer.cliq_alias = ca or None
+    else:
+        customer.bank_name = (form.bank_name.data or '').strip() or None
+        customer.bank_account = (form.bank_account.data or '').strip() or None
+        customer.cliq_alias = None
+
+
 @customer_bp.route('/')
 def list_customers():
     """Display list of customers with filtering options"""
-    # Get search parameters
-    query = request.args.get('query', '')
+    # Get filter parameters (Customer Type only)
     customer_type = request.args.get('customer_type', '')
-    country = request.args.get('country', '')
     
     # Create base query
     customers_query = Customer.query
     
     # Apply filters
-    if query:
-        customers_query = customers_query.filter(
-            db.or_(
-                Customer.first_name.ilike(f'%{query}%'),
-                Customer.last_name.ilike(f'%{query}%'),
-                Customer.email.ilike(f'%{query}%'),
-                Customer.phone.ilike(f'%{query}%'),
-                Customer.company_name.ilike(f'%{query}%')
-            )
-        )
-    
     if customer_type:
         customers_query = customers_query.filter(Customer.customer_type == customer_type)
-    
-    if country:
-        customers_query = customers_query.filter(Customer.country == country)
     
     # Get results - order by first name, then last name
     customers = customers_query.order_by(Customer.first_name, Customer.last_name).all()
     
-    # Prepare search form with country options
+    # Prepare search form (used for customer type choices in the template)
     form = CustomerSearchForm()
-    
-    # Get unique countries for dropdown
-    countries = [(c.country, c.country) for c in Customer.query.filter(
-        Customer.country.isnot(None)
-    ).with_entities(Customer.country).distinct().order_by(Customer.country)]
-    
-    # Add 'All Countries' option at the start
-    form.country.choices = [('', 'All Countries')] + countries
     
     return render_template(
         'customer/list.html',
         customers=customers,
         form=form,
-        query=query,
-        customer_type=customer_type,
-        country=country
+        customer_type=customer_type
     )
 
 @customer_bp.route('/new', methods=['GET', 'POST'])
 def new_customer():
     """Create a new customer"""
     form = CustomerForm()
+    # Force set customer type choices - override any cached values
+    form.customer_type.choices = [
+        ('Travel Agent', 'Travel Agent'),
+        ('Corporate', 'Corporate'),
+        ('Direct', 'Direct'),
+        ('Other', 'Other')
+    ]
+    form.customer_type.default = 'Direct'
+    # Clear any cached formdata
+    if hasattr(form.customer_type, '_formdata'):
+        form.customer_type._formdata = None
     
     if form.validate_on_submit():
         customer = Customer(
-            first_name=form.first_name.data,
-            last_name=form.last_name.data,
-            email=form.email.data,
-            phone=form.phone.data,
-            address=form.address.data,
-            city=form.city.data,
-            country=form.country.data,
+            first_name=(form.agent_name.data or '').strip(),
+            last_name='',
+            email=(form.email.data or '').strip(),
+            phone=(form.phone.data or '').strip(),
+            address=None,
+            city=None,
+            country=None,
             customer_type=form.customer_type.data,
-            company_name=form.company_name.data,
-            tax_number=form.tax_number.data,
-            notes=form.notes.data
+            company_name=(form.contact_person.data or '').strip() or None,
+            payment_terms=(form.payment_terms.data or '').strip() or None,
+            tax_number=None,
+            notes=None,
         )
-        
+        _apply_customer_financial_from_form(form, customer)
+
         try:
             db.session.add(customer)
             db.session.commit()
@@ -106,17 +112,66 @@ def new_customer():
             else:
                 flash('An error occurred while creating the customer. Please try again.', 'error')
     
-    return render_template('customer/edit.html', form=form, is_new=True)
+    # CRITICAL: Always ensure choices are set before rendering
+    form.customer_type.choices = [
+        ('Travel Agent', 'Travel Agent'),
+        ('Corporate', 'Corporate'),
+        ('Direct', 'Direct'),
+        ('Other', 'Other')
+    ]
+    # Clear cached formdata to force rebuild
+    if hasattr(form.customer_type, '_formdata'):
+        form.customer_type._formdata = None
+    # Also clear the _choices attribute if it exists
+    if hasattr(form.customer_type, '_choices'):
+        delattr(form.customer_type, '_choices')
+    return render_template(
+        'customer/edit.html', form=form, is_new=True, customer=None
+    )
 
 @customer_bp.route('/<int:customer_id>/edit', methods=['GET', 'POST'])
 def edit_customer(customer_id):
     """Edit an existing customer"""
     customer = Customer.query.get_or_404(customer_id)
-    form = CustomerForm(obj=customer)
-    
+    form = CustomerForm()
+    # CRITICAL: Set choices BEFORE any form processing
+    form.customer_type.choices = [
+        ('Travel Agent', 'Travel Agent'),
+        ('Corporate', 'Corporate'),
+        ('Direct', 'Direct'),
+        ('Other', 'Other')
+    ]
+
+    if request.method == 'GET':
+        form.agent_name.data = customer.first_name
+        form.contact_person.data = customer.company_name or ''
+        form.email.data = customer.email
+        form.phone.data = customer.phone
+        form.customer_type.data = customer.customer_type
+        form.payment_terms.data = customer.payment_terms or ''
+        pt_fin = (customer.payment_terms or '').strip()
+        if pt_fin == 'Cliq':
+            form.bank_name.data = ''
+            form.bank_account.data = ''
+            alias = (
+                (customer.cliq_alias or '').strip()
+                or (customer.bank_account or '').strip()
+            )
+            form.cliq_alias.data = alias
+        else:
+            form.bank_name.data = customer.bank_name or ''
+            form.bank_account.data = customer.bank_account or ''
+            form.cliq_alias.data = ''
+
     if form.validate_on_submit():
         try:
-            form.populate_obj(customer)
+            customer.first_name = (form.agent_name.data or '').strip()
+            customer.company_name = (form.contact_person.data or '').strip() or None
+            customer.email = (form.email.data or '').strip()
+            customer.phone = (form.phone.data or '').strip()
+            customer.customer_type = form.customer_type.data
+            customer.payment_terms = (form.payment_terms.data or '').strip() or None
+            _apply_customer_financial_from_form(form, customer)
             db.session.commit()
             
             flash(f'Customer {customer.name} updated successfully', 'success')
@@ -129,7 +184,93 @@ def edit_customer(customer_id):
             else:
                 flash('An error occurred while updating the customer. Please try again.', 'error')
     
+    # CRITICAL: Always ensure choices are set before rendering
+    form.customer_type.choices = [
+        ('Travel Agent', 'Travel Agent'),
+        ('Corporate', 'Corporate'),
+        ('Direct', 'Direct'),
+        ('Other', 'Other')
+    ]
+    # Clear cached formdata to force rebuild
+    if hasattr(form.customer_type, '_formdata'):
+        form.customer_type._formdata = None
+    # Also clear the _choices attribute if it exists
+    if hasattr(form.customer_type, '_choices'):
+        delattr(form.customer_type, '_choices')
     return render_template('customer/edit.html', form=form, customer=customer, is_new=False)
+
+
+@customer_bp.route('/<int:customer_id>/delete', methods=['POST'])
+def delete_customer(customer_id):
+    """Remove customer; clear nullable FKs on bookings/inbound requests; delete document files."""
+    customer_row = Customer.query.get_or_404(customer_id)
+    name = customer_row.name
+    cid = customer_row.id
+
+    db.session.expunge(customer_row)
+
+    static_root = os.path.join(current_app.root_path, 'static')
+    try:
+        docs = CustomerDocument.query.filter(CustomerDocument.customer_id == cid).all()
+        for document in docs:
+            if document.file_path:
+                fp = os.path.join(static_root, document.file_path)
+                if os.path.isfile(fp):
+                    try:
+                        os.remove(fp)
+                    except OSError:
+                        pass
+        CustomerDocument.query.filter(CustomerDocument.customer_id == cid).delete(
+            synchronize_session='fetch'
+        )
+
+        Booking.query.filter(Booking.customer_id == cid).update(
+            {Booking.customer_id: None},
+            synchronize_session=False,
+        )
+        InboundRequest.query.filter(InboundRequest.customer_id == cid).update(
+            {InboundRequest.customer_id: None},
+            synchronize_session=False,
+        )
+
+        db.session.execute(delete(Customer).where(Customer.id == cid))
+        db.session.commit()
+        flash(f'Customer {name} was removed.', 'success')
+    except IntegrityError as exc:
+        db.session.rollback()
+        current_app.logger.warning('delete_customer integrity: %s', exc.orig or exc)
+        flash(
+            'Unable to delete: records in another table still reference this customer.',
+            'danger',
+        )
+    except OperationalError as exc:
+        db.session.rollback()
+        err = str(exc.orig or exc).lower()
+        current_app.logger.warning('delete_customer operational: %s', exc.orig or exc)
+        if 'foreign' in err or 'constraint' in err:
+            flash(
+                'Unable to delete: the database refused because something still '
+                'links to this customer (see server log).',
+                'danger',
+            )
+        else:
+            flash('Could not remove customer due to a database error.', 'danger')
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.exception('delete_customer')
+        if current_app.debug:
+            flash(
+                f'Could not remove customer: {exc!s}',
+                'danger',
+            )
+        else:
+            flash(
+                'Could not remove customer. Enable debug logging or check '
+                'the server log for the exact error.',
+                'danger',
+            )
+    return redirect(url_for('customer.list_customers'))
+
 
 @customer_bp.route('/<int:customer_id>')
 def view_customer(customer_id):
@@ -406,8 +547,13 @@ def api_create_customer():
             last_name=data.get('last_name', ''),
             email=data.get('email'),
             phone=data.get('phone'),
-            customer_type=data.get('customer_type', 'Individual'),
+            customer_type=data.get('customer_type', 'Direct'),
             company_name=data.get('company_name', ''),
+            tax_number=data.get('tax_number', ''),
+            address=data.get('address', ''),
+            city=data.get('city', ''),
+            country=data.get('country', ''),
+            notes=data.get('notes', '')
         )
         
         db.session.add(customer)

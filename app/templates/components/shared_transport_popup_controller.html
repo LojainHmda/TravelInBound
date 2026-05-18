@@ -1,0 +1,312 @@
+<script>
+(function () {
+    const TRANSPORT_SELECT_CONFIG = [
+        { id: 'new_transport_city', key: 'transport_city' },
+        { id: 'new_transport_payment_terms', key: 'transport_payment_terms' },
+        { id: 'new_transport_default_currency', key: 'transport_default_currency' }
+    ];
+
+    function ensureOption(selectEl, value) {
+        const val = String(value || '').trim();
+        if (!selectEl || !val) return false;
+        const exists = Array.from(selectEl.options).some(opt => (opt.value || '').toLowerCase() === val.toLowerCase());
+        if (exists) return false;
+        const option = document.createElement('option');
+        option.value = val;
+        option.textContent = val;
+        const otherOption = Array.from(selectEl.options).find(opt => opt.value === 'Other');
+        if (otherOption) selectEl.insertBefore(option, otherOption);
+        else selectEl.appendChild(option);
+        return true;
+    }
+
+    function openCustomPrompt(message, onSubmit) {
+        const existingOverlay = document.getElementById('custom-prompt-overlay');
+        if (existingOverlay) existingOverlay.remove();
+        const overlay = document.createElement('div');
+        overlay.id = 'custom-prompt-overlay';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;';
+        const dialog = document.createElement('div');
+        dialog.style.cssText = 'background:white;border-radius:12px;padding:24px;min-width:360px;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
+        dialog.innerHTML = `
+            <div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:12px;">${message}</div>
+            <input type="text" id="custom-prompt-input" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;" placeholder="Type value..." autofocus>
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+                <button type="button" id="custom-prompt-cancel" style="padding:6px 16px;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;color:#475569;font-size:12px;cursor:pointer;">Cancel</button>
+                <button type="button" id="custom-prompt-ok" style="padding:6px 16px;border:none;border-radius:6px;background:#3b82f6;color:white;font-size:12px;cursor:pointer;font-weight:500;">Add</button>
+            </div>
+        `;
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+        const input = document.getElementById('custom-prompt-input');
+        const okBtn = document.getElementById('custom-prompt-ok');
+        const cancelBtn = document.getElementById('custom-prompt-cancel');
+        const submit = () => {
+            const value = (input?.value || '').trim();
+            overlay.remove();
+            onSubmit(value);
+        };
+        const cancel = () => overlay.remove();
+        okBtn?.addEventListener('click', submit);
+        cancelBtn?.addEventListener('click', cancel);
+        input?.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') submit();
+            if (e.key === 'Escape') cancel();
+        });
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) cancel();
+        });
+        setTimeout(() => input?.focus(), 50);
+    }
+
+    async function fetchGlobalOptionValues(key) {
+        try {
+            const resp = await fetch(`/inbound/api/supplier-option-values/global?key=${encodeURIComponent(key)}`);
+            const data = await resp.json();
+            if (data && data.success && Array.isArray(data.values)) return data.values;
+        } catch (_) {}
+        return [];
+    }
+
+    async function persistGlobalOptionValue(key, value) {
+        const v = String(value || '').trim();
+        if (!key || !v) return false;
+        try {
+            const resp = await fetch('/inbound/api/supplier-option-values/global', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: key, value: v })
+            });
+            const data = await resp.json();
+            return !!(resp.ok && data && data.success);
+        } catch (_) {
+            return false;
+        }
+    }
+
+    async function hydrateTransportSelectOthers() {
+        for (const cfg of TRANSPORT_SELECT_CONFIG) {
+            const selectEl = document.getElementById(cfg.id);
+            if (!selectEl) continue;
+            const values = await fetchGlobalOptionValues(cfg.key);
+            values.forEach(v => ensureOption(selectEl, v));
+            if (selectEl.dataset.otherHandlerAttached === '1') continue;
+            selectEl.dataset.otherHandlerAttached = '1';
+            selectEl.addEventListener('change', function () {
+                if (selectEl.value !== 'Other') return;
+                openCustomPrompt('Enter new value:', async function (customValue) {
+                    const val = String(customValue || '').trim();
+                    if (!val) {
+                        selectEl.value = '';
+                        return;
+                    }
+                    ensureOption(selectEl, val);
+                    selectEl.value = val;
+                    const ok = await persistGlobalOptionValue(cfg.key, val);
+                    if (!ok && typeof showNotification === 'function') {
+                        showNotification('Could not save value globally.', 'error');
+                    }
+                });
+            });
+        }
+    }
+    function buildSupplierFormData(payload, fileInputId) {
+        const formData = new FormData();
+        Object.keys(payload || {}).forEach(key => {
+            formData.append(key, payload[key] == null ? '' : String(payload[key]));
+        });
+        const fileInput = fileInputId ? document.getElementById(fileInputId) : null;
+        if (fileInput && fileInput.files && fileInput.files[0]) {
+            formData.append('contract_file', fileInput.files[0]);
+        }
+        return formData;
+    }
+
+    function getSupplierDialogFinancialFields(prefix) {
+        const paymentTerms = (document.getElementById(`${prefix}_payment_terms`)?.value || '').trim();
+        const bankName = (document.getElementById(`${prefix}_bank_name`)?.value || '').trim();
+        const bankAccount = (document.getElementById(`${prefix}_bank_account`)?.value || '').trim();
+        const cliqAlias = (document.getElementById(`${prefix}_cliq_alias`)?.value || '').trim();
+        return {
+            payment_terms: paymentTerms,
+            bank_name: paymentTerms === 'Cliq' ? 'Cliq' : bankName,
+            bank_account: paymentTerms === 'Cliq' ? cliqAlias : bankAccount,
+            cliq_alias: cliqAlias
+        };
+    }
+
+    function applyCliqAndContractToSupplierDialog(prefix) {
+        const paymentSelect = document.getElementById(`${prefix}_payment_terms`);
+        const bankNameInput = document.getElementById(`${prefix}_bank_name`);
+        const bankAccountInput = document.getElementById(`${prefix}_bank_account`);
+        const taxInput = document.getElementById(`${prefix}_tax_number`);
+        if (!paymentSelect || !bankNameInput || !bankAccountInput || !taxInput) return;
+
+        if (!Array.from(paymentSelect.options).some(o => o.value === 'Cliq')) {
+            const opt = document.createElement('option');
+            opt.value = 'Cliq';
+            opt.textContent = 'Cliq';
+            const otherOption = Array.from(paymentSelect.options).find(o => o.value === 'Other');
+            if (otherOption) paymentSelect.insertBefore(opt, otherOption);
+            else paymentSelect.appendChild(opt);
+        }
+
+        const bankNameWrap = bankNameInput.closest('div');
+        const bankAccountWrap = bankAccountInput.closest('div');
+        const taxWrap = taxInput.closest('div');
+        if (!bankNameWrap || !bankAccountWrap || !taxWrap) return;
+
+        let cliqWrap = document.getElementById(`${prefix}_cliq_wrap`);
+        if (!cliqWrap) {
+            cliqWrap = document.createElement('div');
+            cliqWrap.id = `${prefix}_cliq_wrap`;
+            cliqWrap.style.display = 'none';
+            const labelClass = 'block text-xs font-medium text-slate-700 mb-0.5';
+            const inputClass = bankAccountInput.className || 'w-full px-2 py-1 border border-slate-300 rounded text-xs';
+            cliqWrap.innerHTML = `
+                <label class="${labelClass}">cilq num/Alias</label>
+                <input type="text" id="${prefix}_cliq_alias" class="${inputClass}" placeholder="Enter cliq num or alias">
+            `;
+            bankAccountWrap.insertAdjacentElement('afterend', cliqWrap);
+        }
+
+        const existingContractInput = document.getElementById(`${prefix}_contract_file`);
+        let contractWrap = document.getElementById(`${prefix}_contract_wrap`);
+        if (!existingContractInput && !contractWrap) {
+            contractWrap = document.createElement('div');
+            contractWrap.id = `${prefix}_contract_wrap`;
+            const labelClass = 'block text-xs font-medium text-slate-700 mb-0.5';
+            contractWrap.innerHTML = `
+                <label class="${labelClass}">Contract Attachment</label>
+                <input type="file" id="${prefix}_contract_file" class="${bankAccountInput.className || ''}" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+            `;
+            taxWrap.insertAdjacentElement('afterend', contractWrap);
+        }
+
+        const sync = () => {
+            const isCliq = paymentSelect.value === 'Cliq';
+            bankNameWrap.style.display = isCliq ? 'none' : '';
+            bankAccountWrap.style.display = isCliq ? 'none' : '';
+            cliqWrap.style.display = isCliq ? '' : 'none';
+        };
+        paymentSelect.addEventListener('change', sync);
+        sync();
+    }
+
+    function initTransportPopupEnhancements() {
+        applyCliqAndContractToSupplierDialog('new_transport');
+        hydrateTransportSelectOthers();
+    }
+
+    window.openAddTransportModal = function openAddTransportModal() {
+        const modal = document.getElementById('addTransportModal');
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        modal.style.display = 'flex';
+        initTransportPopupEnhancements();
+        document.getElementById('new_transport_name')?.focus();
+    };
+
+    window.closeAddTransportModal = function closeAddTransportModal() {
+        const modal = document.getElementById('addTransportModal');
+        if (!modal) return;
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        modal.style.display = 'none';
+        document.getElementById('new_transport_name').value = '';
+        document.getElementById('new_transport_contact_person').value = '';
+        document.getElementById('new_transport_phone').value = '';
+        document.getElementById('new_transport_email').value = '';
+        document.getElementById('new_transport_website').value = '';
+        document.getElementById('new_transport_city').value = '';
+        document.getElementById('new_transport_country').value = 'Jordan';
+        document.getElementById('new_transport_payment_terms').value = '';
+        document.getElementById('new_transport_default_currency').value = 'USD';
+        document.getElementById('new_transport_address').value = '';
+        document.getElementById('new_transport_bank_name').value = '';
+        document.getElementById('new_transport_bank_account').value = '';
+        const transCliq = document.getElementById('new_transport_cliq_alias');
+        if (transCliq) transCliq.value = '';
+        const transContract = document.getElementById('new_transport_contract_file');
+        if (transContract) transContract.value = '';
+        document.getElementById('new_transport_tax_number').value = '';
+        document.getElementById('new_transport_notes').value = '';
+        document.getElementById('add-transport-error')?.classList.add('hidden');
+    };
+
+    window.saveNewTransport = function saveNewTransport() {
+        const transportName = document.getElementById('new_transport_name').value.trim();
+        if (!transportName) {
+            const err = document.getElementById('add-transport-error');
+            if (err) {
+                err.textContent = 'Please enter a supplier name';
+                err.classList.remove('hidden');
+            }
+            return;
+        }
+        const financial = getSupplierDialogFinancialFields('new_transport');
+        const transportData = {
+            name: transportName,
+            contact_person: document.getElementById('new_transport_contact_person').value.trim(),
+            phone: document.getElementById('new_transport_phone').value.trim(),
+            email: document.getElementById('new_transport_email').value.trim(),
+            website: document.getElementById('new_transport_website').value.trim(),
+            city: document.getElementById('new_transport_city').value.trim(),
+            country: document.getElementById('new_transport_country').value.trim(),
+            payment_terms: financial.payment_terms,
+            default_currency: document.getElementById('new_transport_default_currency').value.trim() || 'USD',
+            address: document.getElementById('new_transport_address').value.trim(),
+            bank_name: financial.bank_name,
+            bank_account: financial.bank_account,
+            cliq_alias: financial.cliq_alias,
+            tax_number: document.getElementById('new_transport_tax_number').value.trim(),
+            notes: document.getElementById('new_transport_notes').value.trim()
+        };
+        const csrfVal = (typeof window.csrfToken !== 'undefined' ? window.csrfToken : '') || '';
+        const headers = csrfVal ? { 'X-CSRFToken': csrfVal } : {};
+        fetch('/inbound/api/add-transport', {
+            method: 'POST',
+            headers: headers,
+            body: buildSupplierFormData(transportData, 'new_transport_contract_file')
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const select = document.getElementById('transport_supplier');
+                if (select) {
+                    const separator = select.querySelector('optgroup[label="──────────"]');
+                    const option = document.createElement('option');
+                    option.value = data.supplier_id;
+                    option.textContent = transportName;
+                    if (separator) select.insertBefore(option, separator);
+                    else select.appendChild(option);
+                    select.value = data.supplier_id;
+                }
+                window.closeAddTransportModal();
+                if (typeof showNotification === 'function') {
+                    showNotification('Transport supplier added successfully', 'success');
+                }
+                if (!select) {
+                    window.location.reload();
+                } else if (typeof showNotification !== 'function') {
+                    window.location.reload();
+                }
+            } else {
+                const err = document.getElementById('add-transport-error');
+                if (err) {
+                    err.textContent = data.error || 'Error adding transport supplier';
+                    err.classList.remove('hidden');
+                }
+            }
+        })
+        .catch(() => {
+            const err = document.getElementById('add-transport-error');
+            if (err) {
+                err.textContent = 'Error adding transport supplier';
+                err.classList.remove('hidden');
+            }
+        });
+    };
+})();
+</script>

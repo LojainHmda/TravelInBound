@@ -22,6 +22,112 @@
 @media print {
     .no-print { display: none !important; }
 }
+
+/* Print layout - hide app chrome and screen content, show print-only document */
+@media print {
+    @page { size: A4; margin: 0.5in; }
+    .top-navbar, #sidebar, #sidebar-overlay, .invoice-screen-content { display: none !important; }
+    .invoice-print-content { display: block !important; }
+    .invoice-print-content [contenteditable="true"] { outline: none; }
+    body { background: white !important; }
+    #content, main { padding: 0 !important; margin: 0 !important; }
+    .container { max-width: 100% !important; }
+}
+.invoice-print-content {
+    display: block;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #000;
+}
+.invoice-print-header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-top: 0;
+}
+.invoice-print-header img {
+    display: block;
+    max-height: 60px;
+    margin: 0 auto 10px auto;
+}
+.invoice-print-company {
+    text-align: center;
+}
+.invoice-print-company h1 {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+    font-weight: bold;
+}
+.invoice-print-company p { margin: 1px 0; font-size: 10px; }
+.invoice-print-license {
+    margin: 15px 0;
+    font-size: 10px;
+    text-align: center;
+}
+.invoice-print-line {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+.invoice-print-info-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 25px;
+}
+.invoice-print-info-table td {
+    border: 1px solid #000;
+    padding: 8px;
+    vertical-align: top;
+}
+.invoice-print-items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+.invoice-print-items-table th,
+.invoice-print-items-table td {
+    border: 1px solid #000;
+    padding: 3px 6px;
+    font-size: 10px;
+    line-height: 1.25;
+    min-height: 19px;
+    box-sizing: border-box;
+}
+.invoice-print-items-table th {
+    background: #f0f0f0;
+    font-weight: bold;
+    text-align: center;
+}
+.invoice-print-items-table .col-ref { width: 12%; }
+.invoice-print-items-table .col-desc { width: 38%; }
+.invoice-print-items-table .col-price { width: 15%; text-align: right; }
+.invoice-print-items-table .col-pax { width: 10%; text-align: center; }
+.invoice-print-items-table .col-total { width: 15%; text-align: right; }
+.invoice-print-items-table tfoot td { border: none; padding: 3px 6px; }
+.invoice-print-items-table tfoot td:nth-child(4),
+.invoice-print-items-table tfoot td:nth-child(5) { border: 1px solid #000 !important; }
+.invoice-print-items-table tfoot td:nth-child(4) { white-space: nowrap; }
+.invoice-print-statement {
+    margin: 20px 0;
+    font-size: 11px;
+}
+.invoice-print-bank {
+    font-size: 11px;
+    line-height: 1.5;
+}
+.invoice-print-bank p { margin: 2px 0; }
+.invoice-print-editable {
+    min-height: 1em;
+    outline: 1px dashed transparent;
+    outline-offset: -1px;
+}
+.invoice-print-editable:focus {
+    outline-color: #0d6efd33;
+}
+@media print {
+    .invoice-print-editable { outline: none !important; }
+}
 </style>
 {% endblock %}
 
@@ -31,15 +137,267 @@
         <div class="col-12">
             <div class="d-flex justify-content-between">
                 <a href="{{ url_for('inbound.edit_request', id=request.id) }}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left"></i> Back to Request
+                    <i class="fas fa-arrow-left"></i> Back to invoice
                 </a>
-                <button onclick="window.print()" class="btn btn-primary">
-                    <i class="fas fa-print"></i> Print Invoice
-                </button>
+                <div class="d-flex gap-2">
+                    <button type="button" id="invoice-save-btn" class="btn btn-success">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                    <button onclick="window.print()" class="btn btn-primary">
+                        <i class="fas fa-print"></i> Invoice
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Print-only document (shown when printing) -->
+    <div class="invoice-print-content">
+        <div class="invoice-print-header">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Windows of Jordan" onerror="this.style.display='none'">
+            <div class="invoice-print-company">
+                <h1>Windows of Jordan Tours & Travel</h1>
+                <p>Amman - Jordan</p>
+                <p>Prince Mhd Street</p>
+                <p>Building 247 5th floor</p>
+                <p>Email: accounting@windowsofjordan.com</p>
+            </div>
+            <div class="invoice-print-license">
+                <div><strong>License #</strong> 3453 &nbsp;&nbsp; <strong>Company ID#</strong> 200120113 &nbsp;&nbsp; <strong>Tax #</strong> 129228648</div>
+                <div>Cell: +962799661007 &nbsp;&nbsp; Tel: +96264619402</div>
+            </div>
+        </div>
+
+        <div class="invoice-print-line">
+            <span>Invoice No. <span class="invoice-print-editable" contenteditable="true" data-save-key="invoice_no">{{ request.document_sequence or request.request_number }}</span></span>
+            <span>Issue Date: <span class="invoice-print-editable" contenteditable="true" data-save-key="issue_date">{{ request.created_at.strftime('%d/%b/%y') if request.created_at else '' }}</span></span>
+        </div>
+
+        <table class="invoice-print-info-table">
+            <tr>
+                <td style="width: 25%;"><strong>Address to:</strong> <span class="invoice-print-editable" contenteditable="true" data-save-key="address_to">{{ request.agent }}{% if request.customer and request.customer.company_name %} - {{ request.customer.company_name }}{% endif %}</span></td>
+                <td style="width: 25%;"><strong>Agent Reference:</strong> <span class="invoice-print-editable" contenteditable="true" data-save-key="agent_ref">{{ request.agent_ref or '-' }}</span></td>
+                <td style="width: 50%;"><strong>Ref:</strong> <span class="invoice-print-editable" contenteditable="true" data-save-key="ref">{{ request.request_number }}</span></td>
+            </tr>
+            <tr>
+                <td style="width: 33%;"><strong>Pax:</strong> <span class="invoice-print-editable" contenteditable="true" data-save-key="pax">{{ request.pax }}</span></td>
+                <td style="width: 33%;"><strong>Arrival:</strong> <span class="invoice-print-editable" contenteditable="true" data-save-key="arrival">{{ request.from_date.strftime('%d %b %Y') if request.from_date else 'N/A' }}</span></td>
+                <td style="width: 34%;"><strong>Departure:</strong> <span class="invoice-print-editable" contenteditable="true" data-save-key="departure">{{ request.to_date.strftime('%d %b %Y') if request.to_date else 'N/A' }}</span></td>
+            </tr>
+        </table>
+
+        <div style="height: 20px;"></div>
+
+        <table class="invoice-print-items-table">
+            <thead>
+                <tr>
+                    <th class="col-ref">Ref</th>
+                    <th class="col-desc">Description</th>
+                    <th class="col-price">Price</th>
+                    <th class="col-pax">Pax</th>
+                    <th class="col-total">Total</th>
+                </tr>
+            </thead>
+            <tbody data-save-section="rows">
+                <tr data-save-row><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable invoice-price" contenteditable="true"></td><td class="invoice-print-editable invoice-pax" contenteditable="true"></td><td class="invoice-print-editable invoice-row-total" contenteditable="false"></td></tr>
+                <tr data-save-row><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable invoice-price" contenteditable="true"></td><td class="invoice-print-editable invoice-pax" contenteditable="true"></td><td class="invoice-print-editable invoice-row-total" contenteditable="false"></td></tr>
+                <tr data-save-row><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable invoice-price" contenteditable="true"></td><td class="invoice-print-editable invoice-pax" contenteditable="true"></td><td class="invoice-print-editable invoice-row-total" contenteditable="false"></td></tr>
+                <tr data-save-row><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable invoice-price" contenteditable="true"></td><td class="invoice-print-editable invoice-pax" contenteditable="true"></td><td class="invoice-print-editable invoice-row-total" contenteditable="false"></td></tr>
+                <tr data-save-row><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable invoice-price" contenteditable="true"></td><td class="invoice-print-editable invoice-pax" contenteditable="true"></td><td class="invoice-print-editable invoice-row-total" contenteditable="false"></td></tr>
+                <tr data-save-row><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable invoice-price" contenteditable="true"></td><td class="invoice-print-editable invoice-pax" contenteditable="true"></td><td class="invoice-print-editable invoice-row-total" contenteditable="false"></td></tr>
+                <tr data-save-row><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable invoice-price" contenteditable="true"></td><td class="invoice-print-editable invoice-pax" contenteditable="true"></td><td class="invoice-print-editable invoice-row-total" contenteditable="false"></td></tr>
+                <tr data-save-row><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable invoice-price" contenteditable="true"></td><td class="invoice-print-editable invoice-pax" contenteditable="true"></td><td class="invoice-print-editable invoice-row-total" contenteditable="false"></td></tr>
+                <tr data-save-row><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable invoice-price" contenteditable="true"></td><td class="invoice-print-editable invoice-pax" contenteditable="true"></td><td class="invoice-print-editable invoice-row-total" contenteditable="false"></td></tr>
+            </tbody>
+            <tfoot>
+                {% set print_total = request.total_amount or 0 %}
+                {% set print_currency = request.total_currency or 'USD' %}
+                <tr><td></td><td></td><td></td><td>Total</td><td class="invoice-print-tfoot-value invoice-footer-total" contenteditable="false">{{ print_currency }} {{ "%.2f"|format(print_total) }}</td></tr>
+                <tr><td></td><td></td><td></td><td>Advance Payment</td><td class="invoice-print-tfoot-value invoice-advance" contenteditable="true" data-save-key="advance">{{ print_currency }} 0.00</td></tr>
+                <tr><td></td><td></td><td></td><td><strong>Net Due</strong></td><td class="invoice-print-tfoot-value invoice-net-due" contenteditable="false"><strong>{{ print_currency }} {{ "%.2f"|format(print_total) }}</strong></td></tr>
+            </tfoot>
+        </table>
+
+        <div class="invoice-print-statement" style="text-align: center;">
+            <p><strong>All Charges and commissions applied by Banks for transfers are to be paid by the payee.</strong></p>
+        </div>
+
+        <div class="invoice-print-bank" style="text-align: center;">
+            <p><strong>ACCOUNT NAME:</strong> WINDOWS OF JORDAN TOURS</p>
+            <p><strong>BANK:</strong> JORDAN AHLI BANK</p>
+            <p><strong>BRANCH:</strong> Queen Rania Street Branch</p>
+            <p><strong>ADDRESS:</strong> Sport City Circle</p>
+            <p><strong>P.O BOX:</strong> 19285 Shmeisani ZIP CODE: 11196</p>
+            <p><strong>FAX:</strong> 96265699742</p>
+            <p><strong>SWIFT CODE:</strong> JONBJOAXXXX</p>
+            <p><strong>ACCOUNT # (USD):</strong> 53-02-301015-681581-02</p>
+            <p><strong>IBAN:</strong> JO61 JONB 0530 0002 3010 1568 1581 02</p>
+            <p><strong>PURPOSE CODE:</strong> 404</p>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        var currency = "{{ request.total_currency or 'USD' }}";
+        function parseNum(str) {
+            if (!str) return 0;
+            var m = String(str).replace(/,/g, '').match(/-?\d+\.?\d*/g);
+            return m ? parseFloat(m[m.length - 1]) || 0 : 0;
+        }
+        function formatVal(n) { return n.toFixed(2); }
+        function recalc() {
+            var tbody = document.querySelector('.invoice-print-items-table tbody');
+            var rows = tbody.querySelectorAll('tr');
+            var grandTotal = 0;
+            rows.forEach(function(row) {
+                var priceCell = row.querySelector('.invoice-price');
+                var paxCell = row.querySelector('.invoice-pax');
+                var totalCell = row.querySelector('.invoice-row-total');
+                var price = parseNum(priceCell ? priceCell.textContent : '');
+                var pax = parseNum(paxCell ? paxCell.textContent : '') || 1;
+                var total = price * pax;
+                grandTotal += total;
+                if (totalCell) totalCell.textContent = total > 0 ? formatVal(total) : '';
+            });
+            var footerTotal = document.querySelector('.invoice-footer-total');
+            var advanceCell = document.querySelector('.invoice-advance');
+            var netDueCell = document.querySelector('.invoice-net-due');
+            if (footerTotal) footerTotal.textContent = currency + ' ' + formatVal(grandTotal);
+            var advance = parseNum(advanceCell ? advanceCell.textContent : '');
+            var netDue = grandTotal - advance;
+            if (netDueCell) {
+                var strong = netDueCell.querySelector('strong');
+                var txt = currency + ' ' + formatVal(netDue);
+                if (strong) strong.textContent = txt;
+                else netDueCell.textContent = txt;
+            }
+        }
+        function restrictToNumbers(el, allowDecimal) {
+            var v = (el.textContent || '').replace(/\s/g, '');
+            if (allowDecimal) {
+                v = v.replace(/[^\d.]/g, '').replace(/\.(?=.*\.)/g, '');
+            } else {
+                v = v.replace(/\D/g, '');
+            }
+            if (v !== (el.textContent || '').trim()) {
+                el.textContent = v;
+                placeCaretAtEnd(el);
+            }
+        }
+        function placeCaretAtEnd(el) {
+            var range = document.createRange();
+            range.selectNodeContents(el);
+            range.collapse(false);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+        var table = document.querySelector('.invoice-print-items-table');
+        if (table) {
+            table.addEventListener('input', function(e) {
+                var t = e.target;
+                if (t.classList && t.classList.contains('invoice-price')) restrictToNumbers(t, true);
+                if (t.classList && t.classList.contains('invoice-pax')) restrictToNumbers(t, false);
+                recalc();
+            });
+            table.addEventListener('blur', function(e) {
+                var t = e.target;
+                if (t.classList && t.classList.contains('invoice-price')) restrictToNumbers(t, true);
+                if (t.classList && t.classList.contains('invoice-pax')) restrictToNumbers(t, false);
+                recalc();
+            });
+            table.addEventListener('keyup', recalc);
+            recalc();
+        }
+
+        var savedAdminInvoice = {{ saved_admin_invoice|tojson|safe if saved_admin_invoice else 'null' }};
+        var requestId = {{ request.id }};
+        var defaultRef = {{ request.request_number|tojson|safe }};
+
+        function collectAdminData() {
+            var data = {};
+            document.querySelectorAll('[data-save-key]').forEach(function(el) {
+                data[el.getAttribute('data-save-key')] = (el.textContent || '').trim();
+            });
+            var tbody = document.querySelector('.invoice-print-items-table tbody[data-save-section="rows"]');
+            if (tbody) {
+                data.rows = [];
+                tbody.querySelectorAll('tr[data-save-row]').forEach(function(tr) {
+                    var tds = tr.querySelectorAll('td');
+                    if (tds.length >= 5) {
+                        data.rows.push({
+                            ref: (tds[0].textContent || '').trim(),
+                            desc: (tds[1].textContent || '').trim(),
+                            price: (tds[2].textContent || '').trim(),
+                            pax: (tds[3].textContent || '').trim()
+                        });
+                    }
+                });
+            }
+            return data;
+        }
+
+        function loadAdminData(data) {
+            if (!data) return;
+            Object.keys(data).forEach(function(key) {
+                if (key === 'rows') {
+                    var tbody = document.querySelector('.invoice-print-items-table tbody[data-save-section="rows"]');
+                    if (!tbody || !data.rows || !data.rows.length) return;
+                    var rows = tbody.querySelectorAll('tr[data-save-row]');
+                    data.rows.forEach(function(r, i) {
+                        if (rows[i]) {
+                            var tds = rows[i].querySelectorAll('td');
+                            if (tds[0]) tds[0].textContent = r.ref || '';
+                            if (tds[1]) tds[1].textContent = r.desc || '';
+                            if (tds[2]) tds[2].textContent = r.price || '';
+                            if (tds[3]) tds[3].textContent = r.pax || '';
+                        }
+                    });
+                } else {
+                    var el = document.querySelector('[data-save-key="' + key + '"]');
+                    if (el && data[key] !== undefined) {
+                        var val = data[key] || '';
+                        if (key === 'ref' && !val && defaultRef) val = defaultRef;
+                        el.textContent = val;
+                    }
+                }
+            });
+            recalc();
+        }
+
+        document.getElementById('invoice-save-btn').addEventListener('click', function() {
+            var btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            fetch('/inbound/' + requestId + '/save-admin-invoice', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '' },
+                body: JSON.stringify(collectAdminData())
+            }).then(function(r) { return r.json(); }).then(function(res) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Save';
+                if (res.ok) alert('Invoice saved.');
+            }).catch(function() {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Save';
+                alert('Failed to save.');
+            });
+        });
+
+        loadAdminData(savedAdminInvoice);
+        var refEl = document.querySelector('[data-save-key="ref"]');
+        if (refEl && defaultRef && !refEl.textContent.trim()) refEl.textContent = defaultRef;
+
+        // Optional direct-print mode from list page icon.
+        var params = new URLSearchParams(window.location.search || '');
+        if (params.get('auto_print') === '1') {
+            setTimeout(function() { window.print(); }, 250);
+        }
+    })();
+    </script>
+
+    <!-- Screen content (hidden - print layout is shown for editing) -->
+    <div class="invoice-screen-content" style="display: none;">
     <div class="invoice-header">
         <div class="row">
             <div class="col-md-6">
@@ -168,5 +526,6 @@
         <p class="text-muted mb-0">Thank you for choosing Arab Travel Group</p>
         <small class="text-muted">Professional inbound tour operator services</small>
     </div>
+    </div><!-- /.invoice-screen-content -->
 </div>
 {% endblock %}

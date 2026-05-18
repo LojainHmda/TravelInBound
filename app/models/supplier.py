@@ -55,6 +55,7 @@ class Supplier(db.Model):
     
     # Additional information
     notes = db.Column(db.Text)
+    languages = db.Column(db.Text)  # Comma-separated languages (for GUIDE suppliers)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)
@@ -117,7 +118,7 @@ class SupplierPayment(db.Model):
     supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=False)
     service_confirmation_id = db.Column(db.Integer, db.ForeignKey('service_confirmation.id'), nullable=True)
     amount = db.Column(db.Float, nullable=False)
-    payment_date = db.Column(db.Date, nullable=False, default=datetime.utcnow)
+    payment_date = db.Column(db.Date, nullable=False, default=lambda: datetime.utcnow().date())
     payment_reference = db.Column(db.String(100))
     payment_method = db.Column(db.String(50))  # BANK_TRANSFER, CREDIT_CARD, etc.
     notes = db.Column(db.Text)

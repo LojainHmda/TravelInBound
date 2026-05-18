@@ -332,10 +332,10 @@
                     </label>
                     <select name="customer_type" id="customerType" class="form-select" required style="background: #f3f4f6;">
                         <option value="">Auto-filled from customer</option>
-                        <option value="AGENCY" {% if wizard_data.customer_type == 'AGENCY' %}selected{% endif %}>Travel Agency</option>
-                        <option value="GROUP" {% if wizard_data.customer_type == 'GROUP' %}selected{% endif %}>Group Tour</option>
-                        <option value="COMPANY" {% if wizard_data.customer_type == 'COMPANY' %}selected{% endif %}>Company</option>
-                        <option value="CORPORATE" {% if wizard_data.customer_type == 'CORPORATE' %}selected{% endif %}>Corporate</option>
+                        <option value="GROUP" {% if wizard_data.customer_type == 'GROUP' %}selected{% endif %}>Group</option>
+                        <option value="INDIVIDUAL" {% if wizard_data.customer_type == 'INDIVIDUAL' %}selected{% endif %}>Individual</option>
+                        <option value="INCENTIVE" {% if wizard_data.customer_type == 'INCENTIVE' %}selected{% endif %}>Incentive</option>
+                        <option value="OTHERS" {% if wizard_data.customer_type == 'OTHERS' %}selected{% endif %}>Others</option>
                     </select>
                 </div>
                 <div class="form-group">

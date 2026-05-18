@@ -1,11 +1,11 @@
 {% if meals %}
 {% for meal in meals %}
 <tr class="hover:bg-slate-50" data-meal-id="{{ meal.id }}" data-meal-key="{{ meal.meal_type or '' }}-{{ meal.restaurant or '' }}">
-    <td class="px-4 py-3 text-slate-500">{{ meal.date.strftime('%d %b') if meal.date else '-' }}</td>
+    <td class="px-4 py-3 text-slate-500">{{ meal.date.strftime('%d %b %Y') if meal.date else '-' }}</td>
     <td class="px-4 py-3 text-slate-700">{{ meal.restaurant or '-' }}</td>
     <td class="px-4 py-3 text-slate-500">{{ meal.meal_type or '-' }}</td>
     <td class="px-4 py-3 text-slate-500">{{ meal.total_cost or 0 }}</td>
-    <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs {% if meal.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif meal.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-slate-100 text-slate-700{% endif %}">{{ meal.status or 'PENDING' }}</span></td>
+    <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs {% if meal.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif meal.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% elif meal.status == 'WAITING_LIST' %}bg-blue-100 text-blue-700{% elif meal.status == 'CANCELLED' %}bg-red-100 text-red-700{% else %}bg-slate-100 text-slate-700{% endif %}">{{ meal.status or 'PENDING' }}</span></td>
     {% if not view_only %}
     <td class="px-4 py-3 text-center">
         <button type="button" class="text-slate-400 hover:text-red-500 p-1" onclick="deleteMeal({{ meal.id }})">

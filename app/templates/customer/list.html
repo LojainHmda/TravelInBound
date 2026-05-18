@@ -16,59 +16,6 @@ body {
     padding: 2rem;
 }
 
-.page-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 20px;
-    padding: 2.5rem;
-    margin-bottom: 2rem;
-    color: white;
-    box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
-}
-
-.header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.header-text h1 {
-    font-size: 2.5rem;
-    font-weight: 800;
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.header-text p {
-    font-size: 1.1rem;
-    color: rgba(255, 255, 255, 0.9);
-    margin: 0;
-}
-
-.btn-add-customer {
-    background: #efdea4;
-    color: #8b7355;
-    border: 2px solid #8b7355;
-    padding: 0.875rem 1.75rem;
-    border-radius: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    box-shadow: 0 3px 10px rgba(139, 115, 85, 0.2);
-}
-
-.btn-add-customer:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 20px rgba(139, 115, 85, 0.3);
-    background: #e6d192;
-    color: #6b5a42;
-}
-
 .search-card {
     background: white;
     border-radius: 16px;
@@ -141,74 +88,95 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
 }
+
+.customer-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.customer-filter-form {
+    display: flex;
+    align-items: end;
+    gap: 0.75rem;
+    margin-left: auto;
+}
+
+.customer-filter-form .filter-group {
+    min-width: 220px;
+}
+
+@media (max-width: 768px) {
+    .customer-filter-form {
+        width: 100%;
+        margin-left: 0;
+    }
+    .customer-filter-form .filter-group {
+        flex: 1;
+        min-width: 0;
+    }
+}
+
+/* Full-width table: no max-width cap; actions column stays compact */
+.customer-list-card .customer-list-table {
+    width: 100%;
+    margin-bottom: 0;
+}
+.customer-list-card .customer-list-table td:nth-child(2) small {
+    word-break: break-word;
+}
+.customer-list-card .customer-list-table th:last-child,
+.customer-list-card .customer-list-table td:last-child {
+    text-align: right;
+    white-space: nowrap;
+    width: 1%;
+}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="page-container">
-    <div class="page-header">
-        <div class="header-content">
-            <div class="header-text">
-                <h1><i class="fas fa-users"></i> Customers</h1>
-                <p>Manage your customers and their documents</p>
-            </div>
-            <a href="{{ url_for('customer.new_customer') }}" class="btn-add-customer">
-                <i class="fas fa-plus-circle"></i> Add New Customer
-            </a>
-        </div>
-    </div>
-
     <!-- Search Form -->
     <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-light">
-            <h5 class="mb-0"><i class="fas fa-search me-2"></i>Search Customers</h5>
-        </div>
         <div class="card-body">
-            <form method="GET" action="{{ url_for('customer.list_customers') }}" class="row g-3">
-                <div class="col-md-4">
-                    <label for="query" class="form-label">Search</label>
-                    <input type="text" id="query" name="query" class="form-control" value="{{ query }}" placeholder="Name, email, phone...">
-                </div>
-                <div class="col-md-3">
-                    <label for="customer_type" class="form-label">Customer Type</label>
-                    <select id="customer_type" name="customer_type" class="form-select">
-                        {% for choice in form.customer_type.choices %}
-                        <option value="{{ choice[0] }}" {% if customer_type == choice[0] %}selected{% endif %}>{{ choice[1] }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label for="country" class="form-label">Country</label>
-                    <select id="country" name="country" class="form-select">
-                        {% for choice in form.country.choices %}
-                        <option value="{{ choice[0] }}" {% if country == choice[0] %}selected{% endif %}>{{ choice[1] }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-search me-1"></i> Search
-                    </button>
-                </div>
-            </form>
+            <div class="customer-toolbar">
+                <a href="{{ url_for('customer.new_customer') }}" class="btn btn-primary d-inline-flex align-items-center gap-2">
+                    <i class="fas fa-plus-circle"></i> Add New Customer
+                </a>
+                <form method="GET" action="{{ url_for('customer.list_customers') }}" class="customer-filter-form">
+                    <div class="filter-group">
+                        <label for="customer_type" class="form-label">Customer Type</label>
+                        <select id="customer_type" name="customer_type" class="form-select">
+                            {% for choice in form.customer_type.choices %}
+                            <option value="{{ choice[0] }}" {% if customer_type == choice[0] %}selected{% endif %}>{{ choice[1] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i> Search
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
     <!-- Customers List -->
-    <div class="card shadow-sm">
+    <div class="card shadow-sm customer-list-card">
         <div class="card-header bg-light">
             <h5 class="mb-0"><i class="fas fa-list me-2"></i>Customers List</h5>
         </div>
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
+            <div class="table-responsive w-100">
+                <table class="table table-hover mb-0 w-100 customer-list-table">
                     <thead class="table-light">
                         <tr>
-                            <th>Name</th>
+                            <th>Agent Name</th>
                             <th>Contact</th>
                             <th>Type</th>
-                            <th>Country</th>
-                            <th>Documents</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -219,7 +187,7 @@ body {
                                 <a href="{{ url_for('customer.view_customer', customer_id=customer.id) }}" class="text-decoration-none">
                                     {{ customer.name }}
                                 </a>
-                                {% if customer.customer_type == 'Corporate' and customer.company_name %}
+                                {% if (customer.customer_type == 'Corporate' or customer.customer_type == 'Travel Agent') and customer.company_name %}
                                 <br><small class="text-muted">{{ customer.company_name }}</small>
                                 {% endif %}
                             </td>
@@ -231,35 +199,33 @@ body {
                             </td>
                             <td>
                                 <span class="badge bg-{{ 
-                                    'primary' if customer.customer_type == 'Individual' else 
                                     'info' if customer.customer_type == 'Corporate' else 
-                                    'warning' if customer.customer_type == 'Group' else 
+                                    'primary' if customer.customer_type == 'Travel Agent' else 
+                                    'success' if customer.customer_type == 'Direct' else 
                                     'secondary' 
                                 }}">
                                     {{ customer.customer_type }}
                                 </span>
                             </td>
-                            <td>{{ customer.country or 'N/A' }}</td>
-                            <td>
-                                {% set doc_count = customer.documents|length %}
-                                {% if doc_count > 0 %}
-                                <span class="badge bg-success">{{ doc_count }} document{% if doc_count != 1 %}s{% endif %}</span>
-                                {% else %}
-                                <span class="badge bg-secondary">No documents</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <a href="{{ url_for('customer.view_customer', customer_id=customer.id) }}" class="btn btn-sm btn-outline-primary">
+                            <td class="text-nowrap">
+                                <a href="{{ url_for('customer.view_customer', customer_id=customer.id) }}" class="btn btn-sm btn-outline-primary" title="View">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="{{ url_for('customer.edit_customer', customer_id=customer.id) }}" class="btn btn-sm btn-outline-secondary">
+                                <a href="{{ url_for('customer.edit_customer', customer_id=customer.id) }}" class="btn btn-sm btn-outline-secondary" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </a>
+                                <form method="post" action="{{ url_for('customer.delete_customer', customer_id=customer.id) }}" class="d-inline"
+                                      onsubmit="return confirm('Delete this customer? This cannot be undone.');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete customer">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="6" class="text-center py-4">
+                            <td colspan="4" class="text-center py-4">
                                 <p class="text-muted mb-0">No customers found.</p>
                                 <a href="{{ url_for('customer.new_customer') }}" class="btn btn-sm btn-primary mt-2">
                                     <i class="fas fa-plus-circle me-1"></i> Add New Customer

@@ -1,0 +1,587 @@
+{% extends "base.html" %}
+{% block title %}Customer Invoice - {{ request.request_number }}{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+/* Single-page A4 layout - tight spacing, compact */
+.cust-inv-row-actions { white-space: nowrap; padding: 2px 4px !important; width: 1%; }
+.cust-inv-row-actions .cust-inv-btn { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 0; border: 1px solid #666; background: #f5f5f5; cursor: pointer; font-size: 14px; line-height: 1; border-radius: 2px; margin: 0 1px; }
+.cust-inv-row-actions .cust-inv-btn:hover { background: #e0e0e0; }
+@media print {
+    .no-print { display: none !important; }
+    .top-navbar, #sidebar, #sidebar-overlay { display: none !important; }
+    body { background: white !important; }
+    #content, main { padding: 0 !important; margin: 0 !important; }
+    .container { max-width: 100% !important; }
+    .cust-inv-doc { page-break-after: avoid; }
+    html, body { height: auto !important; overflow: visible !important; }
+}
+@page { size: A4; margin: 0.3in; }
+
+.cust-inv-doc {
+    font-family: Arial, sans-serif;
+    font-size: 10px;
+    line-height: 1.25;
+    color: #000 !important;
+    max-width: 800px;
+    margin: 0 auto;
+}
+.cust-inv-doc, .cust-inv-doc * {
+    color: #000 !important;
+}
+
+/* Header - same as admin invoice */
+.cust-inv-header {
+    text-align: center;
+    margin-bottom: 6px;
+    padding-top: 0;
+}
+.cust-inv-header img {
+    display: block;
+    max-height: 48px;
+    margin: 0 auto 4px auto;
+}
+.cust-inv-company { text-align: center; }
+.cust-inv-company h1 { margin: 0 0 2px 0; font-size: 14px; font-weight: bold; }
+.cust-inv-company p { margin: 0; font-size: 9px; }
+.cust-inv-license { margin: 6px 0; font-size: 9px; text-align: center; }
+
+/* Wrapper for title + shoulder cells - title floats above, NOT in table */
+.cust-inv-header-top-wrapper {
+    position: relative;
+    width: 100%;
+    margin: 8px 0 0 0;
+    padding-top: 28px;
+}
+.cust-inv-title-standalone {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 26px;
+    font-weight: bold;
+    color: #000;
+    background: #fff;
+    padding: 0 10px;
+    z-index: 1;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+.cust-inv-shoulder-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0;
+}
+.cust-inv-shoulder-cell {
+    width: 250px;
+    flex-shrink: 0;
+    border: 2px solid #000;
+    padding: 6px 10px;
+    vertical-align: middle;
+    font-size: 11px;
+    color: #000;
+    background-color: #d3d3d3;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    white-space: nowrap;
+}
+/* Header table - starts with Addressed to, connects below shoulder row */
+.cust-inv-header-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+    margin-top: -2px;
+    border: 1px solid #000;
+    border-top: none;
+    background-color: #d3d3d3;
+}
+.cust-inv-header-table td,
+.cust-inv-header-table th {
+    border: 1px solid #000;
+    padding: 4px 8px;
+    vertical-align: middle;
+    font-size: 11px;
+    color: #000;
+    background-color: #d3d3d3;
+}
+.cust-inv-header-table .cust-inv-label-cell {
+    white-space: nowrap;
+}
+
+/* Tables - thick black borders, tight padding */
+.cust-inv-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+    border: 1px solid #000;
+}
+.cust-inv-table td, .cust-inv-table th {
+    border: 1px solid #000;
+    padding: 3px 6px;
+    vertical-align: middle;
+    font-size: 10px;
+}
+.cust-inv-table th {
+    font-weight: bold;
+    text-align: center;
+    background-color: #e8e8e8;
+    white-space: nowrap;
+}
+.cust-inv-table .col-desc { text-align: left; }
+.cust-inv-table .col-price, .cust-inv-table .col-total { text-align: center; white-space: nowrap; }
+
+/* Summary rows - gray background on label column */
+.cust-inv-table .cust-inv-summary-label {
+    background-color: #e8e8e8;
+    font-weight: bold;
+    white-space: nowrap;
+}
+/* Footer left cells - no internal borders */
+.cust-inv-table .cust-inv-footer-left {
+    border-left: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    border-right: 1px solid #000 !important;
+    background: #fff;
+}
+.cust-inv-table tfoot tr:first-child .cust-inv-footer-left {
+    border-top: 1px solid #000 !important;
+}
+.cust-inv-table tfoot tr:last-child .cust-inv-footer-left {
+    border-bottom: 1px solid #000 !important;
+}
+.cust-inv-table .cust-inv-net-due {
+    background-color: #e8e8e8;
+}
+
+/* Section headers - Inclusions, Program */
+.cust-inv-section-header {
+    background-color: #e8e8e8;
+    text-align: center;
+    font-weight: bold;
+}
+/* Inclusions/Program tables: dotted row separators only (no double lines) */
+.cust-inv-table.cust-inv-dotted-table {
+    border-collapse: collapse;
+}
+.cust-inv-table.cust-inv-dotted-table td {
+    border-left: 1px solid #000;
+    border-right: 1px solid #000;
+    border-top: none;
+    border-bottom: 1px dotted #000;
+}
+.cust-inv-table.cust-inv-dotted-table td.cust-inv-section-header {
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
+}
+.cust-inv-table.cust-inv-dotted-table tr:last-child td {
+    border-bottom: 1px solid #000;
+}
+
+/* Notes - gray background bars */
+.cust-inv-notes {
+    text-align: center;
+    font-size: 9px;
+    margin: 6px 0;
+    padding: 4px 8px;
+    background-color: #e8e8e8;
+}
+.cust-inv-notes p { margin: 1px 0; }
+
+/* Bank info */
+.cust-inv-bank {
+    text-align: center;
+    font-size: 9px;
+    line-height: 1.3;
+    margin: 6px 0;
+}
+.cust-inv-bank p { margin: 1px 0; }
+
+/* IBAN - bright yellow */
+.cust-inv-iban {
+    background: #ffeb3b;
+    padding: 4px 8px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 10px;
+    margin: 4px 0;
+}
+
+/* Purpose code - light blue */
+.cust-inv-purpose {
+    text-align: center;
+    font-weight: bold;
+    background: #b3d9ff;
+    padding: 4px 8px;
+    font-size: 10px;
+    margin-top: 4px;
+}
+.cust-inv-editable {
+    min-height: 1em;
+    outline: 1px dashed transparent;
+    outline-offset: -1px;
+}
+.cust-inv-editable:focus {
+    outline-color: #0d6efd33;
+}
+@media print {
+    .cust-inv-editable { outline: none !important; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row no-print mb-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to invoice
+                </a>
+                <div class="d-flex gap-2">
+                    <button type="button" id="cust-inv-save-btn" class="btn btn-success">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                    <button onclick="window.print()" class="btn btn-primary">
+                        <i class="fas fa-print"></i> Details Invoice
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cust-inv-doc">
+        {# 1. Header - same as admin invoice #}
+        <div class="cust-inv-header">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Windows of Jordan" onerror="this.style.display='none'">
+            <div class="cust-inv-company">
+                <h1>Windows of Jordan Tours & Travel</h1>
+                <p>Amman - Jordan</p>
+                <p>Prince Mhd Street</p>
+                <p>Building 247 5th floor</p>
+                <p>Email: accounting@windowsofjordan.com</p>
+            </div>
+            <div class="cust-inv-license">
+                <div><strong>License #</strong> 3453 &nbsp;&nbsp; <strong>Company ID#</strong> 200120113 &nbsp;&nbsp; <strong>Tax #</strong> 129228648</div>
+                <div>Cell: +962799661007 &nbsp;&nbsp; Tel: +96264619402</div>
+            </div>
+        </div>
+
+        {# 2. Wrapper: Title floats above, two shoulder cells only (NO middle cell) #}
+        <div class="cust-inv-header-top-wrapper">
+            <h2 class="cust-inv-title-standalone">Invoice</h2>
+            <div class="cust-inv-shoulder-row">
+                <div class="cust-inv-shoulder-cell"><strong>Invoice No.</strong><span class="cust-inv-editable" contenteditable="true" data-save-key="invoice_no">{{ request.document_sequence or request.request_number }}</span></div>
+                <div class="cust-inv-shoulder-cell"><strong>Issue Date</strong><span class="cust-inv-editable" contenteditable="true" data-save-key="issue_date">{{ request.created_at.strftime('%d/%b/%y') if request.created_at else '' }}</span></div>
+            </div>
+        </div>
+
+        {# 3-5. Table: Addressed to, Name, Tour Ref|Service Date, Pax|Rooms #}
+        <table class="cust-inv-header-table">
+            <tr>
+                <td colspan="4" style="text-align:center;"><strong>Addressed to</strong></td>
+            </tr>
+            <tr>
+                <td colspan="4" style="text-align:center;"><strong><span class="cust-inv-editable" contenteditable="true" data-save-key="addressed_to">{{ request.agent or request.contact_name or 'TBA' }}{% if request.customer and request.customer.company_name %} - {{ request.customer.company_name }}{% endif %}</span></strong></td>
+            </tr>
+            <tr>
+                <td class="cust-inv-label-cell" style="width:12%;"><strong>Tour Ref.:</strong></td>
+                <td style="width:38%; text-align:center;"><strong><span class="cust-inv-editable" contenteditable="true" data-save-key="tour_ref">{{ request.request_number }}</span></strong></td>
+                <td class="cust-inv-label-cell" style="width:12%;"><strong>Service Date:</strong></td>
+                <td style="width:38%;"><strong><span class="cust-inv-editable" contenteditable="true" data-save-key="service_date">{{ request.from_date.strftime('%d %b') if request.from_date else '' }} to {{ request.to_date.strftime('%d %b %Y') if request.to_date else '' }}</span></strong></td>
+            </tr>
+            <tr>
+                <td class="cust-inv-label-cell"><strong>Pax:</strong></td>
+                <td style="width:38%; text-align:left;"><strong><span class="cust-inv-editable" contenteditable="true" data-save-key="pax">{{ request.pax }}</span></strong></td>
+                <td class="cust-inv-label-cell" style="width:12%;"><strong>Agent Reference:</strong></td>
+                <td style="width:38%; text-align:left;"><strong><span class="cust-inv-editable" contenteditable="true" data-save-key="agent_ref">{{ request.agent_ref or '-' }}</span></strong></td>
+            </tr>
+        </table>
+
+        <div style="height: 14px;"></div>
+
+        {# 6. Pricing table - gray header, summary with gray labels #}
+        {% set total_amt = request.total_amount or 0 %}
+        {% set currency = request.total_currency or 'USD' %}
+        {% set advance = 0 %}
+        {% set net_due = total_amt %}
+        <table class="cust-inv-table">
+            <thead>
+                <tr>
+                    <th class="col-desc" style="width:50%;">Description</th>
+                    <th class="col-price" style="width:20%;">Price ($)</th>
+                    <th class="col-price" style="width:15%;">Pax No.</th>
+                    <th class="col-total" style="width:15%;">Total</th>
+                    <th class="cust-inv-row-actions no-print" style="width:60px;"></th>
+                </tr>
+            </thead>
+            <tbody data-save-section="rows">
+                {% set ns = namespace(total=0) %}
+                {% for row in request.itinerary_rows %}
+                    {% set row_cost = row.calculate_row_cost(request.pax) %}
+                    {% set pax_qty = request.pax if row.cost_unit == 'PER_PERSON' else 1 %}
+                    {% set unit_price = row.base_cost or 0 %}
+                    {% if row_cost > 0 %}
+                    <tr data-save-row>
+                        <td class="cust-inv-editable" contenteditable="true">{{ row.description or 'Tour Package' }}</td>
+                        <td class="cust-inv-editable cust-inv-price" contenteditable="true">{{ currency }} {{ "%.2f"|format(unit_price) }}</td>
+                        <td class="cust-inv-editable cust-inv-pax" contenteditable="true">{{ pax_qty }}</td>
+                        <td class="cust-inv-row-total" contenteditable="false">{{ currency }} {{ "%.2f"|format(row_cost) }}</td>
+                        <td class="cust-inv-row-actions no-print"><button type="button" class="cust-inv-btn cust-inv-add-row" title="Add row">+</button><button type="button" class="cust-inv-btn cust-inv-remove-row" title="Remove row">−</button></td>
+                    </tr>
+                    {% set ns.total = ns.total + row_cost %}
+                    {% endif %}
+                {% endfor %}
+                {% if ns.total == 0 and total_amt > 0 %}
+                <tr data-save-row>
+                    <td class="cust-inv-editable" contenteditable="true">Tour Package As agreed</td>
+                    <td class="cust-inv-editable cust-inv-price" contenteditable="true">{{ currency }} {{ "%.2f"|format(total_amt / request.pax) if request.pax else "%.2f"|format(total_amt) }}</td>
+                    <td class="cust-inv-editable cust-inv-pax" contenteditable="true">{{ request.pax }}</td>
+                    <td class="cust-inv-row-total" contenteditable="false">{{ currency }} {{ "%.2f"|format(total_amt) }}</td>
+                    <td class="cust-inv-row-actions no-print"><button type="button" class="cust-inv-btn cust-inv-add-row" title="Add row">+</button><button type="button" class="cust-inv-btn cust-inv-remove-row" title="Remove row">−</button></td>
+                </tr>
+                {% set ns.total = total_amt %}
+                {% endif %}
+                <tr data-save-row><td class="cust-inv-editable" contenteditable="true">Tour Package As agreed</td><td class="cust-inv-editable cust-inv-price" contenteditable="true"></td><td class="cust-inv-editable cust-inv-pax" contenteditable="true"></td><td class="cust-inv-row-total" contenteditable="false"></td><td class="cust-inv-row-actions no-print"><button type="button" class="cust-inv-btn cust-inv-add-row" title="Add row">+</button><button type="button" class="cust-inv-btn cust-inv-remove-row" title="Remove row">−</button></td></tr>
+                <tr data-save-row><td class="cust-inv-editable" contenteditable="true"></td><td class="cust-inv-editable cust-inv-price" contenteditable="true"></td><td class="cust-inv-editable cust-inv-pax" contenteditable="true"></td><td class="cust-inv-row-total" contenteditable="false"></td><td class="cust-inv-row-actions no-print"><button type="button" class="cust-inv-btn cust-inv-add-row" title="Add row">+</button><button type="button" class="cust-inv-btn cust-inv-remove-row" title="Remove row">−</button></td></tr>
+                <tr data-save-row><td class="cust-inv-editable" contenteditable="true"></td><td class="cust-inv-editable cust-inv-price" contenteditable="true"></td><td class="cust-inv-editable cust-inv-pax" contenteditable="true"></td><td class="cust-inv-row-total" contenteditable="false"></td><td class="cust-inv-row-actions no-print"><button type="button" class="cust-inv-btn cust-inv-add-row" title="Add row">+</button><button type="button" class="cust-inv-btn cust-inv-remove-row" title="Remove row">−</button></td></tr>
+            </tbody>
+            <tfoot>
+                <tr><td class="cust-inv-footer-left" colspan="2"></td><td class="cust-inv-summary-label">Total</td><td class="cust-inv-footer-total" contenteditable="false"><strong>{{ currency }} {{ "%.2f"|format(ns.total or total_amt) }}</strong></td><td class="no-print"></td></tr>
+                <tr><td class="cust-inv-footer-left" colspan="2"></td><td class="cust-inv-summary-label">Advance</td><td class="cust-inv-advance cust-inv-editable" contenteditable="true" data-save-key="advance"><strong>{{ currency }} {{ "%.2f"|format(advance) }}</strong></td><td class="no-print"></td></tr>
+                <tr><td class="cust-inv-footer-left" colspan="2"></td><td class="cust-inv-summary-label cust-inv-net-due">Net Due</td><td class="cust-inv-net-due" contenteditable="false"><strong>{{ currency }} {{ "%.2f"|format(net_due) }}</strong></td><td class="no-print"></td></tr>
+            </tfoot>
+        </table>
+
+        <script>
+        (function() {
+            var currency = "{{ request.total_currency or 'USD' }}";
+            function parseNum(str) {
+                if (!str) return 0;
+                var m = String(str).replace(/,/g, '').match(/-?\d+\.?\d*/g);
+                return m ? parseFloat(m[m.length - 1]) || 0 : 0;
+            }
+            function formatVal(n) { return n.toFixed(2); }
+            function recalc() {
+                var tables = document.querySelectorAll('.cust-inv-doc .cust-inv-table');
+                var tbody = tables[0] ? tables[0].querySelector('tbody') : null;
+                if (!tbody) return;
+                var rows = tbody.querySelectorAll('tr');
+                var grandTotal = 0;
+                rows.forEach(function(row) {
+                    var priceCell = row.querySelector('.cust-inv-price');
+                    var paxCell = row.querySelector('.cust-inv-pax');
+                    var totalCell = row.querySelector('.cust-inv-row-total');
+                    var price = parseNum(priceCell ? priceCell.textContent : '');
+                    var pax = parseNum(paxCell ? paxCell.textContent : '') || 1;
+                    var total = price * pax;
+                    grandTotal += total;
+                    if (totalCell) totalCell.textContent = total > 0 ? currency + ' ' + formatVal(total) : '';
+                });
+                var footerTotal = document.querySelector('.cust-inv-footer-total');
+                var advanceCell = document.querySelector('.cust-inv-advance');
+                var netDueCell = document.querySelector('.cust-inv-net-due');
+                if (footerTotal) {
+                    var s = footerTotal.querySelector('strong');
+                    if (s) s.textContent = currency + ' ' + formatVal(grandTotal);
+                    else footerTotal.textContent = currency + ' ' + formatVal(grandTotal);
+                }
+                var advance = parseNum(advanceCell ? advanceCell.textContent : '');
+                var netDue = grandTotal - advance;
+                var netDueCells = document.querySelectorAll('tfoot .cust-inv-net-due');
+                for (var i = 0; i < netDueCells.length; i++) {
+                    if (!netDueCells[i].classList.contains('cust-inv-summary-label')) {
+                        var strong = netDueCells[i].querySelector('strong');
+                        var txt = currency + ' ' + formatVal(netDue);
+                        if (strong) strong.textContent = txt;
+                        else netDueCells[i].textContent = txt;
+                        break;
+                    }
+                }
+            }
+            function addRow() {
+                var tbody = document.querySelector('.cust-inv-doc .cust-inv-table tbody');
+                if (!tbody) return;
+                var tr = document.createElement('tr');
+                tr.setAttribute('data-save-row', '');
+                tr.innerHTML = '<td class="cust-inv-editable" contenteditable="true"></td><td class="cust-inv-editable cust-inv-price" contenteditable="true"></td><td class="cust-inv-editable cust-inv-pax" contenteditable="true"></td><td class="cust-inv-row-total" contenteditable="false"></td><td class="cust-inv-row-actions no-print"><button type="button" class="cust-inv-btn cust-inv-add-row" title="Add row">+</button><button type="button" class="cust-inv-btn cust-inv-remove-row" title="Remove row">−</button></td>';
+                tbody.appendChild(tr);
+                recalc();
+            }
+            function removeRow(btn) {
+                var tr = btn.closest('tr');
+                if (!tr) return;
+                var tbody = tr.parentElement;
+                if (tbody && tbody.querySelectorAll('tr').length > 1) {
+                    tr.remove();
+                    recalc();
+                }
+            }
+            function restrictToNumbers(el, allowDecimal) {
+                var v = (el.textContent || '').replace(/\s/g, '');
+                if (allowDecimal) {
+                    v = v.replace(/[^\d.]/g, '').replace(/\.(?=.*\.)/g, '');
+                } else {
+                    v = v.replace(/\D/g, '');
+                }
+                if (v !== (el.textContent || '').trim()) {
+                    el.textContent = v;
+                    var range = document.createRange();
+                    range.selectNodeContents(el);
+                    range.collapse(false);
+                    var sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                }
+            }
+            var doc = document.querySelector('.cust-inv-doc');
+            if (doc) {
+                doc.addEventListener('input', function(e) {
+                    var t = e.target;
+                    if (t.classList && t.classList.contains('cust-inv-price')) restrictToNumbers(t, true);
+                    if (t.classList && t.classList.contains('cust-inv-pax')) restrictToNumbers(t, false);
+                    recalc();
+                });
+                doc.addEventListener('blur', function(e) {
+                    var t = e.target;
+                    if (t.classList && t.classList.contains('cust-inv-price')) restrictToNumbers(t, true);
+                    if (t.classList && t.classList.contains('cust-inv-pax')) restrictToNumbers(t, false);
+                    recalc();
+                });
+                doc.addEventListener('keyup', recalc);
+                doc.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('cust-inv-add-row')) { e.preventDefault(); addRow(); }
+                    if (e.target.classList.contains('cust-inv-remove-row')) { e.preventDefault(); removeRow(e.target); }
+                });
+                recalc();
+            }
+
+            var savedCustomerInvoice = {{ saved_customer_invoice|tojson|safe }};
+            var requestId = {{ request.id }};
+
+            function collectCustData() {
+                var data = {};
+                document.querySelectorAll('.cust-inv-doc [data-save-key]').forEach(function(el) {
+                    var key = el.getAttribute('data-save-key');
+                    var txt = (el.textContent || '').trim();
+                    if (el.classList.contains('cust-inv-advance') && el.querySelector('strong')) txt = (el.querySelector('strong').textContent || '').trim();
+                    data[key] = txt;
+                });
+                var tbody = document.querySelector('.cust-inv-doc .cust-inv-table tbody[data-save-section="rows"]');
+                if (tbody) {
+                    data.rows = [];
+                    tbody.querySelectorAll('tr[data-save-row]').forEach(function(tr) {
+                        var desc = tr.querySelector('td:first-child');
+                        var price = tr.querySelector('.cust-inv-price');
+                        var pax = tr.querySelector('.cust-inv-pax');
+                        data.rows.push({
+                            desc: desc ? (desc.textContent || '').trim() : '',
+                            price: price ? (price.textContent || '').trim() : '',
+                            pax: pax ? (pax.textContent || '').trim() : ''
+                        });
+                    });
+                }
+                return data;
+            }
+
+            function loadCustData(data) {
+                if (!data) return;
+                Object.keys(data).forEach(function(key) {
+                    if (key === 'rows') {
+                        var tbody = document.querySelector('.cust-inv-doc .cust-inv-table tbody[data-save-section="rows"]');
+                        if (!tbody || !data.rows || !data.rows.length) return;
+                        while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+                        data.rows.forEach(function(r) {
+                            var tr = document.createElement('tr');
+                            tr.setAttribute('data-save-row', '');
+                            tr.innerHTML = '<td class="cust-inv-editable" contenteditable="true">' + (r.desc || '') + '</td><td class="cust-inv-editable cust-inv-price" contenteditable="true">' + (r.price || '') + '</td><td class="cust-inv-editable cust-inv-pax" contenteditable="true">' + (r.pax || '') + '</td><td class="cust-inv-row-total" contenteditable="false"></td><td class="cust-inv-row-actions no-print"><button type="button" class="cust-inv-btn cust-inv-add-row" title="Add row">+</button><button type="button" class="cust-inv-btn cust-inv-remove-row" title="Remove row">−</button></td>';
+                            tbody.appendChild(tr);
+                        });
+                        recalc();
+                    } else {
+                        var el = document.querySelector('.cust-inv-doc [data-save-key="' + key + '"]');
+                        if (el && data[key]) {
+                            if (el.classList.contains('cust-inv-advance')) {
+                                var strong = el.querySelector('strong');
+                                if (strong) strong.textContent = data[key];
+                                else el.textContent = data[key];
+                            } else {
+                                el.textContent = data[key];
+                            }
+                        }
+                    }
+                });
+                recalc();
+            }
+
+            document.getElementById('cust-inv-save-btn').addEventListener('click', function() {
+                var btn = this;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                fetch('/inbound/' + requestId + '/save-customer-invoice', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(collectCustData())
+                }).then(function(r) { return r.json(); }).then(function(res) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-save"></i> Save';
+                    if (res.ok) alert('Invoice saved.');
+                }).catch(function() {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-save"></i> Save';
+                    alert('Failed to save.');
+                });
+            });
+
+            loadCustData(savedCustomerInvoice);
+
+            // Optional direct-print mode from list page icon.
+            var params = new URLSearchParams(window.location.search || '');
+            if (params.get('auto_print') === '1') {
+                setTimeout(function() { window.print(); }, 250);
+            }
+        })();
+        </script>
+
+        {# 7. Inclusions - manual, empty editable area #}
+        <table class="cust-inv-table cust-inv-dotted-table">
+            <tr><td class="cust-inv-section-header">Inclusions</td></tr>
+            <tr><td class="cust-inv-dotted cust-inv-editable" contenteditable="true" style="min-height: 120px;">&nbsp;</td></tr>
+        </table>
+
+        {# 8. Program - manual, empty editable area #}
+        <table class="cust-inv-table cust-inv-dotted-table">
+            <tr><td class="cust-inv-section-header">Program</td></tr>
+            <tr><td class="cust-inv-dotted cust-inv-editable" contenteditable="true" style="min-height: 120px;">&nbsp;</td></tr>
+        </table>
+
+        {# 9. Notes #}
+        <div class="cust-inv-notes">
+            <p><strong>All Charges and commissions applied by Banks for transfers are to be paid by the payee</strong></p>
+            <p>A surcharge of 3% will be added to total if payment is done by Credit/Debit Cards</p>
+        </div>
+
+        {# 10. Company info - INVEST BANK #}
+        <div class="cust-inv-bank">
+            <p><strong>Account Name:</strong> Windows of Jordan Tours & Travel</p>
+            <p><strong>ACCOUNT NAME:</strong> شركه نوافذ الاردن للسياحه والسفر</p>
+            <p><strong>BANK Name:</strong> INVEST BANK</p>
+            <p><strong>BRANCH:</strong> Shmaisani Branch</p>
+            <p>43 Abdul Hamid Sharaf Street, Shmaisani</p>
+            <p><strong>P.O BOX:</strong> 950601 Amman ZIP CODE: 11195 Jordan</p>
+            <p><strong>Tel.:</strong> +962 65001500 <strong>FAX:</strong> +96265681410</p>
+            <p><strong>SWIFT CODE;</strong> JIFBJOAMXXXX</p>
+            <p><strong>Bank Account # (USD):</strong> 01233000022267170001</p>
+        </div>
+
+        {# 11. IBAN - bright yellow #}
+        <div class="cust-inv-iban">(USD) IBAN: JO79JIFB0120033000022267170001</div>
+
+        {# 12. Purpose code - light blue #}
+        <div class="cust-inv-purpose">PURPOSE CODE: 404</div>
+    </div>
+</div>
+{% endblock %}

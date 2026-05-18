@@ -31,21 +31,14 @@
     </div>
 
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="mb-3">
-                <label for="from_date" class="form-label">From Date</label>
+                <label for="from_date" class="form-label">Date</label>
                 <input type="date" class="form-control" id="from_date" name="from_date" 
                        value="{{ confirmation_data.from_date or service_item.start_date.strftime('%Y-%m-%d') }}" required>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="mb-3">
-                <label for="to_date" class="form-label">To Date</label>
-                <input type="date" class="form-control" id="to_date" name="to_date" 
-                       value="{{ confirmation_data.to_date or service_item.end_date.strftime('%Y-%m-%d') }}" required>
-            </div>
-        </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="mb-3">
                 <label for="reservation_time" class="form-label">Reservation Time</label>
                 <input type="time" class="form-control" id="reservation_time" name="reservation_time" 

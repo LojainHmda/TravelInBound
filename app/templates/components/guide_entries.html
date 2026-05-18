@@ -1,7 +1,7 @@
 {% if guides %}
 {% for guide in guides %}
 <tr class="hover:bg-slate-50" data-guide-id="{{ guide.id }}" data-guide-name="{{ guide.guide_name or '' }}">
-    <td class="px-4 py-3 text-slate-500">{{ guide.date.strftime('%d %b') if guide.date else '-' }}</td>
+    <td class="px-4 py-3 text-slate-500">{{ guide.date.strftime('%d %b %Y') if guide.date else '-' }}</td>
     <td class="px-4 py-3 text-slate-700">{{ guide.guide_name or '-' }}</td>
     <td class="px-4 py-3 text-slate-500">{{ guide.language or '-' }}</td>
     <td class="px-4 py-3 text-slate-500">{{ guide.telephone or '-' }}</td>

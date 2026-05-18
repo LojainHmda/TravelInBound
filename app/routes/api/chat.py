@@ -1,11 +1,21 @@
 from flask import Blueprint, request, jsonify
 import os
-from openai import OpenAI
 
 chat_api = Blueprint('chat_api', __name__)
 
-# Initialize OpenAI client
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+# Initialize OpenAI client only if API key is available
+_client = None
+def get_openai_client():
+    """Lazy initialization of OpenAI client"""
+    global _client
+    if _client is None:
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if api_key:
+            from openai import OpenAI
+            _client = OpenAI(api_key=api_key)
+        else:
+            _client = False  # Mark as unavailable
+    return _client if _client else None
 
 @chat_api.route('/api/chat', methods=['POST'])
 def ai_chat():
@@ -16,6 +26,15 @@ def ai_chat():
         
         if not user_query:
             return jsonify({'error': 'Message is required'}), 400
+        
+        # Get OpenAI client
+        client = get_openai_client()
+        if not client:
+            return jsonify({
+                'success': False,
+                'error': 'OpenAI API key not configured',
+                'response': 'AI chat features require an OpenAI API key. Please configure OPENAI_API_KEY environment variable.'
+            }), 503
         
         # Process query with OpenAI
         response = client.chat.completions.create(

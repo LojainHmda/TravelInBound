@@ -74,13 +74,14 @@ class Agent(db.Model):
         return f'<Agent {self.name}>'
 
 def create_test_data():
-    """Create test data for development"""
-    # Check if we already have users
-    if User.query.count() > 0:
+    """Ensure default user (id=1) exists - required for inbound, bookings, etc."""
+    # If default user already exists, nothing to do
+    if User.query.get(1) is not None:
         return
     
-    # Create admin user
+    # Create admin user with explicit id=1 - required for inbound_request.user_id FK
     admin_user = User(
+        id=1,
         username='admin',
         email='admin@arabtravelgroup.com',
         first_name='Admin',
@@ -88,16 +89,20 @@ def create_test_data():
         role='admin'
     )
     admin_user.set_password('admin123')
+    db.session.add(admin_user)
+    db.session.flush()
     
-    # Create ops manager user
-    ops_user = User(
-        username='opsmanager',
-        email='ops@arabtravelgroup.com',
-        first_name='Operations',
-        last_name='Manager',
-        role='ops_manager'
-    )
-    ops_user.set_password('ops123')
+    # Create ops manager user only if table is empty (legacy)
+    if User.query.count() <= 1:
+        ops_user = User(
+            username='opsmanager',
+            email='ops@arabtravelgroup.com',
+            first_name='Operations',
+            last_name='Manager',
+            role='ops_manager'
+        )
+        ops_user.set_password('ops123')
+        db.session.add(ops_user)
     
     # Create agents
     flight_agent = Agent(
@@ -130,9 +135,7 @@ def create_test_data():
         specialty='INSURANCE'
     )
     
-    db.session.add_all([
-        admin_user, ops_user,
-        flight_agent, hotel_agent, transport_agent, visa_agent, insurance_agent
-    ])
+    agents = [flight_agent, hotel_agent, transport_agent, visa_agent, insurance_agent]
+    db.session.add_all(agents)
     
     db.session.commit()
