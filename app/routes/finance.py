@@ -1714,6 +1714,13 @@ def supplier_type_page(type_key):
     if search_query:
         suppliers_query = suppliers_query.filter(Supplier.name.ilike(f'%{search_query}%'))
 
+    if type_key == 'meet-assist':
+        from app.routes.inbound import sync_all_meet_assist_representative_pairs
+        try:
+            sync_all_meet_assist_representative_pairs()
+        except Exception as e:
+            safe_log_error('Meet & Assist representative sync failed', e)
+
     suppliers = suppliers_query.order_by(func.coalesce(Supplier.name, '').asc()).all()
     return render_template(
         'finance/suppliers_type_page.html',

@@ -600,7 +600,7 @@ button.btn-print {
             {% endif %}
             <input type="hidden" name="req_sort" value="{{ req_sort|default('desc') }}">
             <div class="filter-group">
-                <label>Request Number</label>
+                <label>File No</label>
                 <input type="text" name="request_number" placeholder="e.g., INB-202501-0001" 
                        value="{{ request.args.get('request_number', '') }}">
             </div>
@@ -643,6 +643,9 @@ button.btn-print {
                 <div class="filter-buttons">
                     <button type="button" class="btn-search" onclick="exportFilteredRequestsToExcel()">
                         <i class="fas fa-file-excel"></i> Export to Excel
+                    </button>
+                    <button type="button" class="btn-search" onclick="printFilteredRequestsList()">
+                        <i class="fas fa-print"></i> Print
                     </button>
                     <div class="filter-buttons-right">
                         <button type="button" class="btn-reset" onclick="window.location.href='{{ request.path }}?{% if is_deleted_queue|default(false) %}queue=deleted{% elif request.args.get('status') and not all_files_view|default(false) %}status={{ request.args.get('status') }}{% endif %}'">
@@ -1304,6 +1307,23 @@ function exportFilteredRequestsToExcel() {
     }
 
     window.location.href = exportUrl.toString();
+}
+
+function printFilteredRequestsList() {
+    const printUrl = new URL('/inbound/print-list', window.location.origin);
+    const current = new URL(window.location.href);
+
+    current.searchParams.forEach(function (value, key) {
+        if (key !== 'page') {
+            printUrl.searchParams.set(key, value);
+        }
+    });
+
+    if (current.pathname.endsWith('/all-files')) {
+        printUrl.searchParams.set('all_files_view', '1');
+    }
+
+    printInPlace(printUrl.toString());
 }
 
 function submitInboundFilters() {

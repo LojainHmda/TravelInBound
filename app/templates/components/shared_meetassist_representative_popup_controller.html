@@ -357,48 +357,56 @@
                 }
                 const savedName = repName;
                 window.closeAddMeetAssistRepresentativeModal();
-                if (targetSelectId) {
-                    const repHeaders = { 'Content-Type': 'application/json' };
-                    const csrfInline = (typeof window.csrfToken !== 'undefined' ? window.csrfToken : '')
-                        || (typeof csrfToken !== 'undefined' ? csrfToken : '');
-                    if (csrfInline) repHeaders['X-CSRFToken'] = csrfInline;
-                    fetch('/inbound/api/representatives', {
-                        method: 'POST',
-                        headers: repHeaders,
-                        body: JSON.stringify({ name: savedName })
-                    })
+
+                function applyMergedRepresentatives(repData) {
+                    if (repData && Array.isArray(repData.representatives)
+                        && typeof representativesList !== 'undefined') {
+                        representativesList = repData.representatives.map(function (r) {
+                            return { id: r.id, name: r.name };
+                        });
+                        if (typeof refreshRepresentativeDropdowns === 'function') {
+                            refreshRepresentativeDropdowns();
+                        }
+                    }
+                    if (targetSelectId) {
+                        const targetSelect = document.getElementById(targetSelectId);
+                        if (targetSelect) targetSelect.value = savedName;
+                        if (typeof updateArrivalDriverInSummary === 'function') updateArrivalDriverInSummary();
+                        if (typeof updateDepartureDriverInSummary === 'function') updateDepartureDriverInSummary();
+                    }
+                }
+
+                fetch('/inbound/api/representatives')
                     .then(r => r.json())
-                    .then(repData => {
-                        if (repData.success && repData.representative) {
-                            const rep = repData.representative;
-                            if (typeof representativesList !== 'undefined' && representativesList
-                                && !representativesList.find(r => r.name === rep.name)) {
-                                representativesList.push({ id: rep.id, name: rep.name });
-                                representativesList.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-                            }
+                    .then(function (repData) {
+                        applyMergedRepresentatives(repData);
+                        if (typeof showNotification === 'function') {
+                            showNotification('Representative added successfully', 'success');
+                        }
+                        if (!targetSelectId) {
+                            window.location.reload();
+                        }
+                    })
+                    .catch(function () {
+                        if (targetSelectId && typeof representativesList !== 'undefined'
+                            && !representativesList.find(function (r) { return r.name === savedName; })) {
+                            representativesList.push({ id: 0, name: savedName });
+                            representativesList.sort(function (a, b) {
+                                return (a.name || '').localeCompare(b.name || '');
+                            });
                             if (typeof refreshRepresentativeDropdowns === 'function') {
                                 refreshRepresentativeDropdowns();
                             }
                             const targetSelect = document.getElementById(targetSelectId);
-                            if (targetSelect) targetSelect.value = rep.name;
-                            if (typeof updateArrivalDriverInSummary === 'function') updateArrivalDriverInSummary();
-                            if (typeof updateDepartureDriverInSummary === 'function') updateDepartureDriverInSummary();
+                            if (targetSelect) targetSelect.value = savedName;
                         }
                         if (typeof showNotification === 'function') {
                             showNotification('Representative added successfully', 'success');
                         }
-                    })
-                    .catch(() => {
-                        if (typeof showNotification === 'function') {
-                            showNotification('Representative supplier saved but list sync failed. Refresh the page.', 'warning');
+                        if (!targetSelectId) {
+                            window.location.reload();
                         }
                     });
-                } else {
-                    if (typeof showNotification === 'function') {
-                        showNotification('Representative added successfully', 'success');
-                    }
-                    window.location.reload();
-                }
             } else {
                 const err = document.getElementById('add-ma-representative-hub-error');
                 if (err) {

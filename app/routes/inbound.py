@@ -41,6 +41,178 @@ def _invalidate_supplier_dropdown_cache():
     _SUPPLIER_DROPDOWN_CACHE['data'] = None
 
 
+class _RepresentativeOption:
+    """Lightweight object for template dropdowns (id + name)."""
+    __slots__ = ('id', 'name')
+
+    def __init__(self, rep_id, name):
+        self.id = rep_id
+        self.name = name
+
+
+def _normalize_meet_assist_name(name):
+    return str(name or '').strip()
+
+
+def _find_inbound_representative_by_name(name):
+    n = _normalize_meet_assist_name(name)
+    if not n:
+        return None
+    return InboundRepresentative.query.filter(
+        db.func.lower(InboundRepresentative.name) == n.lower()
+    ).first()
+
+
+def _find_ground_handler_supplier_by_name(name):
+    from app.models.supplier import Supplier
+
+    n = _normalize_meet_assist_name(name)
+    if not n:
+        return None
+    return Supplier.query.filter(
+        Supplier.supplier_type == 'GROUND_HANDLER',
+        db.func.lower(Supplier.name) == n.lower(),
+    ).first()
+
+
+def _generate_ground_handler_code():
+    from app.models.supplier import Supplier
+
+    count = Supplier.query.filter(Supplier.code.like('GHD-%')).count()
+    return f'GHD-{count + 1:03d}'
+
+
+def _ensure_inbound_representative(name):
+    n = _normalize_meet_assist_name(name)
+    if not n:
+        return None
+    existing = _find_inbound_representative_by_name(n)
+    if existing:
+        return existing
+    rep = InboundRepresentative(name=n)
+    db.session.add(rep)
+    return rep
+
+
+def _ensure_ground_handler_supplier(name, data=None):
+    """Create GROUND_HANDLER supplier if missing; optional extra fields from add form."""
+    from app.models.supplier import Supplier
+
+    n = _normalize_meet_assist_name(name)
+    if not n:
+        return None
+    existing = _find_ground_handler_supplier_by_name(n)
+    if existing:
+        return existing
+
+    payload = data or {}
+    languages_val = (payload.get('languages') or '').strip() or None
+    payment_terms = (payload.get('payment_terms') or '').strip() or None
+    cliq_alias = (payload.get('cliq_alias') or '').strip()
+    bank_name_val = (
+        'Cliq' if payment_terms == 'Cliq' else (payload.get('bank_name') or '').strip() or None
+    )
+    bank_account_val = (
+        cliq_alias if payment_terms == 'Cliq' else (payload.get('bank_account') or '').strip() or None
+    )
+    notes_value = (payload.get('notes') or '').strip() or None
+
+    new_supplier = Supplier(
+        name=n,
+        code=_generate_ground_handler_code(),
+        supplier_type='GROUND_HANDLER',
+        languages=languages_val,
+        phone=(payload.get('phone') or '').strip() or None,
+        contact_person=(payload.get('contact_person') or '').strip() or None,
+        email=(payload.get('email') or '').strip() or None,
+        website=(payload.get('website') or '').strip() or None,
+        city=(payload.get('city') or '').strip() or None,
+        country=(payload.get('country') or '').strip() or None,
+        payment_terms=payment_terms,
+        default_currency=(payload.get('default_currency') or 'USD') or 'USD',
+        address=(payload.get('address') or '').strip() or None,
+        bank_name=bank_name_val,
+        bank_account=bank_account_val,
+        tax_number=(payload.get('tax_number') or '').strip() or None,
+        notes=notes_value,
+        is_active=True,
+    )
+    db.session.add(new_supplier)
+    return new_supplier
+
+
+def _sync_meet_assist_representative_pair(name, supplier_data=None):
+    """Keep representative dropdown and Meet & Assist hub list aligned by name."""
+    n = _normalize_meet_assist_name(name)
+    if not n:
+        return None, None
+    rep = _ensure_inbound_representative(n)
+    supplier = _ensure_ground_handler_supplier(n, supplier_data)
+    return rep, supplier
+
+
+def _get_merged_representatives_for_dropdown():
+    """Union of InboundRepresentative names and GROUND_HANDLER supplier names."""
+    from app.models.supplier import Supplier
+
+    by_key = {}
+    for r in InboundRepresentative.query.order_by(InboundRepresentative.name).all():
+        n = _normalize_meet_assist_name(r.name)
+        if n:
+            by_key[n.lower()] = {'id': r.id, 'name': n}
+    for s in Supplier.query.filter(
+        Supplier.is_active == True,
+        Supplier.supplier_type == 'GROUND_HANDLER',
+    ).order_by(Supplier.name).all():
+        n = _normalize_meet_assist_name(s.name)
+        if not n or n.lower() in by_key:
+            continue
+        rep = _find_inbound_representative_by_name(n)
+        by_key[n.lower()] = {'id': rep.id if rep else 0, 'name': n}
+    return sorted(by_key.values(), key=lambda x: x['name'].lower())
+
+
+def sync_all_meet_assist_representative_pairs():
+    """Backfill missing rows so hub and dropdown always share the same names."""
+    from app.models.supplier import Supplier
+
+    changed = False
+    rep_names = {
+        _normalize_meet_assist_name(r.name).lower()
+        for r in InboundRepresentative.query.all()
+        if _normalize_meet_assist_name(r.name)
+    }
+    suppliers = Supplier.query.filter(
+        Supplier.is_active == True,
+        Supplier.supplier_type == 'GROUND_HANDLER',
+    ).all()
+    supplier_names = {
+        _normalize_meet_assist_name(s.name).lower()
+        for s in suppliers
+        if _normalize_meet_assist_name(s.name)
+    }
+
+    for r in InboundRepresentative.query.all():
+        n = _normalize_meet_assist_name(r.name)
+        if n and n.lower() not in supplier_names:
+            _ensure_ground_handler_supplier(n)
+            changed = True
+
+    for s in suppliers:
+        n = _normalize_meet_assist_name(s.name)
+        if n and n.lower() not in rep_names:
+            _ensure_inbound_representative(n)
+            changed = True
+
+    if changed:
+        try:
+            db.session.commit()
+            _invalidate_supplier_dropdown_cache()
+        except Exception:
+            db.session.rollback()
+            raise
+
+
 def _get_supplier_dropdown_data(cache_ttl_seconds: int = 120):
     """Load supplier dropdown data once and reuse briefly across requests."""
     now = time.time()
@@ -54,7 +226,10 @@ def _get_supplier_dropdown_data(cache_ttl_seconds: int = 120):
         Supplier.is_active == True,
         Supplier.supplier_type.in_(['HOTEL', 'TRANSPORT', 'GUIDE', 'RESTAURANT', 'GROUND_HANDLER']),
     ).order_by(Supplier.supplier_type, Supplier.city, Supplier.name).all()
-    representatives = InboundRepresentative.query.order_by(InboundRepresentative.name).all()
+    representatives = [
+        _RepresentativeOption(r['id'], r['name'])
+        for r in _get_merged_representatives_for_dropdown()
+    ]
 
     hotels = []
     transports = []
@@ -247,6 +422,46 @@ def _hub_status_scope_label(status_val):
     if u in ('INVOICE', 'COMPLETED', 'INVOICED'):
         return 'Invoiced'
     return None
+
+
+def _inbound_list_filter_summary():
+    """Human-readable active filters for list export/print headers."""
+    parts = []
+    request_number = (request.args.get('request_number') or '').strip()
+    if request_number:
+        parts.append(('Request Number', request_number))
+    agent = (request.args.get('agent') or '').strip()
+    if agent:
+        parts.append(('Agent', agent))
+    filter_year = (request.args.get('filter_year') or '').strip()
+    if filter_year:
+        parts.append(('Year', filter_year))
+    filter_month_raw = (request.args.get('filter_month') or '').strip()
+    if filter_month_raw:
+        try:
+            parts.append(('Month', calendar.month_name[int(filter_month_raw)]))
+        except (ValueError, IndexError):
+            parts.append(('Month', filter_month_raw))
+    status = (request.args.get('status') or '').strip()
+    if status:
+        parts.append(('Status', _hub_status_scope_label(status) or status))
+    queue = (request.args.get('queue') or '').strip().lower()
+    if queue == 'deleted':
+        parts.append(('Queue', 'Deleted'))
+    return parts
+
+
+def _inbound_row_status_label(inb, queue):
+    if queue == 'deleted' or getattr(inb, 'pending_invoice_queue', False):
+        return 'Deleted'
+    status_val = str(inb.status or '').upper()
+    if status_val == 'REQUEST':
+        return 'Request'
+    if status_val in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS']:
+        return 'Confirmed'
+    if status_val in ['INVOICE', 'COMPLETED', 'INVOICED']:
+        return 'Invoiced'
+    return status_val.title() if status_val else ''
 
 
 def _inbound_list_context():
@@ -571,6 +786,49 @@ def export_list_excel():
         as_attachment=True,
         download_name=filename,
     )
+
+
+@inbound_bp.route('/print-list')
+def print_list():
+    """Print-friendly view of inbound list using current filters."""
+    all_files_view = (request.args.get('all_files_view') or '').strip() == '1'
+    query, queue = _build_inbound_list_query(all_files_view)
+
+    req_sort = (request.args.get('req_sort') or 'desc').strip().lower()
+    if req_sort not in ('asc', 'desc'):
+        req_sort = 'desc'
+    if req_sort == 'desc':
+        query = query.order_by(InboundRequest.created_at.desc(), InboundRequest.id.desc())
+    else:
+        query = query.order_by(InboundRequest.created_at.asc(), InboundRequest.id.asc())
+
+    rows = query.all()
+    scope_label = _hub_status_scope_label(request.args.get('status'))
+    if queue == 'deleted':
+        page_title = 'All inbound files — Deleted' if all_files_view else 'Inbound tour — Deleted'
+    elif scope_label:
+        page_title = (
+            f'All inbound files — {scope_label}'
+            if all_files_view
+            else f'Inbound tour — {scope_label}'
+        )
+    else:
+        page_title = 'All inbound files' if all_files_view else 'Inbound Tour Requests'
+
+    is_invoiced_status_view = (request.args.get('status') or '').strip().upper() == 'INVOICED'
+
+    return render_template(
+        'inbound/list_print.html',
+        rows=rows,
+        all_files_view=all_files_view,
+        queue=queue,
+        filter_summary=_inbound_list_filter_summary(),
+        page_title=page_title,
+        printed_at=datetime.now(),
+        is_invoiced_status_view=is_invoiced_status_view,
+        row_status_label=_inbound_row_status_label,
+    )
+
 
 def get_run_down_data_by_date():
     """Get confirmed itineraries grouped by date with activities"""
@@ -1989,34 +2247,27 @@ def api_check_guide_availability(request_id):
 
 @inbound_bp.route('/api/representatives', methods=['GET'])
 def api_list_representatives():
-    """List all representatives for dropdown population."""
-    reps = InboundRepresentative.query.order_by(InboundRepresentative.name).all()
-    return jsonify({'representatives': [{'id': r.id, 'name': r.name} for r in reps]})
+    """List all representatives for dropdown population (merged with Meet & Assist suppliers)."""
+    merged = _get_merged_representatives_for_dropdown()
+    return jsonify({'representatives': merged})
 
 
 @inbound_bp.route('/api/representatives', methods=['POST'])
 @csrf.exempt
 def api_add_representative():
-    """Add a new representative. Returns the new rep and adds to dropdown."""
+    """Add a new representative; also ensures a Meet & Assist (GROUND_HANDLER) supplier exists."""
     data = request.get_json() or {}
-    name = (data.get('name') or '').strip()
+    name = _normalize_meet_assist_name(data.get('name'))
     if not name:
         return jsonify({'success': False, 'error': 'Name is required'}), 400
-    existing = InboundRepresentative.query.filter_by(name=name).first()
-    if existing:
-        return jsonify({
-            'success': True,
-            'representative': {'id': existing.id, 'name': existing.name},
-            'message': 'Representative already exists'
-        }), 200
-    rep = InboundRepresentative(name=name)
-    db.session.add(rep)
     try:
+        rep, _supplier = _sync_meet_assist_representative_pair(name)
         db.session.commit()
+        _invalidate_supplier_dropdown_cache()
         return jsonify({
             'success': True,
-            'representative': {'id': rep.id, 'name': rep.name}
-        }), 201
+            'representative': {'id': rep.id, 'name': rep.name},
+        }), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -4389,48 +4640,30 @@ def api_add_ground_handler():
         if not supplier_name:
             return jsonify({'success': False, 'error': 'Supplier name is required'}), 400
 
-        # Check if ground handler supplier already exists
-        existing = Supplier.query.filter_by(name=supplier_name, supplier_type='GROUND_HANDLER').first()
-        if existing:
-            return jsonify({'success': False, 'error': 'Ground handler supplier already exists'}), 400
-
-        # Generate unique code
-        count = Supplier.query.filter(Supplier.code.like('GHD-%')).count()
-        new_code = f'GHD-{count + 1:03d}'
-
-        languages_val = data.get('languages', '').strip() or None
-
-        payment_terms = data.get('payment_terms', '').strip() or None
-        cliq_alias = data.get('cliq_alias', '').strip()
-        bank_name_val = ('Cliq' if payment_terms == 'Cliq' else (data.get('bank_name', '').strip() or None))
-        bank_account_val = (cliq_alias if payment_terms == 'Cliq' else (data.get('bank_account', '').strip() or None))
         contract_file = _save_contract_upload()
         notes_value = data.get('notes', '').strip() or ''
         if contract_file:
             notes_value = f"Contract file: {contract_file}\n{notes_value}".strip()
+        supplier_payload = dict(data)
+        if notes_value:
+            supplier_payload['notes'] = notes_value
 
-        # Create new supplier with all provided fields
-        new_supplier = Supplier(
-            name=supplier_name,
-            code=new_code,
-            supplier_type='GROUND_HANDLER',
-            languages=languages_val,
-            phone=data.get('phone', '').strip() or None,
-            contact_person=data.get('contact_person', '').strip() or None,
-            email=data.get('email', '').strip() or None,
-            website=data.get('website', '').strip() or None,
-            city=data.get('city', '').strip() or None,
-            country=data.get('country', '').strip() or None,
-            payment_terms=payment_terms,
-            default_currency=data.get('default_currency', 'USD') or 'USD',
-            address=data.get('address', '').strip() or None,
-            bank_name=bank_name_val,
-            bank_account=bank_account_val,
-            tax_number=data.get('tax_number', '').strip() or None,
-            notes=notes_value or None,
-            is_active=True
-        )
-        db.session.add(new_supplier)
+        existing = _find_ground_handler_supplier_by_name(supplier_name)
+        if existing:
+            _ensure_inbound_representative(supplier_name)
+            db.session.commit()
+            _invalidate_supplier_dropdown_cache()
+            return jsonify({
+                'success': True,
+                'supplier_id': existing.id,
+                'supplier': {
+                    'id': existing.id,
+                    'name': existing.name,
+                    'phone': existing.phone,
+                },
+            })
+
+        _rep, new_supplier = _sync_meet_assist_representative_pair(supplier_name, supplier_payload)
         db.session.commit()
         _invalidate_supplier_dropdown_cache()
 

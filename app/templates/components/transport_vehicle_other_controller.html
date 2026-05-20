@@ -1,0 +1,107 @@
+<script>
+(function () {
+    const SELECT_ID = 'transport_vehicle';
+    const OPTION_KEY = 'transport_vehicle';
+    const OTHER_VALUE = 'Others';
+
+    function ensureVehicleOption(selectEl, value) {
+        const val = String(value || '').trim();
+        if (!selectEl || !val) return false;
+        const exists = Array.from(selectEl.options).some(
+            opt => (opt.value || '').toLowerCase() === val.toLowerCase()
+        );
+        if (exists) return false;
+        const option = document.createElement('option');
+        option.value = val;
+        option.textContent = val;
+        const othersOption = Array.from(selectEl.options).find(
+            opt => opt.value === OTHER_VALUE
+        );
+        if (othersOption) {
+            selectEl.insertBefore(option, othersOption);
+        } else {
+            selectEl.appendChild(option);
+        }
+        return true;
+    }
+
+    async function fetchGlobalOptionValues(key) {
+        try {
+            const resp = await fetch(
+                `/inbound/api/supplier-option-values/global?key=${encodeURIComponent(key)}`
+            );
+            const data = await resp.json();
+            if (data && data.success && Array.isArray(data.values)) {
+                return data.values.map(v => String(v || '').trim()).filter(Boolean);
+            }
+        } catch (_) {}
+        return [];
+    }
+
+    async function persistGlobalOptionValue(key, value) {
+        const v = String(value || '').trim();
+        if (!key || !v) return false;
+        try {
+            const resp = await fetch('/inbound/api/supplier-option-values/global', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: key, value: v })
+            });
+            const data = await resp.json();
+            return !!(resp.ok && data && data.success);
+        } catch (_) {
+            return false;
+        }
+    }
+
+    window.ensureTransportVehicleOption = function ensureTransportVehicleOption(value) {
+        const selectEl = document.getElementById(SELECT_ID);
+        if (!selectEl) return false;
+        return ensureVehicleOption(selectEl, value);
+    };
+
+    async function hydrateTransportVehicleSelect() {
+        const selectEl = document.getElementById(SELECT_ID);
+        if (!selectEl) return;
+
+        const values = await fetchGlobalOptionValues(OPTION_KEY);
+        values.forEach(v => ensureVehicleOption(selectEl, v));
+
+        if (selectEl.dataset.vehicleOtherAttached === '1') return;
+        selectEl.dataset.vehicleOtherAttached = '1';
+
+        selectEl.addEventListener('change', function () {
+            if (selectEl.value !== OTHER_VALUE) return;
+
+            const openPrompt = typeof showCustomPrompt === 'function'
+                ? showCustomPrompt
+                : null;
+            if (!openPrompt) return;
+
+            openPrompt('Enter new vehicle type:', async function (customValue) {
+                const val = String(customValue || '').trim();
+                if (!val) {
+                    selectEl.value = '';
+                    return;
+                }
+                ensureVehicleOption(selectEl, val);
+                selectEl.value = val;
+                const ok = await persistGlobalOptionValue(OPTION_KEY, val);
+                if (!ok && typeof showNotification === 'function') {
+                    showNotification('Could not save vehicle type.', 'error');
+                }
+            });
+        });
+    }
+
+    function init() {
+        hydrateTransportVehicleSelect();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+</script>

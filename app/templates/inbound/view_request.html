@@ -2780,6 +2780,25 @@ input[type="date"]::-webkit-calendar-table-body {
                         {% endif %}
                     </tbody>
                 </table>
+                <table class="w-full border-collapse text-xs mb-4">
+                    <thead>
+                        <tr class="bg-slate-100 font-bold">
+                            <th class="border border-black px-2 py-1">Type</th>
+                            <th class="border border-black px-2 py-1">Room Category</th>
+                            <th class="border border-black px-2 py-1">Room Option</th>
+                            <th class="border border-black px-2 py-1">Board</th>
+                            <th class="border border-black px-2 py-1">Dietary Req</th>
+                            <th class="border border-black px-2 py-1">Adt</th>
+                            <th class="border border-black px-2 py-1">Chd</th>
+                            <th class="border border-black px-2 py-1" style="width: 24%;">Note</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hotelVoucherRoomListTbody">
+                        <tr>
+                            <td colspan="8" class="border border-black px-2 py-2 text-center">No room list details</td>
+                        </tr>
+                    </tbody>
+                </table>
                 <div class="flex gap-3 mb-4 items-start">
                     <span class="font-bold text-xs flex-shrink-0">Note and Special Request</span>
                     <div id="hotelVoucherNoteBox" data-field="hotel-voucher-notes" class="flex-1 border border-black min-h-[60px] px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400" style="white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word;" contenteditable="true">{{ request.hotel_voucher_note or '' }}</div>
@@ -4499,7 +4518,11 @@ function populateFormWithDayData(service, rowId) {
         setInput('hotel_name', row.dataset.hotelName);
         setInput('hotel_category', row.dataset.hotelCat);
     } else if (service === 'transport') {
-        setInput('transport_vehicle', row.dataset.transportVehicle);
+        const vehicle = row.dataset.transportVehicle;
+        if (vehicle && typeof window.ensureTransportVehicleOption === 'function') {
+            window.ensureTransportVehicleOption(vehicle);
+        }
+        setInput('transport_vehicle', vehicle);
         setInput('transport_pickup', row.dataset.transportPickup);
         setInput('transport_dropoff', row.dataset.transportDropoff);
     } else if (service === 'guide') {
@@ -7196,7 +7219,11 @@ function populateServiceForm(serviceType, record) {
             if (field.tagName === 'SELECT') {
                 // For select elements, try to find matching option
                 const options = Array.from(field.options);
-                const matchingOption = options.find(opt => opt.value == value || opt.textContent == value);
+                let matchingOption = options.find(opt => opt.value == value || opt.textContent == value);
+                if (!matchingOption && fieldId === 'transport_vehicle' && value && typeof window.ensureTransportVehicleOption === 'function') {
+                    window.ensureTransportVehicleOption(value);
+                    matchingOption = Array.from(field.options).find(opt => opt.value == value || opt.textContent == value);
+                }
                 if (matchingOption) {
                     field.value = matchingOption.value;
                 }
@@ -12826,6 +12853,36 @@ function syncHotelVoucherDataFromTable() {
         }
     });
 }
+function getHotelVoucherRoomListForHotel(hotel) {
+    if (!hotel) return [];
+    const cached = (typeof hotelRoomsData !== 'undefined' && Array.isArray(hotelRoomsData[hotel.id]))
+        ? hotelRoomsData[hotel.id]
+        : [];
+    if (cached.length > 0) return cached;
+    return Array.isArray(hotel.roomList) ? hotel.roomList : [];
+}
+
+function renderHotelVoucherRoomListPreview(targetHotel) {
+    const tbody = document.getElementById('hotelVoucherRoomListTbody');
+    if (!tbody) return;
+    const roomList = getHotelVoucherRoomListForHotel(targetHotel);
+    const escapeHtml = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    if (!roomList.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="border border-black px-2 py-2 text-center">No room list details</td></tr>';
+        return;
+    }
+    tbody.innerHTML = roomList.map((room) => `<tr>
+        <td class="border border-black px-2 py-1">${escapeHtml(room.room_type || room.roomType || '-')}</td>
+        <td class="border border-black px-2 py-1">${escapeHtml(room.room_category || room.roomCategory || '-')}</td>
+        <td class="border border-black px-2 py-1">${escapeHtml(room.room_option || room.roomOption || '-')}</td>
+        <td class="border border-black px-2 py-1">${escapeHtml(room.board_basis || room.boardBasis || '-')}</td>
+        <td class="border border-black px-2 py-1">${escapeHtml(room.dietary_requirements || room.dietaryRequirements || '-')}</td>
+        <td class="border border-black px-2 py-1">${room.adults || 0}</td>
+        <td class="border border-black px-2 py-1">${room.children || 0}</td>
+        <td class="border border-black px-2 py-1" style="white-space: normal; overflow-wrap: anywhere; word-break: break-word;">${escapeHtml(room.guest_names || room.roomNote || '-')}</td>
+    </tr>`).join('');
+}
+
 function openHotelVoucherModal(hotelId) {
     window.hotelVoucherModalOpenedAt = Date.now();
     syncHotelVoucherDataFromTable();
@@ -12862,6 +12919,7 @@ function openHotelVoucherModal(hotelId) {
         const emptyRow = tbody.querySelector('tr:not([data-hotel-id])');
         if (emptyRow) emptyRow.style.display = 'none';
     }
+    renderHotelVoucherRoomListPreview(targetHotel);
     const modal = document.getElementById('hotelVoucherModal');
     if (modal) {
         modal.classList.remove('hidden');
@@ -15154,22 +15212,28 @@ document.addEventListener('DOMContentLoaded', function() {
             if (range.toDate) maxDate = range.toDate;
         }
         
-        // Configuration for Request Details dates - all dates in black
+        // Configuration for Request Details dates — same visible format as service tabs (d-m-Y)
         if (isRequestDetailsDate) {
-            flatpickr(input, {
+            const fpInstance = flatpickr(input, {
                 dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d-m-Y",
                 defaultDate: originalValue || null,
                 allowInput: false,
                 showMonths: 1,
                 prevArrow: '<i class="fas fa-chevron-left"></i>',
                 nextArrow: '<i class="fas fa-chevron-right"></i>',
                 onChange: function(selectedDates, dateStr, instance) {
+                    if (selectedDates && selectedDates.length > 0) {
+                        input.value = instance.formatDate(selectedDates[0], instance.config.dateFormat);
+                    }
                     const event = new Event('change', { bubbles: true });
                     input.dispatchEvent(event);
                     // Update service tab date pickers when range changes
                     updateServiceTabDatePickers();
                 }
             });
+            input._flatpickr = fpInstance;
         } else {
             // Service tab date pickers - restrict to request date range
             // No default date - fields start empty. Only use originalValue if explicitly set (e.g. when editing)
@@ -15368,6 +15432,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% include 'components/shared_transport_popup_controller.html' %}
+{% include 'components/transport_vehicle_other_controller.html' %}
 {% include 'components/shared_guide_popup_controller.html' %}
 {% include 'components/shared_meetassist_representative_popup_controller.html' %}
 {% include 'components/shared_restaurant_popup_controller.html' %}
