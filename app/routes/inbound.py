@@ -94,6 +94,35 @@ def _ensure_inbound_representative(name):
     return rep
 
 
+def _resolve_supplier_bank_fields(data):
+    """Map payment_method (or legacy payment_terms Cliq) to stored bank_name/bank_account."""
+    payment_method = (data.get('payment_method') or '').strip()
+    payment_terms = (data.get('payment_terms') or '').strip()
+    cliq_alias = (data.get('cliq_alias') or '').strip()
+    bank_name = (data.get('bank_name') or '').strip()
+    bank_account = (data.get('bank_account') or '').strip()
+
+    if payment_method == 'Cliq':
+        return 'Cliq', cliq_alias or None
+    if payment_method == 'Bank':
+        return bank_name or None, bank_account or None
+    if payment_terms == 'Cliq':
+        return 'Cliq', cliq_alias or None
+    return bank_name or None, bank_account or None
+
+
+def _merge_payment_method_into_notes(notes, payment_method):
+    """Prepend payment method line to notes when set."""
+    method = (payment_method or '').strip()
+    if not method:
+        return notes
+    base = (notes or '').strip()
+    if base.startswith('Payment Method:'):
+        return base or None
+    merged = f"Payment Method: {method}\n{base}".strip() if base else f"Payment Method: {method}"
+    return merged or None
+
+
 def _ensure_ground_handler_supplier(name, data=None):
     """Create GROUND_HANDLER supplier if missing; optional extra fields from add form."""
     from app.models.supplier import Supplier
@@ -108,14 +137,12 @@ def _ensure_ground_handler_supplier(name, data=None):
     payload = data or {}
     languages_val = (payload.get('languages') or '').strip() or None
     payment_terms = (payload.get('payment_terms') or '').strip() or None
-    cliq_alias = (payload.get('cliq_alias') or '').strip()
-    bank_name_val = (
-        'Cliq' if payment_terms == 'Cliq' else (payload.get('bank_name') or '').strip() or None
+    payment_method = (payload.get('payment_method') or '').strip()
+    bank_name_val, bank_account_val = _resolve_supplier_bank_fields(payload)
+    notes_value = _merge_payment_method_into_notes(
+        (payload.get('notes') or '').strip() or None,
+        payment_method,
     )
-    bank_account_val = (
-        cliq_alias if payment_terms == 'Cliq' else (payload.get('bank_account') or '').strip() or None
-    )
-    notes_value = (payload.get('notes') or '').strip() or None
 
     new_supplier = Supplier(
         name=n,
@@ -960,49 +987,22 @@ def new_request():
         flash(f'Failed to create new request: {str(e)}', 'error')
         return redirect(url_for('inbound.index'))
 
-def _new_request_impl():
-    """Implementation of new inbound request creation"""
+def _ensure_default_inbound_user():
     from app.models.user import User, create_test_data
 
-    # Ensure user id=1 exists (required for inbound_request.user_id FK)
     if User.query.get(1) is None:
         create_test_data()
         db.session.commit()
     if User.query.get(1) is None:
         raise RuntimeError("Default user (id=1) is required but could not be created")
 
-    # Create a new request with default values
-    from_date = datetime.now().date()
-    to_date = (datetime.now() + timedelta(days=3)).date()
 
-    # Use temporary placeholder - sequence will be assigned when user saves with final from_date
-    import uuid
-    temp_request_number = f"IN-NEW-{str(uuid.uuid4())[:6].upper()}"
-
-    request_obj = InboundRequest(
-        request_number=temp_request_number,
-        from_date=from_date,
-        to_date=to_date,
-        customer_type='GROUP',  # Default - must match UI options (GROUP, INDIVIDUAL, INCENTIVE, OTHERS)
-        contact_name='TBA',  # Default value
-        nationality='TBA',  # Default value to avoid null constraint
-        pax=1,
-        user_id=1,
-        status=STATUS_REQUEST,
-        is_saved=False  # Mark as not yet saved with final sequence
-    )
-    request_obj.calculate_days()
-
-    db.session.add(request_obj)
-    db.session.flush()  # Get ID for the request
-
-    # Create default itinerary rows immediately (no flash/reload needed)
+def _create_default_itinerary_rows(request_obj, from_date, to_date):
     current_date = from_date
     day_counter = 1
     total_days = (to_date - from_date).days + 1
 
     while current_date <= to_date:
-        # Generate description based on day
         if day_counter == 1:
             description = "Arrival Day"
         elif current_date == to_date:
@@ -1014,21 +1014,269 @@ def _new_request_impl():
             request_id=request_obj.id,
             date=current_date,
             description=description,
-            flag_hotel=(day_counter != total_days),  # Hotel except last day
+            flag_hotel=(day_counter != total_days),
             flag_transport=True,
-            flag_guide=(day_counter > 1 and day_counter < total_days),  # Guide for middle days
-            flag_meal=(day_counter > 1 and day_counter < total_days),  # Meals for middle days
-            flag_airport=(day_counter == 1 or day_counter == total_days)  # Airport on first and last day
+            flag_guide=(day_counter > 1 and day_counter < total_days),
+            flag_meal=(day_counter > 1 and day_counter < total_days),
+            flag_airport=(day_counter == 1 or day_counter == total_days),
         )
         db.session.add(row)
-
         current_date += timedelta(days=1)
         day_counter += 1
 
-    db.session.commit()
 
-    # Redirect to view page which now has unified edit functionality
+def _create_inbound_request_draft(parent_request=None, link_note=None):
+    """Create a new inbound request draft, optionally linked to a main file."""
+    import uuid
+
+    _ensure_default_inbound_user()
+
+    is_linked = parent_request is not None
+    if is_linked:
+        from_date = parent_request.from_date or datetime.now().date()
+        to_date = parent_request.to_date or (from_date + timedelta(days=3))
+        request_number = InboundRequest.generate_linked_request_number(parent_request)
+        is_saved = True
+    else:
+        from_date = datetime.now().date()
+        to_date = (datetime.now() + timedelta(days=3)).date()
+        request_number = f"IN-NEW-{str(uuid.uuid4())[:6].upper()}"
+        is_saved = False
+
+    request_obj = InboundRequest(
+        request_number=request_number,
+        from_date=from_date,
+        to_date=to_date,
+        customer_type='GROUP',
+        contact_name='TBA',
+        nationality='TBA',
+        pax=1,
+        user_id=1,
+        status=STATUS_REQUEST,
+        is_saved=is_saved,
+    )
+
+    if parent_request:
+        request_obj.parent_request_id = parent_request.id
+        request_obj.link_note = (link_note or '').strip() or None
+        request_obj.customer_id = parent_request.customer_id
+        request_obj.contact_name = parent_request.contact_name or 'TBA'
+        request_obj.nationality = parent_request.nationality or 'TBA'
+        request_obj.pax = parent_request.pax or 1
+        request_obj.customer_type = parent_request.customer_type or 'GROUP'
+        request_obj.agent_ref = parent_request.agent_ref
+
+    request_obj.calculate_days()
+    db.session.add(request_obj)
+    db.session.flush()
+    _create_default_itinerary_rows(request_obj, from_date, to_date)
+    db.session.commit()
+    return request_obj
+
+
+def _main_files_for_link_query():
+    """Saved main inbound files eligible as link parents."""
+    from sqlalchemy import or_
+
+    return InboundRequest.query.filter(
+        InboundRequest.pending_invoice_queue.isnot(True),
+        InboundRequest.parent_request_id.is_(None),
+        or_(
+            InboundRequest.is_saved.is_(True),
+            ~InboundRequest.request_number.like('IN-NEW-%'),
+        ),
+    )
+
+
+def _new_request_impl():
+    """Implementation of new inbound request creation"""
+    request_obj = _create_inbound_request_draft()
     return redirect(url_for('inbound.view_request', id=request_obj.id))
+
+
+@inbound_bp.route('/api/main-files-for-link')
+def api_main_files_for_link():
+    """Search main inbound files that can be linked as parents."""
+    from sqlalchemy import or_, func
+
+    q = (request.args.get('q') or '').strip()
+    query = _main_files_for_link_query()
+    if q:
+        like = f'%{q}%'
+        cust_full = func.trim(
+            func.concat(
+                Customer.first_name,
+                ' ',
+                func.coalesce(Customer.last_name, ''),
+            )
+        )
+        query = query.outerjoin(Customer, InboundRequest.customer_id == Customer.id).filter(
+            or_(
+                InboundRequest.request_number.ilike(like),
+                InboundRequest.contact_name.ilike(like),
+                InboundRequest.agent_ref.ilike(like),
+                cust_full.ilike(like),
+            )
+        )
+    results = query.order_by(InboundRequest.updated_at.desc()).limit(25).all()
+    return jsonify([
+        {
+            'id': row.id,
+            'request_number': row.request_number,
+            'document_sequence': row.document_sequence,
+            'contact_name': row.contact_name,
+            'agent': row.agent,
+            'status': row.status,
+            'from_date': row.from_date.isoformat() if row.from_date else None,
+            'to_date': row.to_date.isoformat() if row.to_date else None,
+            'pax': row.pax,
+        }
+        for row in results
+    ])
+
+
+def _query_linked_attachment_rows(search_query=''):
+    """Return (child, parent) rows for linked attachment listings."""
+    from sqlalchemy import or_
+    from sqlalchemy.orm import aliased
+
+    Parent = aliased(InboundRequest)
+    query = (
+        db.session.query(InboundRequest, Parent)
+        .join(Parent, InboundRequest.parent_request_id == Parent.id)
+        .filter(
+            InboundRequest.parent_request_id.isnot(None),
+            InboundRequest.pending_invoice_queue.isnot(True),
+        )
+    )
+    search_query = (search_query or '').strip()
+    if search_query:
+        like = f'%{search_query}%'
+        query = query.filter(
+            or_(
+                InboundRequest.request_number.ilike(like),
+                Parent.request_number.ilike(like),
+                InboundRequest.contact_name.ilike(like),
+                InboundRequest.link_note.ilike(like),
+            )
+        )
+    return (
+        query.order_by(Parent.request_number.asc(), InboundRequest.created_at.desc())
+        .limit(200)
+        .all()
+    )
+
+
+def _group_linked_attachment_rows(rows):
+    """Group linked attachment rows by parent request."""
+    groups = []
+    by_parent = {}
+    for child, parent in rows:
+        bucket = by_parent.get(parent.id)
+        if not bucket:
+            bucket = {'parent': parent, 'attachments': []}
+            by_parent[parent.id] = bucket
+            groups.append(bucket)
+        bucket['attachments'].append(child)
+    return groups
+
+
+@inbound_bp.route('/linked-attachments')
+def linked_attachments_page():
+    """Dedicated page listing files linked to main inbound records."""
+    q = (request.args.get('q') or '').strip()
+    rows = _query_linked_attachment_rows(q)
+    groups = _group_linked_attachment_rows(rows)
+    return render_template(
+        'inbound/linked_attachments.html',
+        groups=groups,
+        query=q,
+        total_count=sum(len(g['attachments']) for g in groups),
+    )
+
+
+@inbound_bp.route('/linked-attachments/create', methods=['POST'])
+def linked_attachments_create():
+    """Create a linked attachment from the dedicated page form."""
+    parent_id = request.form.get('parent_id', type=int)
+    link_note = (request.form.get('link_note') or '').strip()
+
+    if not parent_id:
+        flash('Please select a main file.', 'error')
+        return redirect(url_for('inbound.linked_attachments_page'))
+
+    parent = _main_files_for_link_query().filter(InboundRequest.id == parent_id).first()
+    if not parent:
+        flash('Main file not found or not eligible for linking.', 'error')
+        return redirect(url_for('inbound.linked_attachments_page'))
+
+    try:
+        child = _create_inbound_request_draft(
+            parent_request=parent,
+            link_note=link_note,
+        )
+        flash(f'Linked file {child.request_number} created.', 'success')
+        return redirect(url_for('inbound.view_request', id=child.id, mode='edit'))
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Could not create linked file: {e}', 'error')
+        return redirect(url_for('inbound.linked_attachments_page'))
+
+
+@inbound_bp.route('/api/linked-attachments')
+def api_linked_attachments():
+    """List inbound requests linked to main files (attached / related files)."""
+    q = (request.args.get('q') or '').strip()
+    rows = _query_linked_attachment_rows(q)
+    return jsonify([
+        {
+            'id': child.id,
+            'request_number': child.request_number,
+            'link_note': child.link_note,
+            'status': child.status,
+            'contact_name': child.contact_name,
+            'created_at': child.created_at.isoformat() if child.created_at else None,
+            'parent_id': parent.id,
+            'parent_request_number': parent.request_number,
+            'parent_document_sequence': parent.document_sequence,
+            'view_url': url_for('inbound.view_request', id=child.id, mode='view'),
+            'edit_url': url_for('inbound.view_request', id=child.id, mode='edit'),
+            'parent_view_url': url_for('inbound.view_request', id=parent.id, mode='view'),
+        }
+        for child, parent in rows
+    ])
+
+
+@inbound_bp.route('/api/create-linked-request', methods=['POST'])
+@csrf.exempt
+def api_create_linked_request():
+    """Create a new inbound request linked to an existing main file."""
+    data = request.get_json(silent=True) or {}
+    parent_id = data.get('parent_id')
+    link_note = (data.get('link_note') or '').strip()
+
+    if not parent_id:
+        return jsonify({'success': False, 'message': 'Please select a main file'}), 400
+
+    parent = _main_files_for_link_query().filter(InboundRequest.id == int(parent_id)).first()
+    if not parent:
+        return jsonify({'success': False, 'message': 'Main file not found or not eligible for linking'}), 404
+
+    try:
+        child = _create_inbound_request_draft(
+            parent_request=parent,
+            link_note=link_note,
+        )
+        return jsonify({
+            'success': True,
+            'request_id': child.id,
+            'request_number': child.request_number,
+            'redirect_url': url_for('inbound.view_request', id=child.id, mode='edit'),
+            'parent_request_number': parent.request_number,
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @inbound_bp.route('/<int:id>/edit')
 def edit_request(id):
@@ -1098,9 +1346,15 @@ def view_request(id):
     )
     guide_tab_badge_count = max(len(request_obj.inbound_guides or []), itin_guide_slots)
     trip_summary_transports = _trip_summary_transports(request_obj.inbound_transports)
+    parent_request = request_obj.parent_request if request_obj.parent_request_id else None
+    linked_children = []
+    if not request_obj.parent_request_id:
+        linked_children = request_obj.linked_requests.order_by(InboundRequest.created_at.desc()).all()
     return render_template('inbound/view_request.html', 
                            request=request_obj,
                            inbound_request=request_obj,  # Explicit variable to avoid Flask request confusion
+                           parent_request=parent_request,
+                           linked_children=linked_children,
                            view_only=view_only,
                            rows=sorted_itinerary_rows,
                            hotel_suppliers=hotel_suppliers,
@@ -1154,13 +1408,19 @@ def api_trash_inbound_request(request_id):
     request_obj = InboundRequest.query.get(request_id)
     if not request_obj:
         return jsonify({'success': False, 'message': 'Request not found'}), 404
+    data = request.get_json(silent=True) or {}
+    reason = (data.get('reason') or '').strip()
+    if not reason:
+        return jsonify({'success': False, 'message': 'Deletion reason is required'}), 400
     try:
         request_obj.pending_invoice_queue = True
+        request_obj.deleted_reason = reason
         db.session.commit()
         return jsonify({
             'success': True,
             'message': 'Request moved to Deleted queue',
             'pending_invoice_queue': True,
+            'deleted_reason': reason,
         })
     except Exception as e:
         db.session.rollback()
@@ -1174,6 +1434,7 @@ def restore_from_invoice_queue(id):
 
     try:
         request_obj.pending_invoice_queue = False
+        request_obj.deleted_reason = None
         db.session.commit()
         flash(f'Request {request_obj.request_number} is back on the main list.', 'success')
     except Exception as e:
@@ -2025,8 +2286,11 @@ def api_save_request(request_id):
     request_obj.calculate_days()
 
     # Only generate sequence number if not already saved AND has placeholder number
-    # This protects existing requests that already have valid sequence numbers
-    if not request_obj.is_saved and request_obj.request_number.startswith('IN-NEW-'):
+    # Linked attachments keep their {parent}-N number and must not get a new YYMM### id.
+    if request_obj.parent_request_id:
+        if not request_obj.is_saved:
+            request_obj.is_saved = True
+    elif not request_obj.is_saved and request_obj.request_number.startswith('IN-NEW-'):
         # Generate sequence number based on from_date month
         request_obj.request_number = InboundRequest.generate_request_number(request_obj.from_date)
         request_obj.is_saved = True
@@ -4027,9 +4291,8 @@ def api_add_hotel():
             new_code = f'HTL-{city_code}-{int(time.time())}'
 
         payment_terms = data.get('payment_terms', '').strip() or None
-        cliq_alias = data.get('cliq_alias', '').strip()
-        bank_name_val = ('Cliq' if payment_terms == 'Cliq' else (data.get('bank_name', '').strip() or None))
-        bank_account_val = (cliq_alias if payment_terms == 'Cliq' else (data.get('bank_account', '').strip() or None))
+        payment_method = data.get('payment_method', '').strip()
+        bank_name_val, bank_account_val = _resolve_supplier_bank_fields(data)
         contract_file = _save_contract_upload()
 
         # Create new supplier with all provided fields
@@ -4052,11 +4315,21 @@ def api_add_hotel():
                 default_categories = ['Standard Rooms', 'Junior Suites', 'Executive Suites', 'Presidential Suites']
                 if room_category not in default_categories:
                     notes_dict['room_categories'] = [room_category]
+            if payment_method:
+                notes_dict['payment_method'] = payment_method
             if contract_file:
                 notes_dict['contract_file'] = contract_file
             notes_value = json.dumps(notes_dict)
-        elif contract_file:
-            notes_value = json.dumps({'contract_file': contract_file})
+        elif payment_method or contract_file:
+            import json
+            notes_dict = {}
+            if notes_value:
+                notes_dict['original_notes'] = notes_value
+            if payment_method:
+                notes_dict['payment_method'] = payment_method
+            if contract_file:
+                notes_dict['contract_file'] = contract_file
+            notes_value = json.dumps(notes_dict)
         
         new_hotel = Supplier(
             name=hotel_name,
@@ -4389,13 +4662,13 @@ def api_add_guide():
             return jsonify({'success': False, 'error': 'At least one language is required'}), 400
         
         payment_terms = data.get('payment_terms', '').strip() or None
-        cliq_alias = data.get('cliq_alias', '').strip()
-        bank_name_val = ('Cliq' if payment_terms == 'Cliq' else (data.get('bank_name', '').strip() or None))
-        bank_account_val = (cliq_alias if payment_terms == 'Cliq' else (data.get('bank_account', '').strip() or None))
+        payment_method = data.get('payment_method', '').strip()
+        bank_name_val, bank_account_val = _resolve_supplier_bank_fields(data)
         contract_file = _save_contract_upload()
         notes_value = data.get('notes', '').strip() or ''
         if contract_file:
             notes_value = f"Contract file: {contract_file}\n{notes_value}".strip()
+        notes_value = _merge_payment_method_into_notes(notes_value, payment_method) or None
 
         # Create new supplier with all provided fields
         new_guide = Supplier(
@@ -4484,13 +4757,13 @@ def api_add_restaurant():
         new_code = f'RST-{count + 1:03d}'
 
         payment_terms = data.get('payment_terms', '').strip() or None
-        cliq_alias = data.get('cliq_alias', '').strip()
-        bank_name_val = ('Cliq' if payment_terms == 'Cliq' else (data.get('bank_name', '').strip() or None))
-        bank_account_val = (cliq_alias if payment_terms == 'Cliq' else (data.get('bank_account', '').strip() or None))
+        payment_method = data.get('payment_method', '').strip()
+        bank_name_val, bank_account_val = _resolve_supplier_bank_fields(data)
         contract_file = _save_contract_upload()
         notes_value = data.get('notes', '').strip() or ''
         if contract_file:
             notes_value = f"Contract file: {contract_file}\n{notes_value}".strip()
+        notes_value = _merge_payment_method_into_notes(notes_value, payment_method) or None
 
         # Create new supplier with all provided fields
         new_restaurant = Supplier(
@@ -4567,13 +4840,13 @@ def api_add_transport():
         new_code = f'TRN-{count + 1:03d}'
 
         payment_terms = data.get('payment_terms', '').strip() or None
-        cliq_alias = data.get('cliq_alias', '').strip()
-        bank_name_val = ('Cliq' if payment_terms == 'Cliq' else (data.get('bank_name', '').strip() or None))
-        bank_account_val = (cliq_alias if payment_terms == 'Cliq' else (data.get('bank_account', '').strip() or None))
+        payment_method = data.get('payment_method', '').strip()
+        bank_name_val, bank_account_val = _resolve_supplier_bank_fields(data)
         contract_file = _save_contract_upload()
         notes_value = data.get('notes', '').strip() or ''
         if contract_file:
             notes_value = f"Contract file: {contract_file}\n{notes_value}".strip()
+        notes_value = _merge_payment_method_into_notes(notes_value, payment_method) or None
 
         # Create new supplier with all provided fields
         new_transport = Supplier(
@@ -5233,6 +5506,7 @@ def api_submit_request(request_id):
         elif target_status == 'INVOICED':
             request_obj.status = 'INVOICED'
             request_obj.pending_invoice_queue = False
+            request_obj.deleted_reason = None
 
             # Automatically create invoice record when status changes to INVOICED
             from app.models.invoice import Invoice

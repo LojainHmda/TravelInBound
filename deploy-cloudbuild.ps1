@@ -3,6 +3,10 @@
 # REQUIRES: DATABASE_URL (PostgreSQL) - set in .env or -DatabaseUrl
 
 param(
+    [string]$ProjectId = "kartacagenai",
+    [string]$GcpAccount = "lojainhmda@gmail.com",
+    [string]$Region = "us-central1",
+    [string]$ServiceName = "travel-inbound",
     [string]$DatabaseUrl = $env:DATABASE_URL,
     [string]$CloudSqlInstance = $env:CLOUD_SQL_INSTANCE
 )
@@ -27,6 +31,16 @@ function Write-Success($message) { Write-Host "[OK] $message" -ForegroundColor G
 function Write-Err($message) { Write-Host "[ERROR] $message" -ForegroundColor Red }
 function Write-Warning($message) { Write-Host "[!] $message" -ForegroundColor Yellow }
 
+function Invoke-GcloudQuiet {
+    param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Args)
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    & gcloud @Args 2>&1 | Out-Null
+    $code = $LASTEXITCODE
+    $ErrorActionPreference = $prev
+    return $code
+}
+
 Write-Host "`n=== Travel Inbound - Cloud Build Deployment ===" -ForegroundColor Cyan
 Write-Host "(No Docker needed - builds in Google Cloud)`n" -ForegroundColor Cyan
 
@@ -41,13 +55,20 @@ if (-not (Get-Command gcloud -ErrorAction SilentlyContinue)) {
 }
 Write-Success "gcloud CLI found"
 
-# Check project
-$PROJECT_ID = gcloud config get-value project 2>$null
-if (-not $PROJECT_ID) {
-    Write-Err "No GCP project set. Run: gcloud config set project YOUR_PROJECT_ID"
+# Target project (production: kartacagenai -> travel-inbound-d5jj5uif3a-uc.a.run.app)
+if (-not $ProjectId) {
+    $ProjectId = gcloud config get-value project 2>$null
+}
+if (-not $ProjectId) {
+    Write-Err "No GCP project set. Use -ProjectId kartacagenai or: gcloud config set project kartacagenai"
     exit 1
 }
-Write-Success "Project: $PROJECT_ID"
+if ($GcpAccount) {
+    Invoke-GcloudQuiet config set account $GcpAccount | Out-Null
+}
+Invoke-GcloudQuiet config set project $ProjectId | Out-Null
+$PROJECT_ID = $ProjectId
+Write-Success "Project: $PROJECT_ID (region: $Region, service: $ServiceName)"
 
 # Check auth
 $ACCOUNT = gcloud config get-value account 2>$null
@@ -69,7 +90,7 @@ Write-Success "cloudbuild.yaml found"
 Write-Step "Enabling required APIs..."
 $apis = @("run.googleapis.com", "containerregistry.googleapis.com", "cloudbuild.googleapis.com")
 foreach ($api in $apis) {
-    gcloud services enable $api --quiet 2>&1 | Out-Null
+    Invoke-GcloudQuiet services enable $api --quiet | Out-Null
 }
 Write-Success "APIs enabled"
 
@@ -100,9 +121,9 @@ if ($CloudSqlInstance) {
 if ($subs.Count -gt 0) {
     $subsStr = $subs -join ","
     Write-Host "  Passing: $($subs -join ', ')" -ForegroundColor Gray
-    gcloud builds submit --config cloudbuild.yaml . --substitutions="$subsStr"
+    gcloud builds submit --config cloudbuild.yaml . --project $PROJECT_ID --substitutions="$subsStr"
 } else {
-    gcloud builds submit --config cloudbuild.yaml .
+    gcloud builds submit --config cloudbuild.yaml . --project $PROJECT_ID
 }
 
 if ($LASTEXITCODE -ne 0) {
@@ -113,7 +134,7 @@ if ($LASTEXITCODE -ne 0) {
 Write-Success "Deployment complete!"
 
 # Get URL and verify
-$SERVICE_URL = gcloud run services describe travel-inbound --region us-central1 --format 'value(status.url)' 2>$null
+$SERVICE_URL = gcloud run services describe $ServiceName --project $PROJECT_ID --region $Region --format 'value(status.url)' 2>$null
 if ($SERVICE_URL) {
     Write-Host "`n=== Deployment Complete Successfully! ===`n" -ForegroundColor Green
     Write-Host "Service URL: " -NoNewline

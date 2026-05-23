@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block title %}Hub - Windows of Jordan{% endblock %}
 
@@ -95,6 +95,22 @@ body {
 
 .hub-tile.primary:hover {
     background: linear-gradient(135deg, #d5b3ff 0%, #c299ff 100%);
+}
+
+.hub-tile.linked-attachment {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border: 2px solid #3b82f6;
+    font: inherit;
+    color: inherit;
+    width: 100%;
+}
+
+.hub-tile.linked-attachment:hover {
+    background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%);
+}
+
+.hub-tile.linked-attachment .tile-icon {
+    color: #1d4ed8;
 }
 
 /* Tile Icon */
@@ -228,6 +244,20 @@ body {
             </div>
             <p class="tile-label">New Inbound Request</p>
         </a>
+
+        <!-- Linked Attachment / Related File -->
+        <a href="{{ url_for('inbound.linked_attachments_page') }}" class="hub-tile linked-attachment" title="View and create files linked to main records">
+            <div class="tile-icon">
+                <i class="fas fa-link"></i>
+            </div>
+            <p class="tile-label">Linked Attachment</p>
+            <p class="tile-brief" style="font-size: 0.7rem; color: #666; margin-top: 0.5rem; line-height: 1.35;">
+                Related File
+                <span style="display: block; font-size: 0.65rem; margin-top: 0.35rem; color: #888;">
+                    Link to main file without editing it
+                </span>
+            </p>
+        </a>
         
         <!-- All inbound files (request + confirmed + invoiced) -->
         <a href="/inbound/all-files" class="hub-tile" title="All saved inbound files">
@@ -238,7 +268,7 @@ body {
             <p class="tile-brief" style="font-size: 0.7rem; color: #666; margin-top: 0.5rem; line-height: 1.35;">
                 {{ total_all_files_count|default(status_counts.REQUEST + status_counts.CONFIRMED + status_counts.INVOICED) }} orders
                 <span style="display: block; font-size: 0.65rem; margin-top: 0.35rem; color: #888;">
-                    Request · Confirmed · Invoiced · Deleted
+                    Request آ· Confirmed آ· Invoiced آ· Deleted
                 </span>
             </p>
         </a>
@@ -285,7 +315,7 @@ body {
             <p class="tile-brief" style="font-size: 0.7rem; color: #666; margin-top: 0.5rem; line-height: 1.35;">
                 {{ deleted_queue_count|default(0) }} order{% if deleted_queue_count|default(0) != 1 %}s{% endif %}
                 <span style="display: block; font-size: 0.65rem; margin-top: 0.35rem; color: #888;">
-                    Removed from main list — follow up here
+                    Removed from main list â€” follow up here
                 </span>
             </p>
         </a>

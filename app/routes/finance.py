@@ -1631,60 +1631,60 @@ def _list_suppliers_impl():
                           country=country,
                           supplier_type=supplier_type)
 
-@finance.route('/suppliers/type/<type_key>')
-def supplier_type_page(type_key):
-    """Dedicated page for a supplier type"""
-    type_map = {
-        'accommodation': {
-            'label': 'Accommodation',
-            'icon': 'fa-hotel',
-            'patterns': ['HOTEL', 'ACCOMMODATION'],
-            'new_supplier_type': 'HOTEL'
-        },
-        'airline': {
-            'label': 'Airline',
-            'icon': 'fa-plane',
-            'patterns': ['AIRLINE'],
-            'new_supplier_type': 'AIRLINE'
-        },
-        'transportation': {
-            'label': 'Transportation',
-            'icon': 'fa-bus',
-            'patterns': ['TRANSPORT', 'TRANSPORTATION', 'TRANSFER'],
-            'new_supplier_type': 'TRANSPORT'
-        },
-        'guides': {
-            'label': 'Guides',
-            'icon': 'fa-user-tie',
-            'patterns': ['GUIDE'],
-            'new_supplier_type': 'GUIDE'
-        },
-        'meet-assist': {
-            'label': 'Meet and assist',
-            'icon': 'fa-handshake',
-            'patterns': ['GROUND_HANDLER', 'MEET', 'ASSIST'],
-            'new_supplier_type': 'GROUND_HANDLER'
-        },
-        'restaurant': {
-            'label': 'Restaurant',
-            'icon': 'fa-utensils',
-            'patterns': ['RESTAURANT', 'MEAL', 'FOOD'],
-            'new_supplier_type': 'RESTAURANT'
-        },
-        'others': {
-            'label': 'Others',
-            'icon': 'fa-layer-group',
-            'patterns': [],
-            'new_supplier_type': ''
-        }
-    }
+_SUPPLIER_TYPE_PAGE_MAP = {
+    'accommodation': {
+        'label': 'Accommodation',
+        'icon': 'fa-hotel',
+        'patterns': ['HOTEL', 'ACCOMMODATION'],
+        'new_supplier_type': 'HOTEL',
+    },
+    'airline': {
+        'label': 'Airline',
+        'icon': 'fa-plane',
+        'patterns': ['AIRLINE'],
+        'new_supplier_type': 'AIRLINE',
+    },
+    'transportation': {
+        'label': 'Transportation',
+        'icon': 'fa-bus',
+        'patterns': ['TRANSPORT', 'TRANSPORTATION', 'TRANSFER'],
+        'new_supplier_type': 'TRANSPORT',
+    },
+    'guides': {
+        'label': 'Guides',
+        'icon': 'fa-user-tie',
+        'patterns': ['GUIDE'],
+        'new_supplier_type': 'GUIDE',
+    },
+    'meet-assist': {
+        'label': 'Meet and assist',
+        'icon': 'fa-handshake',
+        'patterns': ['GROUND_HANDLER', 'MEET', 'ASSIST'],
+        'new_supplier_type': 'GROUND_HANDLER',
+    },
+    'restaurant': {
+        'label': 'Restaurant',
+        'icon': 'fa-utensils',
+        'patterns': ['RESTAURANT', 'MEAL', 'FOOD'],
+        'new_supplier_type': 'RESTAURANT',
+    },
+    'others': {
+        'label': 'Others',
+        'icon': 'fa-layer-group',
+        'patterns': [],
+        'new_supplier_type': '',
+    },
+}
 
-    config = type_map.get(type_key)
+
+def _query_suppliers_for_type(type_key, search_query=''):
+    """Return suppliers for a supplier type hub page, optionally filtered by name."""
+    config = _SUPPLIER_TYPE_PAGE_MAP.get(type_key)
     if not config:
-        return redirect(url_for('finance.list_suppliers'))
+        return None, []
 
     suppliers_query = Supplier.query
-    search_query = request.args.get('q', '').strip()
+    search_query = (search_query or '').strip()
 
     try:
         if config['patterns']:
@@ -1704,11 +1704,11 @@ def supplier_type_page(type_key):
                     Supplier.supplier_type.ilike('%ASSIST%'),
                     Supplier.supplier_type.ilike('%RESTAURANT%'),
                     Supplier.supplier_type.ilike('%MEAL%'),
-                    Supplier.supplier_type.ilike('%FOOD%')
+                    Supplier.supplier_type.ilike('%FOOD%'),
                 )
             )
     except Exception as e:
-        safe_log_error(f"Error applying supplier type page filter {type_key}", e)
+        safe_log_error(f'Error applying supplier type page filter {type_key}', e)
         suppliers_query = Supplier.query.filter(db.text('1=0'))
 
     if search_query:
@@ -1722,6 +1722,17 @@ def supplier_type_page(type_key):
             safe_log_error('Meet & Assist representative sync failed', e)
 
     suppliers = suppliers_query.order_by(func.coalesce(Supplier.name, '').asc()).all()
+    return config, suppliers
+
+
+@finance.route('/suppliers/type/<type_key>')
+def supplier_type_page(type_key):
+    """Dedicated page for a supplier type"""
+    config, suppliers = _query_suppliers_for_type(type_key, request.args.get('q', ''))
+    if not config:
+        return redirect(url_for('finance.list_suppliers'))
+
+    search_query = request.args.get('q', '').strip()
     return render_template(
         'finance/suppliers_type_page.html',
         type_key=type_key,
@@ -1729,8 +1740,42 @@ def supplier_type_page(type_key):
         type_icon=config['icon'],
         suppliers=suppliers,
         query=search_query,
-        new_supplier_type=config['new_supplier_type']
+        new_supplier_type=config['new_supplier_type'],
     )
+
+
+@finance.route('/suppliers/type/<type_key>/print')
+def print_supplier_type_page(type_key):
+    """Print-friendly view of suppliers for a type page."""
+    config, suppliers = _query_suppliers_for_type(type_key, request.args.get('q', ''))
+    if not config:
+        return redirect(url_for('finance.list_suppliers'))
+
+    search_query = request.args.get('q', '').strip()
+    filter_summary = []
+    if search_query:
+        filter_summary.append(('Search', search_query))
+
+    return render_template(
+        'finance/suppliers_type_print.html',
+        type_key=type_key,
+        type_label=config['label'],
+        suppliers=suppliers,
+        filter_summary=filter_summary,
+        page_title=f'{config["label"]} Suppliers',
+        printed_at=datetime.now(),
+    )
+
+
+def _bank_fields_from_payment_method(payment_method, bank_name, bank_account, cliq_alias):
+    """Map payment method selection to stored supplier bank fields."""
+    method = (payment_method or '').strip()
+    if method == 'Cliq':
+        return 'Cliq', (cliq_alias or '').strip() or None
+    if method == 'Bank':
+        return (bank_name or '').strip() or None, (bank_account or '').strip() or None
+    return None, None
+
 
 @finance.route('/suppliers/type/<type_key>/quick-add', methods=['POST'])
 def quick_add_supplier(type_key):
@@ -1758,6 +1803,7 @@ def quick_add_supplier(type_key):
     requested_type = (request.form.get('supplier_type') or '').strip().upper()
     supplier_type = requested_type or base_supplier_type
     payment_terms = (request.form.get('payment_terms') or '').strip() or None
+    payment_method = (request.form.get('payment_method') or '').strip()
     cliq_alias = (request.form.get('cliq_alias') or '').strip()
     guide_languages = (request.form.get('guide_languages') or '').strip()
 
@@ -1778,6 +1824,22 @@ def quick_add_supplier(type_key):
         merged_notes = f"Category: {category}\n{merged_notes}".strip()
     if room_category:
         merged_notes = f"Room Category: {room_category}\n{merged_notes}".strip()
+    if payment_method:
+        merged_notes = f"Payment Method: {payment_method}\n{merged_notes}".strip()
+
+    if payment_method:
+        bank_name_val, bank_account_val = _bank_fields_from_payment_method(
+            payment_method,
+            request.form.get('bank_name'),
+            request.form.get('bank_account'),
+            cliq_alias,
+        )
+    elif payment_terms == 'Cliq':
+        bank_name_val = 'Cliq'
+        bank_account_val = cliq_alias or None
+    else:
+        bank_name_val = (request.form.get('bank_name') or '').strip() or None
+        bank_account_val = (request.form.get('bank_account') or '').strip() or None
 
     contract_file = request.files.get('contract_file')
     contract_saved_name = None
@@ -1806,8 +1868,8 @@ def quick_add_supplier(type_key):
             country=(request.form.get('country') or '').strip() or None,
             payment_terms=payment_terms,
             default_currency=(request.form.get('default_currency') or 'USD').strip() or 'USD',
-            bank_name=('Cliq' if payment_terms == 'Cliq' else (request.form.get('bank_name') or '').strip()) or None,
-            bank_account=(cliq_alias if payment_terms == 'Cliq' else (request.form.get('bank_account') or '').strip()) or None,
+            bank_name=bank_name_val,
+            bank_account=bank_account_val,
             tax_number=(request.form.get('tax_number') or '').strip() or None,
             notes=merged_notes or None,
             languages=guide_languages or None
@@ -1817,6 +1879,8 @@ def quick_add_supplier(type_key):
             supplier.notes = f"Contract file: {contract_saved_name}\n{supplier.notes}".strip()
         db.session.add(supplier)
         db.session.commit()
+        from app.routes.inbound import _invalidate_supplier_dropdown_cache
+        _invalidate_supplier_dropdown_cache()
         flash(f'{name} added successfully.', 'success')
     except Exception as e:
         db.session.rollback()
@@ -2087,6 +2151,32 @@ def supplier_details(supplier_id):
         total_due=total_due,
         total_confirmed=total_confirmed
     )
+
+@finance.route('/supplier/<int:supplier_id>/toggle-status', methods=['POST'])
+def toggle_supplier_status(supplier_id):
+    """Suspend or reactivate a supplier from the type page table."""
+    from app.routes.inbound import _invalidate_supplier_dropdown_cache
+
+    supplier = Supplier.query.get_or_404(supplier_id)
+    supplier_name = supplier.name
+    try:
+        supplier.is_active = not supplier.is_active
+        db.session.commit()
+        _invalidate_supplier_dropdown_cache()
+        if supplier.is_active:
+            flash(f'Supplier "{supplier_name}" is now active.', 'success')
+        else:
+            flash(
+                f'Supplier "{supplier_name}" suspended. It will not appear in request dropdowns.',
+                'success',
+            )
+    except Exception as e:
+        db.session.rollback()
+        safe_log_error(f'Error toggling supplier status {supplier_id}', e)
+        flash('Could not update supplier status. Please try again.', 'error')
+
+    return redirect(request.referrer or url_for('finance.list_suppliers'))
+
 
 @finance.route('/supplier/<int:supplier_id>/delete', methods=['POST'])
 def delete_supplier(supplier_id):

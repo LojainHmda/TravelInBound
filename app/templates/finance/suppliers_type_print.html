@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }} — Print</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            color: #212529;
+            margin: 24px;
+            font-size: 12px;
+        }
+        h1 {
+            margin: 0 0 6px;
+            font-size: 20px;
+            color: #333;
+        }
+        .meta {
+            color: #6c757d;
+            margin-bottom: 16px;
+            font-size: 11px;
+        }
+        .filters {
+            margin-bottom: 18px;
+            padding: 10px 12px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+        }
+        .filters-title {
+            font-weight: 700;
+            margin-bottom: 6px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .filters-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 16px;
+        }
+        .filter-item {
+            font-size: 11px;
+        }
+        .filter-item strong {
+            color: #495057;
+        }
+        .count {
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 8px 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: #ffbf00;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        tr:nth-child(even) td {
+            background: #fafafa;
+        }
+        .status-active {
+            color: #15803d;
+            font-weight: 700;
+        }
+        .status-suspended {
+            color: #b91c1c;
+            font-weight: 700;
+        }
+        .empty {
+            padding: 24px;
+            text-align: center;
+            color: #6c757d;
+            border: 1px dashed #ced4da;
+            border-radius: 6px;
+        }
+        .toolbar {
+            margin-bottom: 16px;
+        }
+        .toolbar button {
+            background: #ffb700;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        @media print {
+            body { margin: 12px; }
+            .toolbar { display: none !important; }
+            .filters { break-inside: avoid; }
+            thead { display: table-header-group; }
+            tr { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar no-print">
+        <button type="button" onclick="window.print()">Print</button>
+    </div>
+
+    <h1>{{ page_title }}</h1>
+    <div class="meta">Printed {{ printed_at.strftime('%d %b %Y %H:%M') }}</div>
+
+    {% if filter_summary %}
+    <div class="filters">
+        <div class="filters-title">Active filters</div>
+        <div class="filters-list">
+            {% for label, value in filter_summary %}
+            <span class="filter-item"><strong>{{ label }}:</strong> {{ value }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="count">{{ suppliers|length }} supplier{{ 's' if suppliers|length != 1 else '' }}</div>
+
+    {% if suppliers %}
+    <table>
+        <thead>
+            <tr>
+                <th style="width: {% if type_key == 'guides' %}30%{% else %}50%{% endif %};">Name</th>
+                {% if type_key == 'guides' %}
+                <th style="width: 14%;">Number</th>
+                <th style="width: 22%;">Languages</th>
+                {% endif %}
+                <th style="width: {% if type_key == 'guides' %}18%{% else %}30%{% endif %};">City</th>
+                <th style="width: {% if type_key == 'guides' %}16%{% else %}20%{% endif %};">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for supplier in suppliers %}
+            <tr>
+                <td>{{ supplier.name }}</td>
+                {% if type_key == 'guides' %}
+                <td>{{ supplier.phone or '-' }}</td>
+                <td>{{ supplier.languages or '-' }}</td>
+                {% endif %}
+                <td>{{ supplier.city or '-' }}</td>
+                <td class="{% if supplier.is_active %}status-active{% else %}status-suspended{% endif %}">
+                    {% if supplier.is_active %}Active{% else %}Suspended{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty">No suppliers found for {{ type_label }}</div>
+    {% endif %}
+</body>
+</html>

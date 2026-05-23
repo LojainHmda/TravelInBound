@@ -325,6 +325,10 @@ def create_app():
                             if is_pg
                             else 'BOOLEAN DEFAULT 0',
                         ),
+                        ('deleted_reason', 'TEXT'),
+                        ('parent_request_id', 'INTEGER'),
+                        ('link_type', 'VARCHAR(20)'),
+                        ('link_note', 'TEXT'),
                     ]:
                         if col_name not in req_columns:
                             _run_alter('inbound_request', col_name, col_type)

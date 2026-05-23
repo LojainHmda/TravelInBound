@@ -2,7 +2,7 @@
 
 /* Universal button override - apply to all buttons across the application */
 .btn, 
-button:not(.btn-reset):not(.close):not([data-dismiss]):not(.guide-itin-slot-main):not(.guide-itin-slot-remove):not(.transport-flight-chip), 
+button:not(.btn-reset):not(.close):not([data-dismiss]):not(.guide-itin-slot-main):not(.guide-itin-slot-remove):not(.transport-flight-chip):not(.supplier-status-toggle):not(.supplier-action-btn), 
 input[type="submit"], 
 input[type="button"],
 .btn-new-request,
@@ -34,7 +34,7 @@ input[type="button"],
 
 /* Hover states for all buttons */
 .btn:hover, 
-button:not(.btn-reset):not(.close):not([data-dismiss]):not(.guide-itin-slot-main):not(.guide-itin-slot-remove):not(.transport-flight-chip):hover, 
+button:not(.btn-reset):not(.close):not([data-dismiss]):not(.guide-itin-slot-main):not(.guide-itin-slot-remove):not(.transport-flight-chip):not(.supplier-status-toggle):not(.supplier-action-btn):hover, 
 input[type="submit"]:hover, 
 input[type="button"]:hover,
 .btn-new-request:hover,

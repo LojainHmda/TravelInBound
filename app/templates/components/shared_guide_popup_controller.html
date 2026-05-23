@@ -184,53 +184,15 @@
         return formData;
     }
 
-    function getSupplierDialogFinancialFields(prefix) {
-        const paymentTerms = (document.getElementById(`${prefix}_payment_terms`)?.value || '').trim();
-        const bankName = (document.getElementById(`${prefix}_bank_name`)?.value || '').trim();
-        const bankAccount = (document.getElementById(`${prefix}_bank_account`)?.value || '').trim();
-        const cliqAlias = (document.getElementById(`${prefix}_cliq_alias`)?.value || '').trim();
-        return {
-            payment_terms: paymentTerms,
-            bank_name: paymentTerms === 'Cliq' ? 'Cliq' : bankName,
-            bank_account: paymentTerms === 'Cliq' ? cliqAlias : bankAccount,
-            cliq_alias: cliqAlias
-        };
-    }
-
     function applyCliqAndContractToSupplierDialog(prefix) {
-        const paymentSelect = document.getElementById(`${prefix}_payment_terms`);
-        const bankNameInput = document.getElementById(`${prefix}_bank_name`);
-        const bankAccountInput = document.getElementById(`${prefix}_bank_account`);
+        if (typeof window.bindSupplierPaymentMethodFields === 'function') {
+            window.bindSupplierPaymentMethodFields(prefix);
+        }
         const taxInput = document.getElementById(`${prefix}_tax_number`);
-        if (!paymentSelect || !bankNameInput || !bankAccountInput || !taxInput) return;
-
-        if (!Array.from(paymentSelect.options).some(o => o.value === 'Cliq')) {
-            const opt = document.createElement('option');
-            opt.value = 'Cliq';
-            opt.textContent = 'Cliq';
-            const otherOption = Array.from(paymentSelect.options).find(o => o.value === 'Other');
-            if (otherOption) paymentSelect.insertBefore(opt, otherOption);
-            else paymentSelect.appendChild(opt);
-        }
-
-        const bankNameWrap = bankNameInput.closest('div');
-        const bankAccountWrap = bankAccountInput.closest('div');
+        const bankAccountInput = document.getElementById(`${prefix}_bank_account`);
+        if (!taxInput || !bankAccountInput) return;
         const taxWrap = taxInput.closest('div');
-        if (!bankNameWrap || !bankAccountWrap || !taxWrap) return;
-
-        let cliqWrap = document.getElementById(`${prefix}_cliq_wrap`);
-        if (!cliqWrap) {
-            cliqWrap = document.createElement('div');
-            cliqWrap.id = `${prefix}_cliq_wrap`;
-            cliqWrap.style.display = 'none';
-            const labelClass = 'block text-xs font-medium text-slate-700 mb-0.5';
-            const inputClass = bankAccountInput.className || 'w-full px-2 py-1 border border-slate-300 rounded text-xs';
-            cliqWrap.innerHTML = `
-                <label class="${labelClass}">cilq num/Alias</label>
-                <input type="text" id="${prefix}_cliq_alias" class="${inputClass}" placeholder="Enter cliq num or alias">
-            `;
-            bankAccountWrap.insertAdjacentElement('afterend', cliqWrap);
-        }
+        if (!taxWrap) return;
 
         const existingContractInput = document.getElementById(`${prefix}_contract_file`);
         let contractWrap = document.getElementById(`${prefix}_contract_wrap`);
@@ -244,15 +206,6 @@
             `;
             taxWrap.insertAdjacentElement('afterend', contractWrap);
         }
-
-        const sync = () => {
-            const isCliq = paymentSelect.value === 'Cliq';
-            bankNameWrap.style.display = isCliq ? 'none' : '';
-            bankAccountWrap.style.display = isCliq ? 'none' : '';
-            cliqWrap.style.display = isCliq ? '' : 'none';
-        };
-        paymentSelect.addEventListener('change', sync);
-        sync();
     }
 
     function initGuidePopupEnhancements() {
@@ -292,11 +245,15 @@
         document.getElementById('new_guide_city').value = '';
         document.getElementById('new_guide_country').value = 'Jordan';
         document.getElementById('new_guide_payment_terms').value = '';
+        document.getElementById('new_guide_payment_method').value = '';
         document.getElementById('new_guide_default_currency').value = 'USD';
         document.getElementById('new_guide_bank_name').value = '';
         document.getElementById('new_guide_bank_account').value = '';
         const guideCliq = document.getElementById('new_guide_cliq_alias');
         if (guideCliq) guideCliq.value = '';
+        if (typeof window.syncSupplierPaymentMethodFields === 'function') {
+            window.syncSupplierPaymentMethodFields('new_guide');
+        }
         const guideContract = document.getElementById('new_guide_contract_file');
         if (guideContract) guideContract.value = '';
         document.getElementById('new_guide_tax_number').value = '';
@@ -331,6 +288,7 @@
             city: document.getElementById('new_guide_city').value.trim(),
             country: document.getElementById('new_guide_country').value.trim(),
             payment_terms: financial.payment_terms,
+            payment_method: financial.payment_method || '',
             default_currency: document.getElementById('new_guide_default_currency').value.trim() || 'USD',
             bank_name: financial.bank_name,
             bank_account: financial.bank_account,

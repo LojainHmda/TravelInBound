@@ -129,17 +129,35 @@
                     <label class="block text-xs font-medium text-slate-700 mb-0.5">Payment Terms</label>
                     <select id="new_hotel_payment_terms" name="payment_terms">
                         <option value="">Select payment terms...</option>
-                        <option value="Cash before arrival">Cash before arrival</option>
                         <option value="Credit">Credit</option>
-                        <option value="Cliq">Cliq</option>
                         <option value="NET 15">NET 15</option>
                         <option value="NET 30">NET 30</option>
                         <option value="NET 45">NET 45</option>
                         <option value="NET 60">NET 60</option>
                         <option value="Prepaid">Prepaid</option>
-                        <option value="Cash on Delivery">Cash on Delivery</option>
                         <option value="Other">Other</option>
                     </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">Payment Method</label>
+                    <select id="new_hotel_payment_method" name="payment_method">
+                        <option value="">Select payment method...</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Cliq">Cliq</option>
+                        <option value="Bank">Bank</option>
+                    </select>
+                </div>
+                <div id="bankNameFieldWrap" style="display:none;">
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">Bank Name</label>
+                    <input type="text" id="new_hotel_bank_name" name="bank_name" placeholder="Bank name">
+                </div>
+                <div id="bankAccountFieldWrap" style="display:none;">
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">Bank Account</label>
+                    <input type="text" id="new_hotel_bank_account" name="bank_account" placeholder="Account number">
+                </div>
+                <div id="cliqFieldWrap" style="display:none;">
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">Cliq num/Alias</label>
+                    <input type="text" id="new_hotel_cliq_alias" name="cliq_alias" placeholder="Enter cliq num or alias">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-700 mb-0.5">Default Currency</label>
@@ -153,18 +171,6 @@
                 <div class="sm:col-span-2">
                     <label class="block text-xs font-medium text-slate-700 mb-0.5">{{ address_label }}</label>
                     <input type="text" id="new_hotel_address" name="address" placeholder="Street address">
-                </div>
-                <div id="bankNameFieldWrap">
-                    <label class="block text-xs font-medium text-slate-700 mb-0.5">Bank Name</label>
-                    <input type="text" id="new_hotel_bank_name" name="bank_name" placeholder="Bank name">
-                </div>
-                <div id="bankAccountFieldWrap">
-                    <label class="block text-xs font-medium text-slate-700 mb-0.5">Bank Account</label>
-                    <input type="text" id="new_hotel_bank_account" name="bank_account" placeholder="Account number">
-                </div>
-                <div id="cliqFieldWrap" style="display:none;">
-                    <label class="block text-xs font-medium text-slate-700 mb-0.5">cilq num/Alias</label>
-                    <input type="text" id="new_hotel_cliq_alias" name="cliq_alias" placeholder="Enter cliq num or alias">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-700 mb-0.5">Tax Number</label>

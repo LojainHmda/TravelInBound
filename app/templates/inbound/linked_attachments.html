@@ -1,0 +1,306 @@
+{% extends 'base.html' %}
+
+{% block title %}Linked Attachments{% endblock %}
+
+{% block content %}
+<style>
+body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; }
+.hub-container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.page-title { font-size: 2rem; font-weight: 700; color: #1a1a1a; margin: 0; }
+.page-subtitle { color: #64748b; font-size: 0.92rem; margin: 0.35rem 0 0; }
+.top-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.panel { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; margin-bottom: 1.25rem; }
+.panel-head { padding: 0.9rem 1rem; border-bottom: 1px solid #e5e7eb; background: #f8fafc; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.panel-head h2 { margin: 0; font-size: 1rem; font-weight: 700; color: #334155; }
+.search-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.search-row input { min-width: 260px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.5rem 0.75rem; }
+.linked-table { width: 100%; border-collapse: collapse; }
+.linked-table th, .linked-table td { padding: 10px 12px; border-bottom: 1px solid #eef2f7; text-align: left; vertical-align: top; font-size: 0.9rem; }
+.linked-table thead th { background: #f8fafc; color: #475569; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.linked-table tbody tr:hover { background: #fafafa; }
+.main-file-label { font-size: 0.78rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; }
+.main-file-link { font-weight: 700; color: #1d4ed8; text-decoration: none; }
+.main-file-link:hover { text-decoration: underline; }
+.row-actions { display: flex; gap: 0.35rem; }
+.row-actions a { font-size: 0.78rem; padding: 0.25rem 0.55rem; border-radius: 6px; border: 1px solid #cbd5e1; color: #334155; text-decoration: none; }
+.row-actions a:hover { background: #eff6ff; border-color: #93c5fd; color: #1d4ed8; }
+.empty-state { padding: 2.5rem 1rem; text-align: center; color: #64748b; }
+.main-search-results { border: 1px solid #e2e8f0; border-radius: 8px; max-height: 220px; overflow-y: auto; display: none; margin-top: 0.5rem; }
+.main-search-item { padding: 0.65rem 0.75rem; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
+.main-search-item:hover, .main-search-item.selected { background: #eff6ff; }
+.selected-main { display: none; background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 0.65rem 0.75rem; font-size: 0.85rem; margin-top: 0.5rem; }
+.selected-main.visible { display: block; }
+</style>
+
+<div class="hub-container">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title"><i class="fas fa-link me-2"></i>Linked Attachments</h1>
+            <p class="page-subtitle">Attached files linked to main records. Original main files are never modified.</p>
+        </div>
+        <div class="top-actions">
+            <a href="{{ url_for('main.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-1"></i> Back to Hub</a>
+            <button type="button" class="btn btn-primary" id="openLinkedFileModalBtn">
+                <i class="fas fa-plus me-1"></i> Add linked file
+            </button>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <h2>Attached files ({{ total_count }})</h2>
+            <form method="GET" action="{{ url_for('inbound.linked_attachments_page') }}" class="search-row">
+                <input type="text" name="q" value="{{ query or '' }}" placeholder="Search file number, main file, contact...">
+                <button type="submit" class="btn btn-primary">Search</button>
+                {% if query %}
+                <a href="{{ url_for('inbound.linked_attachments_page') }}" class="btn btn-secondary">Clear</a>
+                {% endif %}
+            </form>
+        </div>
+
+        {% if groups %}
+        <table class="linked-table">
+            <thead>
+                <tr>
+                    <th>Main file</th>
+                    <th>Linked file</th>
+                    <th>Status</th>
+                    <th>Contact</th>
+                    <th>Note</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for group in groups %}
+                    {% set parent = group.parent %}
+                    {% set parent_num = parent.document_sequence or parent.request_number %}
+                    {% for child in group.attachments %}
+                    <tr>
+                        {% if loop.first %}
+                        <td rowspan="{{ group.attachments|length }}">
+                            <div class="main-file-label">Main file</div>
+                            <a class="main-file-link" href="{{ url_for('inbound.view_request', id=parent.id, mode='view') }}">{{ parent_num }}</a>
+                        </td>
+                        {% endif %}
+                        <td><strong>{{ child.request_number }}</strong></td>
+                        <td>{{ child.status.replace('_', ' ').title() }}</td>
+                        <td>{{ child.contact_name or '-' }}</td>
+                        <td>{{ child.link_note or '-' }}</td>
+                        <td>
+                            <div class="row-actions">
+                                <a href="{{ url_for('inbound.view_request', id=child.id, mode='view') }}">View</a>
+                                <a href="{{ url_for('inbound.view_request', id=child.id, mode='edit') }}">Edit</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <p>No attached files found{% if query %} for "{{ query }}"{% endif %}.</p>
+            <button type="button" class="btn btn-primary mt-2" id="openLinkedFileModalBtnEmpty">
+                <i class="fas fa-plus me-1"></i> Add linked file
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Select main file modal -->
+<div class="modal fade" id="linkedFileModal" tabindex="-1" aria-labelledby="linkedFileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%); color: white;">
+                <h5 class="modal-title" id="linkedFileModalLabel">
+                    <i class="fas fa-link me-1"></i> Link to main file
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3" style="font-size: 0.92rem;">
+                    Select the main file this new request will be linked to. The main file will not be changed.
+                </p>
+                <div class="mb-3">
+                    <label for="linkedMainSearch" class="form-label fw-semibold">Main file <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="linkedMainSearch" placeholder="Search request number, contact, or agent..." autocomplete="off">
+                    <div id="linkedSelectedMain" class="selected-main"></div>
+                    <div id="linkedMainResults" class="main-search-results"></div>
+                </div>
+                <div class="mb-3">
+                    <label for="link_note" class="form-label fw-semibold">Note <span class="text-muted fw-normal">(optional)</span></label>
+                    <textarea class="form-control" id="link_note" rows="2" placeholder="Optional note about this linked request"></textarea>
+                </div>
+                <div id="linkedFileModalError" class="text-danger small mt-2" style="display:none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmLinkedFileBtn" disabled>
+                    <i class="fas fa-arrow-right me-1"></i> Open new linked request
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    var modalEl = document.getElementById('linkedFileModal');
+    if (!modalEl) return;
+
+    var modal = new bootstrap.Modal(modalEl);
+    var selectedParentId = null;
+    var timer = null;
+    var searchInput = document.getElementById('linkedMainSearch');
+    var resultsEl = document.getElementById('linkedMainResults');
+    var selectedEl = document.getElementById('linkedSelectedMain');
+    var confirmBtn = document.getElementById('confirmLinkedFileBtn');
+    var errorEl = document.getElementById('linkedFileModalError');
+    var linkNoteEl = document.getElementById('link_note');
+
+    function setError(msg) {
+        if (!errorEl) return;
+        if (msg) {
+            errorEl.textContent = msg;
+            errorEl.style.display = 'block';
+        } else {
+            errorEl.textContent = '';
+            errorEl.style.display = 'none';
+        }
+    }
+
+    function updateConfirmState() {
+        if (confirmBtn) confirmBtn.disabled = !selectedParentId;
+    }
+
+    function resetModal() {
+        selectedParentId = null;
+        if (searchInput) searchInput.value = '';
+        if (linkNoteEl) linkNoteEl.value = '';
+        if (selectedEl) { selectedEl.classList.remove('visible'); selectedEl.innerHTML = ''; }
+        if (resultsEl) { resultsEl.innerHTML = ''; resultsEl.style.display = 'none'; }
+        setError('');
+        updateConfirmState();
+    }
+
+    function renderSelected(item) {
+        if (!item) {
+            selectedParentId = null;
+            if (selectedEl) { selectedEl.classList.remove('visible'); selectedEl.innerHTML = ''; }
+            updateConfirmState();
+            return;
+        }
+        selectedParentId = item.id;
+        if (selectedEl) {
+            selectedEl.classList.add('visible');
+            selectedEl.innerHTML = '<strong>Selected:</strong> ' + (item.document_sequence || item.request_number) +
+                ' — ' + (item.contact_name || 'TBA') +
+                ' <button type="button" style="float:right;border:none;background:transparent;color:#64748b;cursor:pointer;" id="clearMainPick">Change</button>';
+            var clearBtn = document.getElementById('clearMainPick');
+            if (clearBtn) clearBtn.addEventListener('click', function () {
+                renderSelected(null);
+                if (searchInput) { searchInput.value = ''; searchInput.focus(); }
+                searchMainFiles('');
+            });
+        }
+        if (resultsEl) resultsEl.style.display = 'none';
+        if (searchInput) searchInput.value = item.document_sequence || item.request_number || '';
+        updateConfirmState();
+    }
+
+    function searchMainFiles(q) {
+        fetch('/inbound/api/main-files-for-link?q=' + encodeURIComponent(q || ''), {
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (items) {
+            if (!resultsEl) return;
+            if (!items || !items.length) {
+                resultsEl.innerHTML = '<div style="padding:0.75rem;color:#64748b;">No main files found.</div>';
+                resultsEl.style.display = 'block';
+                return;
+            }
+            resultsEl.innerHTML = items.map(function (item) {
+                var num = item.document_sequence || item.request_number;
+                return '<div class="main-search-item" data-id="' + item.id + '"><strong>' + num + '</strong><br><span style="font-size:0.78rem;color:#64748b;">' +
+                    (item.contact_name || 'TBA') + (item.agent ? ' · ' + item.agent : '') + '</span></div>';
+            }).join('');
+            resultsEl.style.display = 'block';
+            resultsEl.querySelectorAll('.main-search-item').forEach(function (el) {
+                el.addEventListener('click', function () {
+                    var id = parseInt(el.getAttribute('data-id'), 10);
+                    var picked = items.find(function (x) { return x.id === id; });
+                    renderSelected(picked || null);
+                });
+            });
+        });
+    }
+
+    function openModal() {
+        resetModal();
+        modal.show();
+        setTimeout(function () {
+            if (searchInput) searchInput.focus();
+            searchMainFiles('');
+        }, 200);
+    }
+
+    ['openLinkedFileModalBtn', 'openLinkedFileModalBtnEmpty'].forEach(function (id) {
+        var btn = document.getElementById(id);
+        if (btn) btn.addEventListener('click', openModal);
+    });
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            clearTimeout(timer);
+            timer = setTimeout(function () {
+                if (selectedParentId) renderSelected(null);
+                searchMainFiles(searchInput.value.trim());
+            }, 250);
+        });
+        searchInput.addEventListener('focus', function () {
+            if (!selectedParentId) searchMainFiles(searchInput.value.trim());
+        });
+    }
+
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', function () {
+            if (!selectedParentId) {
+                setError('Please select a main file first.');
+                return;
+            }
+            setError('');
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Creating...';
+
+            fetch('/inbound/api/create-linked-request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({
+                    parent_id: selectedParentId,
+                    link_note: linkNoteEl ? linkNoteEl.value.trim() : ''
+                })
+            })
+            .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+            .then(function (result) {
+                if (!result.ok || !result.data.success) {
+                    throw new Error((result.data && result.data.message) || 'Could not create linked file.');
+                }
+                window.location.href = result.data.redirect_url;
+            })
+            .catch(function (err) {
+                setError(err.message || 'Could not create linked file.');
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<i class="fas fa-arrow-right me-1"></i> Open new linked request';
+            });
+        });
+    }
+
+    modalEl.addEventListener('hidden.bs.modal', resetModal);
+})();
+</script>
+{% endblock %}

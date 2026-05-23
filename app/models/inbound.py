@@ -60,6 +60,11 @@ class InboundRequest(db.Model):
     status = db.Column(db.String(20), default=STATUS_REQUEST)
     # When True, hidden from main inbound lists; shown under Hub "Deleted" until restored or invoiced.
     pending_invoice_queue = db.Column(db.Boolean, default=False, nullable=False)
+    deleted_reason = db.Column(db.Text, nullable=True)
+    # Linked attachment: child record points to an immutable main file (parent).
+    parent_request_id = db.Column(db.Integer, db.ForeignKey('inbound_request.id'), nullable=True, index=True)
+    link_type = db.Column(db.String(20), nullable=True)  # FILE, REQUEST, EXTENSION
+    link_note = db.Column(db.Text, nullable=True)
     is_saved = db.Column(db.Boolean, default=False)  # True when user explicitly saves with final sequence number
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=True)  # Link to customer
@@ -87,6 +92,12 @@ class InboundRequest(db.Model):
     quotations = db.relationship('InboundQuotation', backref='request', lazy=True, cascade="all, delete-orphan")
     documents = db.relationship('InboundDocument', backref='request', lazy=True, cascade="all, delete-orphan")
     booking = db.relationship('Booking', backref='inbound_request', lazy=True)
+    parent_request = db.relationship(
+        'InboundRequest',
+        remote_side='InboundRequest.id',
+        foreign_keys=[parent_request_id],
+        backref=db.backref('linked_requests', lazy='dynamic'),
+    )
 
     def __repr__(self):
         return f'<InboundRequest {self.request_number}>'
@@ -104,6 +115,29 @@ class InboundRequest(db.Model):
     def agent(self, value):
         """Allow setting agent (for forms); stored in _agent since no DB column"""
         self.__dict__['_agent'] = value
+
+    @property
+    def is_linked_child(self):
+        return self.parent_request_id is not None
+
+    @property
+    def link_type_label(self):
+        if self.parent_request_id:
+            return 'Linked request'
+        return ''
+
+    @classmethod
+    def generate_linked_request_number(cls, parent_request):
+        """Generate child request number as {parent_number}-1, -2, ..."""
+        base = (parent_request.request_number or str(parent_request.id)).strip()
+        if base.startswith('IN-NEW-'):
+            base = str(parent_request.id)
+        suffix = cls.query.filter_by(parent_request_id=parent_request.id).count() + 1
+        candidate = f'{base}-{suffix}'
+        while cls.query.filter_by(request_number=candidate).first():
+            suffix += 1
+            candidate = f'{base}-{suffix}'
+        return candidate
 
     @classmethod
     def generate_request_number(cls, from_date=None):

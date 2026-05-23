@@ -597,6 +597,36 @@ input[type="date"]::-webkit-calendar-table-body {
 <div class="tw-container">
     <!-- Header Wrapper for Alignment -->
     <div class="max-w-6xl mx-auto">
+        {% if request.parent_request_id and parent_request %}
+        <div class="mb-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            <div class="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                    <strong><i class="fas fa-link mr-1"></i>Linked to request</strong>
+                    <a href="{{ url_for('inbound.view_request', id=parent_request.id, mode='view') }}" class="font-semibold underline">
+                        {{ parent_request.document_sequence or parent_request.request_number }}
+                    </a>.
+                    The original file is not modified through this record.
+                    {% if request.link_note %}
+                    <div class="mt-1 text-blue-800"><span class="font-medium">Note:</span> {{ request.link_note }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% if linked_children %}
+        <div class="mb-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+            <div class="font-semibold mb-2"><i class="fas fa-paperclip mr-1"></i>Linked attachments ({{ linked_children|length }})</div>
+            <ul class="space-y-1">
+                {% for child in linked_children %}
+                <li>
+                    <a href="{{ url_for('inbound.view_request', id=child.id, mode='view') }}" class="text-blue-700 underline font-medium">
+                        {{ child.document_sequence or child.request_number }}
+                    </a>{% if child.link_note %}: {{ child.link_note }}{% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
         <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
             <div class="flex items-center gap-3">
                 <div>
@@ -2445,21 +2475,9 @@ input[type="date"]::-webkit-calendar-table-body {
                         <label class="block text-xs font-medium text-slate-700 mb-0.5">Country</label>
                         <input type="text" id="new_arrival_supplier_country" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-green-500 focus:border-green-500" placeholder="Country" value="Jordan">
                     </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Payment Terms</label>
-                        <select id="new_arrival_supplier_payment_terms" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-green-500 focus:border-green-500">
-                            <option value="">Select payment terms...</option>
-                            <option value="Cash before arrival">Cash before arrival</option>
-                            <option value="Credit">Credit</option>
-                            <option value="NET 15">NET 15</option>
-                            <option value="NET 30">NET 30</option>
-                            <option value="NET 45">NET 45</option>
-                            <option value="NET 60">NET 60</option>
-                            <option value="Prepaid">Prepaid</option>
-                            <option value="Cash on Delivery">Cash on Delivery</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
+                    {% set prefix = 'new_arrival_supplier' %}
+                    {% set field_class = 'w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-green-500 focus:border-green-500' %}
+                    {% include 'components/shared_supplier_payment_fields.html' %}
                     <div>
                         <label class="block text-xs font-medium text-slate-700 mb-0.5">Default Currency</label>
                         <select id="new_arrival_supplier_default_currency" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-green-500 focus:border-green-500">
@@ -2472,14 +2490,6 @@ input[type="date"]::-webkit-calendar-table-body {
                     <div class="sm:col-span-2">
                         <label class="block text-xs font-medium text-slate-700 mb-0.5">Address</label>
                         <textarea id="new_arrival_supplier_address" rows="1" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-green-500 focus:border-green-500 resize-none" placeholder="Street address"></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Bank Name</label>
-                        <input type="text" id="new_arrival_supplier_bank_name" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-green-500 focus:border-green-500" placeholder="Bank name">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Bank Account</label>
-                        <input type="text" id="new_arrival_supplier_bank_account" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-green-500 focus:border-green-500" placeholder="Account number">
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-700 mb-0.5">Tax Number</label>
@@ -2549,21 +2559,9 @@ input[type="date"]::-webkit-calendar-table-body {
                         <label class="block text-xs font-medium text-slate-700 mb-0.5">Country</label>
                         <input type="text" id="new_departure_supplier_country" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-green-500 focus:border-green-500" placeholder="Country" value="Jordan">
                     </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Payment Terms</label>
-                        <select id="new_departure_supplier_payment_terms" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-green-500 focus:border-green-500">
-                            <option value="">Select payment terms...</option>
-                            <option value="Cash before arrival">Cash before arrival</option>
-                            <option value="Credit">Credit</option>
-                            <option value="NET 15">NET 15</option>
-                            <option value="NET 30">NET 30</option>
-                            <option value="NET 45">NET 45</option>
-                            <option value="NET 60">NET 60</option>
-                            <option value="Prepaid">Prepaid</option>
-                            <option value="Cash on Delivery">Cash on Delivery</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
+                    {% set prefix = 'new_departure_supplier' %}
+                    {% set field_class = 'w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-green-500 focus:border-green-500' %}
+                    {% include 'components/shared_supplier_payment_fields.html' %}
                     <div>
                         <label class="block text-xs font-medium text-slate-700 mb-0.5">Default Currency</label>
                         <select id="new_departure_supplier_default_currency" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-green-500 focus:border-green-500">
@@ -2576,14 +2574,6 @@ input[type="date"]::-webkit-calendar-table-body {
                     <div class="sm:col-span-2">
                         <label class="block text-xs font-medium text-slate-700 mb-0.5">Address</label>
                         <textarea id="new_departure_supplier_address" rows="1" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-green-500 focus:border-green-500 resize-none" placeholder="Street address"></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Bank Name</label>
-                        <input type="text" id="new_departure_supplier_bank_name" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-green-500 focus:border-green-500" placeholder="Bank name">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Bank Account</label>
-                        <input type="text" id="new_departure_supplier_bank_account" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-green-500 focus:border-green-500" placeholder="Account number">
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-700 mb-0.5">Tax Number</label>
@@ -11680,72 +11670,11 @@ function buildSupplierFormData(payload, fileInputId) {
 }
 
 function getSupplierDialogFinancialFields(prefix) {
+    if (typeof window.getSupplierPaymentFinancialFields === 'function') {
+        return window.getSupplierPaymentFinancialFields(prefix);
+    }
     const paymentTerms = (document.getElementById(`${prefix}_payment_terms`)?.value || '').trim();
-    const bankName = (document.getElementById(`${prefix}_bank_name`)?.value || '').trim();
-    const bankAccount = (document.getElementById(`${prefix}_bank_account`)?.value || '').trim();
-    const cliqAlias = (document.getElementById(`${prefix}_cliq_alias`)?.value || '').trim();
-    return {
-        payment_terms: paymentTerms,
-        bank_name: paymentTerms === 'Cliq' ? 'Cliq' : bankName,
-        bank_account: paymentTerms === 'Cliq' ? cliqAlias : bankAccount,
-        cliq_alias: cliqAlias
-    };
-}
-
-function applyCliqAndContractToSupplierDialog(prefix) {
-    const paymentSelect = document.getElementById(`${prefix}_payment_terms`);
-    const bankNameInput = document.getElementById(`${prefix}_bank_name`);
-    const bankAccountInput = document.getElementById(`${prefix}_bank_account`);
-    const taxInput = document.getElementById(`${prefix}_tax_number`);
-    if (!paymentSelect || !bankNameInput || !bankAccountInput || !taxInput) return;
-
-    if (!Array.from(paymentSelect.options).some(o => o.value === 'Cliq')) {
-        const opt = document.createElement('option');
-        opt.value = 'Cliq';
-        opt.textContent = 'Cliq';
-        paymentSelect.appendChild(opt);
-    }
-
-    const bankNameWrap = bankNameInput.closest('div');
-    const bankAccountWrap = bankAccountInput.closest('div');
-    const taxWrap = taxInput.closest('div');
-    if (!bankNameWrap || !bankAccountWrap || !taxWrap) return;
-
-    let cliqWrap = document.getElementById(`${prefix}_cliq_wrap`);
-    if (!cliqWrap) {
-        cliqWrap = document.createElement('div');
-        cliqWrap.id = `${prefix}_cliq_wrap`;
-        cliqWrap.style.display = 'none';
-        const labelClass = 'block text-xs font-medium text-slate-700 mb-0.5';
-        const inputClass = bankAccountInput.className || 'w-full px-2 py-1 border border-slate-300 rounded text-xs';
-        cliqWrap.innerHTML = `
-            <label class="${labelClass}">cilq num/Alias</label>
-            <input type="text" id="${prefix}_cliq_alias" class="${inputClass}" placeholder="Enter cliq num or alias">
-        `;
-        bankAccountWrap.insertAdjacentElement('afterend', cliqWrap);
-    }
-
-    const existingContractInput = document.getElementById(`${prefix}_contract_file`);
-    let contractWrap = document.getElementById(`${prefix}_contract_wrap`);
-    if (!existingContractInput && !contractWrap) {
-        contractWrap = document.createElement('div');
-        contractWrap.id = `${prefix}_contract_wrap`;
-        const labelClass = 'block text-xs font-medium text-slate-700 mb-0.5';
-        contractWrap.innerHTML = `
-            <label class="${labelClass}">Contract Attachment</label>
-            <input type="file" id="${prefix}_contract_file" class="${bankAccountInput.className || ''}" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
-        `;
-        taxWrap.insertAdjacentElement('afterend', contractWrap);
-    }
-
-    const sync = () => {
-        const isCliq = paymentSelect.value === 'Cliq';
-        bankNameWrap.style.display = isCliq ? 'none' : '';
-        bankAccountWrap.style.display = isCliq ? 'none' : '';
-        cliqWrap.style.display = isCliq ? '' : 'none';
-    };
-    paymentSelect.addEventListener('change', sync);
-    sync();
+    return { payment_terms: paymentTerms, payment_method: '', bank_name: '', bank_account: '', cliq_alias: '' };
 }
 
 function initSupplierDialogEnhancements() {
@@ -11756,7 +11685,11 @@ function initSupplierDialogEnhancements() {
         'new_transport',
         'new_guide',
         'new_restaurant'
-    ].forEach(applyCliqAndContractToSupplierDialog);
+    ].forEach(prefix => {
+        if (typeof window.bindSupplierPaymentMethodFields === 'function') {
+            window.bindSupplierPaymentMethodFields(prefix);
+        }
+    });
 }
 setTimeout(initSupplierDialogEnhancements, 0);
 
@@ -11863,7 +11796,9 @@ function openAddHotelModal() {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     modal.style.display = 'flex';
-    initSupplierDialogEnhancements();
+    if (typeof window.syncAccommodationPaymentMethodFields === 'function') {
+        window.syncAccommodationPaymentMethodFields();
+    }
     document.getElementById('new_hotel_name').focus();
 }
 function closeAddHotelModal() {
@@ -11880,12 +11815,16 @@ function closeAddHotelModal() {
     document.getElementById('new_hotel_phone').value = '';
     document.getElementById('new_hotel_website').value = '';
     document.getElementById('new_hotel_payment_terms').value = '';
+    document.getElementById('new_hotel_payment_method').value = '';
     document.getElementById('new_hotel_default_currency').value = 'USD';
     document.getElementById('new_hotel_address').value = '';
     document.getElementById('new_hotel_bank_name').value = '';
     document.getElementById('new_hotel_bank_account').value = '';
     const hotelCliq = document.getElementById('new_hotel_cliq_alias');
     if (hotelCliq) hotelCliq.value = '';
+    if (typeof window.syncAccommodationPaymentMethodFields === 'function') {
+        window.syncAccommodationPaymentMethodFields();
+    }
     const hotelContract = document.getElementById('new_hotel_contract_file');
     if (hotelContract) hotelContract.value = '';
     document.getElementById('new_hotel_tax_number').value = '';
@@ -11918,6 +11857,7 @@ function saveNewHotel() {
         phone: document.getElementById('new_hotel_phone').value.trim(),
         website: document.getElementById('new_hotel_website').value.trim(),
         payment_terms: financial.payment_terms,
+        payment_method: financial.payment_method || '',
         default_currency: document.getElementById('new_hotel_default_currency').value.trim() || 'USD',
         address: document.getElementById('new_hotel_address').value.trim(),
         bank_name: financial.bank_name,
@@ -12063,12 +12003,16 @@ function closeAddArrivalSupplierModal() {
     document.getElementById('new_arrival_supplier_city').value = '';
     document.getElementById('new_arrival_supplier_country').value = 'Jordan';
     document.getElementById('new_arrival_supplier_payment_terms').value = '';
+    document.getElementById('new_arrival_supplier_payment_method').value = '';
     document.getElementById('new_arrival_supplier_default_currency').value = 'USD';
     document.getElementById('new_arrival_supplier_address').value = '';
     document.getElementById('new_arrival_supplier_bank_name').value = '';
     document.getElementById('new_arrival_supplier_bank_account').value = '';
     const arrCliq = document.getElementById('new_arrival_supplier_cliq_alias');
     if (arrCliq) arrCliq.value = '';
+    if (typeof window.syncSupplierPaymentMethodFields === 'function') {
+        window.syncSupplierPaymentMethodFields('new_arrival_supplier');
+    }
     const arrContract = document.getElementById('new_arrival_supplier_contract_file');
     if (arrContract) arrContract.value = '';
     document.getElementById('new_arrival_supplier_tax_number').value = '';
@@ -12092,6 +12036,7 @@ function saveNewArrivalSupplier() {
         city: document.getElementById('new_arrival_supplier_city').value.trim(),
         country: document.getElementById('new_arrival_supplier_country').value.trim(),
         payment_terms: financial.payment_terms,
+        payment_method: financial.payment_method || '',
         default_currency: document.getElementById('new_arrival_supplier_default_currency').value.trim() || 'USD',
         address: document.getElementById('new_arrival_supplier_address').value.trim(),
         bank_name: financial.bank_name,
@@ -12166,12 +12111,16 @@ function closeAddDepartureSupplierModal() {
     document.getElementById('new_departure_supplier_city').value = '';
     document.getElementById('new_departure_supplier_country').value = 'Jordan';
     document.getElementById('new_departure_supplier_payment_terms').value = '';
+    document.getElementById('new_departure_supplier_payment_method').value = '';
     document.getElementById('new_departure_supplier_default_currency').value = 'USD';
     document.getElementById('new_departure_supplier_address').value = '';
     document.getElementById('new_departure_supplier_bank_name').value = '';
     document.getElementById('new_departure_supplier_bank_account').value = '';
     const depCliq = document.getElementById('new_departure_supplier_cliq_alias');
     if (depCliq) depCliq.value = '';
+    if (typeof window.syncSupplierPaymentMethodFields === 'function') {
+        window.syncSupplierPaymentMethodFields('new_departure_supplier');
+    }
     const depContract = document.getElementById('new_departure_supplier_contract_file');
     if (depContract) depContract.value = '';
     document.getElementById('new_departure_supplier_tax_number').value = '';
@@ -12195,6 +12144,7 @@ function saveNewDepartureSupplier() {
         city: document.getElementById('new_departure_supplier_city').value.trim(),
         country: document.getElementById('new_departure_supplier_country').value.trim(),
         payment_terms: financial.payment_terms,
+        payment_method: financial.payment_method || '',
         default_currency: document.getElementById('new_departure_supplier_default_currency').value.trim() || 'USD',
         address: document.getElementById('new_departure_supplier_address').value.trim(),
         bank_name: financial.bank_name,

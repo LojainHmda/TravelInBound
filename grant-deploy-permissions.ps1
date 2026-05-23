@@ -5,11 +5,23 @@ $gcloud = "C:\Users\lojai\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin\gc
 $project = "kartacagenai"
 $user = "lojainhmda@gmail.com"
 
-Write-Host "Adding Service Usage Consumer to $user..." -ForegroundColor Cyan
-& $gcloud projects add-iam-policy-binding $project --member="user:$user" --role="roles/serviceusage.serviceUsageConsumer" --quiet
+$roles = @(
+    "roles/serviceusage.serviceUsageConsumer",
+    "roles/cloudbuild.builds.editor",
+    "roles/storage.admin",
+    "roles/run.admin",
+    "roles/iam.serviceAccountUser"
+)
 
-if ($LASTEXITCODE -eq 0) {
-    Write-Host "[OK] Done. Now run: .\install-and-deploy.ps1" -ForegroundColor Green
+$failed = $false
+foreach ($role in $roles) {
+    Write-Host "Adding $role to $user..." -ForegroundColor Cyan
+    & $gcloud projects add-iam-policy-binding $project --member="user:$user" --role=$role --quiet
+    if ($LASTEXITCODE -ne 0) { $failed = $true }
+}
+
+if (-not $failed) {
+    Write-Host "[OK] Done. Deploy with: .\deploy-cloudbuild.ps1 -ProjectId kartacagenai" -ForegroundColor Green
 } else {
-    Write-Host "Failed. Ensure you're logged in as project Owner." -ForegroundColor Red
+    Write-Host "Failed. Ensure you're logged in as project Owner on kartacagenai." -ForegroundColor Red
 }

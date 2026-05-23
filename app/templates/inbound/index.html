@@ -546,6 +546,38 @@ button.btn-print {
     transform: translateY(-2px);
 }
 
+.btn-delete-reason {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    border: 2px solid #e9ecef;
+    background: white;
+    color: #6f42c1;
+    cursor: pointer;
+}
+
+.btn-delete-reason:hover {
+    background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+    color: white;
+    border-color: #6f42c1;
+    transform: translateY(-2px);
+}
+
+.btn-delete-reason.is-empty {
+    color: #adb5bd;
+}
+
+.btn-delete-reason.is-empty:hover {
+    background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+    color: white;
+    border-color: #6f42c1;
+    transform: translateY(-2px);
+}
+
 /* Empty State */
 .empty-state {
     text-align: center;
@@ -829,7 +861,15 @@ button.btn-print {
                                onclick="printInPlace('{{ url_for('inbound.view_request', id=inb.id) }}?mode=view&print_tour_file=1')">
                                 <i class="fas fa-file-lines"></i>
                             </button>
-                            {% if not is_deleted_row %}
+                            {% if is_deleted_queue|default(false) or (all_files_view|default(false) and inb.pending_invoice_queue) %}
+                            <button type="button"
+                                    class="btn-delete-reason{% if not inb.deleted_reason %} is-empty{% endif %}"
+                                    title="{% if inb.deleted_reason %}View deletion reason{% else %}No deletion reason recorded{% endif %}"
+                                    data-request-number="{{ inb.request_number|e }}"
+                                    data-delete-reason="{{ (inb.deleted_reason or '')|e }}">
+                                <i class="fas fa-comment-dots"></i>
+                            </button>
+                            {% elif not is_deleted_row %}
                             <a href="{{ url_for('inbound.view_request', id=inb.id) }}?mode=edit" 
                                class="btn-edit" title="Edit">
                                 <i class="fas fa-edit"></i>
@@ -839,15 +879,9 @@ button.btn-print {
                                 <i class="fas fa-arrow-right"></i>
                             </button>
                             {% endif %}
-                            {% if is_deleted_queue|default(false) or (all_files_view|default(false) and inb.pending_invoice_queue) %}
-                            <a href="{{ url_for('inbound.restore_from_invoice_queue', id=inb.id) }}" class="btn-restore" title="Restore to main list">
-                                <i class="fas fa-undo"></i>
-                            </a>
-                            {% else %}
                             <button type="button" class="btn-delete" title="Move request to Deleted queue" onclick="confirmDelete({{ inb.id }}, '{{ inb.request_number }}')">
                                 <i class="fas fa-trash"></i>
                             </button>
-                            {% endif %}
                             {% endif %}
                         </div>
                     </td>
@@ -913,6 +947,53 @@ button.btn-print {
         <div id="serviceModalContent">
           <!-- Content will be populated by JavaScript -->
         </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Reason Modal -->
+<div class="modal fade" id="deleteReasonModal" tabindex="-1" aria-labelledby="deleteReasonModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white;">
+        <h5 class="modal-title" id="deleteReasonModalLabel">
+          <i class="fas fa-trash"></i> Move to Deleted
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="deleteReasonModalText" class="mb-3 text-muted" style="font-size: 0.95rem;"></p>
+        <label for="deleteReasonInput" class="form-label fw-semibold">Reason for deletion <span class="text-danger">*</span></label>
+        <textarea id="deleteReasonInput" class="form-control" rows="4" placeholder="Enter why this request is being moved to Deleted..." required></textarea>
+        <div id="deleteReasonError" class="text-danger small mt-2" style="display:none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteReasonBtn">
+          <i class="fas fa-trash me-1"></i> Move to Deleted
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View Delete Reason Modal -->
+<div class="modal fade" id="viewDeleteReasonModal" tabindex="-1" aria-labelledby="viewDeleteReasonModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" style="background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%); color: white;">
+        <h5 class="modal-title" id="viewDeleteReasonModalLabel">
+          <i class="fas fa-comment-dots"></i> Deletion Reason
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p id="viewDeleteReasonRequest" class="fw-semibold mb-2"></p>
+        <div id="viewDeleteReasonContent" class="border rounded p-3 bg-light" style="white-space: pre-wrap; min-height: 80px;"></div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -1201,19 +1282,70 @@ function inboundTrashApiUrl(requestId) {
 }
 
 function confirmDelete(requestId, requestNumber) {
-    if (!confirm('Move request ' + requestNumber + ' to Deleted queue? It will be removed from this table and visible in Deleted and All inbound files.')) {
+    var modalEl = document.getElementById('deleteReasonModal');
+    var reasonInput = document.getElementById('deleteReasonInput');
+    var reasonError = document.getElementById('deleteReasonError');
+    var confirmBtn = document.getElementById('confirmDeleteReasonBtn');
+    var modalText = document.getElementById('deleteReasonModalText');
+    if (!modalEl || !reasonInput || !confirmBtn) {
+        alert('Delete dialog is not available. Please refresh the page.');
         return;
     }
 
+    reasonInput.value = '';
+    reasonError.style.display = 'none';
+    reasonError.textContent = '';
+    modalText.textContent = 'Request ' + requestNumber + ' will be removed from this table and moved to the Deleted queue.';
+
+    var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+
+    confirmBtn.onclick = function() {
+        var reason = reasonInput.value.trim();
+        if (!reason) {
+            reasonError.textContent = 'Please enter a reason for deletion.';
+            reasonError.style.display = 'block';
+            reasonInput.focus();
+            return;
+        }
+        reasonError.style.display = 'none';
+        confirmBtn.disabled = true;
+        submitDeleteRequest(requestId, requestNumber, reason, modal, confirmBtn);
+    };
+
+    setTimeout(function() { reasonInput.focus(); }, 250);
+}
+
+function showDeleteReason(requestNumber, reason) {
+    var modalEl = document.getElementById('viewDeleteReasonModal');
+    var requestEl = document.getElementById('viewDeleteReasonRequest');
+    var contentEl = document.getElementById('viewDeleteReasonContent');
+    if (!modalEl || !requestEl || !contentEl) return;
+
+    requestEl.textContent = 'Request ' + (requestNumber || '');
+    contentEl.textContent = (reason || '').trim() || 'No deletion reason was recorded for this request.';
+    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+}
+
+document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.btn-delete-reason');
+    if (!btn) return;
+    showDeleteReason(
+        btn.getAttribute('data-request-number') || '',
+        btn.getAttribute('data-delete-reason') || ''
+    );
+});
+
+function submitDeleteRequest(requestId, requestNumber, reason, modal, confirmBtn) {
     var trashUrl = inboundTrashApiUrl(requestId);
     if (!trashUrl) {
         alert('Invalid request id.');
+        if (confirmBtn) confirmBtn.disabled = false;
         return;
     }
 
     const row = document.querySelector('tr[data-request-id="' + requestId + '"]');
 
-    // Fade the row out immediately so it feels instant
     if (row) {
         row.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
         row.style.opacity = '0';
@@ -1228,7 +1360,7 @@ function confirmDelete(requestId, requestNumber) {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
         },
-        body: '{}'
+        body: JSON.stringify({ reason: reason })
     })
     .then(function(res) {
         return res.text().then(function(text) {
@@ -1244,12 +1376,11 @@ function confirmDelete(requestId, requestNumber) {
     .then(function(result) {
         var data = result.data || {};
         if (result.ok && data.success) {
+            if (modal) modal.hide();
             if (row) {
-                // Remove after fade completes
                 setTimeout(function() {
                     row.remove();
 
-                    // If tbody is now empty, show empty-state and hide table
                     const tbody = document.querySelector('.requests-table tbody');
                     if (tbody && tbody.querySelectorAll('tr').length === 0) {
                         const tableSection = document.querySelector('.table-section');
@@ -1260,7 +1391,6 @@ function confirmDelete(requestId, requestNumber) {
                 }, 380);
             }
 
-            // Brief toast-style confirmation without blocking the UI
             const toast = document.createElement('div');
             toast.textContent = 'Moved to Deleted queue';
             toast.style.cssText = [
@@ -1279,16 +1409,30 @@ function confirmDelete(requestId, requestNumber) {
                 setTimeout(function() { toast.remove(); }, 350);
             }, 2500);
         } else {
-            // Restore row visibility on failure
             if (row) { row.style.opacity = '1'; row.style.transform = ''; }
             var msg = (data && data.message) ? data.message : (result.raw ? 'Server error (HTTP ' + result.status + ')' : 'Could not remove request');
-            alert('Error: ' + msg);
+            var reasonError = document.getElementById('deleteReasonError');
+            if (reasonError) {
+                reasonError.textContent = msg;
+                reasonError.style.display = 'block';
+            } else {
+                alert('Error: ' + msg);
+            }
         }
     })
     .catch(function(err) {
         console.error(err);
         if (row) { row.style.opacity = '1'; row.style.transform = ''; }
-        alert('Could not reach the server. Check your connection and try again.');
+        var reasonError = document.getElementById('deleteReasonError');
+        if (reasonError) {
+            reasonError.textContent = 'Could not reach the server. Check your connection and try again.';
+            reasonError.style.display = 'block';
+        } else {
+            alert('Could not reach the server. Check your connection and try again.');
+        }
+    })
+    .finally(function() {
+        if (confirmBtn) confirmBtn.disabled = false;
     });
 }
 

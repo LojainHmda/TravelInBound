@@ -1,0 +1,40 @@
+{# Payment terms + payment method + conditional bank/cliq fields. Place before currency/address. #}
+{% set field_class = field_class|default('w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500') %}
+{% set use_name_attrs = use_name_attrs|default(false) %}
+<div>
+    <label class="block text-xs font-medium text-slate-700 mb-0.5">Payment Terms</label>
+    <select id="{{ prefix }}_payment_terms"{% if use_name_attrs %} name="payment_terms"{% endif %} class="{{ field_class }}">
+        <option value="">Select payment terms...</option>
+        <option value="Credit">Credit</option>
+        <option value="NET 15">NET 15</option>
+        <option value="NET 30">NET 30</option>
+        <option value="NET 45">NET 45</option>
+        <option value="NET 60">NET 60</option>
+        <option value="Prepaid">Prepaid</option>
+        {% if extra_payment_term_options %}
+        {{ extra_payment_term_options|safe }}
+        {% endif %}
+        <option value="Other">Other</option>
+    </select>
+</div>
+<div>
+    <label class="block text-xs font-medium text-slate-700 mb-0.5">Payment Method</label>
+    <select id="{{ prefix }}_payment_method"{% if use_name_attrs %} name="payment_method"{% endif %} class="{{ field_class }}">
+        <option value="">Select payment method...</option>
+        <option value="Cash">Cash</option>
+        <option value="Cliq">Cliq</option>
+        <option value="Bank">Bank</option>
+    </select>
+</div>
+<div id="{{ prefix }}_bank_name_wrap" style="display:none;">
+    <label class="block text-xs font-medium text-slate-700 mb-0.5">Bank Name</label>
+    <input type="text" id="{{ prefix }}_bank_name"{% if use_name_attrs %} name="bank_name"{% endif %} class="{{ field_class }}" placeholder="Bank name">
+</div>
+<div id="{{ prefix }}_bank_account_wrap" style="display:none;">
+    <label class="block text-xs font-medium text-slate-700 mb-0.5">Bank Account</label>
+    <input type="text" id="{{ prefix }}_bank_account"{% if use_name_attrs %} name="bank_account"{% endif %} class="{{ field_class }}" placeholder="Account number">
+</div>
+<div id="{{ prefix }}_cliq_wrap" style="display:none;">
+    <label class="block text-xs font-medium text-slate-700 mb-0.5">Cliq num/Alias</label>
+    <input type="text" id="{{ prefix }}_cliq_alias"{% if use_name_attrs %} name="cliq_alias"{% endif %} class="{{ field_class }}" placeholder="Enter cliq num or alias">
+</div>

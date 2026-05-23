@@ -115,6 +115,41 @@ body.modal-open {
     background: #fff5f5;
 }
 
+.supplier-status-toggle {
+    height: 30px;
+    padding: 0 10px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+
+.supplier-status-toggle.status-active {
+    color: #15803d !important;
+    background: #dcfce7 !important;
+    border-color: #86efac !important;
+}
+
+.supplier-status-toggle.status-active:hover {
+    color: #166534 !important;
+    background: #bbf7d0 !important;
+    border-color: #4ade80 !important;
+}
+
+.supplier-status-toggle.status-suspended {
+    color: #b91c1c !important;
+    background: #fef2f2 !important;
+    border-color: #fecaca !important;
+}
+
+.supplier-status-toggle.status-suspended:hover {
+    color: #991b1b !important;
+    background: #fee2e2 !important;
+    border-color: #fca5a5 !important;
+}
+
 .quick-sup-grid label {
     font-weight: 600;
     color: #334155;
@@ -166,6 +201,9 @@ body.modal-open {
                 <input type="text" name="q" value="{{ query or '' }}" class="form-control" placeholder="Search by name">
                 <button type="submit" class="btn btn-primary">Search</button>
             </form>
+            <button type="button" class="btn btn-secondary" onclick="printSuppliersList()">
+                <i class="fas fa-print"></i> Print
+            </button>
             <button type="button" id="openQuickSupplierModal" class="btn btn-success">Add New {{ type_label }}</button>
         </div>
     </div>
@@ -174,17 +212,23 @@ body.modal-open {
         <table class="supplier-table">
             <thead>
                 <tr>
-                    <th style="width: 45%;">Name</th>
-                    <th style="width: 20%;">Code</th>
-                    <th style="width: 20%;">City</th>
-                    <th style="width: 15%;">Actions</th>
+                    <th style="width: {% if type_key == 'guides' %}28%{% else %}55%{% endif %};">Name</th>
+                    {% if type_key == 'guides' %}
+                    <th style="width: 16%;">Number</th>
+                    <th style="width: 22%;">Languages</th>
+                    {% endif %}
+                    <th style="width: {% if type_key == 'guides' %}18%{% else %}30%{% endif %};">City</th>
+                    <th style="width: {% if type_key == 'guides' %}16%{% else %}15%{% endif %};">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for supplier in suppliers %}
                 <tr>
                     <td class="supplier-row-name">{{ supplier.name }}</td>
-                    <td>{{ supplier.code or '-' }}</td>
+                    {% if type_key == 'guides' %}
+                    <td>{{ supplier.phone or '-' }}</td>
+                    <td>{{ supplier.languages or '-' }}</td>
+                    {% endif %}
                     <td>{{ supplier.city or '-' }}</td>
                     <td>
                         <div class="supplier-actions">
@@ -194,9 +238,9 @@ body.modal-open {
                             <a href="/supplier/{{ supplier.id }}" class="supplier-action-btn" title="Edit">
                                 <i class="fas fa-pen"></i>
                             </a>
-                            <form method="POST" action="{{ url_for('finance.delete_supplier', supplier_id=supplier.id) }}" onsubmit="return confirm('Delete this supplier?');" style="margin:0;">
-                                <button type="submit" class="supplier-action-btn delete" title="Delete">
-                                    <i class="fas fa-trash"></i>
+                            <form method="POST" action="{{ url_for('finance.toggle_supplier_status', supplier_id=supplier.id) }}" onsubmit="return confirm('{% if supplier.is_active %}Suspend this supplier? It will be hidden from request dropdowns.{% else %}Activate this supplier? It will appear in request dropdowns again.{% endif %}');" style="margin:0;">
+                                <button type="submit" class="supplier-status-toggle {% if supplier.is_active %}status-active{% else %}status-suspended{% endif %}" title="{% if supplier.is_active %}Click to suspend{% else %}Click to activate{% endif %}">
+                                    {% if supplier.is_active %}Active{% else %}Suspended{% endif %}
                                 </button>
                             </form>
                         </div>
@@ -204,7 +248,7 @@ body.modal-open {
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="4" style="text-align:center; color:#6b7280;">No suppliers found for {{ type_label }}</td>
+                    <td colspan="{% if type_key == 'guides' %}5{% else %}3{% endif %}" style="text-align:center; color:#6b7280;">No suppliers found for {{ type_label }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -277,10 +321,7 @@ body.modal-open {
     const closeBtn = document.getElementById('closeQuickSupplierModal');
     const cancelBtn = document.getElementById('cancelQuickSupplierModal');
     const submitBtn = document.getElementById('submitQuickSupplierModal');
-    const paymentTermsSelect = document.querySelector('#addHotelModal select[name="payment_terms"]');
-    const bankNameWrap = document.getElementById('bankNameFieldWrap');
-    const bankAccountWrap = document.getElementById('bankAccountFieldWrap');
-    const cliqWrap = document.getElementById('cliqFieldWrap');
+    const paymentMethodSelect = document.querySelector('#addHotelModal select[name="payment_method"]');
     const popupAccommodationCategory = document.getElementById('new_hotel_category');
     const popupAccommodationRoomCategory = document.getElementById('new_hotel_room_category');
     const popupAddRoomCategoryBtn = document.getElementById('popupAddRoomCategoryBtn');
@@ -540,11 +581,10 @@ body.modal-open {
         document.body.classList.remove('modal-open');
     }
 
-    function syncCliqFields() {
-        const isCliq = paymentTermsSelect && paymentTermsSelect.value === 'Cliq';
-        if (bankNameWrap) bankNameWrap.style.display = isCliq ? 'none' : '';
-        if (bankAccountWrap) bankAccountWrap.style.display = isCliq ? 'none' : '';
-        if (cliqWrap) cliqWrap.style.display = isCliq ? '' : 'none';
+    function syncPaymentMethodFields() {
+        if (typeof window.syncAccommodationPaymentMethodFields === 'function') {
+            window.syncAccommodationPaymentMethodFields();
+        }
     }
 
     function openModal() {
@@ -554,7 +594,7 @@ body.modal-open {
         overlay.setAttribute('aria-hidden', 'false');
         document.body.classList.add('modal-open');
         syncAccommodationCategoriesFromHotelTab();
-        syncCliqFields();
+        syncPaymentMethodFields();
     }
 
     if (openBtn) openBtn.addEventListener('click', openModal);
@@ -592,7 +632,7 @@ body.modal-open {
             openRoomCategoryPromptLikeDialog();
         });
     }
-    if (paymentTermsSelect) paymentTermsSelect.addEventListener('change', syncCliqFields);
+    if (paymentMethodSelect) paymentMethodSelect.addEventListener('change', syncPaymentMethodFields);
     if (overlay) {
         overlay.addEventListener('click', function (e) {
             if (e.target === overlay) closeModal();
@@ -608,7 +648,36 @@ body.modal-open {
             (cats || []).forEach(v => ensureOption(popupAccommodationRoomCategory, v));
         });
     }
-    syncCliqFields();
+    syncPaymentMethodFields();
 })();
+
+function printSuppliersList() {
+    const printUrl = new URL('{{ url_for("finance.print_supplier_type_page", type_key=type_key) }}', window.location.origin);
+    const params = new URLSearchParams(window.location.search);
+    params.forEach(function(value, key) {
+        printUrl.searchParams.set(key, value);
+    });
+    printInPlace(printUrl.toString());
+}
+
+function printInPlace(url) {
+    let frame = document.getElementById('supplier-print-frame');
+    if (!frame) {
+        frame = document.createElement('iframe');
+        frame.id = 'supplier-print-frame';
+        frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
+        document.body.appendChild(frame);
+    }
+    frame.onload = function() {
+        try {
+            frame.contentWindow.focus();
+            frame.contentWindow.print();
+        } catch (e) {
+            alert('Could not open print dialog. Please try again.');
+        }
+    };
+    const sep = url.indexOf('?') >= 0 ? '&' : '?';
+    frame.src = url + sep + '_print_ts=' + Date.now();
+}
 </script>
 {% endblock %}

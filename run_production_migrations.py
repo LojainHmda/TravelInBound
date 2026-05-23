@@ -53,6 +53,10 @@ if "inbound_request" in tables:
         ("advance_expense_sheet_data", "TEXT"),
         ("closing_guide_payment_sheet_data", "TEXT"),
         ("pending_invoice_queue", "BOOLEAN NOT NULL DEFAULT FALSE" if is_pg else "BOOLEAN DEFAULT 0"),
+        ("deleted_reason", "TEXT"),
+        ("parent_request_id", "INTEGER"),
+        ("link_type", "VARCHAR(20)"),
+        ("link_note", "TEXT"),
     ]
 
     added = []
