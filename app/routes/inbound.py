@@ -533,10 +533,17 @@ def _inbound_list_context():
     prev_page_qs = _inbound_list_qs({'page': str(pagination.prev_num)}) if pagination.has_prev else None
     next_page_qs = _inbound_list_qs({'page': str(pagination.next_num)}) if pagination.has_next else None
     page_numbers = list(pagination.iter_pages(left_edge=1, left_current=1, right_current=2, right_edge=1))
-    filter_fields = ('request_number', 'agent', 'filter_year', 'filter_month', 'status')
-    has_active_filters = any((request.args.get(f) or '').strip() for f in filter_fields)
+    search_filter_fields = ('request_number', 'agent', 'filter_year', 'filter_month')
+    has_search_filters = any((request.args.get(f) or '').strip() for f in search_filter_fields)
+    all_filter_fields = ('request_number', 'agent', 'filter_year', 'filter_month', 'status')
+    has_active_filters = any((request.args.get(f) or '').strip() for f in all_filter_fields)
     has_submitted_search = (request.args.get('search') or '').strip() == '1'
-    show_results_table = (not all_files_view) or has_active_filters or has_submitted_search
+    # Status-specific pages (Request/Confirmed/Invoiced/Deleted) show no data until Search is clicked
+    is_status_page = (bool((request.args.get('status') or '').strip()) or queue == 'deleted') and not all_files_view
+    if is_status_page:
+        show_results_table = has_search_filters or has_submitted_search
+    else:
+        show_results_table = (not all_files_view) or has_active_filters or has_submitted_search
 
     # Run-down plan: expensive (loads confirmed/booked requests + itinerary). The template only
     # shows it on the main list without a Hub status filter and not on /inbound/all-files.

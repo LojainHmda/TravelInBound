@@ -917,7 +917,7 @@ button.btn-print {
         <div class="empty-icon">
             <i class="fas fa-map-marked-alt"></i>
         </div>
-        {% if all_files_view|default(false) and not show_results_table|default(true) %}
+        {% if not show_results_table|default(true) %}
         <h3 class="empty-title">Apply filters to view results</h3>
         <p class="empty-text">Select at least one filter above, then click Search to show matching inbound files.</p>
         {% else %}
