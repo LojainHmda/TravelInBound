@@ -1,0 +1,981 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Edit {{ type_label }} — {{ supplier.name }}{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f5f5;
+}
+.edit-container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+.edit-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.15s;
+}
+.back-btn:hover { background: #f1f5f9; color: #1e293b; }
+.edit-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0;
+}
+.edit-subtitle {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin: 2px 0 0;
+}
+.form-card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    padding: 1.75rem;
+}
+.section-label {
+    display: block;
+    padding: 6px 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 0.75rem;
+}
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+.form-grid .full { grid-column: 1 / -1; }
+.field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 3px;
+}
+.field input,
+.field select,
+.field textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: 13px;
+    color: #334155;
+    background: #fff;
+    min-height: 36px;
+    outline: none;
+    transition: border-color 0.15s;
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+}
+.field input[type="file"] {
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    background: none;
+    min-height: unset;
+    box-shadow: none;
+    outline: revert;
+    width: auto;
+}
+.file-row {
+    display: inline-flex;
+    align-items: stretch;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    max-width: 100%;
+}
+.file-row:hover { border-color: #94a3b8; }
+.file-row input[type="file"] { display: none; }
+.file-btn {
+    padding: 0 10px;
+    min-height: 34px;
+    line-height: 34px;
+    background: #f1f5f9;
+    border-right: 1px solid #cbd5e1;
+    font-size: 13px;
+    color: #334155;
+    white-space: nowrap;
+    user-select: none;
+}
+.file-row:hover .file-btn { background: #e2e8f0; }
+.file-label {
+    padding: 0 10px;
+    min-height: 34px;
+    line-height: 34px;
+    font-size: 13px;
+    color: #334155;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 260px;
+}
+.file-label a { color: #334155; text-decoration: none; }
+.file-label a:hover { text-decoration: underline; color: #1d4ed8; }
+.field textarea { resize: vertical; min-height: 60px; }
+.field .hint { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+.required-note { font-size: 11px; color: #94a3b8; margin-top: 0.5rem; }
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #e2e8f0;
+}
+.btn-cancel {
+    padding: 9px 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+.btn-cancel:hover { background: #f8fafc; }
+.btn-save {
+    padding: 9px 22px;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.btn-save:hover { background: #1d4ed8; }
+.lang-tags { display: flex; flex-wrap: wrap; gap: 5px; min-height: 24px; margin-top: 4px; }
+.lang-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    background: #dbeafe;
+    color: #1e40af;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+}
+.lang-tag button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: #3b82f6;
+    font-size: 11px;
+    line-height: 1;
+    min-height: unset;
+}
+@media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid .full { grid-column: 1; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="edit-container">
+    <div class="edit-header">
+        <a href="{{ url_for('finance.supplier_type_page', type_key=type_key) }}" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Back to {{ type_label }}
+        </a>
+        <div>
+            <h1 class="edit-title">
+                <i class="{{ type_icon }} mr-2" style="font-size:1.3rem;color:#3b82f6;"></i>Edit {{ type_label }}
+            </h1>
+            <p class="edit-subtitle">{{ supplier.name }}</p>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="mb-4 px-4 py-3 rounded-lg text-sm {% if category == 'error' %}bg-red-50 border border-red-200 text-red-700{% else %}bg-green-50 border border-green-200 text-green-700{% endif %}">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endwith %}
+
+    <div class="form-card">
+        <form method="POST" action="{{ url_for('finance.edit_supplier_type', type_key=type_key, supplier_id=supplier.id) }}" enctype="multipart/form-data">
+            <input type="hidden" name="supplier_type" value="{{ new_supplier_type }}">
+
+            {# ── ACCOMMODATION ─────────────────────────────────────────── #}
+            {% if type_key == 'accommodation' %}
+
+            <span class="section-label">Location</span>
+            <div class="form-grid">
+                <div class="field">
+                    <label>City</label>
+                    <select name="city">
+                        <option value="">Select city...</option>
+                        {% for c in ['Amman','Aqaba','Petra','Dead Sea','Jerash','Madaba','Wadi Rum','Other'] %}
+                        <option value="{{ c }}" {% if supplier.city == c %}selected{% endif %}>{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Country</label>
+                    <input type="text" name="country" value="{{ supplier.country or 'Jordan' }}" placeholder="Country">
+                </div>
+            </div>
+
+            <span class="section-label">Accommodation Details</span>
+            <div class="form-grid">
+                <div class="field full">
+                    <label>Accommodation Name <span style="color:#ef4444">*</span></label>
+                    <input type="text" name="name" value="{{ supplier.name }}" placeholder="Enter accommodation name" required>
+                </div>
+                <div class="field">
+                    <label>Category</label>
+                    <select name="category">
+                        <option value="">Select...</option>
+                        {% for opt in ['5-Star','4-Star','3-Star','Boutique','Camp','Other'] %}
+                        <option value="{{ opt }}" {% if category == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Room Category</label>
+                    <input type="text" name="room_category" value="{{ room_category }}" placeholder="e.g. Standard Rooms">
+                </div>
+                <div class="field">
+                    <label>Contact Person</label>
+                    <input type="text" name="contact_person" value="{{ supplier.contact_person or '' }}" placeholder="Contact person name">
+                </div>
+                <div class="field">
+                    <label>Email</label>
+                    <input type="email" name="email" value="{{ supplier.email or '' }}" placeholder="email@example.com">
+                </div>
+                <div class="field">
+                    <label>Phone</label>
+                    <input type="text" name="phone" value="{{ supplier.phone or '' }}" placeholder="+962 6 123 4567">
+                </div>
+                <div class="field">
+                    <label>Website</label>
+                    <input type="text" name="website" value="{{ supplier.website or '' }}" placeholder="www.example.com">
+                </div>
+                <div class="field">
+                    <label>Payment Terms</label>
+                    <select name="payment_terms">
+                        <option value="">Select payment terms...</option>
+                        {% for opt in ['Credit','NET 15','NET 30','NET 45','NET 60','Prepaid','Other'] %}
+                        <option value="{{ opt }}" {% if supplier.payment_terms == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Payment Method</label>
+                    <select name="payment_method" id="edit_payment_method">
+                        <option value="">Select payment method...</option>
+                        {% for opt in ['Cash','Cliq','Bank'] %}
+                        <option value="{{ opt }}" {% if payment_method == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field" id="edit_bank_name_wrap" style="display:none;">
+                    <label>Bank Name</label>
+                    <input type="text" name="bank_name" value="{{ bank_name }}" placeholder="Bank name">
+                </div>
+                <div class="field" id="edit_bank_account_wrap" style="display:none;">
+                    <label>Bank Account</label>
+                    <input type="text" name="bank_account" value="{{ bank_account }}" placeholder="Account number">
+                </div>
+                <div class="field" id="edit_cliq_wrap" style="display:none;">
+                    <label>Cliq num/Alias</label>
+                    <input type="text" name="cliq_alias" value="{{ cliq_alias }}" placeholder="Enter cliq num or alias">
+                </div>
+                <div class="field">
+                    <label>Default Currency</label>
+                    <select name="default_currency">
+                        {% for opt in ['USD','EUR','JOD','GBP'] %}
+                        <option value="{{ opt }}" {% if (supplier.default_currency or 'USD') == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field full">
+                    <label>Address</label>
+                    <input type="text" name="address" value="{{ supplier.address or '' }}" placeholder="Street address">
+                </div>
+                <div class="field">
+                    <label>Tax Number</label>
+                    <input type="text" name="tax_number" value="{{ supplier.tax_number or '' }}" placeholder="Tax ID">
+                </div>
+                <div class="field">
+                    <label>Contract Attachment</label>
+                    <label class="file-row">
+                        <span class="file-btn">Choose File</span>
+                        <span class="file-label">{% if contract_file %}<a href="{{ url_for('static', filename='uploads/supplier_contracts/' + contract_file) }}" target="_blank" onclick="event.stopPropagation()">{{ contract_file }}</a>{% endif %}</span>
+                        <input type="file" name="contract_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="this.previousElementSibling.textContent=this.files[0].name">
+                    </label>
+                </div>
+                <div class="field full">
+                    <label>Notes</label>
+                    <textarea name="notes" rows="3" placeholder="Additional notes">{{ clean_notes }}</textarea>
+                </div>
+            </div>
+
+            {# ── AIRLINE ───────────────────────────────────────────────── #}
+            {% elif type_key == 'airline' %}
+
+            <span class="section-label">Airline Information</span>
+            <div class="form-grid">
+                <div class="field full">
+                    <label>Airline Name <span style="color:#ef4444">*</span></label>
+                    <input type="text" name="name" value="{{ supplier.name }}" placeholder="Enter airline name" required>
+                </div>
+                <div class="field">
+                    <label>IATA Code</label>
+                    <input type="text" name="iata_code" value="{{ supplier.code or '' }}" placeholder="e.g. RJ, EK">
+                </div>
+                <div class="field">
+                    <label>City / Base Location</label>
+                    <input type="text" name="city" value="{{ supplier.city or '' }}" placeholder="City / Base location">
+                </div>
+            </div>
+
+            <span class="section-label">Contact Information</span>
+            <div class="form-grid">
+                <div class="field">
+                    <label>Phone</label>
+                    <input type="text" name="phone" value="{{ supplier.phone or '' }}" placeholder="+962 7 123 4567">
+                </div>
+                <div class="field">
+                    <label>Email</label>
+                    <input type="email" name="email" value="{{ supplier.email or '' }}" placeholder="email@airline.com">
+                </div>
+            </div>
+
+            <span class="section-label">Business Details</span>
+            <div class="form-grid">
+                <div class="field">
+                    <label>Payment Terms</label>
+                    <select name="payment_terms">
+                        <option value="">Select payment terms...</option>
+                        {% for opt in ['Credit','NET 15','NET 30','NET 45','NET 60','Prepaid','Other'] %}
+                        <option value="{{ opt }}" {% if supplier.payment_terms == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Payment Method</label>
+                    <select name="payment_method" id="edit_payment_method">
+                        <option value="">Select payment method...</option>
+                        {% for opt in ['Cash','Cliq','Bank'] %}
+                        <option value="{{ opt }}" {% if payment_method == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field" id="edit_bank_name_wrap" style="display:none;">
+                    <label>Bank Name</label>
+                    <input type="text" name="bank_name" value="{{ bank_name }}" placeholder="Bank name">
+                </div>
+                <div class="field" id="edit_bank_account_wrap" style="display:none;">
+                    <label>Bank Account</label>
+                    <input type="text" name="bank_account" value="{{ bank_account }}" placeholder="Account number">
+                </div>
+                <div class="field" id="edit_cliq_wrap" style="display:none;">
+                    <label>Cliq num/Alias</label>
+                    <input type="text" name="cliq_alias" value="{{ cliq_alias }}" placeholder="Enter cliq num or alias">
+                </div>
+                <div class="field">
+                    <label>Default Currency</label>
+                    <select name="default_currency">
+                        {% for opt in ['USD','EUR','JOD','GBP','Other'] %}
+                        <option value="{{ opt }}" {% if (supplier.default_currency or 'USD') == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Tax Number</label>
+                    <input type="text" name="tax_number" value="{{ supplier.tax_number or '' }}" placeholder="Tax ID">
+                </div>
+                <div class="field full">
+                    <label>Notes</label>
+                    <textarea name="notes" rows="3" placeholder="Additional notes">{{ clean_notes }}</textarea>
+                </div>
+            </div>
+
+            {# ── TRANSPORTATION ────────────────────────────────────────── #}
+            {% elif type_key == 'transportation' %}
+
+            <span class="section-label">Supplier Details</span>
+            <div class="form-grid">
+                <div class="field full">
+                    <label>Supplier Name <span style="color:#ef4444">*</span></label>
+                    <input type="text" name="name" value="{{ supplier.name }}" placeholder="Enter supplier name" required>
+                </div>
+                <div class="field">
+                    <label>Contact Person</label>
+                    <input type="text" name="contact_person" value="{{ supplier.contact_person or '' }}" placeholder="Contact person name">
+                </div>
+                <div class="field">
+                    <label>Phone</label>
+                    <input type="text" name="phone" value="{{ supplier.phone or '' }}" placeholder="+962 6 123 4567">
+                </div>
+                <div class="field">
+                    <label>Email</label>
+                    <input type="email" name="email" value="{{ supplier.email or '' }}" placeholder="email@example.com">
+                </div>
+                <div class="field">
+                    <label>Website</label>
+                    <input type="url" name="website" value="{{ supplier.website or '' }}" placeholder="www.example.com">
+                </div>
+                <div class="field">
+                    <label>City</label>
+                    <input type="text" name="city" value="{{ supplier.city or '' }}" placeholder="City">
+                </div>
+                <div class="field">
+                    <label>Country</label>
+                    <input type="text" name="country" value="{{ supplier.country or 'Jordan' }}" placeholder="Country">
+                </div>
+                <div class="field">
+                    <label>Payment Terms</label>
+                    <select name="payment_terms">
+                        <option value="">Select payment terms...</option>
+                        {% for opt in ['Credit','NET 15','NET 30','NET 45','NET 60','Prepaid','Other'] %}
+                        <option value="{{ opt }}" {% if supplier.payment_terms == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Payment Method</label>
+                    <select name="payment_method" id="edit_payment_method">
+                        <option value="">Select payment method...</option>
+                        {% for opt in ['Cash','Cliq','Bank'] %}
+                        <option value="{{ opt }}" {% if payment_method == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field" id="edit_bank_name_wrap" style="display:none;">
+                    <label>Bank Name</label>
+                    <input type="text" name="bank_name" value="{{ bank_name }}" placeholder="Bank name">
+                </div>
+                <div class="field" id="edit_bank_account_wrap" style="display:none;">
+                    <label>Bank Account</label>
+                    <input type="text" name="bank_account" value="{{ bank_account }}" placeholder="Account number">
+                </div>
+                <div class="field" id="edit_cliq_wrap" style="display:none;">
+                    <label>Cliq num/Alias</label>
+                    <input type="text" name="cliq_alias" value="{{ cliq_alias }}" placeholder="Enter cliq num or alias">
+                </div>
+                <div class="field">
+                    <label>Default Currency</label>
+                    <select name="default_currency">
+                        {% for opt in ['USD','EUR','JOD','GBP'] %}
+                        <option value="{{ opt }}" {% if (supplier.default_currency or 'USD') == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field full">
+                    <label>Address</label>
+                    <textarea name="address" rows="2" placeholder="Street address">{{ supplier.address or '' }}</textarea>
+                </div>
+                <div class="field">
+                    <label>Tax Number</label>
+                    <input type="text" name="tax_number" value="{{ supplier.tax_number or '' }}" placeholder="Tax ID">
+                </div>
+                <div class="field">
+                    <label>Contract Attachment</label>
+                    <label class="file-row">
+                        <span class="file-btn">Choose File</span>
+                        <span class="file-label">{% if contract_file %}<a href="{{ url_for('static', filename='uploads/supplier_contracts/' + contract_file) }}" target="_blank" onclick="event.stopPropagation()">{{ contract_file }}</a>{% endif %}</span>
+                        <input type="file" name="contract_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="this.previousElementSibling.textContent=this.files[0].name">
+                    </label>
+                </div>
+                <div class="field full">
+                    <label>Notes</label>
+                    <textarea name="notes" rows="3" placeholder="Additional notes">{{ clean_notes }}</textarea>
+                </div>
+            </div>
+
+            {# ── GUIDES ────────────────────────────────────────────────── #}
+            {% elif type_key == 'guides' %}
+
+            <span class="section-label">Guide Details</span>
+            <div class="form-grid">
+                <div class="field full">
+                    <label>Guide Name <span style="color:#ef4444">*</span></label>
+                    <input type="text" name="name" value="{{ supplier.name }}" placeholder="Enter guide name" required>
+                </div>
+                <div class="field full">
+                    <label>Languages <span style="color:#ef4444">*</span></label>
+                    <select id="edit_guide_lang_select">
+                        <option value="">Select a language...</option>
+                        {% for lang in ['Arabic','English','French','German','Spanish','Italian','Russian','Chinese','Japanese','Korean','Turkish','Hebrew','Persian','Hindi','Portuguese','Dutch','Greek','Swedish','Norwegian','Danish','Polish','Czech','Hungarian','Romanian','Bulgarian','Croatian','Serbian','Other'] %}
+                        <option value="{{ lang }}">{{ lang }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="lang-tags" id="edit_guide_lang_tags"></div>
+                    <input type="hidden" name="guide_languages" id="edit_guide_lang_hidden" value="{{ supplier.languages or '' }}">
+                </div>
+                <div class="field">
+                    <label>Phone</label>
+                    <input type="text" name="phone" value="{{ supplier.phone or '' }}" placeholder="+962 7 123 4567">
+                </div>
+                <div class="field">
+                    <label>Email</label>
+                    <input type="email" name="email" value="{{ supplier.email or '' }}" placeholder="email@example.com">
+                </div>
+                <div class="field">
+                    <label>City</label>
+                    <input type="text" name="city" value="{{ supplier.city or '' }}" placeholder="City">
+                </div>
+                <div class="field">
+                    <label>Country</label>
+                    <input type="text" name="country" value="{{ supplier.country or 'Jordan' }}" placeholder="Country">
+                </div>
+                <div class="field">
+                    <label>Payment Terms</label>
+                    <select name="payment_terms">
+                        <option value="">Select payment terms...</option>
+                        {% for opt in ['Credit','NET 15','NET 30','NET 45','NET 60','Prepaid','Other'] %}
+                        <option value="{{ opt }}" {% if supplier.payment_terms == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Payment Method</label>
+                    <select name="payment_method" id="edit_payment_method">
+                        <option value="">Select payment method...</option>
+                        {% for opt in ['Cash','Cliq','Bank'] %}
+                        <option value="{{ opt }}" {% if payment_method == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field" id="edit_bank_name_wrap" style="display:none;">
+                    <label>Bank Name</label>
+                    <input type="text" name="bank_name" value="{{ bank_name }}" placeholder="Bank name">
+                </div>
+                <div class="field" id="edit_bank_account_wrap" style="display:none;">
+                    <label>Bank Account</label>
+                    <input type="text" name="bank_account" value="{{ bank_account }}" placeholder="Account number">
+                </div>
+                <div class="field" id="edit_cliq_wrap" style="display:none;">
+                    <label>Cliq num/Alias</label>
+                    <input type="text" name="cliq_alias" value="{{ cliq_alias }}" placeholder="Enter cliq num or alias">
+                </div>
+                <div class="field">
+                    <label>Default Currency</label>
+                    <select name="default_currency">
+                        {% for opt in ['USD','EUR','JOD','GBP','Other'] %}
+                        <option value="{{ opt }}" {% if (supplier.default_currency or 'USD') == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Tax Number</label>
+                    <input type="text" name="tax_number" value="{{ supplier.tax_number or '' }}" placeholder="Tax ID">
+                </div>
+                <div class="field">
+                    <label>Contract Attachment</label>
+                    <label class="file-row">
+                        <span class="file-btn">Choose File</span>
+                        <span class="file-label">{% if contract_file %}<a href="{{ url_for('static', filename='uploads/supplier_contracts/' + contract_file) }}" target="_blank" onclick="event.stopPropagation()">{{ contract_file }}</a>{% endif %}</span>
+                        <input type="file" name="contract_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="this.previousElementSibling.textContent=this.files[0].name">
+                    </label>
+                </div>
+                <div class="field full">
+                    <label>Notes</label>
+                    <textarea name="notes" rows="3" placeholder="Additional notes">{{ clean_notes }}</textarea>
+                </div>
+            </div>
+
+            {# ── MEET & ASSIST ─────────────────────────────────────────── #}
+            {% elif type_key == 'meet-assist' %}
+
+            <span class="section-label">Representative Details</span>
+            <div class="form-grid">
+                <div class="field full">
+                    <label>Representative Name <span style="color:#ef4444">*</span></label>
+                    <input type="text" name="name" value="{{ supplier.name }}" placeholder="Enter representative name" required>
+                </div>
+                <div class="field full">
+                    <label>Languages <span style="color:#ef4444">*</span></label>
+                    <select id="edit_guide_lang_select">
+                        <option value="">Select a language...</option>
+                        {% for lang in ['Arabic','English','French','German','Spanish','Italian','Russian','Chinese','Japanese','Korean','Turkish','Hebrew','Persian','Hindi','Portuguese','Dutch','Greek','Swedish','Norwegian','Danish','Polish','Czech','Hungarian','Romanian','Bulgarian','Croatian','Serbian','Other'] %}
+                        <option value="{{ lang }}">{{ lang }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="lang-tags" id="edit_guide_lang_tags"></div>
+                    <input type="hidden" name="guide_languages" id="edit_guide_lang_hidden" value="{{ supplier.languages or '' }}">
+                </div>
+                <div class="field">
+                    <label>Phone</label>
+                    <input type="text" name="phone" value="{{ supplier.phone or '' }}" placeholder="+962 7 123 4567">
+                </div>
+                <div class="field">
+                    <label>Email</label>
+                    <input type="email" name="email" value="{{ supplier.email or '' }}" placeholder="email@example.com">
+                </div>
+                <div class="field">
+                    <label>City</label>
+                    <input type="text" name="city" value="{{ supplier.city or '' }}" placeholder="City">
+                </div>
+                <div class="field">
+                    <label>Country</label>
+                    <input type="text" name="country" value="{{ supplier.country or 'Jordan' }}" placeholder="Country">
+                </div>
+                <div class="field">
+                    <label>Payment Terms</label>
+                    <select name="payment_terms">
+                        <option value="">Select payment terms...</option>
+                        {% for opt in ['Credit','NET 15','NET 30','NET 45','NET 60','Prepaid','Employee','Other'] %}
+                        <option value="{{ opt }}" {% if supplier.payment_terms == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Payment Method</label>
+                    <select name="payment_method" id="edit_payment_method">
+                        <option value="">Select payment method...</option>
+                        {% for opt in ['Cash','Cliq','Bank'] %}
+                        <option value="{{ opt }}" {% if payment_method == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field" id="edit_bank_name_wrap" style="display:none;">
+                    <label>Bank Name</label>
+                    <input type="text" name="bank_name" value="{{ bank_name }}" placeholder="Bank name">
+                </div>
+                <div class="field" id="edit_bank_account_wrap" style="display:none;">
+                    <label>Bank Account</label>
+                    <input type="text" name="bank_account" value="{{ bank_account }}" placeholder="Account number">
+                </div>
+                <div class="field" id="edit_cliq_wrap" style="display:none;">
+                    <label>Cliq num/Alias</label>
+                    <input type="text" name="cliq_alias" value="{{ cliq_alias }}" placeholder="Enter cliq num or alias">
+                </div>
+                <div class="field">
+                    <label>Default Currency</label>
+                    <select name="default_currency">
+                        {% for opt in ['USD','EUR','JOD','GBP','Other'] %}
+                        <option value="{{ opt }}" {% if (supplier.default_currency or 'USD') == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Tax Number</label>
+                    <input type="text" name="tax_number" value="{{ supplier.tax_number or '' }}" placeholder="Tax ID">
+                </div>
+                <div class="field">
+                    <label>Contract Attachment</label>
+                    <label class="file-row">
+                        <span class="file-btn">Choose File</span>
+                        <span class="file-label">{% if contract_file %}<a href="{{ url_for('static', filename='uploads/supplier_contracts/' + contract_file) }}" target="_blank" onclick="event.stopPropagation()">{{ contract_file }}</a>{% endif %}</span>
+                        <input type="file" name="contract_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="this.previousElementSibling.textContent=this.files[0].name">
+                    </label>
+                </div>
+                <div class="field full">
+                    <label>Notes</label>
+                    <textarea name="notes" rows="3" placeholder="Additional notes">{{ clean_notes }}</textarea>
+                </div>
+            </div>
+
+            {# ── RESTAURANT ────────────────────────────────────────────── #}
+            {% elif type_key == 'restaurant' %}
+
+            <span class="section-label">Restaurant Details</span>
+            <div class="form-grid">
+                <div class="field full">
+                    <label>Restaurant Name <span style="color:#ef4444">*</span></label>
+                    <input type="text" name="name" value="{{ supplier.name }}" placeholder="Enter restaurant name" required>
+                </div>
+                <div class="field">
+                    <label>Location</label>
+                    <input type="text" name="location" value="" placeholder="Location">
+                </div>
+                <div class="field">
+                    <label>City</label>
+                    <input type="text" name="city" value="{{ supplier.city or '' }}" placeholder="City">
+                </div>
+                <div class="field">
+                    <label>Country</label>
+                    <input type="text" name="country" value="{{ supplier.country or 'Jordan' }}" placeholder="Country">
+                </div>
+                <div class="field">
+                    <label>Contact Person</label>
+                    <input type="text" name="contact_person" value="{{ supplier.contact_person or '' }}" placeholder="Contact person name">
+                </div>
+                <div class="field">
+                    <label>Phone</label>
+                    <input type="text" name="phone" value="{{ supplier.phone or '' }}" placeholder="+962 6 123 4567">
+                </div>
+                <div class="field">
+                    <label>Email</label>
+                    <input type="email" name="email" value="{{ supplier.email or '' }}" placeholder="email@example.com">
+                </div>
+                <div class="field">
+                    <label>Website</label>
+                    <input type="url" name="website" value="{{ supplier.website or '' }}" placeholder="www.example.com">
+                </div>
+                <div class="field">
+                    <label>Payment Terms</label>
+                    <select name="payment_terms">
+                        <option value="">Select payment terms...</option>
+                        {% for opt in ['Credit','NET 15','NET 30','NET 45','NET 60','Prepaid','Other'] %}
+                        <option value="{{ opt }}" {% if supplier.payment_terms == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Payment Method</label>
+                    <select name="payment_method" id="edit_payment_method">
+                        <option value="">Select payment method...</option>
+                        {% for opt in ['Cash','Cliq','Bank'] %}
+                        <option value="{{ opt }}" {% if payment_method == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field" id="edit_bank_name_wrap" style="display:none;">
+                    <label>Bank Name</label>
+                    <input type="text" name="bank_name" value="{{ bank_name }}" placeholder="Bank name">
+                </div>
+                <div class="field" id="edit_bank_account_wrap" style="display:none;">
+                    <label>Bank Account</label>
+                    <input type="text" name="bank_account" value="{{ bank_account }}" placeholder="Account number">
+                </div>
+                <div class="field" id="edit_cliq_wrap" style="display:none;">
+                    <label>Cliq num/Alias</label>
+                    <input type="text" name="cliq_alias" value="{{ cliq_alias }}" placeholder="Enter cliq num or alias">
+                </div>
+                <div class="field">
+                    <label>Default Currency</label>
+                    <select name="default_currency">
+                        {% for opt in ['USD','EUR','JOD','GBP','Other'] %}
+                        <option value="{{ opt }}" {% if (supplier.default_currency or 'USD') == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field full">
+                    <label>Address</label>
+                    <textarea name="address" rows="2" placeholder="Street address">{{ supplier.address or '' }}</textarea>
+                </div>
+                <div class="field">
+                    <label>Tax Number</label>
+                    <input type="text" name="tax_number" value="{{ supplier.tax_number or '' }}" placeholder="Tax ID">
+                </div>
+                <div class="field">
+                    <label>Contract Attachment</label>
+                    <label class="file-row">
+                        <span class="file-btn">Choose File</span>
+                        <span class="file-label">{% if contract_file %}<a href="{{ url_for('static', filename='uploads/supplier_contracts/' + contract_file) }}" target="_blank" onclick="event.stopPropagation()">{{ contract_file }}</a>{% endif %}</span>
+                        <input type="file" name="contract_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="this.previousElementSibling.textContent=this.files[0].name">
+                    </label>
+                </div>
+                <div class="field full">
+                    <label>Notes</label>
+                    <textarea name="notes" rows="3" placeholder="Additional notes">{{ clean_notes }}</textarea>
+                </div>
+            </div>
+
+            {# ── OTHERS / GENERIC ──────────────────────────────────────── #}
+            {% else %}
+
+            <span class="section-label">Supplier Details</span>
+            <div class="form-grid">
+                <div class="field full">
+                    <label>Supplier Name <span style="color:#ef4444">*</span></label>
+                    <input type="text" name="name" value="{{ supplier.name }}" placeholder="Enter supplier name" required>
+                </div>
+                <div class="field">
+                    <label>Contact Person</label>
+                    <input type="text" name="contact_person" value="{{ supplier.contact_person or '' }}" placeholder="Contact person name">
+                </div>
+                <div class="field">
+                    <label>Phone</label>
+                    <input type="text" name="phone" value="{{ supplier.phone or '' }}" placeholder="+962 6 123 4567">
+                </div>
+                <div class="field">
+                    <label>Email</label>
+                    <input type="email" name="email" value="{{ supplier.email or '' }}" placeholder="email@example.com">
+                </div>
+                <div class="field">
+                    <label>Website</label>
+                    <input type="url" name="website" value="{{ supplier.website or '' }}" placeholder="www.example.com">
+                </div>
+                <div class="field">
+                    <label>City</label>
+                    <input type="text" name="city" value="{{ supplier.city or '' }}" placeholder="City">
+                </div>
+                <div class="field">
+                    <label>Country</label>
+                    <input type="text" name="country" value="{{ supplier.country or '' }}" placeholder="Country">
+                </div>
+                <div class="field">
+                    <label>Payment Terms</label>
+                    <select name="payment_terms">
+                        <option value="">Select payment terms...</option>
+                        {% for opt in ['Credit','NET 15','NET 30','NET 45','NET 60','Prepaid','Other'] %}
+                        <option value="{{ opt }}" {% if supplier.payment_terms == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Payment Method</label>
+                    <select name="payment_method" id="edit_payment_method">
+                        <option value="">Select payment method...</option>
+                        {% for opt in ['Cash','Cliq','Bank'] %}
+                        <option value="{{ opt }}" {% if payment_method == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field" id="edit_bank_name_wrap" style="display:none;">
+                    <label>Bank Name</label>
+                    <input type="text" name="bank_name" value="{{ bank_name }}" placeholder="Bank name">
+                </div>
+                <div class="field" id="edit_bank_account_wrap" style="display:none;">
+                    <label>Bank Account</label>
+                    <input type="text" name="bank_account" value="{{ bank_account }}" placeholder="Account number">
+                </div>
+                <div class="field" id="edit_cliq_wrap" style="display:none;">
+                    <label>Cliq num/Alias</label>
+                    <input type="text" name="cliq_alias" value="{{ cliq_alias }}" placeholder="Enter cliq num or alias">
+                </div>
+                <div class="field">
+                    <label>Default Currency</label>
+                    <select name="default_currency">
+                        {% for opt in ['USD','EUR','JOD','GBP'] %}
+                        <option value="{{ opt }}" {% if (supplier.default_currency or 'USD') == opt %}selected{% endif %}>{{ opt }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="field full">
+                    <label>Address</label>
+                    <textarea name="address" rows="2" placeholder="Street address">{{ supplier.address or '' }}</textarea>
+                </div>
+                <div class="field">
+                    <label>Tax Number</label>
+                    <input type="text" name="tax_number" value="{{ supplier.tax_number or '' }}" placeholder="Tax ID">
+                </div>
+                <div class="field">
+                    <label>Contract Attachment</label>
+                    <label class="file-row">
+                        <span class="file-btn">Choose File</span>
+                        <span class="file-label">{% if contract_file %}<a href="{{ url_for('static', filename='uploads/supplier_contracts/' + contract_file) }}" target="_blank" onclick="event.stopPropagation()">{{ contract_file }}</a>{% endif %}</span>
+                        <input type="file" name="contract_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="this.previousElementSibling.textContent=this.files[0].name">
+                    </label>
+                </div>
+                <div class="field full">
+                    <label>Notes</label>
+                    <textarea name="notes" rows="3" placeholder="Additional notes">{{ clean_notes }}</textarea>
+                </div>
+            </div>
+
+            {% endif %}
+
+            <p class="required-note"><span style="color:#ef4444">*</span> Required fields. Other fields are optional but recommended.</p>
+
+            <div class="form-actions">
+                <a href="{{ url_for('finance.supplier_type_page', type_key=type_key) }}" class="btn-cancel">Cancel</a>
+                <button type="submit" class="btn-save">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+(function () {
+    // ── Payment method toggle ────────────────────────────────
+    var pmSel = document.getElementById('edit_payment_method');
+    var bankNameWrap = document.getElementById('edit_bank_name_wrap');
+    var bankAccWrap  = document.getElementById('edit_bank_account_wrap');
+    var cliqWrap     = document.getElementById('edit_cliq_wrap');
+
+    function updatePaymentFields() {
+        if (!pmSel) return;
+        var v = pmSel.value;
+        if (bankNameWrap) bankNameWrap.style.display = (v === 'Bank') ? '' : 'none';
+        if (bankAccWrap)  bankAccWrap.style.display  = (v === 'Bank') ? '' : 'none';
+        if (cliqWrap)     cliqWrap.style.display     = (v === 'Cliq') ? '' : 'none';
+    }
+
+    if (pmSel) {
+        pmSel.addEventListener('change', updatePaymentFields);
+        updatePaymentFields();
+    }
+
+    // ── Language tag selector (guides / meet-assist) ─────────
+    var langSelect = document.getElementById('edit_guide_lang_select');
+    var langTags   = document.getElementById('edit_guide_lang_tags');
+    var langHidden = document.getElementById('edit_guide_lang_hidden');
+
+    if (langSelect && langTags && langHidden) {
+        var selected = (langHidden.value || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+
+        function renderTags() {
+            langTags.innerHTML = '';
+            selected.forEach(function(lang) {
+                var tag = document.createElement('span');
+                tag.className = 'lang-tag';
+                tag.innerHTML = lang + ' <button type="button" data-lang="' + lang + '">&times;</button>';
+                tag.querySelector('button').addEventListener('click', function() {
+                    selected = selected.filter(function(l){ return l !== this.dataset.lang; }, this);
+                    langHidden.value = selected.join(', ');
+                    renderTags();
+                });
+                langTags.appendChild(tag);
+            });
+        }
+
+        langSelect.addEventListener('change', function() {
+            var v = this.value;
+            if (v && !selected.includes(v)) {
+                selected.push(v);
+                langHidden.value = selected.join(', ');
+                renderTags();
+            }
+            this.value = '';
+        });
+
+        renderTags();
+    }
+})();
+</script>
+{% endblock %}

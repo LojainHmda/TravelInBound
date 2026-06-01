@@ -1889,6 +1889,161 @@ def quick_add_supplier(type_key):
 
     return redirect(url_for('finance.supplier_type_page', type_key=type_key))
 
+
+def _parse_supplier_notes(notes_raw):
+    """Extract structured fields that quick_add_supplier embeds into the notes column."""
+    category = ''
+    room_category = ''
+    payment_method_embedded = ''
+    contract_file = ''
+    clean_lines = []
+    for line in (notes_raw or '').split('\n'):
+        if line.startswith('Category: ') and not category:
+            category = line[len('Category: '):]
+        elif line.startswith('Room Category: ') and not room_category:
+            room_category = line[len('Room Category: '):]
+        elif line.startswith('Payment Method: ') and not payment_method_embedded:
+            payment_method_embedded = line[len('Payment Method: '):]
+        elif line.startswith('Contract file: ') and not contract_file:
+            contract_file = line[len('Contract file: '):]
+        else:
+            clean_lines.append(line)
+    return {
+        'category': category,
+        'room_category': room_category,
+        'payment_method_embedded': payment_method_embedded,
+        'contract_file': contract_file,
+        'clean_notes': '\n'.join(clean_lines).strip(),
+    }
+
+
+@finance.route('/suppliers/type/<type_key>/edit/<int:supplier_id>', methods=['GET', 'POST'])
+def edit_supplier_type(type_key, supplier_id):
+    """Full-page edit form for a supplier on a type page (replaces the old details screen)."""
+    supplier = Supplier.query.get_or_404(supplier_id)
+    config, _ = _query_suppliers_for_type(type_key, '')
+    if not config:
+        return redirect(url_for('finance.list_suppliers'))
+
+    if request.method == 'POST':
+        name = (request.form.get('name') or '').strip()
+        if not name:
+            flash('Name is required.', 'error')
+            return redirect(request.url)
+
+        requested_type = (request.form.get('supplier_type') or '').strip().upper()
+        if requested_type:
+            supplier.supplier_type = requested_type
+
+        payment_method = (request.form.get('payment_method') or '').strip()
+        cliq_alias = (request.form.get('cliq_alias') or '').strip()
+        guide_languages = (request.form.get('guide_languages') or '').strip()
+        category = (request.form.get('category') or '').strip()
+        room_category = (request.form.get('room_category') or '').strip()
+        notes = (request.form.get('notes') or '').strip()
+
+        merged_notes = notes
+        if category:
+            merged_notes = f"Category: {category}\n{merged_notes}".strip()
+        if room_category:
+            merged_notes = f"Room Category: {room_category}\n{merged_notes}".strip()
+        if payment_method:
+            merged_notes = f"Payment Method: {payment_method}\n{merged_notes}".strip()
+
+        # Handle contract file upload: use new file if provided, otherwise keep existing
+        parsed_existing = _parse_supplier_notes(supplier.notes)
+        new_contract_file = request.files.get('contract_file')
+        contract_saved_name = parsed_existing['contract_file']
+        if new_contract_file and new_contract_file.filename:
+            try:
+                safe_name = secure_filename(new_contract_file.filename)
+                upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'supplier_contracts')
+                os.makedirs(upload_dir, exist_ok=True)
+                timestamped_name = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{safe_name}"
+                new_contract_file.save(os.path.join(upload_dir, timestamped_name))
+                contract_saved_name = timestamped_name
+            except Exception as e:
+                safe_log_error('Could not save contract attachment', e)
+        if contract_saved_name:
+            merged_notes = f"Contract file: {contract_saved_name}\n{merged_notes}".strip()
+
+        if payment_method:
+            bank_name_val, bank_account_val = _bank_fields_from_payment_method(
+                payment_method,
+                request.form.get('bank_name'),
+                request.form.get('bank_account'),
+                cliq_alias,
+            )
+        else:
+            bank_name_val = (request.form.get('bank_name') or '').strip() or None
+            bank_account_val = (request.form.get('bank_account') or '').strip() or None
+
+        supplier.name = name
+        supplier.contact_person = (request.form.get('contact_person') or '').strip() or None
+        supplier.email = (request.form.get('email') or '').strip() or None
+        supplier.phone = (request.form.get('phone') or '').strip() or None
+        supplier.website = (request.form.get('website') or '').strip() or None
+        supplier.address = (request.form.get('address') or '').strip() or None
+        supplier.city = (request.form.get('city') or '').strip() or None
+        supplier.country = (request.form.get('country') or '').strip() or None
+        supplier.payment_terms = (request.form.get('payment_terms') or '').strip() or None
+        supplier.default_currency = (request.form.get('default_currency') or 'USD').strip() or 'USD'
+        supplier.bank_name = bank_name_val
+        supplier.bank_account = bank_account_val
+        supplier.tax_number = (request.form.get('tax_number') or '').strip() or None
+        supplier.notes = merged_notes or None
+        if guide_languages:
+            supplier.languages = guide_languages
+
+        try:
+            db.session.commit()
+            from app.routes.inbound import _invalidate_supplier_dropdown_cache
+            _invalidate_supplier_dropdown_cache()
+            flash(f'{name} updated successfully.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            safe_log_error(f'Error updating supplier {supplier_id}', e)
+            flash('Could not save changes. Please try again.', 'error')
+
+        return redirect(url_for('finance.supplier_type_page', type_key=type_key))
+
+    # GET: determine pre-fill values
+    parsed = _parse_supplier_notes(supplier.notes)
+
+    if supplier.bank_name == 'Cliq':
+        payment_method = 'Cliq'
+        cliq_alias = supplier.bank_account or ''
+        bank_name = ''
+        bank_account = ''
+    elif supplier.bank_name:
+        payment_method = 'Bank'
+        bank_name = supplier.bank_name
+        bank_account = supplier.bank_account or ''
+        cliq_alias = ''
+    else:
+        payment_method = parsed['payment_method_embedded']
+        bank_name = ''
+        bank_account = ''
+        cliq_alias = ''
+
+    return render_template(
+        'finance/supplier_type_edit.html',
+        supplier=supplier,
+        type_key=type_key,
+        type_label=config['label'],
+        type_icon=config['icon'],
+        new_supplier_type=config['new_supplier_type'],
+        category=parsed['category'],
+        room_category=parsed['room_category'],
+        clean_notes=parsed['clean_notes'],
+        payment_method=payment_method,
+        bank_name=bank_name,
+        bank_account=bank_account,
+        cliq_alias=cliq_alias,
+        contract_file=parsed['contract_file'],
+    )
+
+
 @finance.route('/new-supplier', methods=['GET', 'POST'])
 
 def new_supplier():

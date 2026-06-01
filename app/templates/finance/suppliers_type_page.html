@@ -235,7 +235,7 @@ body.modal-open {
                             <a href="/supplier/{{ supplier.id }}" class="supplier-action-btn" title="View">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <a href="/supplier/{{ supplier.id }}" class="supplier-action-btn" title="Edit">
+                            <a href="{{ url_for('finance.edit_supplier_type', type_key=type_key, supplier_id=supplier.id) }}" class="supplier-action-btn" title="Edit">
                                 <i class="fas fa-pen"></i>
                             </a>
                             <form method="POST" action="{{ url_for('finance.toggle_supplier_status', supplier_id=supplier.id) }}" onsubmit="return confirm('{% if supplier.is_active %}Suspend this supplier? It will be hidden from request dropdowns.{% else %}Activate this supplier? It will appear in request dropdowns again.{% endif %}');" style="margin:0;">
