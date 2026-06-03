@@ -13,6 +13,7 @@ from app.forms.customer import CustomerForm, CustomerDocumentForm, CustomerSearc
 from app.models.customer import Customer, CustomerDocument
 from app.models.booking import Booking
 from app.models.inbound import InboundRequest
+from app.utils import is_valid_phone, PHONE_ERROR
 from app.services.passport_scanner import PassportScanner
 
 # Create blueprint
@@ -531,6 +532,10 @@ def api_create_customer():
                 }
             }), 400
     
+    # Validate phone format
+    if data.get('phone') and not is_valid_phone(data.get('phone')):
+        return jsonify({'success': False, 'error': PHONE_ERROR}), 400
+
     # Check if customer with this phone already exists (only if phone provided)
     if data.get('phone'):
         existing_phone = Customer.query.filter_by(phone=data.get('phone')).first()

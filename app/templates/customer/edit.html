@@ -14,60 +14,63 @@
 {{ super() }}
 <style>
 .customer-form-page {
-    max-width: 560px;
+    max-width: 790px;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
 }
 .customer-form-page .card {
     max-width: 100%;
     border: 0;
-    box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .08);
+    box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .10);
 }
 .customer-form-page .card-body {
-    padding-top: 1.25rem;
+    padding: 2.2rem 2.2rem 1.75rem;
 }
-/* Match supplier popups: slate strip + compact fields */
 .customer-popup-like .popup-section-strip {
-    padding: 0.25rem 0.5rem;
+    padding: 0.4rem 0.875rem;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    border-radius: 0.25rem;
-    font-size: 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.975rem;
     font-weight: 600;
     color: #334155;
     margin-top: 0;
-    margin-bottom: 0.375rem;
+    margin-bottom: 0.65rem;
 }
 .customer-popup-like .popup-like-label {
     display: block;
-    font-size: 0.75rem;
+    font-size: 0.9rem;
     font-weight: 500;
     color: #334155;
-    margin-bottom: 0.125rem;
+    margin-bottom: 0.3rem;
 }
 .customer-popup-like .popup-like-control,
 .customer-popup-like .popup-like-select {
     box-sizing: border-box;
     width: 100%;
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    line-height: 1.35;
+    font-size: 0.9rem;
+    padding: 0.55rem 0.875rem;
+    line-height: 1.5;
     border: 1px solid #cbd5e1;
-    border-radius: 0.25rem;
+    border-radius: 0.375rem;
     background-color: #fff;
 }
 .customer-popup-like .popup-like-control:focus,
 .customer-popup-like .popup-like-select:focus {
     border-color: #06b6d4;
     outline: 0;
-    box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.35);
+    box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.25);
 }
-/* Do not set flex gap on .row + .col-* — it breaks 50% + 50% and wraps the second column */
 @media (max-width: 575px) {
     .customer-form-page {
         max-width: 100%;
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    .customer-form-page .card-body {
+        padding: 1.5rem 1rem 1.25rem;
     }
 }
 </style>
@@ -77,10 +80,10 @@
 <div class="customer-form-page my-4 customer-popup-like">
   <div class="card shadow-sm">
     <div class="card-body">
-      <form method="POST" enctype="multipart/form-data" class="d-flex flex-column gap-2">
+      <form method="POST" enctype="multipart/form-data" class="d-flex flex-column gap-3">
         {{ form.csrf_token }}
 
-        <div class="row g-2 mb-1 align-items-start">
+        <div class="row g-3 align-items-start">
           <div class="col-6">
             {{ form.agent_name.label(class="popup-like-label") }}
             {{ form.agent_name(class="popup-like-control", placeholder="Agent / account") }}
@@ -97,7 +100,7 @@
           </div>
         </div>
 
-        <div class="row g-2 mb-1 align-items-start">
+        <div class="row g-3 align-items-start">
           <div class="col-6">
             {{ form.phone.label(class="popup-like-label") }}
             {{ form.phone(class="popup-like-control", placeholder="+962 …") }}
@@ -115,7 +118,7 @@
         </div>
 
         <div class="popup-section-strip">Business Details</div>
-        <div class="row g-2 mb-1 align-items-start">
+        <div class="row g-3 align-items-start">
           <div class="col-sm-6">
             {{ form.customer_type.label(class="popup-like-label") }}
             {{ form.customer_type(class="popup-like-select") }}
@@ -133,7 +136,7 @@
         </div>
 
         <div class="popup-section-strip">Financial Information</div>
-        <div id="customerBankFieldsRow" class="row g-2 mb-1 align-items-start">
+        <div id="customerBankFieldsRow" class="row g-3 align-items-start">
           <div class="col-sm-6" id="customerBankNameWrap">
             {{ form.bank_name.label(class="popup-like-label") }}
             {{ form.bank_name(class="popup-like-control", placeholder="Bank name") }}
@@ -150,7 +153,7 @@
           </div>
         </div>
 
-        <div id="customerCliqWrap" class="row g-2 mb-1 align-items-start" style="display: none;">
+        <div id="customerCliqWrap" class="row g-3 align-items-start" style="display: none;">
           <div class="col-12">
             <label class="popup-like-label" for="cliq_alias">Cliq num/Alias</label>
             {{ form.cliq_alias(class="popup-like-control", placeholder="Enter cliq num or alias", id="cliq_alias") }}
@@ -160,9 +163,9 @@
           </div>
         </div>
 
-        <div class="d-flex justify-content-between gap-2 flex-wrap pt-2">
-          <a href="{{ url_for('customer.list_customers') }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
-          {{ form.submit(class="btn btn-primary btn-sm") }}
+        <div class="d-flex justify-content-between gap-3 flex-wrap pt-2">
+          <a href="{{ url_for('customer.list_customers') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+          {{ form.submit(class="btn btn-primary px-4") }}
         </div>
       </form>
     </div>

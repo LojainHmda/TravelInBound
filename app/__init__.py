@@ -86,13 +86,13 @@ def create_app():
     app.config['SESSION_COOKIE_DOMAIN'] = None
     app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
 
-    # Development-only cache behavior: always reflect code/template/static changes.
+    # Always reload templates from disk so edits are reflected without a server restart.
+    app.config['TEMPLATES_AUTO_RELOAD'] = True
+    app.jinja_env.auto_reload = True
     is_dev_env = os.environ.get('FLASK_ENV', '').lower() == 'development'
     is_debug_env = os.environ.get('FLASK_DEBUG', '').lower() in ('1', 'true', 'yes', 'on')
     if is_dev_env or is_debug_env:
-        app.config['TEMPLATES_AUTO_RELOAD'] = True
         app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
-        app.jinja_env.auto_reload = True
     
     # Suppress CSRF logging
     import logging

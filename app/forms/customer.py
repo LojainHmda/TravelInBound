@@ -2,7 +2,7 @@ from datetime import date
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired
 from wtforms import StringField, TextAreaField, SelectField, DateField, SubmitField
-from wtforms.validators import DataRequired, Email, Optional, Length
+from wtforms.validators import DataRequired, Email, Optional, Length, Regexp
 
 def get_customer_type_choices():
     """Return customer type choices - using a function to avoid caching issues"""
@@ -41,7 +41,7 @@ class CustomerForm(FlaskForm):
         validators=[Optional(), Length(max=100)],
     )
     email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
-    phone = StringField('Phone', validators=[DataRequired(), Length(min=1, max=20)])
+    phone = StringField('Phone', validators=[DataRequired(), Length(min=1, max=20), Regexp(r'^[0-9 +]+$', message='Only digits (0–9), spaces, and + are allowed.')])
     customer_type = SelectField('Customer Type', choices=get_customer_type_choices, default='Direct')
     payment_terms = SelectField(
         'Payment Terms',

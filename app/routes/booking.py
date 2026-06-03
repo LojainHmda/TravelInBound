@@ -16,6 +16,7 @@ from app.models import STATUS_REQUEST, STATUS_IN_PROGRESS, STATUS_CONFIRMED
 from app.utils.openai_helper import analyze_flight_ticket
 
 from app.forms.booking import BookingRequestForm, ServiceItemForm
+from app.utils import is_valid_phone, PHONE_ERROR
 from app.forms.status import UpdateServiceStatusForm
 from app.forms.invoice import GenerateInvoiceForm, PaymentForm
 
@@ -1397,6 +1398,10 @@ def confirm_service(item_id):
             document.notes = json.dumps(insurance_details)
             
         elif service_item.service_type == 'RESTAURANT':
+            _rphone = request.form.get('contact_phone', '').strip()
+            if _rphone and not is_valid_phone(_rphone):
+                flash(f'Contact phone: {PHONE_ERROR}', 'error')
+                return redirect(request.url)
             from_date_val = request.form.get('from_date', '')
             # Restaurant uses single date only - to_date = from_date
             restaurant_details = {
@@ -1423,6 +1428,10 @@ def confirm_service(item_id):
             document.notes = json.dumps(restaurant_details)
             
         elif service_item.service_type == 'GUIDE':
+            _gphone = request.form.get('guide_phone', '').strip()
+            if _gphone and not is_valid_phone(_gphone):
+                flash(f'Guide phone: {PHONE_ERROR}', 'error')
+                return redirect(request.url)
             guide_details = {
                 'guide_name': request.form.get('guide_name', ''),
                 'language': request.form.get('language', ''),
