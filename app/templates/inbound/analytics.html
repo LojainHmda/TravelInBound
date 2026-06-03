@@ -1,1020 +1,918 @@
 {% extends "base.html" %}
-
-{% block title %}Services Analytics - Run Downs{% endblock %}
+{% block title %}Run Down Analytics{% endblock %}
 
 {% block content %}
 <style>
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
-    background: #f8fafc;
+body { background: #f1f5f9; }
+.an-wrap { max-width: 1440px; margin: 0 auto; padding: 14px 18px; }
+
+/* ── Date inputs in filter bar ── */
+.date-inline { display: flex; align-items: center; gap: 6px; }
+.date-inline label { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; white-space: nowrap; }
+.date-inline input[type=date] { padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px; width: 118px; background: white; }
+.date-inline .sep { color: #9ca3af; font-size: 12px; }
+
+/* ── KPI cards ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 8px; margin-bottom: 10px; }
+@media(max-width:1200px){ .kpi-grid{ grid-template-columns: repeat(3,1fr); } }
+@media(max-width:640px) { .kpi-grid{ grid-template-columns: repeat(2,1fr); } }
+.kpi-card {
+  background: white; border-radius: 10px; padding: 10px 12px;
+  border: 1.5px solid #f3f4f6; cursor: pointer; transition: all .18s;
+  position: relative; overflow: hidden;
 }
-
-.analytics-header {
-    background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%);
-    color: #1f2937;
-    padding: 20px 28px;
-    border-radius: 14px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.kpi-card:hover { box-shadow: 0 4px 10px rgba(0,0,0,.08); transform: translateY(-1px); }
+.kpi-card.active { border-color: #f59e0b; background: #fffbeb; }
+.kpi-card.active::after {
+  content:''; position: absolute; bottom: 0; left: 0; right: 0;
+  height: 3px; background: #f59e0b; border-radius: 0 0 8px 8px;
 }
+.kpi-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+.kpi-icon { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.kpi-icon.hotel    { background:#dbeafe; color:#1d4ed8; }
+.kpi-icon.transport{ background:#ffedd5; color:#c2410c; }
+.kpi-icon.guide    { background:#ede9fe; color:#6d28d9; }
+.kpi-icon.meal     { background:#fae8ff; color:#9333ea; }
+.kpi-icon.optional { background:#dcfce7; color:#15803d; }
+.kpi-icon.ground   { background:#fef3c7; color:#b45309; }
+.kpi-share { text-align: right; }
+.kpi-share-lbl { font-size: 9px; color: #9ca3af; text-transform: uppercase; }
+.kpi-share-val { font-size: 13px; font-weight: 700; color: #374151; }
+.kpi-name { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .4px; }
+.kpi-count { font-size: 20px; font-weight: 800; color: #111827; line-height: 1; }
+.kpi-count small { font-size: 11px; font-weight: 400; color: #9ca3af; margin-left: 2px; }
+.kpi-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; padding-top: 6px; border-top: 1px solid #f3f4f6; }
+.kpi-stat { display: flex; flex-direction: column; }
+.kpi-stat-lbl { font-size: 8px; color: #9ca3af; text-transform: uppercase; }
+.kpi-stat-val { font-size: 13px; font-weight: 700; color: #1f2937; }
+.kpi-stat-pct { font-size: 9px; color: #10b981; margin-left: 1px; }
 
-.analytics-header h1 {
-    font-size: 22px;
-    font-weight: 700;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.analytics-header .subtitle {
-    font-size: 13px;
-    opacity: 0.8;
-}
-
-.date-period {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: rgba(255,255,255,0.9);
-    padding: 8px 14px;
-    border-radius: 8px;
-}
-
-.date-period label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #6b7280;
-    text-transform: uppercase;
-}
-
-.date-period input {
-    padding: 6px 10px;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    font-size: 13px;
-    width: 130px;
-}
-
-.date-period .to-text {
-    color: #9ca3af;
-    font-size: 13px;
-}
-
-/* Service Performance Dashboard Cards - Compact */
-.performance-section {
-    margin-bottom: 16px;
-}
-
-.performance-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.performance-title .record-count {
-    font-size: 12px;
-    font-weight: 400;
-    color: #6b7280;
-}
-
-.performance-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 10px;
-}
-
-@media (max-width: 1200px) {
-    .performance-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    .performance-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-.perf-card {
-    background: white;
-    border-radius: 10px;
-    padding: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    border: 1px solid #f3f4f6;
-    transition: all 0.2s;
-    cursor: pointer;
-}
-
-.perf-card:hover {
-    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
-    transform: translateY(-1px);
-}
-
-.perf-card.selected {
-    border-color: #f59e0b;
-    background: #fffbeb;
-}
-
-.perf-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 8px;
-}
-
-.perf-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-}
-
-.perf-icon.hotel { background: #dbeafe; color: #2563eb; }
-.perf-icon.transport { background: #ffedd5; color: #ea580c; }
-.perf-icon.guide { background: #e0e7ff; color: #4f46e5; }
-.perf-icon.meal { background: #fae8ff; color: #a855f7; }
-.perf-icon.optional { background: #dcfce7; color: #16a34a; }
-
-.share-badge {
-    text-align: right;
-}
-
-.share-label {
-    font-size: 9px;
-    color: #9ca3af;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-}
-
-.share-value {
-    font-size: 14px;
-    font-weight: 700;
-    color: #1f2937;
-}
-
-.perf-service-name {
-    font-size: 11px;
-    font-weight: 600;
-    color: #374151;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    margin-bottom: 2px;
-}
-
-.perf-count {
-    font-size: 22px;
-    font-weight: 700;
-    color: #1f2937;
-    line-height: 1;
-}
-
-.perf-count-label {
-    font-size: 11px;
-    color: #6b7280;
-    margin-left: 3px;
-}
-
-.perf-card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid #f3f4f6;
-}
-
-.confirmed-stat {
-    display: flex;
-    flex-direction: column;
-}
-
-.confirmed-label {
-    font-size: 9px;
-    color: #9ca3af;
-    text-transform: uppercase;
-}
-
-.confirmed-value {
-    font-size: 14px;
-    font-weight: 700;
-    color: #1f2937;
-}
-
-.confirmed-pct {
-    font-size: 10px;
-    color: #10b981;
-    margin-left: 2px;
-}
-
-.pax-stat {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.pax-icon {
-    color: #9ca3af;
-    font-size: 12px;
-}
-
-.pax-label {
-    font-size: 9px;
-    color: #9ca3af;
-    text-transform: uppercase;
-}
-
-.pax-value {
-    font-size: 14px;
-    font-weight: 700;
-    color: #1f2937;
-}
-
-/* Filter bar */
+/* ── Filter bar ── */
 .filter-bar {
-    background: white;
-    border-radius: 12px;
-    padding: 14px 18px;
-    margin-bottom: 0;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+  background: white; border-radius: 10px; padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.05);
 }
-
-.search-box {
-    flex: 1;
-    min-width: 250px;
-    position: relative;
-}
-
+.search-box { flex: 1; min-width: 220px; position: relative; }
 .search-box input {
-    width: 100%;
-    padding: 10px 16px 10px 38px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 14px;
-    background: #f9fafb;
+  width: 100%; padding: 7px 12px 7px 32px;
+  border: 1px solid #e5e7eb; border-radius: 7px; font-size: 13px;
+  background: #f9fafb; transition: all .15s;
+}
+.search-box input:focus { outline: none; border-color: #fbbf24; background: white; }
+.search-box i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 12px; }
+.flt-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border: 1px solid #e5e7eb; border-radius: 7px;
+  background: white; font-size: 13px; font-weight: 500; color: #374151;
+  cursor: pointer; white-space: nowrap; transition: all .15s;
+}
+.flt-btn:hover { border-color: #d1d5db; background: #f9fafb; }
+.flt-btn.active { border-color: #f59e0b; background: #fffbeb; color: #92400e; }
+.flt-dd { position: relative; }
+.flt-menu {
+  position: absolute; top: calc(100%+4px); left: 0; z-index: 200;
+  background: white; border: 1px solid #e5e7eb; border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.1); min-width: 155px;
+  padding: 4px 0; display: none;
+}
+.flt-menu.open { display: block; }
+.flt-item { display: flex; align-items: center; gap: 8px; padding: 6px 12px; font-size: 12px; color: #374151; cursor: pointer; }
+.flt-item:hover { background: #f9fafb; }
+.flt-item.on { background: #fffbeb; color: #b45309; }
+.flt-chk { width: 13px; height: 13px; border: 1.5px solid #d1d5db; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 7px; color: transparent; flex-shrink: 0; }
+.flt-item.on .flt-chk { background: #f59e0b; border-color: #f59e0b; color: white; }
+.btn-export { background: #059669; color: white; border: none; padding: 7px 14px; border-radius: 7px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; text-decoration: none; white-space: nowrap; }
+.btn-export:hover { background: #047857; color: white; }
+
+/* Active tags row */
+.active-tags { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 6px 14px 8px; background: white; border-top: 1px solid #f3f4f6; border-radius: 0 0 10px 10px; margin-top: -10px; margin-bottom: 10px; }
+.tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 5px; font-size: 11px; font-weight: 500; }
+.tag.svc  { background: #dbeafe; color: #1e40af; }
+.tag.sts  { background: #ede9fe; color: #5b21b6; }
+.tag.srch { background: #f3f4f6; color: #374151; }
+.tag .x { cursor: pointer; opacity: .7; }
+.tag .x:hover { opacity: 1; }
+.clear-all { font-size: 12px; color: #f59e0b; text-decoration: none; font-weight: 500; cursor: pointer; }
+
+/* ── Supplier Analytics Panel ── */
+.sa-panel { background: white; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); overflow: hidden; border: 1px solid #f3f4f6; }
+.sa-panel-header { background: #1e293b; color: white; padding: 8px 16px; display: flex; align-items: center; gap: 8px; }
+.sa-panel-header h2 { margin: 0; font-size: 13px; font-weight: 600; }
+.sa-panel-header .badge-count { background: rgba(255,255,255,.15); padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+
+/* ── Controls: 2-column layout ── */
+.sa-controls {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+.sa-col-left {
+  padding: 10px 16px 10px 16px;
+  display: flex; flex-direction: column; gap: 7px;
+  border-right: 1px solid #f3f4f6;
+}
+.sa-col-right {
+  padding: 10px 16px;
+  display: flex; flex-direction: column; gap: 7px;
+  min-width: 260px;
+}
+@media(max-width:700px){
+  .sa-controls { grid-template-columns: 1fr; }
+  .sa-col-left { border-right: none; border-bottom: 1px solid #f3f4f6; }
+  .sa-col-right { min-width: 0; }
+}
+.sa-row { display: flex; align-items: center; gap: 8px; }
+.sa-lbl {
+  font-size: 9px; font-weight: 700; color: #94a3b8;
+  text-transform: uppercase; letter-spacing: .6px;
+  white-space: nowrap; min-width: 52px;
 }
 
-.search-box input:focus {
-    outline: none;
-    border-color: #fbbf24;
-    background: white;
+/* Supplier type tabs */
+.stype-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.stype-tab { padding: 4px 11px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1.5px solid transparent; background: #f3f4f6; color: #374151; transition: all .15s; display: flex; align-items: center; gap: 4px; }
+.stype-tab:hover { background: #e5e7eb; }
+.stype-tab.on { background: #1e293b; color: white; border-color: #1e293b; }
+
+/* View mode toggle */
+.view-toggle { display: flex; gap: 2px; background: #f3f4f6; border-radius: 6px; padding: 2px; }
+.view-btn { padding: 3px 9px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; color: #6b7280; transition: all .15s; }
+.view-btn.on { background: white; color: #1e293b; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+
+/* Attribute pills */
+.attr-pills { display: flex; gap: 4px; flex-wrap: wrap; min-height: 22px; }
+.attr-pill { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid #e5e7eb; background: white; color: #374151; transition: all .15s; }
+.attr-pill:hover { border-color: #d1d5db; background: #f9fafb; }
+.attr-pill.on { background: #1e293b; color: white; border-color: #1e293b; }
+
+/* Status chips */
+.status-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+.sts-chip { padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid #e5e7eb; background: white; color: #374151; transition: all .15s; white-space: nowrap; }
+.sts-chip.on.confirmed { background: #dcfce7; color: #166534; border-color: #86efac; }
+.sts-chip.on.requested { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+.sts-chip.on.invoiced  { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+
+/* Date inputs inside panel */
+.sa-date-row { display: flex; align-items: center; gap: 5px; }
+.sa-date-row input[type=date] {
+  padding: 3px 7px; border: 1px solid #e5e7eb; border-radius: 5px;
+  font-size: 11px; width: 108px; background: white; color: #374151;
 }
+.sa-date-row .sep { color: #9ca3af; font-size: 11px; }
 
-.search-box i {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #9ca3af;
-}
+/* Analytics table */
+.sa-table-wrap { overflow-x: auto; }
+.sa-table { width: 100%; border-collapse: collapse; }
+.sa-table th { background: #f8fafc; padding: 8px 12px; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: .4px; border-bottom: 1px solid #e5e7eb; text-align: left; white-space: nowrap; }
+.sa-table th:first-child { padding-left: 16px; }
+.sa-table td { padding: 8px 12px; font-size: 13px; color: #1f2937; border-bottom: 1px solid #f3f4f6; }
+.sa-table td:first-child { padding-left: 16px; font-weight: 600; }
+.sa-table tr:last-child td { border-bottom: none; }
+.sa-table tr:hover td { background: #fefce8; }
+.sa-table .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.cnt-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; padding: 2px 8px; border-radius: 5px; font-size: 12px; font-weight: 700; }
+.cnt-confirmed { background: #dcfce7; color: #166534; }
+.cnt-requested { background: #dbeafe; color: #1e40af; }
+.cnt-invoiced  { background: #fef3c7; color: #92400e; }
+.cnt-total     { background: #f3f4f6; color: #374151; }
+.sa-loading { padding: 30px; text-align: center; color: #6b7280; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.sa-empty   { padding: 30px; text-align: center; color: #9ca3af; font-size: 13px; }
 
-.filter-dropdown {
-    position: relative;
-}
-
-.filter-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    background: white;
-    font-size: 14px;
-    font-weight: 500;
-    color: #374151;
-    cursor: pointer;
-}
-
-.filter-btn:hover {
-    border-color: #d1d5db;
-    background: #f9fafb;
-}
-
-.filter-btn.active {
-    border-color: #f59e0b;
-    background: #fffbeb;
-    color: #b45309;
-}
-
-.filter-btn .plus-icon {
-    font-size: 12px;
-    color: #6b7280;
-}
-
-.filter-menu {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    margin-top: 4px;
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-    min-width: 160px;
-    z-index: 100;
-    padding: 4px 0;
-    display: none;
-    overflow: hidden;
-}
-
-.filter-menu.show {
-    display: block;
-}
-
-.filter-menu-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 12px;
-    cursor: pointer;
-    font-size: 13px;
-    color: #374151;
-}
-
-.filter-menu-item:hover {
-    background: #f9fafb;
-}
-
-.filter-menu-item.selected {
-    background: #fffbeb;
-    color: #b45309;
-}
-
-.filter-menu-item .check-icon {
-    width: 14px;
-    height: 14px;
-    border: 1.5px solid #d1d5db;
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 8px;
-    color: transparent;
-    flex-shrink: 0;
-}
-
-.filter-menu-item.selected .check-icon {
-    background: #f59e0b;
-    border-color: #f59e0b;
-    color: white;
-}
-
-.filter-menu-item i.service-icon {
-    width: 14px;
-    font-size: 12px;
-    text-align: center;
-    color: #6b7280;
-}
-
-.btn-export {
-    background: #10b981;
-    color: white;
-    border: none;
-    padding: 10px 16px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    text-decoration: none;
-}
-
-.btn-export:hover {
-    background: #059669;
-    color: white;
-}
-
-/* Active filters row */
-.active-filters {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 18px;
-    background: white;
-    border-top: 1px solid #f3f4f6;
-    border-radius: 0 0 12px 12px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-}
-
-.filter-label {
-    font-size: 12px;
-    color: #6b7280;
-    font-weight: 500;
-}
-
-.filter-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 10px;
-    background: #059669;
-    color: white;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.filter-tag.status-tag {
-    background: #6366f1;
-}
-
-.filter-tag .remove-tag {
-    cursor: pointer;
-    opacity: 0.8;
-    font-size: 14px;
-}
-
-.filter-tag .remove-tag:hover {
-    opacity: 1;
-}
-
-.clear-all {
-    font-size: 13px;
-    color: #f59e0b;
-    text-decoration: none;
-    font-weight: 500;
-    margin-left: 8px;
-}
-
-.clear-all:hover {
-    color: #d97706;
-    text-decoration: underline;
-}
-
-/* Results count */
-.results-count {
-    font-size: 14px;
-    color: #6b7280;
-    margin-bottom: 12px;
-}
-
-.results-count strong {
-    color: #1f2937;
-}
-
-/* Table view */
-.service-table {
-    background: white;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-}
-
-.service-table table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.service-table th {
-    background: #f9fafb;
-    padding: 12px 16px;
-    text-align: left;
-    font-size: 12px;
-    font-weight: 600;
-    color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.service-table td {
-    padding: 14px 16px;
-    font-size: 14px;
-    color: #1f2937;
-    border-bottom: 1px solid #f3f4f6;
-}
-
-.service-table tr:hover {
-    background: #fefce8;
-}
-
-.service-type-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.service-type-badge.hotel { background: #dbeafe; color: #1e40af; }
-.service-type-badge.transport { background: #ffedd5; color: #c2410c; }
-.service-type-badge.guide { background: #e0e7ff; color: #4338ca; }
-.service-type-badge.meal { background: #fae8ff; color: #7e22ce; }
-.service-type-badge.optional { background: #dcfce7; color: #166534; }
-
-.status-badge {
-    padding: 4px 10px;
-    border-radius: 5px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.status-request { background: #f3f4f6; color: #374151; }
-.status-quoted { background: #dbeafe; color: #1e40af; }
-.status-confirmed { background: #dcfce7; color: #166534; }
-.status-processing { background: #fef3c7; color: #92400e; }
-.status-completed { background: #d1fae5; color: #065f46; }
-.status-reserved { background: #e0e7ff; color: #4338ca; }
-.status-requested { background: #fce7f3; color: #be185d; }
-.status-cancelled { background: #fee2e2; color: #dc2626; }
-
-.pax-badge {
-    background: #f3f4f6;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #374151;
-}
-
-.request-link {
-    color: #2563eb;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.request-link:hover {
-    text-decoration: underline;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 50px 20px;
-    background: white;
-    border-radius: 12px;
-}
-
-.empty-state i {
-    font-size: 40px;
-    color: #d1d5db;
-    margin-bottom: 14px;
-}
-
-.empty-state h3 {
-    color: #374151;
-    margin-bottom: 6px;
-    font-size: 18px;
-}
-
-.empty-state p {
-    color: #6b7280;
-    font-size: 14px;
-}
+/* ── Run-down table ── */
+.rd-section-title { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.rd-count { font-size: 11px; color: #6b7280; font-weight: 400; }
+.rd-table-wrap { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+.rd-table { width: 100%; border-collapse: collapse; }
+.rd-table th { background: #f9fafb; padding: 8px 12px; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: .4px; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
+.rd-table td { padding: 9px 12px; font-size: 13px; color: #1f2937; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+.rd-table tr:last-child td { border-bottom: none; }
+.rd-table tr:hover td { background: #fefce8; }
+.svc-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 600; }
+.svc-badge.hotel     { background: #dbeafe; color: #1e40af; }
+.svc-badge.transport { background: #ffedd5; color: #c2410c; }
+.svc-badge.guide     { background: #ede9fe; color: #5b21b6; }
+.svc-badge.meal      { background: #fae8ff; color: #7e22ce; }
+.svc-badge.optional  { background: #dcfce7; color: #166534; }
+.sts-badge { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+.sts-request   { background: #f3f4f6; color: #374151; }
+.sts-quoted    { background: #dbeafe; color: #1e40af; }
+.sts-reserved  { background: #ede9fe; color: #4338ca; }
+.sts-confirmed { background: #dcfce7; color: #166534; }
+.sts-pending   { background: #fef3c7; color: #92400e; }
+.sts-completed { background: #d1fae5; color: #065f46; }
+.sts-invoiced  { background: #fef9c3; color: #713f12; }
+.sts-cancelled { background: #fee2e2; color: #dc2626; }
+.pax-pill { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; color: #374151; }
+.req-link { color: #2563eb; text-decoration: none; font-weight: 500; }
+.req-link:hover { text-decoration: underline; }
+.empty-state { text-align: center; padding: 40px; background: white; border-radius: 10px; }
+.empty-state i { font-size: 32px; color: #d1d5db; margin-bottom: 10px; display: block; }
+.empty-state h3 { font-size: 15px; color: #374151; margin-bottom: 4px; }
+.empty-state p { font-size: 13px; color: #9ca3af; }
 </style>
 
-<div class="container-fluid" style="max-width: 1400px; padding: 20px;">
-    <form method="GET" action="{{ url_for('inbound.analytics_dashboard') }}" id="filterForm">
-        <!-- Header with Date Range -->
-        <div class="analytics-header">
-            <div>
-                <h1>
-                    <i class="fas fa-chart-pie"></i>
-                    InboundTravel
-                </h1>
-                <div class="subtitle">OPERATIONS DASHBOARD</div>
-            </div>
-            <div class="date-period">
-                <label>RUN DOWN PERIOD:</label>
-                <input type="date" name="date_from" id="dateFrom" value="{{ date_from }}">
-                <span class="to-text">to</span>
-                <input type="date" name="date_to" id="dateTo" value="{{ date_to }}">
-            </div>
+<div class="an-wrap">
+
+  {# ── KPI CARDS — labels match /finance/suppliers business categories ── #}
+  <div class="kpi-grid" id="kpiGrid">
+    {% set card_defs = [
+      ('HOTEL',          'hotel',    'fa-hotel',      'Accommodation'),
+      ('GUIDE',          'guide',    'fa-user-tie',   'Guides'),
+      ('TRANSPORT',      'transport','fa-bus',         'Transportation'),
+      ('MEAL',           'meal',     'fa-utensils',   'Restaurant'),
+      ('GROUND_HANDLER', 'ground',   'fa-handshake',  'Meet & Assist'),
+      ('OPTIONAL',       'optional', 'fa-star',       'Optional'),
+    ] %}
+    {% for stype, css, icon, label in card_defs %}
+    {% set stat = service_stats[stype] %}
+    <div class="kpi-card {% if stype in service_types %}active{% endif %}"
+         data-stype="{{ stype }}"
+         onclick="toggleServiceFilter('{{ stype }}')">
+      <div class="kpi-top">
+        <div class="kpi-icon {{ css }}"><i class="fas {{ icon }}"></i></div>
+        <div class="kpi-share">
+          <div class="kpi-share-lbl">Share</div>
+          <div class="kpi-share-val" data-field="share">{{ stat.share }}%</div>
         </div>
-
-        <!-- Service Performance Cards -->
-        <div class="performance-section">
-            <div class="performance-title">
-                Service Performance <span class="record-count">{{ total_services }} records</span>
-            </div>
-            <div class="performance-grid">
-                <!-- Hotel Card -->
-                <div class="perf-card {% if 'HOTEL' in service_types %}selected{% endif %}" onclick="toggleServiceFilter('HOTEL')">
-                    <div class="perf-card-header">
-                        <div class="perf-icon hotel">
-                            <i class="fas fa-hotel"></i>
-                        </div>
-                        <div class="share-badge">
-                            <div class="share-label">SHARE</div>
-                            <div class="share-value">{{ service_stats.HOTEL.share }}%</div>
-                        </div>
-                    </div>
-                    <div class="perf-service-name">HOTEL</div>
-                    <div class="perf-count">{{ service_stats.HOTEL.total }}<span class="perf-count-label">Reqs</span></div>
-                    <div class="perf-card-footer">
-                        <div class="confirmed-stat">
-                            <span class="confirmed-label">CONFIRMED</span>
-                            <span class="confirmed-value">{{ service_stats.HOTEL.confirmed }}<span class="confirmed-pct">{{ service_stats.HOTEL.confirmed_pct }}%</span></span>
-                        </div>
-                        <div class="pax-stat">
-                            <i class="fas fa-users pax-icon"></i>
-                            <div>
-                                <div class="pax-label">PAX</div>
-                                <div class="pax-value">{{ service_stats.HOTEL.pax }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Transport Card -->
-                <div class="perf-card {% if 'TRANSPORT' in service_types %}selected{% endif %}" onclick="toggleServiceFilter('TRANSPORT')">
-                    <div class="perf-card-header">
-                        <div class="perf-icon transport">
-                            <i class="fas fa-shuttle-van"></i>
-                        </div>
-                        <div class="share-badge">
-                            <div class="share-label">SHARE</div>
-                            <div class="share-value">{{ service_stats.TRANSPORT.share }}%</div>
-                        </div>
-                    </div>
-                    <div class="perf-service-name">TRANSPORT</div>
-                    <div class="perf-count">{{ service_stats.TRANSPORT.total }}<span class="perf-count-label">Reqs</span></div>
-                    <div class="perf-card-footer">
-                        <div class="confirmed-stat">
-                            <span class="confirmed-label">CONFIRMED</span>
-                            <span class="confirmed-value">{{ service_stats.TRANSPORT.confirmed }}<span class="confirmed-pct">{{ service_stats.TRANSPORT.confirmed_pct }}%</span></span>
-                        </div>
-                        <div class="pax-stat">
-                            <i class="fas fa-users pax-icon"></i>
-                            <div>
-                                <div class="pax-label">PAX</div>
-                                <div class="pax-value">{{ service_stats.TRANSPORT.pax }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Guide Card -->
-                <div class="perf-card {% if 'GUIDE' in service_types %}selected{% endif %}" onclick="toggleServiceFilter('GUIDE')">
-                    <div class="perf-card-header">
-                        <div class="perf-icon guide">
-                            <i class="fas fa-user-tie"></i>
-                        </div>
-                        <div class="share-badge">
-                            <div class="share-label">SHARE</div>
-                            <div class="share-value">{{ service_stats.GUIDE.share }}%</div>
-                        </div>
-                    </div>
-                    <div class="perf-service-name">GUIDE</div>
-                    <div class="perf-count">{{ service_stats.GUIDE.total }}<span class="perf-count-label">Reqs</span></div>
-                    <div class="perf-card-footer">
-                        <div class="confirmed-stat">
-                            <span class="confirmed-label">CONFIRMED</span>
-                            <span class="confirmed-value">{{ service_stats.GUIDE.confirmed }}<span class="confirmed-pct">{{ service_stats.GUIDE.confirmed_pct }}%</span></span>
-                        </div>
-                        <div class="pax-stat">
-                            <i class="fas fa-users pax-icon"></i>
-                            <div>
-                                <div class="pax-label">PAX</div>
-                                <div class="pax-value">{{ service_stats.GUIDE.pax }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Meal Card -->
-                <div class="perf-card {% if 'MEAL' in service_types %}selected{% endif %}" onclick="toggleServiceFilter('MEAL')">
-                    <div class="perf-card-header">
-                        <div class="perf-icon meal">
-                            <i class="fas fa-utensils"></i>
-                        </div>
-                        <div class="share-badge">
-                            <div class="share-label">SHARE</div>
-                            <div class="share-value">{{ service_stats.MEAL.share }}%</div>
-                        </div>
-                    </div>
-                    <div class="perf-service-name">MEAL</div>
-                    <div class="perf-count">{{ service_stats.MEAL.total }}<span class="perf-count-label">Reqs</span></div>
-                    <div class="perf-card-footer">
-                        <div class="confirmed-stat">
-                            <span class="confirmed-label">CONFIRMED</span>
-                            <span class="confirmed-value">{{ service_stats.MEAL.confirmed }}<span class="confirmed-pct">{{ service_stats.MEAL.confirmed_pct }}%</span></span>
-                        </div>
-                        <div class="pax-stat">
-                            <i class="fas fa-users pax-icon"></i>
-                            <div>
-                                <div class="pax-label">PAX</div>
-                                <div class="pax-value">{{ service_stats.MEAL.pax }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Optional Card -->
-                <div class="perf-card {% if 'OPTIONAL' in service_types %}selected{% endif %}" onclick="toggleServiceFilter('OPTIONAL')">
-                    <div class="perf-card-header">
-                        <div class="perf-icon optional">
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <div class="share-badge">
-                            <div class="share-label">SHARE</div>
-                            <div class="share-value">{{ service_stats.OPTIONAL.share }}%</div>
-                        </div>
-                    </div>
-                    <div class="perf-service-name">OPTIONAL</div>
-                    <div class="perf-count">{{ service_stats.OPTIONAL.total }}<span class="perf-count-label">Reqs</span></div>
-                    <div class="perf-card-footer">
-                        <div class="confirmed-stat">
-                            <span class="confirmed-label">CONFIRMED</span>
-                            <span class="confirmed-value">{{ service_stats.OPTIONAL.confirmed }}<span class="confirmed-pct">{{ service_stats.OPTIONAL.confirmed_pct }}%</span></span>
-                        </div>
-                        <div class="pax-stat">
-                            <i class="fas fa-users pax-icon"></i>
-                            <div>
-                                <div class="pax-label">PAX</div>
-                                <div class="pax-value">{{ service_stats.OPTIONAL.pax }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      </div>
+      <div class="kpi-name">{{ label }}</div>
+      <div class="kpi-count" data-field="count">{{ stat.total }}<small>records</small></div>
+      <div class="kpi-footer">
+        <div class="kpi-stat">
+          <span class="kpi-stat-lbl">Confirmed</span>
+          <span class="kpi-stat-val" data-field="confirmed">{{ stat.confirmed }}<span class="kpi-stat-pct"> ({{ stat.confirmed_pct }}%)</span></span>
         </div>
-
-        <!-- Filter Bar -->
-        <div class="filter-bar" style="{% if service_types or status_filter or search_query %}border-radius: 12px 12px 0 0;{% endif %}">
-            <div class="search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" name="search" value="{{ search_query }}" placeholder="Search ID, Name, or Description and press Enter...">
-            </div>
-
-            <!-- Service Multi-Select Dropdown -->
-            <div class="filter-dropdown">
-                <button type="button" class="filter-btn {% if service_types %}active{% endif %}" onclick="toggleDropdown('serviceMenu')">
-                    <i class="fas fa-concierge-bell"></i>
-                    Service
-                    <span class="plus-icon">+</span>
-                </button>
-                <div class="filter-menu" id="serviceMenu">
-                    <div class="filter-menu-item {% if 'HOTEL' in service_types %}selected{% endif %}" onclick="toggleServiceCheckbox('HOTEL')">
-                        <span class="check-icon"><i class="fas fa-check"></i></span>
-                        <i class="fas fa-bed service-icon"></i> Hotels
-                    </div>
-                    <div class="filter-menu-item {% if 'TRANSPORT' in service_types %}selected{% endif %}" onclick="toggleServiceCheckbox('TRANSPORT')">
-                        <span class="check-icon"><i class="fas fa-check"></i></span>
-                        <i class="fas fa-car service-icon"></i> Transport
-                    </div>
-                    <div class="filter-menu-item {% if 'GUIDE' in service_types %}selected{% endif %}" onclick="toggleServiceCheckbox('GUIDE')">
-                        <span class="check-icon"><i class="fas fa-check"></i></span>
-                        <i class="fas fa-user-tie service-icon"></i> Guides
-                    </div>
-                    <div class="filter-menu-item {% if 'MEAL' in service_types %}selected{% endif %}" onclick="toggleServiceCheckbox('MEAL')">
-                        <span class="check-icon"><i class="fas fa-check"></i></span>
-                        <i class="fas fa-utensils service-icon"></i> Meals
-                    </div>
-                    <div class="filter-menu-item {% if 'OPTIONAL' in service_types %}selected{% endif %}" onclick="toggleServiceCheckbox('OPTIONAL')">
-                        <span class="check-icon"><i class="fas fa-check"></i></span>
-                        <i class="fas fa-star service-icon"></i> Optionals
-                    </div>
-                </div>
-            </div>
-
-            <!-- Hidden inputs for service types -->
-            <div id="serviceTypeInputs">
-                {% for st in service_types %}
-                <input type="hidden" name="service_type" value="{{ st }}">
-                {% endfor %}
-            </div>
-
-            <!-- Status Dropdown -->
-            <div class="filter-dropdown">
-                <button type="button" class="filter-btn {% if status_filter %}active{% endif %}" onclick="toggleDropdown('statusMenu')">
-                    <i class="fas fa-flag"></i>
-                    Status
-                    <span class="plus-icon">+</span>
-                </button>
-                <div class="filter-menu" id="statusMenu">
-                    <div class="filter-menu-item" onclick="selectStatus('')">
-                        <span class="check-icon"><i class="fas fa-check"></i></span>
-                        All Statuses
-                    </div>
-                    <div class="filter-menu-item {% if status_filter == 'REQUEST' %}selected{% endif %}" onclick="selectStatus('REQUEST')">
-                        <span class="check-icon"><i class="fas fa-check"></i></span>
-                        Request
-                    </div>
-                    <div class="filter-menu-item {% if status_filter == 'CONFIRMED' %}selected{% endif %}" onclick="selectStatus('CONFIRMED')">
-                        <span class="check-icon"><i class="fas fa-check"></i></span>
-                        Confirmed
-                    </div>
-                    <div class="filter-menu-item {% if status_filter == 'PROCESSING' %}selected{% endif %}" onclick="selectStatus('PROCESSING')">
-                        <span class="check-icon"><i class="fas fa-check"></i></span>
-                        Processing
-                    </div>
-                    <div class="filter-menu-item {% if status_filter == 'COMPLETED' %}selected{% endif %}" onclick="selectStatus('COMPLETED')">
-                        <span class="check-icon"><i class="fas fa-check"></i></span>
-                        Completed
-                    </div>
-                </div>
-                <input type="hidden" name="status" id="statusInput" value="{{ status_filter }}">
-            </div>
-
-            <input type="hidden" name="request_number" value="{{ request_number }}">
-
-            <a href="{{ url_for('inbound.analytics_export_excel', search=search_query, status=status_filter, date_from=date_from, date_to=date_to, request_number=request_number) }}" class="btn-export">
-                <i class="fas fa-download"></i>
-                Export
-            </a>
+        <div class="kpi-stat" style="text-align:right;">
+          <span class="kpi-stat-lbl">PAX</span>
+          <span class="kpi-stat-val" data-field="pax">{{ stat.pax }}</span>
         </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
 
-        <!-- Active Filter Tags -->
-        {% if service_types or status_filter or search_query %}
-        <div class="active-filters">
-            <span class="filter-label">FILTERS:</span>
-            {% for st in service_types %}
-            <span class="filter-tag">
-                SERVICE: {{ st }}
-                <span class="remove-tag" onclick="removeServiceFilter('{{ st }}')">&times;</span>
-            </span>
-            {% endfor %}
-            {% if status_filter %}
-            <span class="filter-tag status-tag">
-                STATUS: {{ status_filter }}
-                <span class="remove-tag" onclick="removeFilter('status')">&times;</span>
-            </span>
-            {% endif %}
-            {% if search_query %}
-            <span class="filter-tag" style="background:#374151;">
-                SEARCH: "{{ search_query }}"
-                <span class="remove-tag" onclick="removeFilter('search')">&times;</span>
-            </span>
-            {% endif %}
-            <a href="{{ url_for('inbound.analytics_dashboard') }}" class="clear-all">Clear all</a>
-        </div>
-        {% endif %}
-    </form>
-
-    <!-- Results -->
-    <div class="results-count">
-        <strong>{{ services|length }}</strong> services found
+  {# ── FILTER BAR ── #}
+  <div class="filter-bar" id="filterBar">
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" id="searchInput" value="{{ search_query }}"
+             placeholder="Search request, contact, description…"
+             onkeydown="if(event.key==='Enter'){applySearch();}">
     </div>
 
+    {# Service multi-select #}
+    <div class="flt-dd">
+      <button type="button" class="flt-btn" id="svcBtn" onclick="toggleMenu('svcMenu')">
+        <i class="fas fa-concierge-bell"></i> Service
+        <i class="fas fa-chevron-down" style="font-size:10px;"></i>
+      </button>
+      <div class="flt-menu" id="svcMenu">
+        {% for stype, css, icon, label in card_defs %}
+        <div class="flt-item" data-stype="{{ stype }}" onclick="toggleServiceCheckbox('{{ stype }}')">
+          <span class="flt-chk"><i class="fas fa-check"></i></span>
+          <i class="fas {{ icon }}" style="width:14px;text-align:center;color:#6b7280;font-size:11px;"></i>
+          {{ label }}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# Status dropdown #}
+    <div class="flt-dd">
+      <button type="button" class="flt-btn" id="stsBtn" onclick="toggleMenu('stsMenu')">
+        <i class="fas fa-flag"></i> Status
+        <i class="fas fa-chevron-down" style="font-size:10px;"></i>
+      </button>
+      <div class="flt-menu" id="stsMenu">
+        {% for val,lbl in [('','All'),('REQUEST','Requested'),('CONFIRMED','Confirmed'),('INVOICED','Invoiced'),('PENDING','Pending'),('COMPLETED','Completed')] %}
+        <div class="flt-item {% if status_filter==val %}on{% endif %}"
+             data-sts="{{ val }}" onclick="selectStatus('{{ val }}')">
+          <span class="flt-chk"><i class="fas fa-check"></i></span>{{ lbl }}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="date-inline">
+      <label>Period:</label>
+      <input type="date" id="dateFrom" value="{{ date_from }}">
+      <span class="sep">→</span>
+      <input type="date" id="dateTo" value="{{ date_to }}">
+    </div>
+
+    <a id="exportBtn" href="#" class="btn-export">
+      <i class="fas fa-download"></i> Export
+    </a>
+  </div>
+
+  {# ── ACTIVE FILTER TAGS ── #}
+  <div class="active-tags" id="activeTags" style="display:none;"></div>
+
+  {# ── SUPPLIER ANALYTICS PANEL ── #}
+  <div class="sa-panel" id="saPanel">
+    <div class="sa-panel-header">
+      <i class="fas fa-chart-line"></i>
+      <h2>Supplier Analytics</h2>
+      <span class="badge-count" id="saCount">—</span>
+      <span style="flex:1;"></span>
+    </div>
+    <div class="sa-controls">
+
+      {# ── LEFT: Supplier type + Attributes ── #}
+      <div class="sa-col-left">
+        <div class="sa-row">
+          <span class="sa-lbl">Supplier</span>
+          <div class="stype-tabs" id="stypeTabs">
+            <span style="font-size:11px;color:#9ca3af;">Loading…</span>
+          </div>
+        </div>
+        <div class="sa-row" id="attrRow">
+          <span class="sa-lbl">Attribute</span>
+          <div id="attrPills" class="attr-pills"></div>
+        </div>
+      </div>
+
+      {# ── RIGHT: View toggle · Status · Date range ── #}
+      <div class="sa-col-right">
+        <div class="sa-row">
+          <span class="sa-lbl">View</span>
+          <div class="view-toggle" id="viewToggle">
+            <div class="view-btn on" data-view="suppliers" onclick="setView('suppliers')">
+              <i class="fas fa-building" style="font-size:9px;"></i> Suppliers
+            </div>
+            <div class="view-btn" data-view="attribute" onclick="setView('attribute')">
+              <i class="fas fa-layer-group" style="font-size:9px;"></i> Breakdown
+            </div>
+          </div>
+        </div>
+        <div class="sa-row">
+          <span class="sa-lbl">Status</span>
+          <div class="status-chips" id="saStatusChips">
+            <div class="sts-chip on requested" data-sts="REQUEST" onclick="toggleSaStatus('REQUEST')">
+              <i class="fas fa-circle" style="font-size:7px;"></i> Requested
+            </div>
+            <div class="sts-chip on confirmed" data-sts="CONFIRMED" onclick="toggleSaStatus('CONFIRMED')">
+              <i class="fas fa-check-circle" style="font-size:9px;"></i> Confirmed
+            </div>
+            <div class="sts-chip on invoiced" data-sts="INVOICED" onclick="toggleSaStatus('INVOICED')">
+              <i class="fas fa-file-invoice" style="font-size:9px;"></i> Invoiced
+            </div>
+          </div>
+        </div>
+        <div class="sa-row">
+          <span class="sa-lbl">Period</span>
+          <div class="sa-date-row">
+            <input type="date" id="saDateFrom" value="{{ date_from }}">
+            <span class="sep">→</span>
+            <input type="date" id="saDateTo"   value="{{ date_to }}">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="sa-table-wrap" id="saTableWrap">
+      <div class="sa-loading" id="saLoading">
+        <i class="fas fa-spinner fa-spin"></i> Loading analytics…
+      </div>
+      <table class="sa-table" id="saTable" style="display:none;">
+        <thead id="saHead"></thead>
+        <tbody id="saBody"></tbody>
+      </table>
+      <div class="sa-empty" id="saEmpty" style="display:none;">
+        <i class="fas fa-inbox" style="font-size:28px;color:#d1d5db;"></i>
+        <p style="margin-top:8px;">No data for the selected filters and date range.</p>
+      </div>
+    </div>
+  </div>
+
+  {# ── RUN-DOWN TABLE — preserved wrapper, rows patched via JS ── #}
+  <div class="rd-section-title">
+    Run Down Records <span class="rd-count" id="rdCount">{{ services|length }} entries</span>
+  </div>
+  <div id="rdContainer">
     {% if services %}
-    <!-- Table View -->
-    <div class="service-table">
-        <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Request #</th>
-                    <th>Contact</th>
-                    <th>PAX</th>
-                    <th>Service</th>
-                    <th>Description</th>
-                    <th>Status</th>
-                    <th>Cost</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for service in services %}
-                <tr>
-                    <td style="font-weight:600;">{{ service.date.strftime('%d %b %Y') }}</td>
-                    <td><a href="{{ url_for('inbound.view_request', id=service.request_id) }}" class="request-link">{{ service.request_number }}</a></td>
-                    <td>{{ service.contact_name }}</td>
-                    <td><span class="pax-badge">{{ service.pax }} PAX</span></td>
-                    <td>
-                        <span class="service-type-badge {{ service.service_type.lower() }}">
-                            <i class="fas fa-{% if service.service_type == 'HOTEL' %}bed{% elif service.service_type == 'TRANSPORT' %}car{% elif service.service_type == 'GUIDE' %}user-tie{% elif service.service_type == 'MEAL' %}utensils{% else %}star{% endif %}"></i>
-                            {{ service.service_type }}
-                        </span>
-                    </td>
-                    <td style="max-width:250px;">{{ service.description }}</td>
-                    <td><span class="status-badge status-{{ service.status.lower() }}">{{ service.status }}</span></td>
-                    <td style="font-weight:600;color:#059669;">{% if service.cost %}${{ "%.2f"|format(service.cost) }}{% else %}-{% endif %}</td>
-                    <td>
-                        <a href="{{ url_for('inbound.view_request', id=service.request_id) }}" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="rd-table-wrap">
+      <table class="rd-table">
+        <thead>
+          <tr>
+            <th>Date</th><th>Request #</th><th>Contact</th><th>PAX</th>
+            <th>Service</th><th>Description</th><th>Status</th><th>Cost</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="rdBody">
+          {% for svc in services %}
+          <tr>
+            <td style="font-weight:600;white-space:nowrap;">{{ svc.date.strftime('%d %b %Y') }}</td>
+            <td><a href="{{ url_for('inbound.view_request',id=svc.request_id) }}" class="req-link">{{ svc.request_number }}</a></td>
+            <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ svc.contact_name }}</td>
+            <td><span class="pax-pill">{{ svc.pax }}</span></td>
+            <td>
+              <span class="svc-badge {{ svc.service_type.lower() }}">
+                <i class="fas fa-{% if svc.service_type=='HOTEL' %}bed{% elif svc.service_type=='TRANSPORT' %}car{% elif svc.service_type=='GUIDE' %}user-tie{% elif svc.service_type=='MEAL' %}utensils{% else %}star{% endif %}"></i>
+                {{ svc.service_type }}
+              </span>
+            </td>
+            <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ svc.description }}">{{ svc.description }}</td>
+            <td><span class="sts-badge sts-{{ svc.status.lower() }}">{{ svc.status }}</span></td>
+            <td style="font-weight:600;color:#059669;white-space:nowrap;">{% if svc.cost %}${{ "%.0f"|format(svc.cost) }}{% else %}—{% endif %}</td>
+            <td><a href="{{ url_for('inbound.view_request',id=svc.request_id) }}" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:11px;"><i class="fas fa-eye"></i></a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
     {% else %}
-    <div class="empty-state">
-        <i class="fas fa-search"></i>
-        <h3>No Services Found</h3>
-        <p>Try adjusting your filters or date range</p>
+    <div class="empty-state" id="rdEmpty">
+      <i class="fas fa-search"></i>
+      <h3>No Services Found</h3>
+      <p>Try adjusting your filters or date range.</p>
     </div>
     {% endif %}
-</div>
+  </div>
+
+</div>{# /an-wrap #}
 
 <script>
-// Track selected service types
-let selectedServices = {{ service_types | tojson | safe }};
+/* ════════════════════════════════════════════════════════════════════════════
+   MODEL — single source of truth for all filter state
+════════════════════════════════════════════════════════════════════════════ */
+const M = {
+  dateFrom:     document.getElementById('dateFrom').value,
+  dateTo:       document.getElementById('dateTo').value,
+  serviceTypes: {{ service_types | tojson | safe }},
+  status:       {{ (status_filter or '') | tojson | safe }},
+  search:       {{ (search_query or '') | tojson | safe }},
+  // Supplier Analytics sub-state
+  sa: {
+    supplierType: null,   // set after types load
+    view:         'suppliers',  // 'suppliers' | 'attribute'
+    attribute:    '',
+    statuses:     ['REQUEST','CONFIRMED','INVOICED'],
+  },
+};
 
-// Toggle dropdown
-function toggleDropdown(menuId) {
-    const menu = document.getElementById(menuId);
-    document.querySelectorAll('.filter-menu').forEach(m => {
-        if (m.id !== menuId) m.classList.remove('show');
-    });
-    menu.classList.toggle('show');
+/* ════════════════════════════════════════════════════════════════════════════
+   URL helpers
+════════════════════════════════════════════════════════════════════════════ */
+function buildQS(extra = {}) {
+  const p = new URLSearchParams();
+  if (M.dateFrom) p.set('date_from', M.dateFrom);
+  if (M.dateTo)   p.set('date_to',   M.dateTo);
+  M.serviceTypes.forEach(st => p.append('service_type', st));
+  if (M.status) p.set('status', M.status);
+  if (M.search) p.set('search', M.search);
+  Object.entries(extra).forEach(([k,v]) => {
+    if (Array.isArray(v)) v.forEach(vi => p.append(k, vi));
+    else if (v !== null && v !== undefined && v !== '') p.set(k, v);
+  });
+  return p.toString();
 }
 
-// Close dropdowns when clicking outside
-document.addEventListener('click', function(e) {
-    if (!e.target.closest('.filter-dropdown')) {
-        document.querySelectorAll('.filter-menu').forEach(m => m.classList.remove('show'));
-    }
-});
+function syncUrl() {
+  history.replaceState({}, '', '?' + buildQS());
+}
 
-// Toggle service filter from checkbox menu
-function toggleServiceCheckbox(serviceType) {
-    const idx = selectedServices.indexOf(serviceType);
-    if (idx > -1) {
-        selectedServices.splice(idx, 1);
+function exportUrl() {
+  return '/inbound/analytics/export-excel?' + buildQS();
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   VIEW HELPERS — patch DOM in-place, never rebuild the outer divs
+════════════════════════════════════════════════════════════════════════════ */
+const SVC_ICON = {HOTEL:'bed',TRANSPORT:'car',GUIDE:'user-tie',MEAL:'utensils',OPTIONAL:'star'};
+
+// Patch KPI cards (only text nodes, not the card elements themselves)
+function patchKpi(stats, totalServices) {
+  document.querySelectorAll('.kpi-card').forEach(card => {
+    const stype = card.dataset.stype;
+    const s = stats[stype];
+    if (!s) return;
+    const share = totalServices ? Math.round(s.total / totalServices * 100) : 0;
+    const confPct = s.total ? Math.round(s.confirmed / s.total * 100) : 0;
+    card.querySelector('[data-field="share"]').textContent = share + '%';
+    card.querySelector('[data-field="count"]').innerHTML = s.total + '<small>records</small>';
+    card.querySelector('[data-field="confirmed"]').innerHTML =
+      s.confirmed + `<span class="kpi-stat-pct"> (${confPct}%)</span>`;
+    card.querySelector('[data-field="pax"]').textContent = s.pax;
+  });
+}
+
+// Patch KPI active state only (no fetch)
+function patchKpiActive() {
+  document.querySelectorAll('.kpi-card').forEach(c => {
+    c.classList.toggle('active', M.serviceTypes.includes(c.dataset.stype));
+  });
+}
+
+// Rebuild run-down table body in-place
+function patchRunDown(services) {
+  const count = services.length;
+  document.getElementById('rdCount').textContent = count + ' entries';
+
+  const container = document.getElementById('rdContainer');
+
+  if (count === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <i class="fas fa-search"></i>
+        <h3>No Services Found</h3>
+        <p>Try adjusting your filters or date range.</p>
+      </div>`;
+    return;
+  }
+
+  // Ensure table structure exists
+  let wrap = container.querySelector('.rd-table-wrap');
+  if (!wrap) {
+    container.innerHTML = `
+      <div class="rd-table-wrap">
+        <table class="rd-table">
+          <thead><tr>
+            <th>Date</th><th>Request #</th><th>Contact</th><th>PAX</th>
+            <th>Service</th><th>Description</th><th>Status</th><th>Cost</th><th></th>
+          </tr></thead>
+          <tbody id="rdBody"></tbody>
+        </table>
+      </div>`;
+  }
+
+  const icon = stype => SVC_ICON[stype] || 'star';
+  document.getElementById('rdBody').innerHTML = services.map(svc => `
+    <tr>
+      <td style="font-weight:600;white-space:nowrap;">${svc.date_display}</td>
+      <td><a href="/inbound/${svc.request_id}/view" class="req-link">${svc.request_number}</a></td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(svc.contact_name)}</td>
+      <td><span class="pax-pill">${svc.pax}</span></td>
+      <td>
+        <span class="svc-badge ${svc.service_type.toLowerCase()}">
+          <i class="fas fa-${icon(svc.service_type)}"></i> ${svc.service_type}
+        </span>
+      </td>
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+          title="${esc(svc.description)}">${esc(svc.description)}</td>
+      <td><span class="sts-badge sts-${svc.status.toLowerCase()}">${svc.status}</span></td>
+      <td style="font-weight:600;color:#059669;white-space:nowrap;">${svc.cost ? '$' + Math.round(svc.cost) : '—'}</td>
+      <td><a href="/inbound/${svc.request_id}/view" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:11px;"><i class="fas fa-eye"></i></a></td>
+    </tr>`).join('');
+}
+
+// Rebuild active-tags row in-place
+function patchActiveTags() {
+  const bar = document.getElementById('activeTags');
+  const parts = [];
+  M.serviceTypes.forEach(st => {
+    parts.push(`<span class="tag svc">${st}<span class="x" onclick="removeServiceFilter('${st}')">&times;</span></span>`);
+  });
+  if (M.status) {
+    parts.push(`<span class="tag sts">STATUS: ${M.status}<span class="x" onclick="clearStatus()">&times;</span></span>`);
+  }
+  if (M.search) {
+    parts.push(`<span class="tag srch">"${esc(M.search)}"<span class="x" onclick="clearSearch()">&times;</span></span>`);
+  }
+
+  if (parts.length) {
+    bar.style.display = 'flex';
+    bar.innerHTML = '<span style="font-size:11px;color:#6b7280;font-weight:500;">Filters:</span>'
+      + parts.join('')
+      + '<span class="clear-all" onclick="clearAll()">Clear all</span>';
+  } else {
+    bar.style.display = 'none';
+    bar.innerHTML = '';
+  }
+
+  // Update filter button active state
+  document.getElementById('svcBtn').classList.toggle('active', M.serviceTypes.length > 0);
+  document.getElementById('stsBtn').classList.toggle('active', !!M.status);
+
+  // Update dropdown items
+  document.querySelectorAll('#svcMenu .flt-item').forEach(el => {
+    el.classList.toggle('on', M.serviceTypes.includes(el.dataset.stype));
+  });
+  document.querySelectorAll('#stsMenu .flt-item').forEach(el => {
+    el.classList.toggle('on', el.dataset.sts === M.status);
+  });
+
+  // Update export button URL
+  document.getElementById('exportBtn').href = exportUrl();
+}
+
+function esc(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   CONTROLLERS — filter actions that update Model then refresh Views
+════════════════════════════════════════════════════════════════════════════ */
+function toggleServiceFilter(st) {
+  const i = M.serviceTypes.indexOf(st);
+  if (i > -1) M.serviceTypes.splice(i, 1); else M.serviceTypes.push(st);
+  patchKpiActive();
+  patchActiveTags();
+  syncUrl();
+  refreshRunDown();
+  // Sync supplier analytics supplier type to first selected service if applicable
+  _syncSaSupplierType();
+}
+
+function toggleServiceCheckbox(st) { toggleServiceFilter(st); }
+
+function removeServiceFilter(st) {
+  const i = M.serviceTypes.indexOf(st);
+  if (i > -1) M.serviceTypes.splice(i, 1);
+  patchKpiActive(); patchActiveTags(); syncUrl(); refreshRunDown();
+}
+
+function selectStatus(val) {
+  M.status = val;
+  patchActiveTags(); syncUrl(); refreshRunDown();
+}
+
+function clearStatus() { selectStatus(''); }
+
+function applySearch() {
+  M.search = document.getElementById('searchInput').value.trim();
+  patchActiveTags(); syncUrl(); refreshRunDown();
+}
+
+function clearSearch() {
+  M.search = '';
+  document.getElementById('searchInput').value = '';
+  patchActiveTags(); syncUrl(); refreshRunDown();
+}
+
+function clearAll() {
+  M.serviceTypes = []; M.status = ''; M.search = '';
+  document.getElementById('searchInput').value = '';
+  patchKpiActive(); patchActiveTags(); syncUrl();
+  refreshKpi(); refreshRunDown();
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   DATA FETCHERS
+════════════════════════════════════════════════════════════════════════════ */
+async function refreshKpi() {
+  try {
+    const res = await fetch(`/inbound/analytics/kpi-data?date_from=${M.dateFrom}&date_to=${M.dateTo}`);
+    if (!res.ok) return;
+    const d = await res.json();
+    patchKpi(d.stats, d.total_services);
+  } catch(e) { console.error('KPI fetch error', e); }
+}
+
+async function refreshRunDown() {
+  const stsParam = M.serviceTypes.map(st => `service_type=${encodeURIComponent(st)}`).join('&');
+  const url = `/inbound/analytics/run-down-data?date_from=${M.dateFrom}&date_to=${M.dateTo}`
+    + `&status=${encodeURIComponent(M.status)}&search=${encodeURIComponent(M.search)}&${stsParam}`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const d = await res.json();
+    patchRunDown(d.services);
+  } catch(e) { console.error('RunDown fetch error', e); }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SUPPLIER ANALYTICS — MVC for the analytics panel
+════════════════════════════════════════════════════════════════════════════ */
+// category key → attribute breakdown options (for "Attribute" view)
+const ATTR_DEFS = {
+  'guides':        [{val:'',lbl:'By Guide Name'},{val:'language',lbl:'Language'},{val:'service_type',lbl:'Service Type'}],
+  'transportation':[{val:'',lbl:'By Company'},{val:'vehicle_type',lbl:'Vehicle Type'}],
+  'restaurant':    [{val:'',lbl:'By Restaurant'},{val:'meal_type',lbl:'Meal Type'},{val:'location',lbl:'Location'}],
+  'accommodation': [{val:'',lbl:'By Hotel'},{val:'hotel_category',lbl:'Category'},{val:'meal_plan',lbl:'Meal Plan'},{val:'location',lbl:'Location'}],
+  'meet-assist':   [{val:'',lbl:'By Company'}],
+};
+
+// category key → supplier_type for the aggregation API
+const CAT_SERVICE_MAP = {
+  'guides':        'GUIDE',
+  'transportation':'TRANSPORT',
+  'restaurant':    'RESTAURANT',
+  'accommodation': 'HOTEL',
+  'meet-assist':   'GROUND_HANDLER',
+};
+
+function _syncSaSupplierType() {
+  if (M.serviceTypes.length !== 1) return;
+  const st = M.serviceTypes[0];
+  const mapped = {
+    HOTEL:'accommodation', TRANSPORT:'transportation',
+    GUIDE:'guides', MEAL:'restaurant', GROUND_HANDLER:'meet-assist'
+  }[st];
+  if (mapped && M.sa.supplierType !== mapped) {
+    M.sa.supplierType = mapped;
+    M.sa.attribute = '';
+    renderSaControls();
+    loadSaData();
+  }
+}
+
+async function loadSupplierTypes() {
+  try {
+    const res = await fetch('/inbound/analytics/supplier-types');
+    const d = await res.json();
+    const cats = d.categories && d.categories.length ? d.categories
+      : [{key:'guides',label:'Guides',icon:'fa-user-tie'},
+         {key:'transportation',label:'Transportation',icon:'fa-bus'},
+         {key:'restaurant',label:'Restaurant',icon:'fa-utensils'},
+         {key:'accommodation',label:'Accommodation',icon:'fa-hotel'},
+         {key:'meet-assist',label:'Meet & Assist',icon:'fa-handshake'}];
+    if (!M.sa.supplierType) M.sa.supplierType = cats[0].key;
+    renderSaTypeTabs(cats);
+    renderSaControls();
+    loadSaData();
+  } catch(e) {
+    console.error('supplier-types error', e);
+    M.sa.supplierType = 'guides';
+    renderSaTypeTabs([{key:'guides',label:'Guides',icon:'fa-user-tie'}]);
+    renderSaControls();
+    loadSaData();
+  }
+}
+
+function renderSaTypeTabs(cats) {
+  document.getElementById('stypeTabs').innerHTML = cats.map(c =>
+    `<div class="stype-tab ${c.key===M.sa.supplierType?'on':''}" data-stype="${c.key}" onclick="setSaType('${c.key}')">
+       <i class="fas ${c.icon||'fa-tag'}"></i> ${c.label}
+     </div>`
+  ).join('');
+}
+
+function renderSaControls() {
+  // Supplier type tabs
+  document.querySelectorAll('.stype-tab').forEach(t =>
+    t.classList.toggle('on', t.dataset.stype === M.sa.supplierType));
+
+  // View toggle
+  document.querySelectorAll('.view-btn').forEach(b =>
+    b.classList.toggle('on', b.dataset.view === M.sa.view));
+
+  // Attribute pills — always render, visible in attribute view
+  const attrWrap  = document.getElementById('attrPills');
+  const attrRow   = document.getElementById('attrRow');
+  const defs = ATTR_DEFS[M.sa.supplierType] || [{val:'',lbl:'By Name'}];
+  attrWrap.innerHTML = defs.map(d =>
+    `<div class="attr-pill ${d.val===M.sa.attribute?'on':''}" onclick="setSaAttr('${d.val}')">${d.lbl}</div>`
+  ).join('');
+  // Show attr row only in breakdown view
+  if (attrRow) attrRow.style.display = M.sa.view === 'attribute' ? 'flex' : 'none';
+
+  // Status chips
+  document.querySelectorAll('#saStatusChips .sts-chip').forEach(c =>
+    c.classList.toggle('on', M.sa.statuses.includes(c.dataset.sts)));
+
+  // Sync panel date inputs with global model
+  const sdf = document.getElementById('saDateFrom');
+  const sdt = document.getElementById('saDateTo');
+  if (sdf && sdf.value !== M.dateFrom) sdf.value = M.dateFrom;
+  if (sdt && sdt.value !== M.dateTo)   sdt.value = M.dateTo;
+}
+
+function setSaType(t) {
+  M.sa.supplierType = t; M.sa.attribute = '';
+  renderSaControls(); loadSaData();
+}
+
+function setView(v) {
+  M.sa.view = v; M.sa.attribute = '';
+  renderSaControls(); loadSaData();
+}
+
+function setSaAttr(a) {
+  M.sa.attribute = a; renderSaControls(); loadSaData();
+}
+
+function toggleSaStatus(s) {
+  const i = M.sa.statuses.indexOf(s);
+  if (i > -1) M.sa.statuses.splice(i,1); else M.sa.statuses.push(s);
+  renderSaControls(); loadSaData();
+}
+
+async function loadSaData() {
+  const loading = document.getElementById('saLoading');
+  const table   = document.getElementById('saTable');
+  const empty   = document.getElementById('saEmpty');
+  loading.style.display = 'flex';
+  table.style.display   = 'none';
+  empty.style.display   = 'none';
+
+  const stsParam = M.sa.statuses.map(s => `status=${encodeURIComponent(s)}`).join('&');
+  const dates    = `date_from=${M.dateFrom}&date_to=${M.dateTo}`;
+
+  let url, columns, items;
+  try {
+    if (M.sa.view === 'suppliers') {
+      // ── Suppliers view: actual Supplier records from /finance/suppliers ──
+      url = `/inbound/analytics/suppliers-by-type?category=${M.sa.supplierType}&${stsParam}&${dates}`;
+      const res = await fetch(url);
+      const d   = await res.json();
+      items   = d.items || [];
+      columns = buildSupplierColumns(M.sa.supplierType);
+      document.getElementById('saCount').textContent = d.total + ' suppliers';
     } else {
-        selectedServices.push(serviceType);
+      // ── Attribute view: aggregation breakdown ──
+      const apiType = CAT_SERVICE_MAP[M.sa.supplierType] || M.sa.supplierType.toUpperCase();
+      url = `/inbound/analytics/supplier-analytics?supplier_type=${apiType}&attribute=${encodeURIComponent(M.sa.attribute)}&${stsParam}&${dates}`;
+      const res = await fetch(url);
+      const d   = await res.json();
+      items   = d.items   || [];
+      columns = d.columns || [];
+      document.getElementById('saCount').textContent = d.total + ' rows';
     }
-    updateServiceInputs();
-    document.getElementById('filterForm').submit();
+
+    loading.style.display = 'none';
+    if (!items.length) { empty.style.display = 'block'; return; }
+    renderSaTable(columns, items);
+    table.style.display = '';
+  } catch(e) {
+    loading.style.display = 'none';
+    empty.style.display = 'block';
+    console.error('SA load error', e);
+  }
 }
 
-// Toggle service filter from card click
-function toggleServiceFilter(serviceType) {
-    const idx = selectedServices.indexOf(serviceType);
-    if (idx > -1) {
-        selectedServices.splice(idx, 1);
-    } else {
-        selectedServices.push(serviceType);
-    }
-    updateServiceInputs();
-    document.getElementById('filterForm').submit();
+function buildSupplierColumns(catKey) {
+  const base = [
+    {key:'name',    label:'Supplier'},
+    {key:'city',    label:'City'},
+    {key:'country', label:'Country'},
+  ];
+  if (catKey === 'guides')
+    base.splice(2, 0, {key:'languages', label:'Languages'});
+  if (catKey === 'meet-assist') {
+    base.push(
+      {key:'arrivals',   label:'Arrivals'},
+      {key:'departures', label:'Departures'},
+      {key:'total',      label:'Total'},
+    );
+  } else if (catKey !== 'accommodation') {
+    base.push(
+      {key:'total',     label:'Assignments'},
+      {key:'confirmed', label:'Confirmed'},
+      {key:'requested', label:'Requested'},
+      {key:'invoiced',  label:'Invoiced'},
+    );
+  } else {
+    // Accommodation: no usage counts available (no FK on InboundHotel)
+    base.push({key:'total', label:'In System'});
+  }
+  return base;
 }
 
-// Remove single service filter
-function removeServiceFilter(serviceType) {
-    const idx = selectedServices.indexOf(serviceType);
-    if (idx > -1) {
-        selectedServices.splice(idx, 1);
-    }
-    updateServiceInputs();
-    document.getElementById('filterForm').submit();
-}
+function renderSaTable(columns, items) {
+  document.getElementById('saHead').innerHTML =
+    '<tr>' + columns.map(c => `<th>${c.label}</th>`).join('') + '</tr>';
 
-// Update hidden inputs for service types
-function updateServiceInputs() {
-    const container = document.getElementById('serviceTypeInputs');
-    container.innerHTML = '';
-    selectedServices.forEach(st => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'service_type';
-        input.value = st;
-        container.appendChild(input);
+  const BADGES = {confirmed:'cnt-confirmed',requested:'cnt-requested',invoiced:'cnt-invoiced',total:'cnt-total'};
+  document.getElementById('saBody').innerHTML = items.map(item => {
+    const cells = columns.map(col => {
+      const v = item[col.key];
+      if (col.key in BADGES)
+        return `<td class="num"><span class="cnt-badge ${BADGES[col.key]}">${v ?? 0}</span></td>`;
+      if (typeof v === 'number')
+        return `<td class="num">${v}</td>`;
+      return `<td>${esc(v ?? '—')}</td>`;
     });
+    return '<tr>' + cells.join('') + '</tr>';
+  }).join('');
 }
 
-// Select status
-function selectStatus(value) {
-    document.getElementById('statusInput').value = value;
-    document.getElementById('filterForm').submit();
+/* ════════════════════════════════════════════════════════════════════════════
+   DROPDOWN UX
+════════════════════════════════════════════════════════════════════════════ */
+function toggleMenu(id) {
+  document.querySelectorAll('.flt-menu').forEach(m => {
+    if (m.id !== id) m.classList.remove('open');
+  });
+  document.getElementById(id).classList.toggle('open');
 }
+document.addEventListener('click', e => {
+  if (!e.target.closest('.flt-dd'))
+    document.querySelectorAll('.flt-menu').forEach(m => m.classList.remove('open'));
+});
 
-// Remove filter
-function removeFilter(filterName) {
-    const url = new URL(window.location.href);
-    url.searchParams.delete(filterName);
-    window.location.href = url.toString();
+/* ════════════════════════════════════════════════════════════════════════════
+   DATE RANGE
+════════════════════════════════════════════════════════════════════════════ */
+function _applyDateChange(from, to) {
+  M.dateFrom = from; M.dateTo = to; syncUrl();
+  // Sync all date inputs
+  ['dateFrom','saDateFrom'].forEach(id => { const el = document.getElementById(id); if (el) el.value = from; });
+  ['dateTo','saDateTo'].forEach(id =>   { const el = document.getElementById(id); if (el) el.value = to;   });
+  refreshKpi(); refreshRunDown(); loadSaData();
 }
+document.getElementById('dateFrom').addEventListener('change', function() { _applyDateChange(this.value, M.dateTo); });
+document.getElementById('dateTo').addEventListener('change',   function() { _applyDateChange(M.dateFrom, this.value); });
+document.getElementById('saDateFrom').addEventListener('change', function() { _applyDateChange(this.value, M.dateTo); });
+document.getElementById('saDateTo').addEventListener('change',   function() { _applyDateChange(M.dateFrom, this.value); });
 
-// Auto-submit on date change
-document.getElementById('dateFrom').addEventListener('change', function() {
-    document.getElementById('filterForm').submit();
-});
-document.getElementById('dateTo').addEventListener('change', function() {
-    document.getElementById('filterForm').submit();
-});
-
-// Submit on Enter in search
-document.querySelector('.search-box input').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        document.getElementById('filterForm').submit();
-    }
-});
+/* ════════════════════════════════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════════════════════════════════ */
+patchActiveTags();   // restore tag row from SSR state
+loadSupplierTypes(); // fetch types from DB → renders SA panel
 </script>
-
 {% endblock %}

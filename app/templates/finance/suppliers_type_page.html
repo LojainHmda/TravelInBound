@@ -92,6 +92,19 @@ body.modal-open {
     gap: 8px;
 }
 
+.lang-tag {
+    display: inline-block;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 2px 7px;
+    margin: 2px 2px 2px 0;
+    white-space: nowrap;
+}
+
 .supplier-action-btn {
     width: 30px;
     height: 30px;
@@ -212,12 +225,16 @@ body.modal-open {
         <table class="supplier-table">
             <thead>
                 <tr>
-                    <th style="width: {% if type_key == 'guides' %}28%{% else %}55%{% endif %};">Name</th>
+                    <th style="width: {% if type_key == 'guides' %}28%{% elif type_key == 'meet-assist' %}35%{% elif type_key in ('restaurant', 'transportation') %}40%{% else %}55%{% endif %};">Name</th>
                     {% if type_key == 'guides' %}
                     <th style="width: 16%;">Number</th>
                     <th style="width: 22%;">Languages</th>
+                    {% elif type_key == 'meet-assist' %}
+                    <th style="width: 20%;">Language</th>
+                    {% elif type_key in ('restaurant', 'transportation') %}
+                    <th style="width: 20%;">Phone</th>
                     {% endif %}
-                    <th style="width: {% if type_key == 'guides' %}18%{% else %}30%{% endif %};">City</th>
+                    <th style="width: {% if type_key == 'guides' %}18%{% elif type_key == 'meet-assist' %}20%{% elif type_key in ('restaurant', 'transportation') %}25%{% else %}30%{% endif %};">City</th>
                     <th style="width: {% if type_key == 'guides' %}16%{% else %}15%{% endif %};">Actions</th>
                 </tr>
             </thead>
@@ -228,6 +245,19 @@ body.modal-open {
                     {% if type_key == 'guides' %}
                     <td>{{ supplier.phone or '-' }}</td>
                     <td>{{ supplier.languages or '-' }}</td>
+                    {% elif type_key == 'meet-assist' %}
+                    <td>
+                        {% if supplier.languages %}
+                            {% for lang in supplier.languages.split(',') %}
+                                {% set lang = lang.strip() %}
+                                {% if lang %}<span class="lang-tag">{{ lang }}</span>{% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <span style="color:#9ca3af;">—</span>
+                        {% endif %}
+                    </td>
+                    {% elif type_key in ('restaurant', 'transportation') %}
+                    <td>{{ supplier.phone or '' }}</td>
                     {% endif %}
                     <td>{{ supplier.city or '-' }}</td>
                     <td>
@@ -248,7 +278,7 @@ body.modal-open {
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="{% if type_key == 'guides' %}5{% else %}3{% endif %}" style="text-align:center; color:#6b7280;">No suppliers found for {{ type_label }}</td>
+                    <td colspan="{% if type_key == 'guides' %}5{% elif type_key == 'meet-assist' %}4{% elif type_key in ('restaurant', 'transportation') %}4{% else %}3{% endif %}" style="text-align:center; color:#6b7280;">No suppliers found for {{ type_label }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

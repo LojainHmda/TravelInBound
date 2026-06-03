@@ -24,6 +24,7 @@ from app.forms.expense import (
     ExpenseCategoryForm, ExpenseForm, ExpenseFilterForm,
     ExpenseAttachmentForm, FinancialReportFilterForm
 )
+from app.utils import is_valid_phone, PHONE_ERROR
 
 finance = Blueprint('finance', __name__, url_prefix='/finance')
 
@@ -1800,6 +1801,11 @@ def quick_add_supplier(type_key):
         flash('Name is required.', 'error')
         return redirect(url_for('finance.supplier_type_page', type_key=type_key))
 
+    phone_val = (request.form.get('phone') or '').strip()
+    if phone_val and not is_valid_phone(phone_val):
+        flash(f'Phone: {PHONE_ERROR}', 'error')
+        return redirect(url_for('finance.supplier_type_page', type_key=type_key))
+
     requested_type = (request.form.get('supplier_type') or '').strip().upper()
     supplier_type = requested_type or base_supplier_type
     payment_terms = (request.form.get('payment_terms') or '').strip() or None
@@ -1929,6 +1935,11 @@ def edit_supplier_type(type_key, supplier_id):
         name = (request.form.get('name') or '').strip()
         if not name:
             flash('Name is required.', 'error')
+            return redirect(request.url)
+
+        phone_val = (request.form.get('phone') or '').strip()
+        if phone_val and not is_valid_phone(phone_val):
+            flash(f'Phone: {PHONE_ERROR}', 'error')
             return redirect(request.url)
 
         requested_type = (request.form.get('supplier_type') or '').strip().upper()

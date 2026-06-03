@@ -943,6 +943,98 @@
             });
         });
     </script>
+    <style>
+        .phone-error-msg {
+            display: block;
+            color: #dc2626;
+            font-size: 0.78rem;
+            margin-top: 3px;
+        }
+        input.phone-invalid {
+            border-color: #dc2626 !important;
+            outline-color: #dc2626 !important;
+        }
+    </style>
+    <script>
+    (function () {
+        var PHONE_MSG = 'Only digits (0–9), spaces, and + are allowed.';
+        var PHONE_RE = /^[0-9 +]*$/;
+
+        /* Selectors that identify phone inputs across the whole app */
+        var PHONE_NAMES = [
+            'input[name="phone"]',
+            'input[name="guide_phone"]',
+            'input[name="contact_phone"]',
+            'input[name="hotel_phone"]',
+            'input[name="transport_phone"]',
+            'input[name="driver_phone"]',
+            'input[name="telephone_number"]',
+            'input[type="tel"]',
+        ];
+        var PHONE_IDS = [
+            '#newCustomerPhone', '#customerPhone', '#quick_phone',
+            '#new_airline_phone', '#new_hotel_phone', '#new_restaurant_phone',
+            '#new_transport_phone', '#new_guide_phone', '#new_ma_rep_phone',
+            '#guide_phone',
+        ];
+        var SELECTOR = PHONE_NAMES.concat(PHONE_IDS).join(', ');
+
+        function getOrCreateError(input) {
+            var id = input.id || input.name;
+            var errId = 'phone-err-' + id;
+            var existing = input.parentNode && input.parentNode.querySelector('#' + errId);
+            if (existing) return existing;
+            var span = document.createElement('span');
+            span.id = errId;
+            span.className = 'phone-error-msg';
+            span.setAttribute('role', 'alert');
+            input.insertAdjacentElement('afterend', span);
+            return span;
+        }
+
+        function validate(input) {
+            var val = input.value;
+            if (val && !PHONE_RE.test(val)) {
+                input.classList.add('phone-invalid');
+                getOrCreateError(input).textContent = PHONE_MSG;
+                return false;
+            } else {
+                input.classList.remove('phone-invalid');
+                var errSpan = input.parentNode && input.parentNode.querySelector('[id^="phone-err-"]');
+                if (errSpan) errSpan.textContent = '';
+                return true;
+            }
+        }
+
+        /* Live validation on input */
+        document.addEventListener('input', function (e) {
+            if (e.target.matches && e.target.matches(SELECTOR)) {
+                validate(e.target);
+            }
+        }, true);
+
+        /* Block submit if any phone field is invalid */
+        document.addEventListener('submit', function (e) {
+            var form = e.target;
+            var inputs = form.querySelectorAll(SELECTOR);
+            var ok = true;
+            inputs.forEach(function (inp) {
+                if (!validate(inp)) {
+                    ok = false;
+                    inp.focus();
+                }
+            });
+            if (!ok) e.preventDefault();
+        }, true);
+
+        /* Also validate on blur so error shows immediately after tab-out */
+        document.addEventListener('blur', function (e) {
+            if (e.target.matches && e.target.matches(SELECTOR)) {
+                validate(e.target);
+            }
+        }, true);
+    })();
+    </script>
     
     {% block scripts %}{% endblock %}
 </body>

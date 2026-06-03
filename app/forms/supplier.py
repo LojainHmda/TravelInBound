@@ -2,7 +2,7 @@ from datetime import date
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, TextAreaField, SelectField, DateField, FloatField, SubmitField, SelectMultipleField
-from wtforms.validators import DataRequired, Email, Optional, Length, NumberRange
+from wtforms.validators import DataRequired, Email, Optional, Length, NumberRange, Regexp
 
 class SupplierForm(FlaskForm):
     """Form for creating and editing suppliers"""
@@ -25,7 +25,7 @@ class SupplierForm(FlaskForm):
         ('INSURANCE', 'Insurance Services')
     ], validators=[DataRequired()], description="Select all service types this supplier offers")
     email = StringField('Email', validators=[Optional(), Email(), Length(max=120)])
-    phone = StringField('Phone', validators=[Optional(), Length(max=20)])
+    phone = StringField('Phone', validators=[Optional(), Length(max=20), Regexp(r'^[0-9 +]*$', message='Only digits (0–9), spaces, and + are allowed.')])
     website = StringField('Website', validators=[Optional(), Length(max=100)])
     contact_person = StringField('Contact Person', validators=[Optional(), Length(max=100)])
     address = TextAreaField('Address', validators=[Optional()])
