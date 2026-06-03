@@ -9459,15 +9459,16 @@ def analytics_dashboard():
     date_to_str = request.args.get('date_to', '')
     request_number = request.args.get('request_number', '')
 
-    # Default to current month if dates not provided
+    # Default to full year if dates not provided (current month often has no data)
     import calendar
     today = datetime.now().date()
-    first_day_of_month = today.replace(day=1)
-    last_day_of_month = today.replace(day=calendar.monthrange(today.year, today.month)[1])
+    # Use full year (Jan 1 - Dec 31) for better default data visibility
+    first_day_of_year = today.replace(month=1, day=1)
+    last_day_of_year = today.replace(month=12, day=31)
 
-    # Parse dates with current month defaults
-    date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date() if date_from_str else first_day_of_month
-    date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date() if date_to_str else last_day_of_month
+    # Parse dates with full year defaults
+    date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date() if date_from_str else first_day_of_year
+    date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date() if date_to_str else last_day_of_year
 
     # Calculate service performance stats for dashboard cards
     service_stats = {}
