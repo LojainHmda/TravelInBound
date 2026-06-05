@@ -2688,7 +2688,7 @@ def api_save_service_data(request_id):
             hotel.hotel_name = hotel_name_value
             hotel.hotel_category = form_data.get('hotel_category', '')
             hotel.meal_plan = form_data.get('hotel_board', 'BB')
-            hotel.status = form_data.get('hotel_status', 'REQUESTED')
+            hotel.status = form_data.get('hotel_status', 'REQUEST')
 
             # Dates are already set when creating new hotel, but update them if provided in form_data
             # (This handles the case when editing an existing hotel)
@@ -2852,7 +2852,7 @@ def api_save_service_data(request_id):
                 transport.dropoff_location = form_data.get('transport_dropoff', '')
                 transport.driver_name = form_data.get('transport_driver', '')
                 transport.driver_phone = form_data.get('transport_phone', '')
-                transport.status = form_data.get('transport_status', 'REQUESTED')
+                transport.status = form_data.get('transport_status', 'REQUEST')
                 transport.cost = float(form_data.get('transport_cost', 0) or 0)
                 transport.note = form_data.get('transport_notes', '')
                 transport.supplier_id = supplier_id
@@ -2995,7 +2995,7 @@ def api_save_service_data(request_id):
                     guide.cost = float(form_data.get('guide_cost', 0) or 0)
                     guide.is_cancelled = form_data.get('guide_cancelled') in ['true', 'True', True, 'on', '1']
                     guide.additional_comments = form_data.get('guide_notes', '')
-                    guide.status = form_data.get('guide_status', 'REQUESTED')
+                    guide.status = form_data.get('guide_status', 'REQUEST')
                     guide.supplier_id = guide_supplier_id_val
                     db.session.add(guide)
                     print(f"[SAVE SERVICE] Created itinerary-linked guide for row {source_itinerary_id}")
@@ -3037,7 +3037,7 @@ def api_save_service_data(request_id):
                 guide.cost = float(form_data.get('guide_cost', 0) or 0)
                 guide.is_cancelled = form_data.get('guide_cancelled') in ['true', 'True', True, 'on', '1']
                 guide.additional_comments = form_data.get('guide_notes', '')
-                guide.status = form_data.get('guide_status', 'REQUESTED')
+                guide.status = form_data.get('guide_status', 'REQUEST')
                 guide.supplier_id = guide_supplier_id
                 db.session.add(guide)
                 print(f"[SAVE SERVICE] Created single guide entry from {from_date} to {to_date}")
@@ -10067,7 +10067,11 @@ def analytics_export_excel():
 
 @inbound_bp.route('/analytics/supplier-analytics')
 def supplier_analytics_api():
-    """JSON API: aggregated supplier analytics grouped by supplier type and attribute."""
+    """JSON API: aggregated supplier analytics grouped by supplier type and attribute.
+
+    Status parameter controls presentation only — aggregation always runs on full dataset.
+    This ensures a single source of truth: one order has consistent data across all status views.
+    """
     from sqlalchemy import func, distinct
     from sqlalchemy import case as sa_case
 
@@ -10088,11 +10092,6 @@ def supplier_analytics_api():
         """SQLAlchemy 2.x case(condition, result, else_=default)."""
         return sa_case((col == val, 1), else_=0)
 
-    def _status_filter(model_col):
-        if not statuses:
-            return None
-        return db.or_(*[model_col == s for s in statuses])
-
     columns = []
     items = []
 
@@ -10103,9 +10102,6 @@ def supplier_analytics_api():
             InboundGuide.date <= date_to,
             InboundGuide.is_cancelled == False,
         ]
-        sf = _status_filter(InboundGuide.status)
-        if sf is not None:
-            base_filters.append(sf)
 
         if attribute == 'language':
             q = (
@@ -10113,9 +10109,9 @@ def supplier_analytics_api():
                     InboundGuide.language.label('key'),
                     func.count(InboundGuide.id).label('total'),
                     func.count(distinct(InboundGuide.guide_name)).label('unique_guides'),
-                    func.sum(_when(InboundGuide.status, 'CONFIRMED')).label('confirmed'),
-                    func.sum(_when(InboundGuide.status, 'REQUEST')).label('requested'),
-                    func.sum(_when(InboundGuide.status, 'INVOICED')).label('invoiced'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
                 )
                 .join(InboundRequest, InboundGuide.request_id == InboundRequest.id)
                 .filter(*base_filters)
@@ -10142,9 +10138,9 @@ def supplier_analytics_api():
                 db.session.query(
                     InboundGuide.service_type.label('key'),
                     func.count(InboundGuide.id).label('total'),
-                    func.sum(_when(InboundGuide.status, 'CONFIRMED')).label('confirmed'),
-                    func.sum(_when(InboundGuide.status, 'REQUEST')).label('requested'),
-                    func.sum(_when(InboundGuide.status, 'INVOICED')).label('invoiced'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
                 )
                 .join(InboundRequest, InboundGuide.request_id == InboundRequest.id)
                 .filter(*base_filters)
@@ -10172,9 +10168,9 @@ def supplier_analytics_api():
                     InboundGuide.language.label('language'),
                     func.count(InboundGuide.id).label('total'),
                     func.sum(func.coalesce(InboundRequest.pax, 0)).label('total_pax'),
-                    func.sum(_when(InboundGuide.status, 'CONFIRMED')).label('confirmed'),
-                    func.sum(_when(InboundGuide.status, 'REQUEST')).label('requested'),
-                    func.sum(_when(InboundGuide.status, 'INVOICED')).label('invoiced'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
                 )
                 .join(InboundRequest, InboundGuide.request_id == InboundRequest.id)
                 .filter(*base_filters)
@@ -10205,9 +10201,6 @@ def supplier_analytics_api():
             InboundTransport.date >= date_from,
             InboundTransport.date <= date_to,
         ]
-        sf = _status_filter(InboundTransport.status)
-        if sf is not None:
-            base_filters.append(sf)
 
         if attribute == 'vehicle_type':
             q = (
@@ -10215,9 +10208,9 @@ def supplier_analytics_api():
                     InboundTransport.vehicle_type.label('key'),
                     func.count(InboundTransport.id).label('total'),
                     func.sum(func.coalesce(InboundTransport.pax, 0)).label('total_pax'),
-                    func.sum(_when(InboundTransport.status, 'CONFIRMED')).label('confirmed'),
-                    func.sum(_when(InboundTransport.status, 'REQUEST')).label('requested'),
-                    func.sum(_when(InboundTransport.status, 'INVOICED')).label('invoiced'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
                 )
                 .join(InboundRequest, InboundTransport.request_id == InboundRequest.id)
                 .filter(*base_filters)
@@ -10246,9 +10239,9 @@ def supplier_analytics_api():
                     InboundTransport.supplier.label('supplier_name'),
                     func.count(InboundTransport.id).label('total'),
                     func.sum(func.coalesce(InboundTransport.pax, 0)).label('total_pax'),
-                    func.sum(_when(InboundTransport.status, 'CONFIRMED')).label('confirmed'),
-                    func.sum(_when(InboundTransport.status, 'REQUEST')).label('requested'),
-                    func.sum(_when(InboundTransport.status, 'INVOICED')).label('invoiced'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
                 )
                 .join(InboundRequest, InboundTransport.request_id == InboundRequest.id)
                 .filter(*base_filters)
@@ -10284,9 +10277,6 @@ def supplier_analytics_api():
             InboundMeal.date >= date_from,
             InboundMeal.date <= date_to,
         ]
-        sf = _status_filter(InboundMeal.status)
-        if sf is not None:
-            base_filters.append(sf)
 
         if attribute == 'meal_type':
             q = (
@@ -10294,9 +10284,9 @@ def supplier_analytics_api():
                     InboundMeal.meal_type.label('key'),
                     func.count(InboundMeal.id).label('total'),
                     func.count(distinct(InboundMeal.supplier_id)).label('unique_restaurants'),
-                    func.sum(_when(InboundMeal.status, 'CONFIRMED')).label('confirmed'),
-                    func.sum(_when(InboundMeal.status, 'REQUEST')).label('requested'),
-                    func.sum(_when(InboundMeal.status, 'INVOICED')).label('invoiced'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
                 )
                 .join(InboundRequest, InboundMeal.request_id == InboundRequest.id)
                 .filter(*base_filters)
@@ -10323,9 +10313,9 @@ def supplier_analytics_api():
                 db.session.query(
                     InboundMeal.location.label('key'),
                     func.count(InboundMeal.id).label('total'),
-                    func.sum(_when(InboundMeal.status, 'CONFIRMED')).label('confirmed'),
-                    func.sum(_when(InboundMeal.status, 'REQUEST')).label('requested'),
-                    func.sum(_when(InboundMeal.status, 'INVOICED')).label('invoiced'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
                 )
                 .join(InboundRequest, InboundMeal.request_id == InboundRequest.id)
                 .filter(*base_filters)
@@ -10352,9 +10342,9 @@ def supplier_analytics_api():
                     InboundMeal.supplier_id.label('supplier_id'),
                     InboundMeal.restaurant.label('restaurant_name'),
                     func.count(InboundMeal.id).label('total'),
-                    func.sum(_when(InboundMeal.status, 'CONFIRMED')).label('confirmed'),
-                    func.sum(_when(InboundMeal.status, 'REQUEST')).label('requested'),
-                    func.sum(_when(InboundMeal.status, 'INVOICED')).label('invoiced'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
                 )
                 .join(InboundRequest, InboundMeal.request_id == InboundRequest.id)
                 .filter(*base_filters)
@@ -10387,9 +10377,6 @@ def supplier_analytics_api():
             InboundHotel.check_in_date >= date_from,
             InboundHotel.check_in_date <= date_to,
         ]
-        sf = _status_filter(InboundHotel.status)
-        if sf is not None:
-            base_filters.append(sf)
 
         if attribute == 'hotel_category':
             q = (
@@ -10397,9 +10384,9 @@ def supplier_analytics_api():
                     InboundHotel.hotel_category.label('key'),
                     func.count(InboundHotel.id).label('total'),
                     func.count(distinct(InboundHotel.hotel_name)).label('unique_hotels'),
-                    func.sum(_when(InboundHotel.status, 'CONFIRMED')).label('confirmed'),
-                    func.sum(_when(InboundHotel.status, 'REQUEST')).label('requested'),
-                    func.sum(_when(InboundHotel.status, 'INVOICED')).label('invoiced'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
                 )
                 .join(InboundRequest, InboundHotel.request_id == InboundRequest.id)
                 .filter(*base_filters)
@@ -10426,9 +10413,9 @@ def supplier_analytics_api():
                 db.session.query(
                     InboundHotel.meal_plan.label('key'),
                     func.count(InboundHotel.id).label('total'),
-                    func.sum(_when(InboundHotel.status, 'CONFIRMED')).label('confirmed'),
-                    func.sum(_when(InboundHotel.status, 'REQUEST')).label('requested'),
-                    func.sum(_when(InboundHotel.status, 'INVOICED')).label('invoiced'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
                 )
                 .join(InboundRequest, InboundHotel.request_id == InboundRequest.id)
                 .filter(*base_filters)
@@ -10455,9 +10442,9 @@ def supplier_analytics_api():
                     InboundHotel.location.label('key'),
                     func.count(InboundHotel.id).label('total'),
                     func.count(distinct(InboundHotel.hotel_name)).label('unique_hotels'),
-                    func.sum(_when(InboundHotel.status, 'CONFIRMED')).label('confirmed'),
-                    func.sum(_when(InboundHotel.status, 'REQUEST')).label('requested'),
-                    func.sum(_when(InboundHotel.status, 'INVOICED')).label('invoiced'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
                 )
                 .join(InboundRequest, InboundHotel.request_id == InboundRequest.id)
                 .filter(*base_filters)
@@ -10487,9 +10474,9 @@ def supplier_analytics_api():
                     InboundHotel.hotel_category.label('category'),
                     func.count(InboundHotel.id).label('total'),
                     func.sum(func.coalesce(InboundRequest.pax, 0)).label('total_pax'),
-                    func.sum(_when(InboundHotel.status, 'CONFIRMED')).label('confirmed'),
-                    func.sum(_when(InboundHotel.status, 'REQUEST')).label('requested'),
-                    func.sum(_when(InboundHotel.status, 'INVOICED')).label('invoiced'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
                 )
                 .join(InboundRequest, InboundHotel.request_id == InboundRequest.id)
                 .filter(*base_filters)
@@ -10522,7 +10509,7 @@ def supplier_analytics_api():
         'total': len(items),
         'date_from': str(date_from),
         'date_to': str(date_to),
-        'statuses': statuses,
+        'statuses': statuses,  # for UI highlighting only; data aggregation ran on full dataset
     })
 
 
