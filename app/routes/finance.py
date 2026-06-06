@@ -1768,13 +1768,15 @@ def print_supplier_type_page(type_key):
     )
 
 
-def _bank_fields_from_payment_method(payment_method, bank_name, bank_account, cliq_alias):
+def _bank_fields_from_payment_method(payment_method, bank_name, bank_account, cliq_alias, other_payment_method=None):
     """Map payment method selection to stored supplier bank fields."""
     method = (payment_method or '').strip()
     if method == 'Cliq':
         return 'Cliq', (cliq_alias or '').strip() or None
     if method == 'Bank':
         return (bank_name or '').strip() or None, (bank_account or '').strip() or None
+    if method == 'Other':
+        return 'Other', (other_payment_method or '').strip() or None
     return None, None
 
 
@@ -1825,6 +1827,8 @@ def quick_add_supplier(type_key):
     category = (request.form.get('category') or '').strip()
     room_category = (request.form.get('room_category') or '').strip()
     notes = (request.form.get('notes') or '').strip()
+    other_payment_method = (request.form.get('other_payment_method') or '').strip()
+    bank_iban = (request.form.get('bank_iban') or '').strip() or None
     merged_notes = notes
     if category:
         merged_notes = f"Category: {category}\n{merged_notes}".strip()
@@ -1839,6 +1843,7 @@ def quick_add_supplier(type_key):
             request.form.get('bank_name'),
             request.form.get('bank_account'),
             cliq_alias,
+            other_payment_method,
         )
     elif payment_terms == 'Cliq':
         bank_name_val = 'Cliq'
@@ -1876,6 +1881,7 @@ def quick_add_supplier(type_key):
             default_currency=(request.form.get('default_currency') or 'USD').strip() or 'USD',
             bank_name=bank_name_val,
             bank_account=bank_account_val,
+            bank_iban=bank_iban,
             tax_number=(request.form.get('tax_number') or '').strip() or None,
             notes=merged_notes or None,
             languages=guide_languages or None
@@ -1952,6 +1958,8 @@ def edit_supplier_type(type_key, supplier_id):
         category = (request.form.get('category') or '').strip()
         room_category = (request.form.get('room_category') or '').strip()
         notes = (request.form.get('notes') or '').strip()
+        other_payment_method = (request.form.get('other_payment_method') or '').strip()
+        bank_iban = (request.form.get('bank_iban') or '').strip() or None
 
         merged_notes = notes
         if category:
@@ -1984,6 +1992,7 @@ def edit_supplier_type(type_key, supplier_id):
                 request.form.get('bank_name'),
                 request.form.get('bank_account'),
                 cliq_alias,
+                other_payment_method,
             )
         else:
             bank_name_val = (request.form.get('bank_name') or '').strip() or None
@@ -2001,6 +2010,7 @@ def edit_supplier_type(type_key, supplier_id):
         supplier.default_currency = (request.form.get('default_currency') or 'USD').strip() or 'USD'
         supplier.bank_name = bank_name_val
         supplier.bank_account = bank_account_val
+        supplier.bank_iban = bank_iban
         supplier.tax_number = (request.form.get('tax_number') or '').strip() or None
         supplier.notes = merged_notes or None
         if guide_languages:
@@ -2026,16 +2036,29 @@ def edit_supplier_type(type_key, supplier_id):
         cliq_alias = supplier.bank_account or ''
         bank_name = ''
         bank_account = ''
+        bank_iban = ''
+        other_payment_method = ''
+    elif supplier.bank_name == 'Other':
+        payment_method = 'Other'
+        other_payment_method = supplier.bank_account or ''
+        cliq_alias = ''
+        bank_name = ''
+        bank_account = ''
+        bank_iban = ''
     elif supplier.bank_name:
         payment_method = 'Bank'
         bank_name = supplier.bank_name
         bank_account = supplier.bank_account or ''
+        bank_iban = supplier.bank_iban or ''
         cliq_alias = ''
+        other_payment_method = ''
     else:
         payment_method = parsed['payment_method_embedded']
         bank_name = ''
         bank_account = ''
+        bank_iban = ''
         cliq_alias = ''
+        other_payment_method = ''
 
     return render_template(
         'finance/supplier_type_edit.html',
@@ -2050,7 +2073,9 @@ def edit_supplier_type(type_key, supplier_id):
         payment_method=payment_method,
         bank_name=bank_name,
         bank_account=bank_account,
+        bank_iban=bank_iban,
         cliq_alias=cliq_alias,
+        other_payment_method=other_payment_method,
         contract_file=parsed['contract_file'],
     )
 

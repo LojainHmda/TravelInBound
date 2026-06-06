@@ -308,7 +308,7 @@ body {
                     <label>Payment Method</label>
                     <select name="payment_method" id="edit_payment_method">
                         <option value="">Select payment method...</option>
-                        {% for opt in ['Cash','Cliq','Bank'] %}
+                        {% for opt in ['Cash','Cliq','Bank','Other'] %}
                         <option value="{{ opt }}" {% if payment_method == opt %}selected{% endif %}>{{ opt }}</option>
                         {% endfor %}
                     </select>
@@ -321,9 +321,17 @@ body {
                     <label>Bank Account</label>
                     <input type="text" name="bank_account" value="{{ bank_account }}" placeholder="Account number">
                 </div>
+                <div class="field" id="edit_bank_iban_wrap" style="display:none;">
+                    <label>IBAN</label>
+                    <input type="text" name="bank_iban" value="{{ bank_iban or '' }}" placeholder="IBAN">
+                </div>
                 <div class="field" id="edit_cliq_wrap" style="display:none;">
                     <label>Cliq num/Alias</label>
                     <input type="text" name="cliq_alias" value="{{ cliq_alias }}" placeholder="Enter cliq num or alias">
+                </div>
+                <div class="field" id="edit_other_wrap" style="display:none;">
+                    <label>Payment Method Details</label>
+                    <input type="text" name="other_payment_method" value="{{ other_payment_method or '' }}" placeholder="Enter custom payment method">
                 </div>
                 <div class="field">
                     <label>Default Currency</label>
@@ -401,7 +409,7 @@ body {
                     <label>Payment Method</label>
                     <select name="payment_method" id="edit_payment_method">
                         <option value="">Select payment method...</option>
-                        {% for opt in ['Cash','Cliq','Bank'] %}
+                        {% for opt in ['Cash','Cliq','Bank','Other'] %}
                         <option value="{{ opt }}" {% if payment_method == opt %}selected{% endif %}>{{ opt }}</option>
                         {% endfor %}
                     </select>
@@ -414,9 +422,17 @@ body {
                     <label>Bank Account</label>
                     <input type="text" name="bank_account" value="{{ bank_account }}" placeholder="Account number">
                 </div>
+                <div class="field" id="edit_bank_iban_wrap" style="display:none;">
+                    <label>IBAN</label>
+                    <input type="text" name="bank_iban" value="{{ bank_iban or '' }}" placeholder="IBAN">
+                </div>
                 <div class="field" id="edit_cliq_wrap" style="display:none;">
                     <label>Cliq num/Alias</label>
                     <input type="text" name="cliq_alias" value="{{ cliq_alias }}" placeholder="Enter cliq num or alias">
+                </div>
+                <div class="field" id="edit_other_wrap" style="display:none;">
+                    <label>Payment Method Details</label>
+                    <input type="text" name="other_payment_method" value="{{ other_payment_method or '' }}" placeholder="Enter custom payment method">
                 </div>
                 <div class="field">
                     <label>Default Currency</label>
@@ -482,7 +498,7 @@ body {
                     <label>Payment Method</label>
                     <select name="payment_method" id="edit_payment_method">
                         <option value="">Select payment method...</option>
-                        {% for opt in ['Cash','Cliq','Bank'] %}
+                        {% for opt in ['Cash','Cliq','Bank','Other'] %}
                         <option value="{{ opt }}" {% if payment_method == opt %}selected{% endif %}>{{ opt }}</option>
                         {% endfor %}
                     </select>
@@ -495,9 +511,17 @@ body {
                     <label>Bank Account</label>
                     <input type="text" name="bank_account" value="{{ bank_account }}" placeholder="Account number">
                 </div>
+                <div class="field" id="edit_bank_iban_wrap" style="display:none;">
+                    <label>IBAN</label>
+                    <input type="text" name="bank_iban" value="{{ bank_iban or '' }}" placeholder="IBAN">
+                </div>
                 <div class="field" id="edit_cliq_wrap" style="display:none;">
                     <label>Cliq num/Alias</label>
                     <input type="text" name="cliq_alias" value="{{ cliq_alias }}" placeholder="Enter cliq num or alias">
+                </div>
+                <div class="field" id="edit_other_wrap" style="display:none;">
+                    <label>Payment Method Details</label>
+                    <input type="text" name="other_payment_method" value="{{ other_payment_method or '' }}" placeholder="Enter custom payment method">
                 </div>
                 <div class="field">
                     <label>Default Currency</label>
@@ -578,7 +602,7 @@ body {
                     <label>Payment Method</label>
                     <select name="payment_method" id="edit_payment_method">
                         <option value="">Select payment method...</option>
-                        {% for opt in ['Cash','Cliq','Bank'] %}
+                        {% for opt in ['Cash','Cliq','Bank','Other'] %}
                         <option value="{{ opt }}" {% if payment_method == opt %}selected{% endif %}>{{ opt }}</option>
                         {% endfor %}
                     </select>
@@ -591,9 +615,17 @@ body {
                     <label>Bank Account</label>
                     <input type="text" name="bank_account" value="{{ bank_account }}" placeholder="Account number">
                 </div>
+                <div class="field" id="edit_bank_iban_wrap" style="display:none;">
+                    <label>IBAN</label>
+                    <input type="text" name="bank_iban" value="{{ bank_iban or '' }}" placeholder="IBAN">
+                </div>
                 <div class="field" id="edit_cliq_wrap" style="display:none;">
                     <label>Cliq num/Alias</label>
                     <input type="text" name="cliq_alias" value="{{ cliq_alias }}" placeholder="Enter cliq num or alias">
+                </div>
+                <div class="field" id="edit_other_wrap" style="display:none;">
+                    <label>Payment Method Details</label>
+                    <input type="text" name="other_payment_method" value="{{ other_payment_method or '' }}" placeholder="Enter custom payment method">
                 </div>
                 <div class="field">
                     <label>Default Currency</label>
@@ -670,7 +702,7 @@ body {
                     <label>Payment Method</label>
                     <select name="payment_method" id="edit_payment_method">
                         <option value="">Select payment method...</option>
-                        {% for opt in ['Cash','Cliq','Bank'] %}
+                        {% for opt in ['Cash','Cliq','Bank','Other'] %}
                         <option value="{{ opt }}" {% if payment_method == opt %}selected{% endif %}>{{ opt }}</option>
                         {% endfor %}
                     </select>
@@ -683,9 +715,17 @@ body {
                     <label>Bank Account</label>
                     <input type="text" name="bank_account" value="{{ bank_account }}" placeholder="Account number">
                 </div>
+                <div class="field" id="edit_bank_iban_wrap" style="display:none;">
+                    <label>IBAN</label>
+                    <input type="text" name="bank_iban" value="{{ bank_iban or '' }}" placeholder="IBAN">
+                </div>
                 <div class="field" id="edit_cliq_wrap" style="display:none;">
                     <label>Cliq num/Alias</label>
                     <input type="text" name="cliq_alias" value="{{ cliq_alias }}" placeholder="Enter cliq num or alias">
+                </div>
+                <div class="field" id="edit_other_wrap" style="display:none;">
+                    <label>Payment Method Details</label>
+                    <input type="text" name="other_payment_method" value="{{ other_payment_method or '' }}" placeholder="Enter custom payment method">
                 </div>
                 <div class="field">
                     <label>Default Currency</label>
@@ -763,7 +803,7 @@ body {
                     <label>Payment Method</label>
                     <select name="payment_method" id="edit_payment_method">
                         <option value="">Select payment method...</option>
-                        {% for opt in ['Cash','Cliq','Bank'] %}
+                        {% for opt in ['Cash','Cliq','Bank','Other'] %}
                         <option value="{{ opt }}" {% if payment_method == opt %}selected{% endif %}>{{ opt }}</option>
                         {% endfor %}
                     </select>
@@ -776,9 +816,17 @@ body {
                     <label>Bank Account</label>
                     <input type="text" name="bank_account" value="{{ bank_account }}" placeholder="Account number">
                 </div>
+                <div class="field" id="edit_bank_iban_wrap" style="display:none;">
+                    <label>IBAN</label>
+                    <input type="text" name="bank_iban" value="{{ bank_iban or '' }}" placeholder="IBAN">
+                </div>
                 <div class="field" id="edit_cliq_wrap" style="display:none;">
                     <label>Cliq num/Alias</label>
                     <input type="text" name="cliq_alias" value="{{ cliq_alias }}" placeholder="Enter cliq num or alias">
+                </div>
+                <div class="field" id="edit_other_wrap" style="display:none;">
+                    <label>Payment Method Details</label>
+                    <input type="text" name="other_payment_method" value="{{ other_payment_method or '' }}" placeholder="Enter custom payment method">
                 </div>
                 <div class="field">
                     <label>Default Currency</label>
@@ -856,7 +904,7 @@ body {
                     <label>Payment Method</label>
                     <select name="payment_method" id="edit_payment_method">
                         <option value="">Select payment method...</option>
-                        {% for opt in ['Cash','Cliq','Bank'] %}
+                        {% for opt in ['Cash','Cliq','Bank','Other'] %}
                         <option value="{{ opt }}" {% if payment_method == opt %}selected{% endif %}>{{ opt }}</option>
                         {% endfor %}
                     </select>
@@ -869,9 +917,17 @@ body {
                     <label>Bank Account</label>
                     <input type="text" name="bank_account" value="{{ bank_account }}" placeholder="Account number">
                 </div>
+                <div class="field" id="edit_bank_iban_wrap" style="display:none;">
+                    <label>IBAN</label>
+                    <input type="text" name="bank_iban" value="{{ bank_iban or '' }}" placeholder="IBAN">
+                </div>
                 <div class="field" id="edit_cliq_wrap" style="display:none;">
                     <label>Cliq num/Alias</label>
                     <input type="text" name="cliq_alias" value="{{ cliq_alias }}" placeholder="Enter cliq num or alias">
+                </div>
+                <div class="field" id="edit_other_wrap" style="display:none;">
+                    <label>Payment Method Details</label>
+                    <input type="text" name="other_payment_method" value="{{ other_payment_method or '' }}" placeholder="Enter custom payment method">
                 </div>
                 <div class="field">
                     <label>Default Currency</label>
@@ -926,14 +982,18 @@ body {
     var pmSel = document.getElementById('edit_payment_method');
     var bankNameWrap = document.getElementById('edit_bank_name_wrap');
     var bankAccWrap  = document.getElementById('edit_bank_account_wrap');
+    var bankIbanWrap = document.getElementById('edit_bank_iban_wrap');
     var cliqWrap     = document.getElementById('edit_cliq_wrap');
+    var otherWrap    = document.getElementById('edit_other_wrap');
 
     function updatePaymentFields() {
         if (!pmSel) return;
         var v = pmSel.value;
         if (bankNameWrap) bankNameWrap.style.display = (v === 'Bank') ? '' : 'none';
         if (bankAccWrap)  bankAccWrap.style.display  = (v === 'Bank') ? '' : 'none';
+        if (bankIbanWrap) bankIbanWrap.style.display = (v === 'Bank') ? '' : 'none';
         if (cliqWrap)     cliqWrap.style.display     = (v === 'Cliq') ? '' : 'none';
+        if (otherWrap)    otherWrap.style.display    = (v === 'Other') ? '' : 'none';
     }
 
     if (pmSel) {

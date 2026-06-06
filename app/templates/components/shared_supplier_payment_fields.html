@@ -24,6 +24,7 @@
         <option value="Cash">Cash</option>
         <option value="Cliq">Cliq</option>
         <option value="Bank">Bank</option>
+        <option value="Other">Other</option>
     </select>
 </div>
 <div id="{{ prefix }}_bank_name_wrap" style="display:none;">
@@ -34,7 +35,15 @@
     <label class="block text-xs font-medium text-slate-700 mb-0.5">Bank Account</label>
     <input type="text" id="{{ prefix }}_bank_account"{% if use_name_attrs %} name="bank_account"{% endif %} class="{{ field_class }}" placeholder="Account number">
 </div>
+<div id="{{ prefix }}_bank_iban_wrap" style="display:none;">
+    <label class="block text-xs font-medium text-slate-700 mb-0.5">IBAN</label>
+    <input type="text" id="{{ prefix }}_bank_iban"{% if use_name_attrs %} name="bank_iban"{% endif %} class="{{ field_class }}" placeholder="IBAN">
+</div>
 <div id="{{ prefix }}_cliq_wrap" style="display:none;">
     <label class="block text-xs font-medium text-slate-700 mb-0.5">Cliq num/Alias</label>
     <input type="text" id="{{ prefix }}_cliq_alias"{% if use_name_attrs %} name="cliq_alias"{% endif %} class="{{ field_class }}" placeholder="Enter cliq num or alias">
+</div>
+<div id="{{ prefix }}_other_wrap" style="display:none;">
+    <label class="block text-xs font-medium text-slate-700 mb-0.5">Payment Method Details</label>
+    <input type="text" id="{{ prefix }}_other_payment_method"{% if use_name_attrs %} name="other_payment_method"{% endif %} class="{{ field_class }}" placeholder="Enter custom payment method">
 </div>
