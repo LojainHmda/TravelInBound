@@ -9795,267 +9795,569 @@ def analytics_dashboard():
 
 @inbound_bp.route('/analytics/export-excel')
 def analytics_export_excel():
-    """Export analytics data to Excel"""
-    from app.models.inbound import InboundOptional
+    """Export Supplier Analytics aggregated data to Excel.
+    Uses the same filtered aggregation logic as supplier_analytics_api."""
     import io
     import openpyxl
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from sqlalchemy import func, distinct
+    from sqlalchemy import case as sa_case
 
-    # Get same filters as analytics dashboard
-    search_query = request.args.get('search', '').strip()
-    service_type = request.args.get('service_type', '')
-    status_filter = request.args.get('status', '')
+    # Get Supplier Analytics filters
+    supplier_type = request.args.get('supplier_type', 'GUIDE').upper()
+    attribute = request.args.get('attribute', '').lower()
+    statuses = [s for s in request.args.getlist('status') if s]
     date_from_str = request.args.get('date_from', '')
     date_to_str = request.args.get('date_to', '')
-    request_number = request.args.get('request_number', '')
 
-    # Parse dates
-    date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date() if date_from_str else (datetime.now().date() - timedelta(days=7))
-    date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date() if date_to_str else (datetime.now().date() + timedelta(days=30))
+    today = datetime.now().date()
+    first_day = today.replace(day=1)
+    last_day = today.replace(day=calendar.monthrange(today.year, today.month)[1])
 
-    # Collect all services (same logic as analytics_dashboard)
-    all_services = []
+    date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date() if date_from_str else first_day
+    date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date() if date_to_str else last_day
 
-    # Hotels
-    if not service_type or service_type == 'HOTEL':
-        hotels_query = InboundHotel.query.join(InboundRequest)
-        if date_from_str:
-            hotels_query = hotels_query.filter(InboundHotel.check_in_date >= date_from)
-        if date_to_str:
-            hotels_query = hotels_query.filter(InboundHotel.check_in_date <= date_to)
-        if status_filter:
-            hotels_query = hotels_query.filter(InboundHotel.status == status_filter)
-        if request_number:
-            hotels_query = hotels_query.filter(InboundRequest.request_number.contains(request_number))
-        if search_query:
-            hotels_query = hotels_query.filter(
-                db.or_(
-                    InboundHotel.hotel_name.contains(search_query),
-                    InboundHotel.location.contains(search_query),
-                    InboundRequest.contact_name.contains(search_query)
+    def _when(col, val):
+        """SQLAlchemy 2.x case(condition, result, else_=default)."""
+        return sa_case((col == val, 1), else_=0)
+
+    columns = []
+    items = []
+
+    # ── GUIDE ──
+    if supplier_type == 'GUIDE':
+        base_filters = [
+            InboundGuide.date >= date_from,
+            InboundGuide.date <= date_to,
+            InboundGuide.is_cancelled == False,
+        ]
+
+        if attribute == 'language':
+            q = (
+                db.session.query(
+                    InboundGuide.language.label('key'),
+                    func.count(InboundGuide.id).label('total'),
+                    func.count(distinct(InboundGuide.guide_name)).label('unique_guides'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
                 )
+                .join(InboundRequest, InboundGuide.request_id == InboundRequest.id)
+                .filter(*base_filters)
+                .group_by(InboundGuide.language)
+                .order_by(func.count(InboundGuide.id).desc())
             )
+            columns = [
+                {'key': 'key', 'label': 'Language'},
+                {'key': 'unique_guides', 'label': 'Guides'},
+                {'key': 'total', 'label': 'Assignments'},
+                {'key': 'confirmed', 'label': 'Confirmed'},
+                {'key': 'requested', 'label': 'Requested'},
+                {'key': 'invoiced', 'label': 'Invoiced'},
+            ]
+            items = [
+                {'key': r.key or 'Unspecified', 'unique_guides': r.unique_guides,
+                 'total': r.total, 'confirmed': r.confirmed or 0,
+                 'requested': r.requested or 0, 'invoiced': r.invoiced or 0}
+                for r in q.all()
+            ]
 
-        for hotel in hotels_query.all():
-            all_services.append({
-                'date': hotel.check_in_date,
-                'service_type': 'HOTEL',
-                'request_number': hotel.request.request_number,
-                'contact_name': hotel.request.contact_name,
-                'pax': hotel.request.pax,
-                'description': f"{hotel.hotel_name} - {hotel.location or ''} ({hotel.nights} nights)",
-                'details': f"Category: {hotel.hotel_category or 'N/A'}, Meal: {hotel.meal_plan}",
-                'status': hotel.status,
-                'cost': hotel.total_cost,
-                'currency': hotel.currency
-            })
-
-    # Transport
-    if not service_type or service_type == 'TRANSPORT':
-        transport_query = InboundTransport.query.join(InboundRequest)
-        if date_from_str:
-            transport_query = transport_query.filter(InboundTransport.date >= date_from)
-        if date_to_str:
-            transport_query = transport_query.filter(InboundTransport.date <= date_to)
-        if status_filter:
-            transport_query = transport_query.filter(InboundTransport.status == status_filter)
-        if request_number:
-            transport_query = transport_query.filter(InboundRequest.request_number.contains(request_number))
-        if search_query:
-            transport_query = transport_query.filter(
-                db.or_(
-                    InboundTransport.vehicle_type.contains(search_query),
-                    InboundTransport.supplier.contains(search_query),
-                    InboundRequest.contact_name.contains(search_query)
+        elif attribute == 'service_type':
+            q = (
+                db.session.query(
+                    InboundGuide.service_type.label('key'),
+                    func.count(InboundGuide.id).label('total'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
                 )
+                .join(InboundRequest, InboundGuide.request_id == InboundRequest.id)
+                .filter(*base_filters)
+                .group_by(InboundGuide.service_type)
+                .order_by(func.count(InboundGuide.id).desc())
             )
+            columns = [
+                {'key': 'key', 'label': 'Service Type'},
+                {'key': 'total', 'label': 'Assignments'},
+                {'key': 'confirmed', 'label': 'Confirmed'},
+                {'key': 'requested', 'label': 'Requested'},
+                {'key': 'invoiced', 'label': 'Invoiced'},
+            ]
+            items = [
+                {'key': r.key or 'Unspecified', 'total': r.total,
+                 'confirmed': r.confirmed or 0, 'requested': r.requested or 0,
+                 'invoiced': r.invoiced or 0}
+                for r in q.all()
+            ]
 
-        for transport in transport_query.all():
-            all_services.append({
-                'date': transport.date,
-                'service_type': 'TRANSPORT',
-                'request_number': transport.request.request_number,
-                'contact_name': transport.request.contact_name,
-                'pax': transport.pax or transport.request.pax,
-                'description': f"{transport.vehicle_type or 'Transport'} - {transport.supplier or 'TBA'}",
-                'details': f"From: {transport.pickup_location or 'N/A'}, To: {transport.dropoff_location or 'N/A'}",
-                'status': transport.status,
-                'cost': transport.cost,
-                'currency': transport.currency
-            })
-
-    # Guides
-    if not service_type or service_type == 'GUIDE':
-        guides_query = InboundGuide.query.join(InboundRequest)
-        if date_from_str:
-            guides_query = guides_query.filter(InboundGuide.date >= date_from)
-        if date_to_str:
-            guides_query = guides_query.filter(InboundGuide.date <= date_to)
-        if status_filter:
-            guides_query = guides_query.filter(InboundGuide.status == status_filter)
-        if request_number:
-            guides_query = guides_query.filter(InboundRequest.request_number.contains(request_number))
-        if search_query:
-            guides_query = guides_query.filter(
-                db.or_(
-                    InboundGuide.guide_name.contains(search_query),
-                    InboundGuide.language.contains(search_query),
-                    InboundRequest.contact_name.contains(search_query)
+        else:  # by guide name
+            q = (
+                db.session.query(
+                    InboundGuide.guide_name.label('key'),
+                    InboundGuide.language.label('language'),
+                    func.count(InboundGuide.id).label('total'),
+                    func.sum(func.coalesce(InboundRequest.pax, 0)).label('total_pax'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
                 )
+                .join(InboundRequest, InboundGuide.request_id == InboundRequest.id)
+                .filter(*base_filters)
+                .group_by(InboundGuide.guide_name, InboundGuide.language)
+                .order_by(func.count(InboundGuide.id).desc())
             )
+            columns = [
+                {'key': 'key', 'label': 'Guide Name'},
+                {'key': 'language', 'label': 'Language'},
+                {'key': 'total', 'label': 'Assignments'},
+                {'key': 'total_pax', 'label': 'Total PAX'},
+                {'key': 'confirmed', 'label': 'Confirmed'},
+                {'key': 'requested', 'label': 'Requested'},
+                {'key': 'invoiced', 'label': 'Invoiced'},
+            ]
+            items = [
+                {'key': r.key or 'Unknown', 'language': r.language or '-',
+                 'total': r.total, 'total_pax': r.total_pax or 0,
+                 'confirmed': r.confirmed or 0, 'requested': r.requested or 0,
+                 'invoiced': r.invoiced or 0}
+                for r in q.all()
+            ]
 
-        for guide in guides_query.all():
-            all_services.append({
-                'date': guide.date,
-                'service_type': 'GUIDE',
-                'request_number': guide.request.request_number,
-                'contact_name': guide.request.contact_name,
-                'pax': guide.request.pax,
-                'description': f"{guide.guide_name or 'Guide'} - {guide.language or 'N/A'}",
-                'details': f"Service: {guide.service_type or 'N/A'}",
-                'status': guide.status,
-                'cost': guide.cost,
-                'currency': guide.currency
-            })
+    # ── TRANSPORT ──
+    elif supplier_type == 'TRANSPORT':
+        from app.models.supplier import Supplier as _Supplier
+        base_filters = [
+            InboundTransport.date >= date_from,
+            InboundTransport.date <= date_to,
+        ]
 
-    # Meals
-    if not service_type or service_type == 'MEAL':
-        meals_query = InboundMeal.query.join(InboundRequest)
-        if date_from_str:
-            meals_query = meals_query.filter(InboundMeal.date >= date_from)
-        if date_to_str:
-            meals_query = meals_query.filter(InboundMeal.date <= date_to)
-        if status_filter:
-            meals_query = meals_query.filter(InboundMeal.status == status_filter)
-        if request_number:
-            meals_query = meals_query.filter(InboundRequest.request_number.contains(request_number))
-        if search_query:
-            meals_query = meals_query.filter(
-                db.or_(
-                    InboundMeal.restaurant.contains(search_query),
-                    InboundMeal.meal_type.contains(search_query),
-                    InboundRequest.contact_name.contains(search_query)
+        if attribute == 'vehicle_type':
+            q = (
+                db.session.query(
+                    InboundTransport.vehicle_type.label('key'),
+                    func.count(InboundTransport.id).label('total'),
+                    func.sum(func.coalesce(InboundTransport.pax, 0)).label('total_pax'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
                 )
+                .join(InboundRequest, InboundTransport.request_id == InboundRequest.id)
+                .filter(*base_filters)
+                .group_by(InboundTransport.vehicle_type)
+                .order_by(func.count(InboundTransport.id).desc())
             )
+            columns = [
+                {'key': 'key', 'label': 'Vehicle Type'},
+                {'key': 'total', 'label': 'Assignments'},
+                {'key': 'total_pax', 'label': 'Total PAX'},
+                {'key': 'confirmed', 'label': 'Confirmed'},
+                {'key': 'requested', 'label': 'Requested'},
+                {'key': 'invoiced', 'label': 'Invoiced'},
+            ]
+            items = [
+                {'key': r.key or 'Unspecified', 'total': r.total,
+                 'total_pax': r.total_pax or 0, 'confirmed': r.confirmed or 0,
+                 'requested': r.requested or 0, 'invoiced': r.invoiced or 0}
+                for r in q.all()
+            ]
 
-        for meal in meals_query.all():
-            all_services.append({
-                'date': meal.date,
-                'service_type': 'MEAL',
-                'request_number': meal.request.request_number,
-                'contact_name': meal.request.contact_name,
-                'pax': meal.request.pax,
-                'description': f"{meal.meal_type or 'Meal'} at {meal.restaurant or 'TBA'}",
-                'details': f"Location: {meal.location or 'N/A'}",
-                'status': meal.status,
-                'cost': meal.total_cost,
-                'currency': meal.currency
-            })
-
-    # Optionals
-    if not service_type or service_type == 'OPTIONAL':
-        optionals_query = InboundOptional.query.join(InboundRequest)
-        if date_from_str and date_to_str:
-            optionals_query = optionals_query.filter(
-                db.or_(
-                    InboundOptional.date == None,
-                    db.and_(InboundOptional.date >= date_from, InboundOptional.date <= date_to)
+        else:  # by supplier / company
+            q = (
+                db.session.query(
+                    InboundTransport.supplier_id.label('supplier_id'),
+                    InboundTransport.supplier.label('supplier_name'),
+                    func.count(InboundTransport.id).label('total'),
+                    func.sum(func.coalesce(InboundTransport.pax, 0)).label('total_pax'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
                 )
+                .join(InboundRequest, InboundTransport.request_id == InboundRequest.id)
+                .filter(*base_filters)
+                .group_by(InboundTransport.supplier_id, InboundTransport.supplier)
+                .order_by(func.count(InboundTransport.id).desc())
             )
-        if status_filter:
-            optionals_query = optionals_query.filter(InboundOptional.status == status_filter)
-        if request_number:
-            optionals_query = optionals_query.filter(InboundRequest.request_number.contains(request_number))
-        if search_query:
-            optionals_query = optionals_query.filter(
-                db.or_(
-                    InboundOptional.service_name.contains(search_query),
-                    InboundRequest.contact_name.contains(search_query)
+            rows = q.all()
+            sid_list = [r.supplier_id for r in rows if r.supplier_id]
+            sup_map = {}
+            if sid_list:
+                sups = _Supplier.query.filter(_Supplier.id.in_(sid_list)).all()
+                sup_map = {s.id: s.name for s in sups}
+            columns = [
+                {'key': 'key', 'label': 'Supplier / Company'},
+                {'key': 'total', 'label': 'Assignments'},
+                {'key': 'total_pax', 'label': 'Total PAX'},
+                {'key': 'confirmed', 'label': 'Confirmed'},
+                {'key': 'requested', 'label': 'Requested'},
+                {'key': 'invoiced', 'label': 'Invoiced'},
+            ]
+            items = [
+                {'key': sup_map.get(r.supplier_id) or r.supplier_name or 'Unknown',
+                 'total': r.total, 'total_pax': r.total_pax or 0,
+                 'confirmed': r.confirmed or 0, 'requested': r.requested or 0,
+                 'invoiced': r.invoiced or 0}
+                for r in rows
+            ]
+
+    # ── RESTAURANT ──
+    elif supplier_type == 'RESTAURANT':
+        from app.models.supplier import Supplier as _Supplier
+        base_filters = [
+            InboundMeal.date >= date_from,
+            InboundMeal.date <= date_to,
+        ]
+
+        if attribute == 'meal_type':
+            q = (
+                db.session.query(
+                    InboundMeal.meal_type.label('key'),
+                    func.count(InboundMeal.id).label('total'),
+                    func.count(distinct(InboundMeal.supplier_id)).label('unique_restaurants'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
                 )
+                .join(InboundRequest, InboundMeal.request_id == InboundRequest.id)
+                .filter(*base_filters)
+                .group_by(InboundMeal.meal_type)
+                .order_by(func.count(InboundMeal.id).desc())
             )
+            columns = [
+                {'key': 'key', 'label': 'Meal Type'},
+                {'key': 'unique_restaurants', 'label': 'Restaurants'},
+                {'key': 'total', 'label': 'Assignments'},
+                {'key': 'confirmed', 'label': 'Confirmed'},
+                {'key': 'requested', 'label': 'Requested'},
+                {'key': 'invoiced', 'label': 'Invoiced'},
+            ]
+            items = [
+                {'key': r.key or 'Unspecified', 'unique_restaurants': r.unique_restaurants,
+                 'total': r.total, 'confirmed': r.confirmed or 0,
+                 'requested': r.requested or 0, 'invoiced': r.invoiced or 0}
+                for r in q.all()
+            ]
 
-        for optional in optionals_query.all():
-            all_services.append({
-                'date': optional.date or date_from,
-                'service_type': 'OPTIONAL',
-                'request_number': optional.request.request_number,
-                'contact_name': optional.request.contact_name,
-                'pax': optional.request.pax,
-                'description': optional.service_name,
-                'details': optional.description or '',
-                'status': optional.status,
-                'cost': optional.total_cost,
-                'currency': optional.currency
-            })
+        elif attribute == 'location':
+            q = (
+                db.session.query(
+                    InboundMeal.location.label('key'),
+                    func.count(InboundMeal.id).label('total'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
+                )
+                .join(InboundRequest, InboundMeal.request_id == InboundRequest.id)
+                .filter(*base_filters)
+                .group_by(InboundMeal.location)
+                .order_by(func.count(InboundMeal.id).desc())
+            )
+            columns = [
+                {'key': 'key', 'label': 'Location'},
+                {'key': 'total', 'label': 'Assignments'},
+                {'key': 'confirmed', 'label': 'Confirmed'},
+                {'key': 'requested', 'label': 'Requested'},
+                {'key': 'invoiced', 'label': 'Invoiced'},
+            ]
+            items = [
+                {'key': r.key or 'Unspecified', 'total': r.total,
+                 'confirmed': r.confirmed or 0, 'requested': r.requested or 0,
+                 'invoiced': r.invoiced or 0}
+                for r in q.all()
+            ]
 
-    # Sort by date
-    all_services.sort(key=lambda x: x['date'])
+        else:  # by restaurant
+            q = (
+                db.session.query(
+                    InboundMeal.supplier_id.label('supplier_id'),
+                    InboundMeal.restaurant.label('restaurant_name'),
+                    func.count(InboundMeal.id).label('total'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
+                )
+                .join(InboundRequest, InboundMeal.request_id == InboundRequest.id)
+                .filter(*base_filters)
+                .group_by(InboundMeal.supplier_id, InboundMeal.restaurant)
+                .order_by(func.count(InboundMeal.id).desc())
+            )
+            rows = q.all()
+            sid_list = [r.supplier_id for r in rows if r.supplier_id]
+            sup_map = {}
+            if sid_list:
+                sups = _Supplier.query.filter(_Supplier.id.in_(sid_list)).all()
+                sup_map = {s.id: s.name for s in sups}
+            columns = [
+                {'key': 'key', 'label': 'Restaurant'},
+                {'key': 'total', 'label': 'Assignments'},
+                {'key': 'confirmed', 'label': 'Confirmed'},
+                {'key': 'requested', 'label': 'Requested'},
+                {'key': 'invoiced', 'label': 'Invoiced'},
+            ]
+            items = [
+                {'key': sup_map.get(r.supplier_id) or r.restaurant_name or 'Unknown',
+                 'total': r.total, 'confirmed': r.confirmed or 0,
+                 'requested': r.requested or 0, 'invoiced': r.invoiced or 0}
+                for r in rows
+            ]
+
+    # ── HOTEL / ACCOMMODATION ──
+    elif supplier_type == 'HOTEL':
+        base_filters = [
+            InboundHotel.check_in_date >= date_from,
+            InboundHotel.check_in_date <= date_to,
+        ]
+
+        if attribute == 'hotel_category':
+            q = (
+                db.session.query(
+                    InboundHotel.hotel_category.label('key'),
+                    func.count(InboundHotel.id).label('total'),
+                    func.count(distinct(InboundHotel.hotel_name)).label('unique_hotels'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
+                )
+                .join(InboundRequest, InboundHotel.request_id == InboundRequest.id)
+                .filter(*base_filters)
+                .group_by(InboundHotel.hotel_category)
+                .order_by(func.count(InboundHotel.id).desc())
+            )
+            columns = [
+                {'key': 'key', 'label': 'Category'},
+                {'key': 'unique_hotels', 'label': 'Hotels'},
+                {'key': 'total', 'label': 'Bookings'},
+                {'key': 'confirmed', 'label': 'Confirmed'},
+                {'key': 'requested', 'label': 'Requested'},
+                {'key': 'invoiced', 'label': 'Invoiced'},
+            ]
+            items = [
+                {'key': r.key or 'Unspecified', 'unique_hotels': r.unique_hotels,
+                 'total': r.total, 'confirmed': r.confirmed or 0,
+                 'requested': r.requested or 0, 'invoiced': r.invoiced or 0}
+                for r in q.all()
+            ]
+
+        elif attribute == 'meal_plan':
+            q = (
+                db.session.query(
+                    InboundHotel.meal_plan.label('key'),
+                    func.count(InboundHotel.id).label('total'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
+                )
+                .join(InboundRequest, InboundHotel.request_id == InboundRequest.id)
+                .filter(*base_filters)
+                .group_by(InboundHotel.meal_plan)
+                .order_by(func.count(InboundHotel.id).desc())
+            )
+            columns = [
+                {'key': 'key', 'label': 'Meal Plan'},
+                {'key': 'total', 'label': 'Bookings'},
+                {'key': 'confirmed', 'label': 'Confirmed'},
+                {'key': 'requested', 'label': 'Requested'},
+                {'key': 'invoiced', 'label': 'Invoiced'},
+            ]
+            items = [
+                {'key': r.key or 'Unspecified', 'total': r.total,
+                 'confirmed': r.confirmed or 0, 'requested': r.requested or 0,
+                 'invoiced': r.invoiced or 0}
+                for r in q.all()
+            ]
+
+        elif attribute == 'location':
+            q = (
+                db.session.query(
+                    InboundHotel.location.label('key'),
+                    func.count(InboundHotel.id).label('total'),
+                    func.count(distinct(InboundHotel.hotel_name)).label('unique_hotels'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
+                )
+                .join(InboundRequest, InboundHotel.request_id == InboundRequest.id)
+                .filter(*base_filters)
+                .group_by(InboundHotel.location)
+                .order_by(func.count(InboundHotel.id).desc())
+            )
+            columns = [
+                {'key': 'key', 'label': 'Location'},
+                {'key': 'unique_hotels', 'label': 'Hotels'},
+                {'key': 'total', 'label': 'Bookings'},
+                {'key': 'confirmed', 'label': 'Confirmed'},
+                {'key': 'requested', 'label': 'Requested'},
+                {'key': 'invoiced', 'label': 'Invoiced'},
+            ]
+            items = [
+                {'key': r.key or 'Unspecified', 'unique_hotels': r.unique_hotels,
+                 'total': r.total, 'confirmed': r.confirmed or 0,
+                 'requested': r.requested or 0, 'invoiced': r.invoiced or 0}
+                for r in q.all()
+            ]
+
+        else:  # by hotel name
+            q = (
+                db.session.query(
+                    InboundHotel.hotel_name.label('key'),
+                    InboundHotel.location.label('location'),
+                    InboundHotel.hotel_category.label('category'),
+                    func.count(InboundHotel.id).label('total'),
+                    func.sum(func.coalesce(InboundRequest.pax, 0)).label('total_pax'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
+                )
+                .join(InboundRequest, InboundHotel.request_id == InboundRequest.id)
+                .filter(*base_filters)
+                .group_by(InboundHotel.hotel_name, InboundHotel.location, InboundHotel.hotel_category)
+                .order_by(func.count(InboundHotel.id).desc())
+            )
+            columns = [
+                {'key': 'key', 'label': 'Hotel'},
+                {'key': 'location', 'label': 'Location'},
+                {'key': 'category', 'label': 'Category'},
+                {'key': 'total', 'label': 'Bookings'},
+                {'key': 'total_pax', 'label': 'Total PAX'},
+                {'key': 'confirmed', 'label': 'Confirmed'},
+                {'key': 'requested', 'label': 'Requested'},
+                {'key': 'invoiced', 'label': 'Invoiced'},
+            ]
+            items = [
+                {'key': r.key or 'Unknown', 'location': r.location or '-',
+                 'category': r.category or '-', 'total': r.total,
+                 'total_pax': r.total_pax or 0, 'confirmed': r.confirmed or 0,
+                 'requested': r.requested or 0, 'invoiced': r.invoiced or 0}
+                for r in q.all()
+            ]
+
+    # ── GROUND_HANDLER (MEET & ASSIST) ──
+    elif supplier_type == 'GROUND_HANDLER':
+        from app.models.inbound import ArrivalBatch, DepartureBatch
+        base_filters = [
+            db.or_(
+                ArrivalBatch.arrival_date >= date_from,
+                DepartureBatch.departure_date >= date_from,
+            ),
+            db.or_(
+                ArrivalBatch.arrival_date <= date_to,
+                DepartureBatch.departure_date <= date_to,
+            )
+        ]
+
+        # By company (supplier_id)
+        q = (
+            db.session.query(
+                ArrivalBatch.supplier_id.label('supplier_id'),
+                ArrivalBatch.supplier_name.label('supplier_name'),
+                func.count(ArrivalBatch.id).label('arrivals'),
+                func.sum(func.coalesce(ArrivalBatch.pax_count, 0)).label('arrival_pax'),
+            )
+            .filter(*[f for f in base_filters if 'ArrivalBatch' in str(f)])
+            .group_by(ArrivalBatch.supplier_id, ArrivalBatch.supplier_name)
+        )
+        arr_rows = q.all()
+
+        q2 = (
+            db.session.query(
+                DepartureBatch.supplier_id.label('supplier_id'),
+                DepartureBatch.supplier_name.label('supplier_name'),
+                func.count(DepartureBatch.id).label('departures'),
+                func.sum(func.coalesce(DepartureBatch.pax_count, 0)).label('departure_pax'),
+            )
+            .filter(*[f for f in base_filters if 'DepartureBatch' in str(f)])
+            .group_by(DepartureBatch.supplier_id, DepartureBatch.supplier_name)
+        )
+        dep_rows = q2.all()
+
+        # Merge arrivals and departures by supplier
+        supplier_map = {}
+        for r in arr_rows:
+            key = r.supplier_id or r.supplier_name or 'Unknown'
+            supplier_map[key] = {
+                'key': key, 'arrivals': r.arrivals or 0,
+                'departure': 0, 'total': (r.arrivals or 0),
+                'total_pax': r.arrival_pax or 0
+            }
+        for r in dep_rows:
+            key = r.supplier_id or r.supplier_name or 'Unknown'
+            if key not in supplier_map:
+                supplier_map[key] = {
+                    'key': key, 'arrivals': 0,
+                    'departure': 0, 'total': 0, 'total_pax': 0
+                }
+            supplier_map[key]['departure'] = r.departures or 0
+            supplier_map[key]['total'] = supplier_map[key]['arrivals'] + (r.departures or 0)
+            supplier_map[key]['total_pax'] = (supplier_map[key].get('total_pax', 0) or 0) + (r.departure_pax or 0)
+
+        columns = [
+            {'key': 'key', 'label': 'Supplier / Company'},
+            {'key': 'arrivals', 'label': 'Arrivals'},
+            {'key': 'departure', 'label': 'Departures'},
+            {'key': 'total', 'label': 'Total'},
+            {'key': 'total_pax', 'label': 'Total PAX'},
+        ]
+        items = sorted(supplier_map.values(), key=lambda x: x['total'], reverse=True)
 
     # Create Excel workbook
     wb = openpyxl.Workbook()
     ws = cast(Any, wb.active)
-    ws.title = "Services Analytics"
+    ws.title = "Supplier Analytics"
 
     # Header styling
-    header_fill = PatternFill(start_color="FFBF00", end_color="FFBF00", fill_type="solid")
-    header_font = Font(bold=True, color="000000", size=12)
-    header_alignment = Alignment(horizontal="center", vertical="center")
+    header_fill = PatternFill(start_color="1F2937", end_color="1F2937", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
     thin_border = Border(
-        left=Side(style='thin'),
-        right=Side(style='thin'),
-        top=Side(style='thin'),
-        bottom=Side(style='thin')
+        left=Side(style='thin'), right=Side(style='thin'),
+        top=Side(style='thin'), bottom=Side(style='thin')
     )
+    center_alignment = Alignment(horizontal="right", vertical="center")
 
-    # Title
-    ws.merge_cells('A1:J1')
-    ws['A1'] = f"Services Analytics: {date_from.strftime('%B %d, %Y')} - {date_to.strftime('%B %d, %Y')}"
-    ws['A1'].font = Font(bold=True, size=14)
-    ws['A1'].alignment = Alignment(horizontal="center")
+    # Title row
+    ws.merge_cells(f'A1:{chr(64 + len(columns))}1')
+    title_cell = ws['A1']
+    title_cell.value = f"Supplier Analytics: {supplier_type} by {attribute or 'default'}"
+    title_cell.font = Font(bold=True, size=13)
+    title_cell.alignment = Alignment(horizontal="left")
 
-    # Headers
-    headers = ['Date', 'Request #', 'Contact', 'PAX', 'Service Type', 'Description', 'Details', 'Status', 'Cost', 'Currency']
-    for col, header in enumerate(headers, start=1):
-        cell = ws.cell(row=3, column=col)
-        cell.value = header
+    # Date range row
+    ws.merge_cells(f'A2:{chr(64 + len(columns))}2')
+    date_cell = ws['A2']
+    date_cell.value = f"Period: {date_from} to {date_to}"
+    date_cell.font = Font(size=10, italic=True)
+    date_cell.alignment = Alignment(horizontal="left")
+
+    # Headers row
+    for col, col_def in enumerate(columns, start=1):
+        cell = ws.cell(row=4, column=col)
+        cell.value = col_def['label']
         cell.fill = header_fill
         cell.font = header_font
         cell.alignment = header_alignment
         cell.border = thin_border
 
     # Data rows
-    row = 4
-    for service in all_services:
-        ws.cell(row=row, column=1, value=service['date'].strftime('%Y-%m-%d')).border = thin_border
-        ws.cell(row=row, column=2, value=service['request_number']).border = thin_border
-        ws.cell(row=row, column=3, value=service['contact_name']).border = thin_border
-        ws.cell(row=row, column=4, value=service['pax']).border = thin_border
-        ws.cell(row=row, column=5, value=service['service_type']).border = thin_border
-        ws.cell(row=row, column=6, value=service['description']).border = thin_border
-        ws.cell(row=row, column=7, value=service['details']).border = thin_border
-        ws.cell(row=row, column=8, value=service['status']).border = thin_border
-        ws.cell(row=row, column=9, value=service['cost']).border = thin_border
-        ws.cell(row=row, column=10, value=service['currency']).border = thin_border
-        row += 1
+    for row_idx, item in enumerate(items, start=5):
+        for col_idx, col_def in enumerate(columns, start=1):
+            cell = ws.cell(row=row_idx, column=col_idx)
+            value = item.get(col_def['key'], '')
+            cell.value = value if value is not None else ''
+            cell.border = thin_border
+            # Right-align numeric columns
+            if col_def['key'] in ('total', 'confirmed', 'requested', 'invoiced', 'total_pax', 'unique_guides', 'unique_restaurants', 'unique_hotels', 'arrivals', 'departure', 'arrivals_count', 'departures_count'):
+                cell.alignment = center_alignment
 
     # Adjust column widths
-    ws.column_dimensions['A'].width = 12
-    ws.column_dimensions['B'].width = 15
-    ws.column_dimensions['C'].width = 20
-    ws.column_dimensions['D'].width = 6
-    ws.column_dimensions['E'].width = 12
-    ws.column_dimensions['F'].width = 35
-    ws.column_dimensions['G'].width = 40
-    ws.column_dimensions['H'].width = 12
-    ws.column_dimensions['I'].width = 10
-    ws.column_dimensions['J'].width = 8
+    for col_idx, col_def in enumerate(columns, start=1):
+        col_letter = chr(64 + col_idx)
+        ws.column_dimensions[col_letter].width = 18
 
     # Save to bytes
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
 
-    filename = f"Services_Analytics_{date_from.strftime('%Y%m%d')}_{date_to.strftime('%Y%m%d')}.xlsx"
+    filename = f"SupplierAnalytics_{supplier_type}_{date_from.strftime('%Y%m%d')}_{date_to.strftime('%Y%m%d')}.xlsx"
 
     return send_file(
         output,
