@@ -234,7 +234,9 @@ body.modal-open {
                     {% elif type_key in ('restaurant', 'transportation') %}
                     <th style="width: 20%;">Phone</th>
                     {% endif %}
+                    {% if type_key != 'airline' %}
                     <th style="width: {% if type_key == 'guides' %}18%{% elif type_key == 'meet-assist' %}20%{% elif type_key in ('restaurant', 'transportation') %}25%{% else %}30%{% endif %};">City</th>
+                    {% endif %}
                     <th style="width: {% if type_key == 'guides' %}16%{% else %}15%{% endif %};">Actions</th>
                 </tr>
             </thead>
@@ -259,7 +261,9 @@ body.modal-open {
                     {% elif type_key in ('restaurant', 'transportation') %}
                     <td>{{ supplier.phone or '' }}</td>
                     {% endif %}
+                    {% if type_key != 'airline' %}
                     <td>{{ supplier.city or '-' }}</td>
+                    {% endif %}
                     <td>
                         <div class="supplier-actions">
                             <a href="/supplier/{{ supplier.id }}" class="supplier-action-btn" title="View">
@@ -278,7 +282,7 @@ body.modal-open {
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="{% if type_key == 'guides' %}5{% elif type_key == 'meet-assist' %}4{% elif type_key in ('restaurant', 'transportation') %}4{% else %}3{% endif %}" style="text-align:center; color:#6b7280;">No suppliers found for {{ type_label }}</td>
+                    <td colspan="{% if type_key == 'guides' %}5{% elif type_key == 'meet-assist' %}4{% elif type_key in ('restaurant', 'transportation') %}4{% elif type_key == 'airline' %}2{% else %}3{% endif %}" style="text-align:center; color:#6b7280;">No suppliers found for {{ type_label }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
