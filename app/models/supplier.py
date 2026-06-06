@@ -51,6 +51,7 @@ class Supplier(db.Model):
     default_currency = db.Column(db.String(3), default='USD')
     bank_name = db.Column(db.String(100))
     bank_account = db.Column(db.String(100))
+    bank_iban = db.Column(db.String(100))
     tax_number = db.Column(db.String(50))
     
     # Additional information
