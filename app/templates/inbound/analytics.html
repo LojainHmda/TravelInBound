@@ -258,58 +258,10 @@ body { background: #f1f5f9; }
   </div>
 
   {# ── FILTER BAR ── #}
-  <div class="filter-bar" id="filterBar">
-    <div class="search-box">
-      <i class="fas fa-search"></i>
-      <input type="text" id="searchInput" value="{{ search_query }}"
-             placeholder="Search request, contact, description…"
-             onkeydown="if(event.key==='Enter'){applySearch();}">
-    </div>
-
-    {# Service multi-select #}
-    <div class="flt-dd">
-      <button type="button" class="flt-btn" id="svcBtn" onclick="toggleMenu('svcMenu')">
-        <i class="fas fa-concierge-bell"></i> Service
-        <i class="fas fa-chevron-down" style="font-size:10px;"></i>
-      </button>
-      <div class="flt-menu" id="svcMenu">
-        {% for stype, css, icon, label in card_defs %}
-        <div class="flt-item" data-stype="{{ stype }}" onclick="toggleServiceCheckbox('{{ stype }}')">
-          <span class="flt-chk"><i class="fas fa-check"></i></span>
-          <i class="fas {{ icon }}" style="width:14px;text-align:center;color:#6b7280;font-size:11px;"></i>
-          {{ label }}
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-
-    {# Status dropdown #}
-    <div class="flt-dd">
-      <button type="button" class="flt-btn" id="stsBtn" onclick="toggleMenu('stsMenu')">
-        <i class="fas fa-flag"></i> Status
-        <i class="fas fa-chevron-down" style="font-size:10px;"></i>
-      </button>
-      <div class="flt-menu" id="stsMenu">
-        {% for val,lbl in [('','All'),('REQUEST','Requested'),('CONFIRMED','Confirmed'),('INVOICED','Invoiced'),('PENDING','Pending'),('COMPLETED','Completed')] %}
-        <div class="flt-item {% if status_filter==val %}on{% endif %}"
-             data-sts="{{ val }}" onclick="selectStatus('{{ val }}')">
-          <span class="flt-chk"><i class="fas fa-check"></i></span>{{ lbl }}
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-
-    <div class="date-inline">
-      <label>Period:</label>
-      <input type="date" id="dateFrom" value="{{ date_from }}">
-      <span class="sep">→</span>
-      <input type="date" id="dateTo" value="{{ date_to }}">
-    </div>
-
-    <a id="exportBtn" href="#" class="btn-export">
-      <i class="fas fa-download"></i> Export
-    </a>
-  </div>
+  {# hidden date inputs so JS date-sync still works #}
+  <input type="hidden" id="dateFrom" value="{{ date_from }}">
+  <input type="hidden" id="dateTo"   value="{{ date_to }}">
+  <input type="hidden" id="searchInput" value="{{ search_query }}">
 
   {# ── ACTIVE FILTER TAGS ── #}
   <div class="active-tags" id="activeTags" style="display:none;"></div>
@@ -336,18 +288,14 @@ body { background: #f1f5f9; }
           <span class="sa-lbl">Attribute</span>
           <div id="attrPills" class="attr-pills"></div>
         </div>
+        <div class="sa-row" id="attrValueRow" style="display:none;">
+          <span class="sa-lbl" id="attrValueLbl"></span>
+          <div id="attrValueChips" class="attr-pills"></div>
+        </div>
       </div>
 
       {# ── RIGHT: View toggle · Status · Date range ── #}
       <div class="sa-col-right">
-        <div class="sa-row">
-          <span class="sa-lbl">View</span>
-          <div class="view-toggle" id="viewToggle">
-            <div class="view-btn on" data-view="attribute" onclick="setView('attribute')">
-              <i class="fas fa-layer-group" style="font-size:9px;"></i> Breakdown
-            </div>
-          </div>
-        </div>
         <div class="sa-row">
           <span class="sa-lbl">Status</span>
           <div class="status-chips" id="saStatusChips">
@@ -369,6 +317,23 @@ body { background: #f1f5f9; }
             <span class="sep">→</span>
             <input type="date" id="saDateTo"   value="{{ date_to }}">
           </div>
+        </div>
+        <div class="sa-row">
+          <span class="sa-lbl"></span>
+          <div class="attr-pills">
+            <div class="attr-pill" id="qr-last_month"  onclick="selectQuickRange('last_month')">Last Month</div>
+            <div class="attr-pill" id="qr-this_month"  onclick="selectQuickRange('this_month')">This Month</div>
+            <div class="attr-pill" id="qr-last_year"   onclick="selectQuickRange('last_year')">Last Year</div>
+            <div class="attr-pill" id="qr-next_year"   onclick="selectQuickRange('next_year')">Next Year</div>
+          </div>
+        </div>
+        <div class="sa-row" style="justify-content:flex-end;gap:8px;">
+          <button onclick="exportSaExcel()" style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;background:#16a34a;color:white;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;">
+            <i class="fas fa-file-excel"></i> Excel
+          </button>
+          <button onclick="applyAllFilters()" style="padding:5px 18px;border-radius:20px;font-size:12px;font-weight:600;background:#1e293b;color:white;border:none;cursor:pointer;">
+            Apply
+          </button>
         </div>
       </div>
 
@@ -451,6 +416,7 @@ const M = {
     supplierType: null,   // set after types load
     view:         'attribute',  // 'attribute' only (removed 'suppliers')
     attribute:    '',
+    attrFilter:   '',
     statuses:     ['REQUEST','CONFIRMED','INVOICED'],
   },
 };
@@ -584,20 +550,6 @@ function patchActiveTags() {
     bar.innerHTML = '';
   }
 
-  // Update filter button active state
-  document.getElementById('svcBtn').classList.toggle('active', M.serviceTypes.length > 0);
-  document.getElementById('stsBtn').classList.toggle('active', !!M.status);
-
-  // Update dropdown items
-  document.querySelectorAll('#svcMenu .flt-item').forEach(el => {
-    el.classList.toggle('on', M.serviceTypes.includes(el.dataset.stype));
-  });
-  document.querySelectorAll('#stsMenu .flt-item').forEach(el => {
-    el.classList.toggle('on', el.dataset.sts === M.status);
-  });
-
-  // Update export button URL
-  document.getElementById('exportBtn').href = exportUrl();
 }
 
 function esc(str) {
@@ -773,8 +725,10 @@ function renderSaControls() {
 }
 
 function setSaType(t) {
-  M.sa.supplierType = t; M.sa.attribute = '';
-  renderSaControls(); loadSaData();
+  M.sa.supplierType = t; M.sa.attribute = ''; M.sa.attrFilter = '';
+  renderSaControls();
+  document.getElementById('attrValueRow').style.display='none';
+  document.getElementById('attrValueChips').innerHTML='';
 }
 
 function setView(v) {
@@ -783,13 +737,35 @@ function setView(v) {
 }
 
 function setSaAttr(a) {
-  M.sa.attribute = a; renderSaControls(); loadSaData();
+  M.sa.attribute = a; M.sa.attrFilter = '';
+  renderSaControls();
+  if (a) fetchAttrValues();
+  else { document.getElementById('attrValueRow').style.display='none'; document.getElementById('attrValueChips').innerHTML=''; }
+}
+
+async function fetchAttrValues() {
+  const apiType = CAT_SERVICE_MAP[M.sa.supplierType] || M.sa.supplierType.toUpperCase();
+  const url = `/inbound/analytics/supplier-analytics?supplier_type=${apiType}&attribute=${encodeURIComponent(M.sa.attribute)}&attr_filter=&date_from=${M.dateFrom}&date_to=${M.dateTo}`;
+  try {
+    const res = await fetch(url);
+    const d   = await res.json();
+    renderAttrValueChips(d.attr_values || [], d.attr_label || '');
+  } catch(e) {}
+}
+
+function setAttrFilter(v) {
+  M.sa.attrFilter = (M.sa.attrFilter === v) ? '' : v;
+  // Just update chip highlights, no data fetch
+  document.querySelectorAll('#attrValueChips .attr-pill').forEach(el => {
+    el.classList.toggle('on', el.textContent.trim() === M.sa.attrFilter);
+  });
 }
 
 function toggleSaStatus(s) {
   const i = M.sa.statuses.indexOf(s);
   if (i > -1) M.sa.statuses.splice(i,1); else M.sa.statuses.push(s);
-  renderSaControls(); loadSaData();
+  renderSaControls();
+  applySaColumnVisibility();
 }
 
 async function loadSaData() {
@@ -816,11 +792,12 @@ async function loadSaData() {
     } else {
       // ── Attribute view: aggregation breakdown ──
       const apiType = CAT_SERVICE_MAP[M.sa.supplierType] || M.sa.supplierType.toUpperCase();
-      url = `/inbound/analytics/supplier-analytics?supplier_type=${apiType}&attribute=${encodeURIComponent(M.sa.attribute)}&${stsParam}&${dates}`;
+      url = `/inbound/analytics/supplier-analytics?supplier_type=${apiType}&attribute=${encodeURIComponent(M.sa.attribute)}&attr_filter=${encodeURIComponent(M.sa.attrFilter)}&${dates}`;
       const res = await fetch(url);
       const d   = await res.json();
-      items   = d.items   || [];
-      columns = d.columns || [];
+      items   = d.items || [];
+      columns = buildSaColumns(d.attr_label || '');
+      renderAttrValueChips(d.attr_values || [], d.attr_label || '');
       document.getElementById('saCount').textContent = d.total + ' rows';
     }
 
@@ -863,10 +840,44 @@ function buildSupplierColumns(catKey) {
   return base;
 }
 
+// Status key → column key mapping
+const STS_COL = {REQUEST:'requested', CONFIRMED:'confirmed', INVOICED:'invoiced'};
+
+// Supplier type → primary name column label
+const STYPE_NAME_LABEL = {
+  'accommodation': 'Hotel',
+  'guides':        'Guide',
+  'transportation':'Supplier / Company',
+  'restaurant':    'Restaurant',
+  'meet-assist':   'Company',
+};
+
+function buildSaColumns(attrLabel) {
+  const nameLabel = STYPE_NAME_LABEL[M.sa.supplierType] || 'Name';
+  const cols = [{key:'key', label: nameLabel}];
+  if (M.sa.attribute && attrLabel) cols.push({key:'attr_val', label: attrLabel});
+  cols.push({key:'confirmed', label:'Confirmed'});
+  cols.push({key:'requested', label:'Requested'});
+  cols.push({key:'invoiced',  label:'Invoiced'});
+  cols.push({key:'total', label:'Times Used'});
+  return cols;
+}
+
+function renderAttrValueChips(values, label) {
+  const row   = document.getElementById('attrValueRow');
+  const lbl   = document.getElementById('attrValueLbl');
+  const wrap  = document.getElementById('attrValueChips');
+  if (!values.length) { row.style.display = 'none'; wrap.innerHTML = ''; return; }
+  row.style.display = 'flex';
+  lbl.textContent = label;
+  wrap.innerHTML = values.map(v =>
+    `<div class="attr-pill${M.sa.attrFilter === v ? ' on' : ''}" onclick='setAttrFilter(${JSON.stringify(v)})'>${esc(v)}</div>`
+  ).join('');
+}
+
 function renderSaTable(columns, items) {
   const BADGES = {confirmed:'cnt-confirmed',requested:'cnt-requested',invoiced:'cnt-invoiced',total:'cnt-total'};
 
-  // Determine which columns are numeric
   const isNumeric = (col) => {
     if (col.key in BADGES) return true;
     if (items.length > 0) return typeof items[0][col.key] === 'number';
@@ -876,20 +887,36 @@ function renderSaTable(columns, items) {
   document.getElementById('saHead').innerHTML =
     '<tr>' + columns.map(c => {
       const numeric = isNumeric(c);
-      return `<th${numeric ? ' style="text-align:right;"' : ''}>${c.label}</th>`;
+      const colAttr = c.key in BADGES ? ` data-col="${c.key}"` : '';
+      return `<th${colAttr}${numeric ? ' style="text-align:right;"' : ''}>${c.label}</th>`;
     }).join('') + '</tr>';
 
   document.getElementById('saBody').innerHTML = items.map(item => {
     const cells = columns.map(col => {
       const v = item[col.key];
+      const colAttr = col.key in BADGES ? ` data-col="${col.key}"` : '';
       if (col.key in BADGES)
-        return `<td class="num"><span class="cnt-badge ${BADGES[col.key]}">${v ?? 0}</span></td>`;
+        return `<td${colAttr} class="num"><span class="cnt-badge ${BADGES[col.key]}">${v ?? 0}</span></td>`;
       if (typeof v === 'number')
-        return `<td class="num">${v}</td>`;
-      return `<td>${esc(v ?? '—')}</td>`;
+        return `<td${colAttr} class="num">${v}</td>`;
+      return `<td${colAttr}>${esc(v ?? '—')}</td>`;
     });
     return '<tr>' + cells.join('') + '</tr>';
   }).join('');
+
+  applySaColumnVisibility();
+}
+
+function applySaColumnVisibility() {
+  const table = document.getElementById('saTable');
+  if (!table) return;
+  // For each status chip, show/hide its corresponding column
+  Object.entries(STS_COL).forEach(([sts, colKey]) => {
+    const visible = M.sa.statuses.includes(sts);
+    table.querySelectorAll(`[data-col="${colKey}"]`).forEach(el => {
+      el.style.display = visible ? '' : 'none';
+    });
+  });
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -909,6 +936,49 @@ document.addEventListener('click', e => {
 /* ════════════════════════════════════════════════════════════════════════════
    DATE RANGE
 ════════════════════════════════════════════════════════════════════════════ */
+function selectQuickRange(range) {
+  const now = new Date();
+  let from, to;
+  const pad = n => String(n).padStart(2, '0');
+  const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  if (range === 'last_month') {
+    const first = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const last  = new Date(now.getFullYear(), now.getMonth(), 0);
+    from = fmt(first); to = fmt(last);
+  } else if (range === 'this_month') {
+    const first = new Date(now.getFullYear(), now.getMonth(), 1);
+    const last  = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    from = fmt(first); to = fmt(last);
+  } else if (range === 'last_year') {
+    from = `${now.getFullYear() - 1}-01-01`;
+    to   = `${now.getFullYear() - 1}-12-31`;
+  } else if (range === 'next_year') {
+    from = `${now.getFullYear() + 1}-01-01`;
+    to   = `${now.getFullYear() + 1}-12-31`;
+  }
+  // Update inputs only — do NOT reload data yet
+  const sdf = document.getElementById('saDateFrom');
+  const sdt = document.getElementById('saDateTo');
+  if (sdf) sdf.value = from;
+  if (sdt) sdt.value = to;
+  // Highlight active pill
+  ['last_month','this_month','last_year','next_year'].forEach(r => {
+    const el = document.getElementById(`qr-${r}`);
+    if (el) el.classList.toggle('on', r === range);
+  });
+}
+
+function applyAllFilters() {
+  const from = document.getElementById('saDateFrom').value;
+  const to   = document.getElementById('saDateTo').value;
+  if (!from || !to) return;
+  _applyDateChange(from, to);
+}
+
+function exportSaExcel() {
+  window.location.href = exportUrl();
+}
+
 function _applyDateChange(from, to) {
   M.dateFrom = from; M.dateTo = to; syncUrl();
   // Sync all date inputs
@@ -916,10 +986,16 @@ function _applyDateChange(from, to) {
   ['dateTo','saDateTo'].forEach(id =>   { const el = document.getElementById(id); if (el) el.value = to;   });
   refreshKpi(); refreshRunDown(); loadSaData();
 }
-document.getElementById('dateFrom').addEventListener('change', function() { _applyDateChange(this.value, M.dateTo); });
-document.getElementById('dateTo').addEventListener('change',   function() { _applyDateChange(M.dateFrom, this.value); });
-document.getElementById('saDateFrom').addEventListener('change', function() { _applyDateChange(this.value, M.dateTo); });
-document.getElementById('saDateTo').addEventListener('change',   function() { _applyDateChange(M.dateFrom, this.value); });
+document.getElementById('saDateFrom').addEventListener('change', function() {
+  ['last_month','this_month','last_year','next_year'].forEach(r => {
+    const el = document.getElementById(`qr-${r}`); if (el) el.classList.remove('on');
+  });
+});
+document.getElementById('saDateTo').addEventListener('change', function() {
+  ['last_month','this_month','last_year','next_year'].forEach(r => {
+    const el = document.getElementById(`qr-${r}`); if (el) el.classList.remove('on');
+  });
+});
 
 /* ════════════════════════════════════════════════════════════════════════════
    INIT
