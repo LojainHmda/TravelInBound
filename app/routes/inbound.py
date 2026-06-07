@@ -10,11 +10,11 @@ from sqlalchemy.orm import selectinload
 
 from app import db, csrf
 from app.models.inbound import (
-    InboundRequest, ItineraryRow, InboundHotel, InboundTransport, 
+    InboundRequest, ItineraryRow, InboundHotel, InboundTransport,
     InboundMeal, InboundGuide, InboundCashExpense, InboundDocument,
     HotelRoom, COST_UNIT_PER_PERSON, COST_UNIT_PER_GROUP,
     ArrivalBatch, DepartureBatch, InboundRepresentative,
-    itinerary_row_guide_supplier_id_list,
+    itinerary_row_guide_supplier_id_list, HotelCategory,
 )
 from werkzeug.utils import secure_filename
 import uuid
@@ -4866,6 +4866,7 @@ def api_add_transport():
         count = Supplier.query.filter(Supplier.code.like('TRN-%')).count()
         new_code = f'TRN-{count + 1:03d}'
 
+        entity_type = data.get('entity_type', 'COMPANY').strip() or 'COMPANY'
         payment_terms = data.get('payment_terms', '').strip() or None
         payment_method = data.get('payment_method', '').strip()
         bank_name_val, bank_account_val = _resolve_supplier_bank_fields(data)
@@ -4880,6 +4881,7 @@ def api_add_transport():
             name=transport_name,
             code=new_code,
             supplier_type='TRANSPORT',
+            entity_type=entity_type,
             phone=data.get('phone', '').strip() or None,
             contact_person=data.get('contact_person', '').strip() or None,
             email=data.get('email', '').strip() or None,
@@ -4887,6 +4889,7 @@ def api_add_transport():
             city=data.get('city', '').strip() or None,
             country=data.get('country', '').strip() or None,
             payment_terms=payment_terms,
+            payment_method=payment_method,
             default_currency=data.get('default_currency', 'USD') or 'USD',
             address=data.get('address', '').strip() or None,
             bank_name=bank_name_val,
@@ -9690,276 +9693,92 @@ def analytics_dashboard():
                          date_to=date_to,
                          request_number=request_number)
 
-@inbound_bp.route('/analytics/export-excel')
+@inbound_bp.route('/analytics/export-excel', methods=['POST'])
 def analytics_export_excel():
-    """Export analytics data to Excel"""
-    from app.models.inbound import InboundOptional
+    """Export the currently displayed Supplier Analytics table as Excel.
+    Accepts table data directly from frontend to ensure exact match."""
     import io
     import openpyxl
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
-    # Get same filters as analytics dashboard
-    search_query = request.args.get('search', '').strip()
-    service_type = request.args.get('service_type', '')
-    status_filter = request.args.get('status', '')
-    date_from_str = request.args.get('date_from', '')
-    date_to_str = request.args.get('date_to', '')
-    request_number = request.args.get('request_number', '')
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
 
-    # Parse dates
-    date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date() if date_from_str else (datetime.now().date() - timedelta(days=7))
-    date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date() if date_to_str else (datetime.now().date() + timedelta(days=30))
+        headers = data.get('headers', [])
+        rows = data.get('rows', [])
+        title = data.get('title', 'Supplier Analytics Export')
 
-    # Collect all services (same logic as analytics_dashboard)
-    all_services = []
+        # Create Excel workbook
+        wb = openpyxl.Workbook()
+        ws = cast(Any, wb.active)
+        ws.title = "Analytics"
 
-    # Hotels
-    if not service_type or service_type == 'HOTEL':
-        hotels_query = InboundHotel.query.join(InboundRequest)
-        if date_from_str:
-            hotels_query = hotels_query.filter(InboundHotel.check_in_date >= date_from)
-        if date_to_str:
-            hotels_query = hotels_query.filter(InboundHotel.check_in_date <= date_to)
-        if status_filter:
-            hotels_query = hotels_query.filter(InboundHotel.status == status_filter)
-        if request_number:
-            hotels_query = hotels_query.filter(InboundRequest.request_number.contains(request_number))
-        if search_query:
-            hotels_query = hotels_query.filter(
-                db.or_(
-                    InboundHotel.hotel_name.contains(search_query),
-                    InboundHotel.location.contains(search_query),
-                    InboundRequest.contact_name.contains(search_query)
-                )
-            )
+        # Styling
+        header_fill = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
+        header_font = Font(bold=True, color="FFFFFF", size=11)
+        header_alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+        data_alignment = Alignment(horizontal="left", vertical="center")
+        data_alignment_numeric = Alignment(horizontal="right", vertical="center")
+        thin_border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
 
-        for hotel in hotels_query.all():
-            all_services.append({
-                'date': hotel.check_in_date,
-                'service_type': 'HOTEL',
-                'request_number': hotel.request.request_number,
-                'contact_name': hotel.request.contact_name,
-                'pax': hotel.request.pax,
-                'description': f"{hotel.hotel_name} - {hotel.location or ''} ({hotel.nights} nights)",
-                'details': f"Category: {hotel.hotel_category or 'N/A'}, Meal: {hotel.meal_plan}",
-                'status': hotel.status,
-                'cost': hotel.total_cost,
-                'currency': hotel.currency
-            })
+        # Title row
+        ws.merge_cells(f'A1:{chr(64 + len(headers))}1')
+        title_cell = ws['A1']
+        title_cell.value = title
+        title_cell.font = Font(bold=True, size=12)
+        title_cell.alignment = Alignment(horizontal="center", vertical="center")
 
-    # Transport
-    if not service_type or service_type == 'TRANSPORT':
-        transport_query = InboundTransport.query.join(InboundRequest)
-        if date_from_str:
-            transport_query = transport_query.filter(InboundTransport.date >= date_from)
-        if date_to_str:
-            transport_query = transport_query.filter(InboundTransport.date <= date_to)
-        if status_filter:
-            transport_query = transport_query.filter(InboundTransport.status == status_filter)
-        if request_number:
-            transport_query = transport_query.filter(InboundRequest.request_number.contains(request_number))
-        if search_query:
-            transport_query = transport_query.filter(
-                db.or_(
-                    InboundTransport.vehicle_type.contains(search_query),
-                    InboundTransport.supplier.contains(search_query),
-                    InboundRequest.contact_name.contains(search_query)
-                )
-            )
+        # Headers (row 3)
+        for col_idx, header_text in enumerate(headers, start=1):
+            cell = ws.cell(row=3, column=col_idx)
+            cell.value = header_text
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = header_alignment
+            cell.border = thin_border
 
-        for transport in transport_query.all():
-            all_services.append({
-                'date': transport.date,
-                'service_type': 'TRANSPORT',
-                'request_number': transport.request.request_number,
-                'contact_name': transport.request.contact_name,
-                'pax': transport.pax or transport.request.pax,
-                'description': f"{transport.vehicle_type or 'Transport'} - {transport.supplier or 'TBA'}",
-                'details': f"From: {transport.pickup_location or 'N/A'}, To: {transport.dropoff_location or 'N/A'}",
-                'status': transport.status,
-                'cost': transport.cost,
-                'currency': transport.currency
-            })
+        # Data rows (starting row 4)
+        for row_idx, row_data in enumerate(rows, start=4):
+            for col_idx, cell_value in enumerate(row_data, start=1):
+                cell = ws.cell(row=row_idx, column=col_idx)
+                cell.value = cell_value
+                cell.border = thin_border
+                # Numeric cells right-aligned
+                if isinstance(cell_value, (int, float)):
+                    cell.alignment = data_alignment_numeric
+                else:
+                    cell.alignment = data_alignment
 
-    # Guides
-    if not service_type or service_type == 'GUIDE':
-        guides_query = InboundGuide.query.join(InboundRequest)
-        if date_from_str:
-            guides_query = guides_query.filter(InboundGuide.date >= date_from)
-        if date_to_str:
-            guides_query = guides_query.filter(InboundGuide.date <= date_to)
-        if status_filter:
-            guides_query = guides_query.filter(InboundGuide.status == status_filter)
-        if request_number:
-            guides_query = guides_query.filter(InboundRequest.request_number.contains(request_number))
-        if search_query:
-            guides_query = guides_query.filter(
-                db.or_(
-                    InboundGuide.guide_name.contains(search_query),
-                    InboundGuide.language.contains(search_query),
-                    InboundRequest.contact_name.contains(search_query)
-                )
-            )
+        # Auto-adjust column widths based on header length
+        for col_idx, header_text in enumerate(headers, start=1):
+            col_letter = chr(64 + col_idx)
+            # Base width on header length, with minimum
+            width = max(len(str(header_text)) + 2, 12)
+            ws.column_dimensions[col_letter].width = width
 
-        for guide in guides_query.all():
-            all_services.append({
-                'date': guide.date,
-                'service_type': 'GUIDE',
-                'request_number': guide.request.request_number,
-                'contact_name': guide.request.contact_name,
-                'pax': guide.request.pax,
-                'description': f"{guide.guide_name or 'Guide'} - {guide.language or 'N/A'}",
-                'details': f"Service: {guide.service_type or 'N/A'}",
-                'status': guide.status,
-                'cost': guide.cost,
-                'currency': guide.currency
-            })
+        # Save to bytes
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
 
-    # Meals
-    if not service_type or service_type == 'MEAL':
-        meals_query = InboundMeal.query.join(InboundRequest)
-        if date_from_str:
-            meals_query = meals_query.filter(InboundMeal.date >= date_from)
-        if date_to_str:
-            meals_query = meals_query.filter(InboundMeal.date <= date_to)
-        if status_filter:
-            meals_query = meals_query.filter(InboundMeal.status == status_filter)
-        if request_number:
-            meals_query = meals_query.filter(InboundRequest.request_number.contains(request_number))
-        if search_query:
-            meals_query = meals_query.filter(
-                db.or_(
-                    InboundMeal.restaurant.contains(search_query),
-                    InboundMeal.meal_type.contains(search_query),
-                    InboundRequest.contact_name.contains(search_query)
-                )
-            )
+        filename = f"SupplierAnalytics_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
 
-        for meal in meals_query.all():
-            all_services.append({
-                'date': meal.date,
-                'service_type': 'MEAL',
-                'request_number': meal.request.request_number,
-                'contact_name': meal.request.contact_name,
-                'pax': meal.request.pax,
-                'description': f"{meal.meal_type or 'Meal'} at {meal.restaurant or 'TBA'}",
-                'details': f"Location: {meal.location or 'N/A'}",
-                'status': meal.status,
-                'cost': meal.total_cost,
-                'currency': meal.currency
-            })
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=filename
+        )
 
-    # Optionals
-    if not service_type or service_type == 'OPTIONAL':
-        optionals_query = InboundOptional.query.join(InboundRequest)
-        if date_from_str and date_to_str:
-            optionals_query = optionals_query.filter(
-                db.or_(
-                    InboundOptional.date == None,
-                    db.and_(InboundOptional.date >= date_from, InboundOptional.date <= date_to)
-                )
-            )
-        if status_filter:
-            optionals_query = optionals_query.filter(InboundOptional.status == status_filter)
-        if request_number:
-            optionals_query = optionals_query.filter(InboundRequest.request_number.contains(request_number))
-        if search_query:
-            optionals_query = optionals_query.filter(
-                db.or_(
-                    InboundOptional.service_name.contains(search_query),
-                    InboundRequest.contact_name.contains(search_query)
-                )
-            )
-
-        for optional in optionals_query.all():
-            all_services.append({
-                'date': optional.date or date_from,
-                'service_type': 'OPTIONAL',
-                'request_number': optional.request.request_number,
-                'contact_name': optional.request.contact_name,
-                'pax': optional.request.pax,
-                'description': optional.service_name,
-                'details': optional.description or '',
-                'status': optional.status,
-                'cost': optional.total_cost,
-                'currency': optional.currency
-            })
-
-    # Sort by date
-    all_services.sort(key=lambda x: x['date'])
-
-    # Create Excel workbook
-    wb = openpyxl.Workbook()
-    ws = cast(Any, wb.active)
-    ws.title = "Services Analytics"
-
-    # Header styling
-    header_fill = PatternFill(start_color="FFBF00", end_color="FFBF00", fill_type="solid")
-    header_font = Font(bold=True, color="000000", size=12)
-    header_alignment = Alignment(horizontal="center", vertical="center")
-    thin_border = Border(
-        left=Side(style='thin'),
-        right=Side(style='thin'),
-        top=Side(style='thin'),
-        bottom=Side(style='thin')
-    )
-
-    # Title
-    ws.merge_cells('A1:J1')
-    ws['A1'] = f"Services Analytics: {date_from.strftime('%B %d, %Y')} - {date_to.strftime('%B %d, %Y')}"
-    ws['A1'].font = Font(bold=True, size=14)
-    ws['A1'].alignment = Alignment(horizontal="center")
-
-    # Headers
-    headers = ['Date', 'Request #', 'Contact', 'PAX', 'Service Type', 'Description', 'Details', 'Status', 'Cost', 'Currency']
-    for col, header in enumerate(headers, start=1):
-        cell = ws.cell(row=3, column=col)
-        cell.value = header
-        cell.fill = header_fill
-        cell.font = header_font
-        cell.alignment = header_alignment
-        cell.border = thin_border
-
-    # Data rows
-    row = 4
-    for service in all_services:
-        ws.cell(row=row, column=1, value=service['date'].strftime('%Y-%m-%d')).border = thin_border
-        ws.cell(row=row, column=2, value=service['request_number']).border = thin_border
-        ws.cell(row=row, column=3, value=service['contact_name']).border = thin_border
-        ws.cell(row=row, column=4, value=service['pax']).border = thin_border
-        ws.cell(row=row, column=5, value=service['service_type']).border = thin_border
-        ws.cell(row=row, column=6, value=service['description']).border = thin_border
-        ws.cell(row=row, column=7, value=service['details']).border = thin_border
-        ws.cell(row=row, column=8, value=service['status']).border = thin_border
-        ws.cell(row=row, column=9, value=service['cost']).border = thin_border
-        ws.cell(row=row, column=10, value=service['currency']).border = thin_border
-        row += 1
-
-    # Adjust column widths
-    ws.column_dimensions['A'].width = 12
-    ws.column_dimensions['B'].width = 15
-    ws.column_dimensions['C'].width = 20
-    ws.column_dimensions['D'].width = 6
-    ws.column_dimensions['E'].width = 12
-    ws.column_dimensions['F'].width = 35
-    ws.column_dimensions['G'].width = 40
-    ws.column_dimensions['H'].width = 12
-    ws.column_dimensions['I'].width = 10
-    ws.column_dimensions['J'].width = 8
-
-    # Save to bytes
-    output = io.BytesIO()
-    wb.save(output)
-    output.seek(0)
-
-    filename = f"Services_Analytics_{date_from.strftime('%Y%m%d')}_{date_to.strftime('%Y%m%d')}.xlsx"
-
-    return send_file(
-        output,
-        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        as_attachment=True,
-        download_name=filename
-    )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @inbound_bp.route('/analytics/supplier-analytics')
@@ -10029,11 +9848,16 @@ def supplier_analytics_api():
                  'invoiced': r.invoiced or 0}
                 for r in rows]
 
-    def _attr_values(attr_col, base_filters):
+    def _attr_values(model, attr_col, attr_value_filters):
         rows = db.session.query(
             func.coalesce(attr_col, 'Unspecified').label('v')
-        ).filter(*base_filters).distinct().order_by('v').all()
+        ).select_from(model).filter(*attr_value_filters).distinct().order_by('v').all()
         return [r.v for r in rows if r.v]
+
+    def _attr_values_from_master(master_model):
+        """Query attribute values from master data table (for categories, types, etc.)."""
+        rows = db.session.query(master_model.name).filter(master_model.is_active == True).order_by(master_model.sort_order, master_model.name).all()
+        return [r[0] for r in rows if r[0]]
 
     items = []
     attr_values = []
@@ -10046,13 +9870,16 @@ def supplier_analytics_api():
             InboundGuide.date <= date_to,
             InboundGuide.is_cancelled == False,
         ]
+        attr_value_filters = [
+            InboundGuide.is_cancelled == False,
+        ]
         ATTR_COLS = {
             'language':     (InboundGuide.language,     'Language'),
             'service_type': (InboundGuide.service_type, 'Service Type'),
         }
         if attribute in ATTR_COLS:
             attr_col, attr_label = ATTR_COLS[attribute]
-            attr_values = _attr_values(attr_col, base_filters)
+            attr_values = _attr_values(InboundGuide, attr_col, attr_value_filters)
             af = [attr_col == attr_filter] if attr_filter else []
             q = _attr_query(InboundGuide.guide_name, attr_col, InboundGuide, InboundRequest,
                             InboundGuide.request_id == InboundRequest.id, base_filters, af)
@@ -10068,12 +9895,13 @@ def supplier_analytics_api():
             InboundTransport.date >= date_from,
             InboundTransport.date <= date_to,
         ]
+        attr_value_filters = []
         ATTR_COLS = {
             'vehicle_type': (InboundTransport.vehicle_type, 'Vehicle Type'),
         }
         if attribute in ATTR_COLS:
             attr_col, attr_label = ATTR_COLS[attribute]
-            attr_values = _attr_values(attr_col, base_filters)
+            attr_values = _attr_values(InboundTransport, attr_col, attr_value_filters)
             af = [attr_col == attr_filter] if attr_filter else []
             q = _attr_query(InboundTransport.supplier, attr_col, InboundTransport, InboundRequest,
                             InboundTransport.request_id == InboundRequest.id, base_filters, af)
@@ -10089,13 +9917,14 @@ def supplier_analytics_api():
             InboundMeal.date >= date_from,
             InboundMeal.date <= date_to,
         ]
+        attr_value_filters = []
         ATTR_COLS = {
             'meal_type': (InboundMeal.meal_type, 'Meal Type'),
             'location':  (InboundMeal.location,  'Location'),
         }
         if attribute in ATTR_COLS:
             attr_col, attr_label = ATTR_COLS[attribute]
-            attr_values = _attr_values(attr_col, base_filters)
+            attr_values = _attr_values(InboundMeal, attr_col, attr_value_filters)
             af = [attr_col == attr_filter] if attr_filter else []
             q = _attr_query(InboundMeal.restaurant, attr_col, InboundMeal, InboundRequest,
                             InboundMeal.request_id == InboundRequest.id, base_filters, af)
@@ -10111,6 +9940,7 @@ def supplier_analytics_api():
             InboundHotel.check_in_date >= date_from,
             InboundHotel.check_in_date <= date_to,
         ]
+        attr_value_filters = []
         ATTR_COLS = {
             'hotel_category': (InboundHotel.hotel_category, 'Category'),
             'meal_plan':      (InboundHotel.meal_plan,      'Meal Plan'),
@@ -10118,7 +9948,11 @@ def supplier_analytics_api():
         }
         if attribute in ATTR_COLS:
             attr_col, attr_label = ATTR_COLS[attribute]
-            attr_values = _attr_values(attr_col, base_filters)
+            # Use master data for hotel_category, regular queries for others
+            if attribute == 'hotel_category':
+                attr_values = _attr_values_from_master(HotelCategory)
+            else:
+                attr_values = _attr_values(InboundHotel, attr_col, attr_value_filters)
             af = [attr_col == attr_filter] if attr_filter else []
             q = _attr_query(InboundHotel.hotel_name, attr_col, InboundHotel, InboundRequest,
                             InboundHotel.request_id == InboundRequest.id, base_filters, af)
