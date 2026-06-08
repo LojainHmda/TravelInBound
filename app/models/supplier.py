@@ -34,26 +34,28 @@ class Supplier(db.Model):
     name = db.Column(db.String(100), nullable=False)
     code = db.Column(db.String(20), nullable=False, unique=True)  # Short supplier code like "BA" for British Airways
     supplier_type = db.Column(db.String(20))  # AIRLINE, HOTEL, TRANSPORT, VISA, INSURANCE
-    
+    entity_type = db.Column(db.String(20), default='COMPANY')  # COMPANY or FREELANCER
+
     # Contact information
     email = db.Column(db.String(120))
     phone = db.Column(db.String(20))
     website = db.Column(db.String(100))
     contact_person = db.Column(db.String(100))
-    
+
     # Address
     address = db.Column(db.Text)
     city = db.Column(db.String(50))
     country = db.Column(db.String(50))
-    
+
     # Payment information
     payment_terms = db.Column(db.String(100))  # e.g., "NET 30", "Prepaid"
+    payment_method = db.Column(db.String(50))  # Payment method for freelancers
     default_currency = db.Column(db.String(3), default='USD')
     bank_name = db.Column(db.String(100))
     bank_account = db.Column(db.String(100))
     bank_iban = db.Column(db.String(100))
     tax_number = db.Column(db.String(50))
-    
+
     # Additional information
     notes = db.Column(db.Text)
     languages = db.Column(db.Text)  # Comma-separated languages (for GUIDE suppliers)
@@ -82,14 +84,28 @@ class Supplier(db.Model):
             ServiceConfirmation.supplier_id == self.id,
             ServiceConfirmation.is_paid == False
         ).scalar() or 0
-        
+
         # Sum of payments not directly linked to confirmations
         general_payments = db.session.query(func.sum(SupplierPayment.amount)).filter(
             SupplierPayment.supplier_id == self.id,
             SupplierPayment.service_confirmation_id == None
         ).scalar() or 0
-        
+
         return costs - general_payments
+
+    @property
+    def accommodation_category(self):
+        """Extract accommodation category from notes (not room category)"""
+        if not self.notes:
+            return ''
+
+        for line in self.notes.split('\n'):
+            if line and 'Category: ' in line and not line.startswith('Room'):
+                parts = line.split('Category: ')
+                if len(parts) == 2:
+                    return parts[1].strip()
+
+        return ''
 
 
 class SupplierService(db.Model):

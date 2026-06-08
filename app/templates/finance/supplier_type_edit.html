@@ -277,7 +277,14 @@ body {
                 </div>
                 <div class="field">
                     <label>Room Category</label>
-                    <input type="text" name="room_category" value="{{ room_category }}" placeholder="e.g. Standard Rooms">
+                    <div class="flex gap-1">
+                        <select name="room_category" id="edit_hotel_room_category" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select...</option>
+                        </select>
+                        <button type="button" id="editAddRoomCategoryBtn" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-slate-600 flex-shrink-0" title="Add New Room Category">
+                            <i class="fas fa-plus text-xs"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="field">
                     <label>Contact Person</label>
@@ -455,6 +462,17 @@ body {
             {# ── TRANSPORTATION ────────────────────────────────────────── #}
             {% elif type_key == 'transportation' %}
 
+            <span class="section-label">Supplier Type</span>
+            <div class="form-grid">
+                <div class="field">
+                    <label>Supplier Type <span style="color:#ef4444">*</span></label>
+                    <select name="entity_type" id="transportEntityType">
+                        <option value="COMPANY" {% if supplier.entity_type == 'COMPANY' %}selected{% endif %}>Company</option>
+                        <option value="FREELANCER" {% if supplier.entity_type == 'FREELANCER' %}selected{% endif %}>Freelancer</option>
+                    </select>
+                </div>
+            </div>
+
             <span class="section-label">Supplier Details</span>
             <div class="form-grid">
                 <div class="field full">
@@ -473,34 +491,39 @@ body {
                     <label>Email</label>
                     <input type="email" name="email" value="{{ supplier.email or '' }}" placeholder="email@example.com">
                 </div>
-                <div class="field">
+                <div class="field transport-company-only">
                     <label>Website</label>
                     <input type="url" name="website" value="{{ supplier.website or '' }}" placeholder="www.example.com">
                 </div>
-                <div class="field">
+                <div class="field transport-company-only">
                     <label>City</label>
                     <input type="text" name="city" value="{{ supplier.city or '' }}" placeholder="City">
                 </div>
-                <div class="field">
+                <div class="field transport-company-only">
                     <label>Country</label>
                     <input type="text" name="country" value="{{ supplier.country or 'Jordan' }}" placeholder="Country">
                 </div>
                 <div class="field">
                     <label>Payment Terms</label>
-                    <select name="payment_terms">
+                    <select name="payment_terms" id="edit_payment_terms">
                         <option value="">Select payment terms...</option>
-                        {% for opt in ['Credit','NET 15','NET 30','NET 45','NET 60','Prepaid','Other'] %}
-                        <option value="{{ opt }}" {% if supplier.payment_terms == opt %}selected{% endif %}>{{ opt }}</option>
-                        {% endfor %}
+                        <option value="Credit" {% if supplier.payment_terms == 'Credit' %}selected{% endif %}>Credit</option>
+                        <option value="NET 15" {% if supplier.payment_terms == 'NET 15' %}selected{% endif %}>NET 15</option>
+                        <option value="NET 30" {% if supplier.payment_terms == 'NET 30' %}selected{% endif %}>NET 30</option>
+                        <option value="NET 45" {% if supplier.payment_terms == 'NET 45' %}selected{% endif %}>NET 45</option>
+                        <option value="NET 60" {% if supplier.payment_terms == 'NET 60' %}selected{% endif %}>NET 60</option>
+                        <option value="Prepaid" {% if supplier.payment_terms == 'Prepaid' %}selected{% endif %}>Prepaid</option>
+                        <option value="Other" {% if supplier.payment_terms == 'Other' %}selected{% endif %}>Other</option>
                     </select>
                 </div>
                 <div class="field">
                     <label>Payment Method</label>
                     <select name="payment_method" id="edit_payment_method">
                         <option value="">Select payment method...</option>
-                        {% for opt in ['Cash','Cliq','Bank','Other'] %}
-                        <option value="{{ opt }}" {% if payment_method == opt %}selected{% endif %}>{{ opt }}</option>
-                        {% endfor %}
+                        <option value="Cash" {% if payment_method == 'Cash' %}selected{% endif %}>Cash</option>
+                        <option value="Cliq" {% if payment_method == 'Cliq' %}selected{% endif %}>Cliq</option>
+                        <option value="Bank" {% if payment_method == 'Bank' %}selected{% endif %}>Bank</option>
+                        <option value="Other" {% if payment_method == 'Other' %}selected{% endif %}>Other</option>
                     </select>
                 </div>
                 <div class="field" id="edit_bank_name_wrap" style="display:none;">
@@ -531,11 +554,11 @@ body {
                         {% endfor %}
                     </select>
                 </div>
-                <div class="field full">
+                <div class="field full transport-company-only">
                     <label>Address</label>
                     <textarea name="address" rows="2" placeholder="Street address">{{ supplier.address or '' }}</textarea>
                 </div>
-                <div class="field">
+                <div class="field transport-company-only">
                     <label>Tax Number</label>
                     <input type="text" name="tax_number" value="{{ supplier.tax_number or '' }}" placeholder="Tax ID">
                 </div>
@@ -1035,6 +1058,145 @@ body {
         });
 
         renderTags();
+    }
+
+    // ── Transportation entity type selector (company/freelancer) ────────────
+    var entityTypeSelect = document.getElementById('transportEntityType');
+    if (entityTypeSelect) {
+        var companyOnlyFields = document.querySelectorAll('.transport-company-only');
+
+        function updateTransportFieldVisibility() {
+            var isCompany = entityTypeSelect.value === 'COMPANY';
+            companyOnlyFields.forEach(function(field) {
+                field.style.display = isCompany ? '' : 'none';
+            });
+        }
+
+        entityTypeSelect.addEventListener('change', updateTransportFieldVisibility);
+        updateTransportFieldVisibility(); // Initial state
+    }
+
+    // ── Room Category dropdown (Edit accommodation) ────────────────────
+    var roomCategorySelect = document.getElementById('edit_hotel_room_category');
+    var addRoomCategoryBtn = document.getElementById('editAddRoomCategoryBtn');
+    var savedRoomCategory = '{{ room_category }}';
+
+    if (roomCategorySelect) {
+        function ensureOption(selectEl, value) {
+            if (!value) return false;
+            var val = String(value || '').trim();
+            if (!selectEl || !val) return false;
+            var exists = Array.from(selectEl.options).some(function(opt) {
+                return (opt.value || '').toLowerCase() === val.toLowerCase();
+            });
+            if (exists) return false;
+            var option = document.createElement('option');
+            option.value = val;
+            option.textContent = val;
+            selectEl.appendChild(option);
+            return true;
+        }
+
+        async function fetchGlobalRoomCategories() {
+            try {
+                var resp = await fetch('/inbound/api/hotel/room-categories/global');
+                var data = await resp.json();
+                if (data && data.success && Array.isArray(data.categories)) {
+                    data.categories.forEach(function(cat) {
+                        var val = String(cat || '').trim();
+                        if (val) ensureOption(roomCategorySelect, val);
+                    });
+                }
+            } catch (err) {}
+        }
+
+        async function openRoomCategoryDialog() {
+            var existingOverlay = document.getElementById('custom-prompt-overlay-edit');
+            if (existingOverlay) existingOverlay.remove();
+
+            var globalCategories = [];
+            try {
+                var resp = await fetch('/inbound/api/hotel/room-categories/global');
+                var data = await resp.json();
+                if (data && data.success && Array.isArray(data.categories)) {
+                    globalCategories = data.categories.map(function(v) { return String(v || '').trim(); }).filter(Boolean);
+                }
+            } catch (err) {}
+
+            var DEFAULT_ROOM_CATEGORIES = ['Standard Rooms', 'Junior Suites', 'Executive Suites', 'Presidential Suites'];
+            var existingValues = new Set(Array.from(roomCategorySelect.options).map(function(opt) { return opt.value.toLowerCase(); }));
+            var presets = [
+                { value: 'Standard Rooms', label: 'Standard Rooms' },
+                { value: 'Junior Suites', label: 'Junior Suites' },
+                { value: 'Executive Suites', label: 'Executive Suites' },
+                { value: 'Presidential Suites', label: 'Presidential Suites' }
+            ];
+            var presetValues = presets.map(function(p) { return p.value.toLowerCase(); });
+            var savedCustom = (globalCategories || [])
+                .filter(function(v) { return !presetValues.includes(v.toLowerCase()); })
+                .map(function(v) { return { value: v, label: v }; });
+            var promptOptions = presets.concat(savedCustom);
+
+            var checkboxHtml = promptOptions.map(function(p) {
+                var checked = existingValues.has(p.value.toLowerCase()) ? ' checked' : '';
+                return '<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#334155;cursor:pointer;"><input type="checkbox" name="room-cat-preset" value="' + p.value + '"' + checked + '> ' + p.label + '</label>';
+            }).join('');
+
+            var overlayPrompt = document.createElement('div');
+            overlayPrompt.id = 'custom-prompt-overlay-edit';
+            overlayPrompt.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;';
+            var dialog = document.createElement('div');
+            dialog.style.cssText = 'background:white;border-radius:12px;padding:24px;min-width:360px;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
+            dialog.innerHTML = '<div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:12px;">Enter new Room Category:</div><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">' + checkboxHtml + '</div><input type="text" id="custom-prompt-input-edit" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;" placeholder="Or type custom category..." autofocus><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;"><button type="button" id="custom-prompt-cancel-edit" style="padding:6px 16px;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;color:#475569;font-size:12px;cursor:pointer;">Cancel</button><button type="button" id="custom-prompt-ok-edit" style="padding:6px 16px;border:none;border-radius:6px;background:#3b82f6;color:white;font-size:12px;cursor:pointer;font-weight:500;">Add</button></div>';
+            overlayPrompt.appendChild(dialog);
+            document.body.appendChild(overlayPrompt);
+
+            var input = document.getElementById('custom-prompt-input-edit');
+            var okBtn = document.getElementById('custom-prompt-ok-edit');
+            var cancelBtn = document.getElementById('custom-prompt-cancel-edit');
+
+            setTimeout(function() { input.focus(); }, 50);
+
+            async function submit() {
+                var checkedList = document.querySelectorAll('input[name="room-cat-preset"]:checked');
+                var trimmedInput = input.value.trim();
+                var values = Array.from(checkedList).map(function(cb) { return cb.value; });
+                if (trimmedInput) values.push(trimmedInput);
+                overlayPrompt.remove();
+                if (values.length === 0) return;
+
+                values.forEach(function(val) {
+                    ensureOption(roomCategorySelect, val);
+                });
+                if (values.length > 0) {
+                    roomCategorySelect.value = values[values.length - 1];
+                }
+            }
+
+            function cancel() { overlayPrompt.remove(); }
+            okBtn.addEventListener('click', submit);
+            cancelBtn.addEventListener('click', cancel);
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') submit();
+                if (e.key === 'Escape') cancel();
+            });
+            overlayPrompt.addEventListener('click', function(e) {
+                if (e.target === overlayPrompt) cancel();
+            });
+        }
+
+        if (addRoomCategoryBtn) {
+            addRoomCategoryBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                openRoomCategoryDialog();
+            });
+        }
+
+        fetchGlobalRoomCategories().then(function() {
+            if (savedRoomCategory && savedRoomCategory.trim()) {
+                roomCategorySelect.value = savedRoomCategory.trim();
+            }
+        });
     }
 })();
 </script>

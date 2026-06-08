@@ -31,6 +31,38 @@ from app.utils import is_valid_phone, PHONE_ERROR
 # Create blueprint for inbound tour operator routes
 inbound_bp = Blueprint('inbound', __name__, url_prefix='/inbound')
 
+# Guide languages available in the creation form
+GUIDE_LANGUAGES = [
+    'Arabic',
+    'English',
+    'French',
+    'German',
+    'Spanish',
+    'Italian',
+    'Russian',
+    'Chinese',
+    'Japanese',
+    'Korean',
+    'Turkish',
+    'Hebrew',
+    'Persian',
+    'Hindi',
+    'Portuguese',
+    'Dutch',
+    'Greek',
+    'Swedish',
+    'Norwegian',
+    'Danish',
+    'Polish',
+    'Czech',
+    'Hungarian',
+    'Romanian',
+    'Bulgarian',
+    'Croatian',
+    'Serbian',
+    'Other',
+]
+
 _SUPPLIER_DROPDOWN_CACHE = {
     'expires_at': 0.0,
     'data': None,
@@ -9879,7 +9911,11 @@ def supplier_analytics_api():
         }
         if attribute in ATTR_COLS:
             attr_col, attr_label = ATTR_COLS[attribute]
-            attr_values = _attr_values(InboundGuide, attr_col, attr_value_filters)
+            # For language, show all available languages from the creation form
+            if attribute == 'language':
+                attr_values = GUIDE_LANGUAGES
+            else:
+                attr_values = _attr_values(InboundGuide, attr_col, attr_value_filters)
             af = [attr_col == attr_filter] if attr_filter else []
             q = _attr_query(InboundGuide.guide_name, attr_col, InboundGuide, InboundRequest,
                             InboundGuide.request_id == InboundRequest.id, base_filters, af)

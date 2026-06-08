@@ -1638,42 +1638,56 @@ _SUPPLIER_TYPE_PAGE_MAP = {
         'icon': 'fa-hotel',
         'patterns': ['HOTEL', 'ACCOMMODATION'],
         'new_supplier_type': 'HOTEL',
+        'search_placeholder': 'Search by Name / City',
+        'search_fields': ['name', 'city'],
     },
     'airline': {
         'label': 'Airline',
         'icon': 'fa-plane',
         'patterns': ['AIRLINE'],
         'new_supplier_type': 'AIRLINE',
+        'search_placeholder': 'Search by Name',
+        'search_fields': ['name'],
     },
     'transportation': {
         'label': 'Transportation',
         'icon': 'fa-bus',
         'patterns': ['TRANSPORT', 'TRANSPORTATION', 'TRANSFER'],
         'new_supplier_type': 'TRANSPORT',
+        'search_placeholder': 'Search by Name / Phone / City',
+        'search_fields': ['name', 'phone', 'city'],
     },
     'guides': {
         'label': 'Guides',
         'icon': 'fa-user-tie',
         'patterns': ['GUIDE'],
         'new_supplier_type': 'GUIDE',
+        'search_placeholder': 'Search by Name / Phone / City',
+        'search_fields': ['name', 'phone', 'city'],
     },
     'meet-assist': {
         'label': 'Meet and assist',
         'icon': 'fa-handshake',
         'patterns': ['GROUND_HANDLER', 'MEET', 'ASSIST'],
         'new_supplier_type': 'GROUND_HANDLER',
+        'search_placeholder': 'Search by Name / City',
+        'search_fields': ['name', 'city'],
     },
     'restaurant': {
         'label': 'Restaurant',
         'icon': 'fa-utensils',
         'patterns': ['RESTAURANT', 'MEAL', 'FOOD'],
         'new_supplier_type': 'RESTAURANT',
+        'search_placeholder': 'Search by Name / Phone / City',
+        'search_fields': ['name', 'phone', 'city'],
     },
     'others': {
         'label': 'Others',
         'icon': 'fa-layer-group',
         'patterns': [],
         'new_supplier_type': '',
+        'search_placeholder': 'Search by Name',
+        'search_fields': ['name'],
     },
 }
 
@@ -1713,7 +1727,17 @@ def _query_suppliers_for_type(type_key, search_query=''):
         suppliers_query = Supplier.query.filter(db.text('1=0'))
 
     if search_query:
-        suppliers_query = suppliers_query.filter(Supplier.name.ilike(f'%{search_query}%'))
+        search_fields = config.get('search_fields', ['name'])
+        search_filters = []
+        for field in search_fields:
+            if field == 'name':
+                search_filters.append(Supplier.name.ilike(f'%{search_query}%'))
+            elif field == 'city':
+                search_filters.append(Supplier.city.ilike(f'%{search_query}%'))
+            elif field == 'phone':
+                search_filters.append(Supplier.phone.ilike(f'%{search_query}%'))
+        if search_filters:
+            suppliers_query = suppliers_query.filter(or_(*search_filters))
 
     if type_key == 'meet-assist':
         from app.routes.inbound import sync_all_meet_assist_representative_pairs
@@ -1742,6 +1766,7 @@ def supplier_type_page(type_key):
         suppliers=suppliers,
         query=search_query,
         new_supplier_type=config['new_supplier_type'],
+        search_placeholder=config.get('search_placeholder', 'Search'),
     )
 
 
@@ -1808,6 +1833,7 @@ def quick_add_supplier(type_key):
         flash(f'Phone: {PHONE_ERROR}', 'error')
         return redirect(url_for('finance.supplier_type_page', type_key=type_key))
 
+    entity_type = (request.form.get('entity_type') or 'COMPANY').strip().upper() or 'COMPANY'
     requested_type = (request.form.get('supplier_type') or '').strip().upper()
     supplier_type = requested_type or base_supplier_type
     payment_terms = (request.form.get('payment_terms') or '').strip() or None
@@ -1870,6 +1896,7 @@ def quick_add_supplier(type_key):
             name=name,
             code=code,
             supplier_type=supplier_type,
+            entity_type=entity_type,
             contact_person=(request.form.get('contact_person') or '').strip() or None,
             email=(request.form.get('email') or '').strip() or None,
             phone=(request.form.get('phone') or '').strip() or None,
@@ -1878,6 +1905,7 @@ def quick_add_supplier(type_key):
             city=(request.form.get('city') or '').strip() or None,
             country=(request.form.get('country') or '').strip() or None,
             payment_terms=payment_terms,
+            payment_method=payment_method,
             default_currency=(request.form.get('default_currency') or 'USD').strip() or 'USD',
             bank_name=bank_name_val,
             bank_account=bank_account_val,
@@ -1948,6 +1976,10 @@ def edit_supplier_type(type_key, supplier_id):
             flash(f'Phone: {PHONE_ERROR}', 'error')
             return redirect(request.url)
 
+        entity_type = (request.form.get('entity_type') or 'COMPANY').strip().upper() or 'COMPANY'
+        if entity_type:
+            supplier.entity_type = entity_type
+
         requested_type = (request.form.get('supplier_type') or '').strip().upper()
         if requested_type:
             supplier.supplier_type = requested_type
@@ -2007,6 +2039,7 @@ def edit_supplier_type(type_key, supplier_id):
         supplier.city = (request.form.get('city') or '').strip() or None
         supplier.country = (request.form.get('country') or '').strip() or None
         supplier.payment_terms = (request.form.get('payment_terms') or '').strip() or None
+        supplier.payment_method = payment_method or None
         supplier.default_currency = (request.form.get('default_currency') or 'USD').strip() or 'USD'
         supplier.bank_name = bank_name_val
         supplier.bank_account = bank_account_val
@@ -2094,9 +2127,21 @@ def new_supplier():
 
     if form.validate_on_submit():
         try:
+            entity_type = form.entity_type.data or 'COMPANY'
+
+            # For freelancers, service types are not required
+            if entity_type == 'FREELANCER' and not form.service_types.data:
+                # Service types validation is only required for companies
+                pass
+            elif entity_type == 'COMPANY' and not form.service_types.data:
+                # Service types are required for companies
+                flash('Service Types are required for Company suppliers.', 'error')
+                return render_template('finance/new_supplier.html', form=form, is_new=True)
+
             supplier = Supplier(
                 name=form.name.data,
                 code=form.code.data,
+                entity_type=entity_type,
                 supplier_type=form.supplier_type.data,
                 contact_person=form.contact_person.data,
                 email=form.email.data,
@@ -2106,6 +2151,7 @@ def new_supplier():
                 city=form.city.data,
                 country=form.country.data,
                 payment_terms=form.payment_terms.data,
+                payment_method=form.payment_method.data,
                 default_currency=form.default_currency.data,
                 bank_name=form.bank_name.data,
                 bank_account=form.bank_account.data,
@@ -2116,29 +2162,31 @@ def new_supplier():
             db.session.add(supplier)
             db.session.flush()  # Get the supplier ID before creating services
 
-            # Create SupplierService records for each selected service type
+            # Create SupplierService records for each selected service type (only for companies)
             from app.models.supplier import SupplierService
-            for service_type in form.service_types.data:
-                # Default commission rates per service type
-                default_rates = {
-                    'FLIGHT': 8.0,
-                    'HOTEL': 15.0,
-                    'TRANSPORT': 12.0,
-                    'VISA': 10.0,
-                    'INSURANCE': 25.0
-                }
+            if entity_type == 'COMPANY' and form.service_types.data:
+                for service_type in form.service_types.data:
+                    # Default commission rates per service type
+                    default_rates = {
+                        'FLIGHT': 8.0,
+                        'HOTEL': 15.0,
+                        'TRANSPORT': 12.0,
+                        'VISA': 10.0,
+                        'INSURANCE': 25.0
+                    }
 
-                service = SupplierService(
-                    supplier_id=supplier.id,
-                    service_type=service_type,
-                    service_name=f"{service_type.title()} Services",
-                    commission_rate=default_rates.get(service_type, 10.0)
-                )
-                db.session.add(service)
+                    service = SupplierService(
+                        supplier_id=supplier.id,
+                        service_type=service_type,
+                        service_name=f"{service_type.title()} Services",
+                        commission_rate=default_rates.get(service_type, 10.0)
+                    )
+                    db.session.add(service)
 
             db.session.commit()
 
-            flash('Supplier created successfully with selected service types!', 'success')
+            message = 'Freelancer created successfully!' if entity_type == 'FREELANCER' else 'Supplier created successfully with selected service types!'
+            flash(message, 'success')
             return redirect(url_for('finance.list_suppliers'))
 
         except Exception as e:

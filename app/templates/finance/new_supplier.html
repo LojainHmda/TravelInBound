@@ -36,8 +36,16 @@
             <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Supplier Information</h5>
         </div>
         <div class="card-body">
-            <form method="POST" action="" class="row g-3">
+            <form method="POST" action="" class="row g-3" id="supplierForm">
                 {{ form.csrf_token }}
+
+                <div class="col-md-6">
+                    <label for="entity_type" class="form-label">Supplier Type *</label>
+                    {{ form.entity_type(class="form-select", id="entityType") }}
+                    <small class="text-muted">Choose if this is a Company or Freelancer</small>
+                </div>
+
+                <div class="col-md-6"></div>
 
                 <div class="col-md-6">
                     <label for="name" class="form-label">Supplier Name *</label>
@@ -55,20 +63,83 @@
                     {% endfor %}
                     <small class="text-muted">Unique code for this supplier</small>
                 </div>
-                
-                <div class="col-md-6">
+
+                <div class="col-md-6 company-only">
                     <label for="supplier_type" class="form-label">Primary Supplier Type</label>
                     {{ form.supplier_type(class="form-select") }}
                 </div>
 
+                <div class="col-md-6">
+                    <label for="contact_person" class="form-label">Contact Person</label>
+                    {{ form.contact_person(class="form-control") }}
+                </div>
+
+                <div class="col-md-6">
+                    <label for="phone" class="form-label">Phone</label>
+                    {{ form.phone(class="form-control") }}
+                </div>
+
+                <div class="col-md-6">
+                    <label for="email" class="form-label">Email</label>
+                    {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), type="email") }}
+                    {% for error in form.email.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="col-md-6 company-only">
+                    <label for="payment_terms" class="form-label">Payment Terms</label>
+                    {{ form.payment_terms(class="form-control", placeholder="e.g., Net 30") }}
+                </div>
+
+                <div class="col-md-6">
+                    <label for="payment_method" class="form-label">Payment Method</label>
+                    {{ form.payment_method(class="form-control") }}
+                </div>
+
+                <div class="col-md-6">
+                    <label for="default_currency" class="form-label">Default Currency</label>
+                    {{ form.default_currency(class="form-select") }}
+                </div>
+
                 <div class="col-12">
+                    <label for="notes" class="form-label">Notes</label>
+                    {{ form.notes(class="form-control", rows=3) }}
+                </div>
+
+                <div class="col-md-6 company-only">
+                    <label for="website" class="form-label">Website</label>
+                    {{ form.website(class="form-control", placeholder="https://") }}
+                </div>
+
+                <div class="col-md-6 company-only">
+                    <label for="city" class="form-label">City</label>
+                    {{ form.city(class="form-control") }}
+                </div>
+
+                <div class="col-md-6 company-only">
+                    <label for="country" class="form-label">Country</label>
+                    {{ form.country(class="form-control") }}
+                </div>
+
+                <div class="col-12 company-only">
+                    <label for="address" class="form-label">Address</label>
+                    {{ form.address(class="form-control", rows=3) }}
+                </div>
+
+                <div class="col-md-6 company-only">
+                    <label for="tax_number" class="form-label">Tax Number</label>
+                    {{ form.tax_number(class="form-control") }}
+                </div>
+
+                <div class="col-12 company-only">
                     <label class="form-label">Service Types *</label>
                     <small class="text-muted d-block mb-2">Select all service types this supplier offers</small>
                     <div class="row">
                         {% for value, label in form.service_types.choices %}
                         <div class="col-md-4 col-sm-6">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="{{ value }}" 
+                                <input class="form-check-input" type="checkbox" value="{{ value }}"
                                        id="service_{{ value }}" name="service_types">
                                 <label class="form-check-label" for="service_{{ value }}">
                                     {{ label }}
@@ -82,72 +153,14 @@
                     {% endfor %}
                 </div>
 
-                <div class="col-md-6">
-                    <label for="contact_person" class="form-label">Contact Person</label>
-                    {{ form.contact_person(class="form-control") }}
-                </div>
-
-                <div class="col-md-6">
-                    <label for="email" class="form-label">Email</label>
-                    {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), type="email") }}
-                    {% for error in form.email.errors %}
-                    <div class="invalid-feedback">{{ error }}</div>
-                    {% endfor %}
-                </div>
-
-                <div class="col-md-6">
-                    <label for="phone" class="form-label">Phone</label>
-                    {{ form.phone(class="form-control") }}
-                </div>
-
-                <div class="col-md-6">
-                    <label for="website" class="form-label">Website</label>
-                    {{ form.website(class="form-control", placeholder="https://") }}
-                </div>
-
-                <div class="col-md-6">
-                    <label for="country" class="form-label">Country</label>
-                    {{ form.country(class="form-control") }}
-                </div>
-
-                <div class="col-12">
-                    <label for="address" class="form-label">Address</label>
-                    {{ form.address(class="form-control", rows=3) }}
-                </div>
-
-                <div class="col-md-6">
-                    <label for="city" class="form-label">City</label>
-                    {{ form.city(class="form-control") }}
-                </div>
-
-                <div class="col-md-6">
-                    <label for="payment_terms" class="form-label">Payment Terms</label>
-                    {{ form.payment_terms(class="form-control", placeholder="e.g., Net 30") }}
-                </div>
-
-                <div class="col-md-6">
-                    <label for="default_currency" class="form-label">Default Currency</label>
-                    {{ form.default_currency(class="form-select") }}
-                </div>
-
-                <div class="col-md-6">
+                <div class="col-md-6 company-only">
                     <label for="bank_name" class="form-label">Bank Name</label>
                     {{ form.bank_name(class="form-control") }}
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-md-6 company-only">
                     <label for="bank_account" class="form-label">Bank Account</label>
                     {{ form.bank_account(class="form-control") }}
-                </div>
-
-                <div class="col-md-6">
-                    <label for="tax_number" class="form-label">Tax Number</label>
-                    {{ form.tax_number(class="form-control") }}
-                </div>
-
-                <div class="col-12">
-                    <label for="notes" class="form-label">Notes</label>
-                    {{ form.notes(class="form-control", rows=3) }}
                 </div>
 
                 <div class="col-12 mt-4">
@@ -162,4 +175,43 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const entityTypeSelect = document.getElementById('entityType');
+    const companyOnlyFields = document.querySelectorAll('.company-only');
+    const serviceTypesCheckboxes = document.querySelectorAll('input[name="service_types"]');
+
+    function updateFieldVisibility() {
+        const isCompany = entityTypeSelect.value === 'COMPANY';
+
+        // Show/hide company-only fields
+        companyOnlyFields.forEach(field => {
+            if (isCompany) {
+                field.style.display = '';
+            } else {
+                field.style.display = 'none';
+            }
+        });
+
+        // Update service types validation
+        if (!isCompany) {
+            // Uncheck all service types for freelancers
+            serviceTypesCheckboxes.forEach(checkbox => {
+                checkbox.checked = false;
+                checkbox.required = false;
+            });
+        } else {
+            // Make service types required for companies
+            // Note: Will be validated server-side
+        }
+    }
+
+    // Initial visibility update
+    updateFieldVisibility();
+
+    // Update when entity type changes
+    entityTypeSelect.addEventListener('change', updateFieldVisibility);
+});
+</script>
 {% endblock %}

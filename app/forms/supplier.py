@@ -8,6 +8,10 @@ class SupplierForm(FlaskForm):
     """Form for creating and editing suppliers"""
     name = StringField('Supplier Name', validators=[DataRequired(), Length(min=3, max=100)])
     code = StringField('Supplier Code', validators=[DataRequired(), Length(min=2, max=20)])
+    entity_type = SelectField('Supplier Type', choices=[
+        ('COMPANY', 'Company'),
+        ('FREELANCER', 'Freelancer')
+    ], default='COMPANY')
     supplier_type = SelectField('Primary Type', choices=[
         ('AIRLINE', 'Airline'),
         ('HOTEL', 'Hotel'),
@@ -32,6 +36,7 @@ class SupplierForm(FlaskForm):
     city = StringField('City', validators=[Optional(), Length(max=50)])
     country = StringField('Country', validators=[Optional(), Length(max=50)])
     payment_terms = StringField('Payment Terms', validators=[Optional(), Length(max=100)])
+    payment_method = StringField('Payment Method', validators=[Optional(), Length(max=50)])
     default_currency = SelectField('Default Currency', choices=[
         ('USD', 'USD'),
         ('EUR', 'EUR'),

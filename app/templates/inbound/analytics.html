@@ -331,6 +331,9 @@ body { background: #f1f5f9; }
           <button onclick="exportSaExcel()" style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;background:#16a34a;color:white;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;">
             <i class="fas fa-file-excel"></i> Excel
           </button>
+          <button onclick="printSaTable()" style="padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;background:#2563eb;color:white;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;">
+            <i class="fas fa-print"></i> Print
+          </button>
           <button onclick="applyAllFilters()" style="padding:5px 18px;border-radius:20px;font-size:12px;font-weight:600;background:#1e293b;color:white;border:none;cursor:pointer;">
             Apply
           </button>
@@ -443,7 +446,15 @@ function syncUrl() {
 }
 
 function exportUrl() {
-  return '/inbound/analytics/export-excel?' + buildQS();
+  const p = new URLSearchParams();
+  if (M.dateFrom) p.set('date_from', M.dateFrom);
+  if (M.dateTo)   p.set('date_to',   M.dateTo);
+  // Supplier Analytics filters
+  if (M.sa.supplierType) p.set('supplier_type', M.sa.supplierType);
+  if (M.sa.attribute) p.set('attribute', M.sa.attribute);
+  if (M.sa.attrFilter) p.set('attr_filter', M.sa.attrFilter);
+  M.sa.statuses.forEach(s => p.append('status', s));
+  return '/inbound/analytics/export-excel?' + p.toString();
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -975,8 +986,140 @@ function applyAllFilters() {
   _applyDateChange(from, to);
 }
 
+function printSaTable() {
+  const table = document.getElementById('saTable');
+  if (!table || table.style.display === 'none') {
+    alert('No data to print');
+    return;
+  }
+
+  // Clone the table for printing
+  const tableClone = table.cloneNode(true);
+
+  // Create a temporary print window
+  const printWindow = window.open('', '', 'width=1000,height=600');
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Supplier Analytics - Print</title>
+      <style>
+        * { margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #f8fafc; padding: 8px 12px; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: .4px; border-bottom: 1px solid #e5e7eb; text-align: left; white-space: nowrap; }
+        td { padding: 8px 12px; font-size: 13px; color: #1f2937; border-bottom: 1px solid #f3f4f6; }
+        tr:last-child td { border-bottom: none; }
+        .cnt-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; padding: 2px 8px; border-radius: 5px; font-size: 12px; font-weight: 700; }
+        .cnt-confirmed { background: #dcfce7; color: #166534; }
+        .cnt-requested { background: #dbeafe; color: #1e40af; }
+        .cnt-invoiced  { background: #fef3c7; color: #92400e; }
+        .cnt-total     { background: #f3f4f6; color: #374151; }
+        .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+        h2 { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 10px; }
+        @media print { body { padding: 0; } }
+      </style>
+    </head>
+    <body>
+      <h2>Supplier Analytics</h2>
+  `);
+
+  printWindow.document.body.appendChild(tableClone);
+
+  printWindow.document.write(`
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+
+  // Wait for content to render, then print
+  setTimeout(() => {
+    printWindow.print();
+    printWindow.close();
+  }, 250);
+}
+
 function exportSaExcel() {
-  window.location.href = exportUrl();
+  const table = document.getElementById('saTable');
+  if (!table || table.style.display === 'none') {
+    alert('No data to export');
+    return;
+  }
+
+  // Extract headers from visible columns
+  const headers = [];
+  const headerCells = table.querySelectorAll('th');
+  headerCells.forEach(th => {
+    const style = window.getComputedStyle(th);
+    if (style.display !== 'none') {
+      headers.push(th.textContent.trim());
+    }
+  });
+
+  // Extract rows from visible columns
+  const rows = [];
+  const bodyRows = table.querySelectorAll('tbody tr');
+  bodyRows.forEach(tr => {
+    const row = [];
+    const cells = tr.querySelectorAll('td');
+    cells.forEach((td, idx) => {
+      // Check if the corresponding header is visible
+      const th = headerCells[idx];
+      const style = window.getComputedStyle(th);
+      if (style.display !== 'none') {
+        // Extract numeric value if it's a badge
+        const badge = td.querySelector('.cnt-badge');
+        if (badge) {
+          row.push(parseInt(badge.textContent.trim()));
+        } else {
+          row.push(td.textContent.trim());
+        }
+      }
+    });
+    if (row.length > 0) {
+      rows.push(row);
+    }
+  });
+
+  // Build title
+  const dateFromEl = document.getElementById('saDateFrom');
+  const dateToEl = document.getElementById('saDateTo');
+  const dateFrom = dateFromEl ? dateFromEl.value : '';
+  const dateTo = dateToEl ? dateToEl.value : '';
+  const title = `Supplier Analytics: ${dateFrom} - ${dateTo}`;
+
+  // Send to export endpoint
+  fetch('/inbound/analytics/export-excel', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      title: title,
+      headers: headers,
+      rows: rows
+    })
+  })
+  .then(response => {
+    if (!response.ok) throw new Error('Export failed');
+    return response.blob();
+  })
+  .then(blob => {
+    // Download the file
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `SupplierAnalytics_${new Date().toISOString().split('T')[0]}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  })
+  .catch(err => {
+    console.error('Export error:', err);
+    alert('Export failed: ' + err.message);
+  });
 }
 
 function _applyDateChange(from, to) {

@@ -146,9 +146,28 @@
         }
     }
 
+    function updateTransportFieldVisibility() {
+        const entityTypeSelect = document.getElementById('new_transport_entity_type');
+        const isCompany = !entityTypeSelect || entityTypeSelect.value === 'COMPANY';
+        const companyOnlyFields = document.querySelectorAll('.transport-company-only');
+
+        companyOnlyFields.forEach(field => {
+            if (isCompany) {
+                field.style.display = '';
+            } else {
+                field.style.display = 'none';
+            }
+        });
+    }
+
     function initTransportPopupEnhancements() {
         applyCliqAndContractToSupplierDialog('new_transport');
         hydrateTransportSelectOthers();
+        updateTransportFieldVisibility();
+        const entityTypeSelect = document.getElementById('new_transport_entity_type');
+        if (entityTypeSelect) {
+            entityTypeSelect.addEventListener('change', updateTransportFieldVisibility);
+        }
     }
 
     window.openAddTransportModal = function openAddTransportModal() {
@@ -167,6 +186,7 @@
         modal.classList.add('hidden');
         modal.classList.remove('flex');
         modal.style.display = 'none';
+        document.getElementById('new_transport_entity_type').value = 'COMPANY';
         document.getElementById('new_transport_name').value = '';
         document.getElementById('new_transport_contact_person').value = '';
         document.getElementById('new_transport_phone').value = '';
@@ -203,7 +223,9 @@
             return;
         }
         const financial = getSupplierDialogFinancialFields('new_transport');
+        const entityType = document.getElementById('new_transport_entity_type').value || 'COMPANY';
         const transportData = {
+            entity_type: entityType,
             name: transportName,
             contact_person: document.getElementById('new_transport_contact_person').value.trim(),
             phone: document.getElementById('new_transport_phone').value.trim(),
