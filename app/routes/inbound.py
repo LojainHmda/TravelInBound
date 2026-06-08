@@ -9906,8 +9906,7 @@ def supplier_analytics_api():
             InboundGuide.is_cancelled == False,
         ]
         ATTR_COLS = {
-            'language':     (InboundGuide.language,     'Language'),
-            'service_type': (InboundGuide.service_type, 'Service Type'),
+            'language': (InboundGuide.language, 'Language'),
         }
         if attribute in ATTR_COLS:
             attr_col, attr_label = ATTR_COLS[attribute]
