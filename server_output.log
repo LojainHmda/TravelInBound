@@ -1,0 +1,50 @@
+============================================================
+Starting Travel Inbound Flask Server
+============================================================
+
+Interpreter: C:\Users\user\AppData\Local\Programs\Python311\python.exe
+Project: C:\Users\user\TravelInBound-main
+
+[1/3] Creating Flask application...
+[OK] Application created successfully
+
+[2/3] Testing index route...
+[OK] Index route working (Status: 200)
+
+[3/3] Starting server...
+Server will be available at (this machine only):
+  - http://localhost:5000
+  - http://127.0.0.1:5000
+
+Press Ctrl+C to stop the server
+============================================================
+ * Serving Flask app 'app'
+ * Debug mode: on
+============================================================
+Starting Travel Inbound Flask Server
+============================================================
+
+Interpreter: C:\Users\user\AppData\Local\Programs\Python311\python.exe
+Project: C:\Users\user\TravelInBound-main
+
+[1/3] Creating Flask application...
+[OK] Application created successfully
+
+[2/3] Testing index route...
+[OK] Index route working (Status: 200)
+
+[3/3] Starting server...
+Server will be available at (this machine only):
+  - http://localhost:5000
+  - http://127.0.0.1:5000
+
+Press Ctrl+C to stop the server
+============================================================
+[SAVE SERVICE] type=transport, is_global=True, row_id=None
+[SAVE SERVICE] form_data keys: ['transport_from_date', 'transport_to_date', 'transport_supplier', 'transport_vehicle', 'transport_status', 'transport_pickup', 'transport_dropoff', 'transport_cost', 'transport_cost_currency', 'transport_notes']
+[SAVE SERVICE] hotel_name value: 'NOT_FOUND'
+[SAVE SERVICE] full form_data: {'transport_from_date': '2026-06-09', 'transport_to_date': '2026-06-10', 'transport_supplier': '33', 'transport_vehicle': 'Van 7-11', 'transport_status': 'REQUESTED', 'transport_pickup': '', 'transport_dropoff': '', 'transport_cost': '', 'transport_cost_currency': 'JOD', 'transport_notes': ''}
+[SAVE SERVICE] Created single transport entry from 2026-06-09 to 2026-06-10
+[SAVE SERVICE] Commit successful for transport
+[SAVE SERVICE] Direct query found 1 transports
+[SAVE SERVICE] Transport id=140, note=''

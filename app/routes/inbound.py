@@ -902,28 +902,30 @@ def print_list():
 def get_run_down_data_by_date():
     """Get confirmed itineraries grouped by date with activities"""
     from app.models.customer import Customer
+    from sqlalchemy.orm import joinedload
 
     # Get date range (next 30 days)
     today = datetime.now().date()
     date_to = today + timedelta(days=30)
 
     # Get all confirmed requests with their itinerary rows (exclude Deleted queue)
+    # Use eager loading to fetch customers in a single query
     confirmed_requests = InboundRequest.query.filter(
         InboundRequest.status.in_(['CONFIRMED', 'BOOKED']),
         InboundRequest.pending_invoice_queue.isnot(True),
+    ).options(
+        joinedload(InboundRequest.customer),
+        joinedload(InboundRequest.itinerary_rows)
     ).all()
 
     # Group activities by date
     activities_by_date = {}
 
     for req in confirmed_requests:
-        # Get customer info
+        # Get customer info (already loaded via eager loading)
         customer_name = "TBA"
-        if req.customer_id:
-            from app.models.customer import Customer
-            customer = Customer.query.get(req.customer_id)
-            if customer:
-                customer_name = customer.name
+        if req.customer:
+            customer_name = req.customer.name
         elif req.contact_name:
             customer_name = req.contact_name
 
