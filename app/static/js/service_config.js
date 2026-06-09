@@ -387,43 +387,33 @@ class ServiceConfigManager {
     
     collectHotelData() {
         console.log('Collecting hotel data from form...');
-        
+
         const hotels = [];
-        const hotelCards = document.querySelectorAll('.hotel-card');
-        
-        hotelCards.forEach((card, hotelIndex) => {
+
+        // Collect hotel data from global form fields (not from .hotel-card elements which don't exist)
+        const hotelName = document.getElementById('hotel_name')?.value || '';
+        const hotelCategory = document.getElementById('hotel_category')?.value || '';
+        const checkInDate = document.getElementById('hotel_check_in')?.value || '';
+        const checkOutDate = document.getElementById('hotel_check_out')?.value || '';
+
+        // Only include hotel if name is provided
+        if (hotelName) {
             const hotelData = {
-                hotel_index: hotelIndex,
-                hotel_name: document.getElementById('hotel_name')?.value || '',
-                hotel_category: document.getElementById('hotel_category')?.value || '',
-                // Hotel-level check-in/check-out dates (dates are managed at hotel level ONLY)
-                check_in_date: card.querySelector('[name="check_in_date"]')?.value || '',
-                check_out_date: card.querySelector('[name="check_out_date"]')?.value || '',
-                hotel_single_rooms: parseInt(card.querySelector('[name*="hotel_single_rooms"]')?.value || 0),
-                hotel_double_rooms: parseInt(card.querySelector('[name*="hotel_double_rooms"]')?.value || 0),
-                hotel_triple_rooms: parseInt(card.querySelector('[name*="hotel_triple_rooms"]')?.value || 0),
-                hotel_other_rooms: parseInt(card.querySelector('[name*="hotel_other_rooms"]')?.value || 0),
+                hotel_index: 0,
+                hotel_name: hotelName,
+                hotel_category: hotelCategory,
+                check_in_date: checkInDate,
+                check_out_date: checkOutDate,
+                hotel_single_rooms: parseInt(document.getElementById('hotel_single_rooms')?.value || 0),
+                hotel_double_rooms: parseInt(document.getElementById('hotel_double_rooms')?.value || 0),
+                hotel_triple_rooms: parseInt(document.getElementById('hotel_triple_rooms')?.value || 0),
+                hotel_other_rooms: parseInt(document.getElementById('hotel_other_rooms')?.value || 0),
                 rooms: []
             };
-            
-            // Collect room details (no check_in/check_out - rooms inherit from hotel level)
-            const roomRows = card.querySelectorAll('.hotel-room-row');
-            roomRows.forEach((row, roomIndex) => {
-                const roomData = {
-                    room_category: row.querySelector(`[name="rooms[${roomIndex}][room_category]"]`)?.value || '',
-                    hotel_room_option: row.querySelector(`[name="rooms[${roomIndex}][hotel_room_option]"]`)?.value || '',
-                    board_basis: row.querySelector(`[name="rooms[${roomIndex}][board_basis]"]`)?.value || '',
-                    dietary_requirements: row.querySelector(`[name="rooms[${roomIndex}][dietary_requirements]"]`)?.value || '',
-                    adults: parseInt(row.querySelector(`[name="rooms[${roomIndex}][adults]"]`)?.value || 0),
-                    children: parseInt(row.querySelector(`[name="rooms[${roomIndex}][children]"]`)?.value || 0),
-                    lead_passenger: row.querySelector(`[name="rooms[${roomIndex}][lead_passenger]"]`)?.value || ''
-                };
-                hotelData.rooms.push(roomData);
-            });
-            
+
             hotels.push(hotelData);
-        });
-        
+        }
+
         console.log('Collected hotel data:', hotels);
         return hotels;
     }
