@@ -171,6 +171,7 @@ def _ensure_ground_handler_supplier(name, data=None):
     languages_val = (payload.get('languages') or '').strip() or None
     payment_terms = (payload.get('payment_terms') or '').strip() or None
     payment_method = (payload.get('payment_method') or '').strip()
+    entity_type = (payload.get('supplier_type') or 'COMPANY').strip().upper() or 'COMPANY'
     bank_name_val, bank_account_val = _resolve_supplier_bank_fields(payload)
     notes_value = _merge_payment_method_into_notes(
         (payload.get('notes') or '').strip() or None,
@@ -181,6 +182,7 @@ def _ensure_ground_handler_supplier(name, data=None):
         name=n,
         code=_generate_ground_handler_code(),
         supplier_type='GROUND_HANDLER',
+        entity_type=entity_type,
         languages=languages_val,
         phone=(payload.get('phone') or '').strip() or None,
         contact_person=(payload.get('contact_person') or '').strip() or None,
@@ -9926,6 +9928,8 @@ def supplier_analytics_api():
 
     # ── TRANSPORT ──────────────────────────────────────────────────────────────
     elif supplier_type == 'TRANSPORT':
+        from app.models.supplier import Supplier
+
         base_filters = [
             InboundTransport.date >= date_from,
             InboundTransport.date <= date_to,
@@ -9933,8 +9937,39 @@ def supplier_analytics_api():
         attr_value_filters = []
         ATTR_COLS = {
             'vehicle_type': (InboundTransport.vehicle_type, 'Vehicle Type'),
+            'supplier_type': (Supplier.entity_type, 'Supplier Type'),
         }
-        if attribute in ATTR_COLS:
+
+        if attribute == 'supplier_type':
+            attr_label = 'Supplier Type'
+            # Get distinct supplier types from Supplier table for TRANSPORT suppliers
+            attr_values = db.session.query(
+                func.coalesce(Supplier.entity_type, 'COMPANY').label('v')
+            ).select_from(Supplier).filter(
+                Supplier.supplier_type == 'TRANSPORT',
+                Supplier.is_active == True
+            ).distinct().order_by('v').all()
+            attr_values = [r.v for r in attr_values if r.v]
+
+            # Query with Supplier join for entity_type filtering
+            af = [Supplier.entity_type == attr_filter] if attr_filter else []
+            q = (
+                db.session.query(
+                    InboundTransport.supplier.label('name'),
+                    func.coalesce(Supplier.entity_type, 'COMPANY').label('attr_val'),
+                    func.count(InboundTransport.id).label('total'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
+                )
+                .join(InboundRequest, InboundTransport.request_id == InboundRequest.id)
+                .join(Supplier, Supplier.name == InboundTransport.supplier)
+                .filter(*base_filters, *af)
+                .group_by(InboundTransport.supplier, Supplier.entity_type)
+                .order_by(func.count(InboundTransport.id).desc())
+            )
+            items = _to_items(q.all(), True)
+        elif attribute in ATTR_COLS:
             attr_col, attr_label = ATTR_COLS[attribute]
             attr_values = _attr_values(InboundTransport, attr_col, attr_value_filters)
             af = [attr_col == attr_filter] if attr_filter else []
@@ -9996,6 +10031,146 @@ def supplier_analytics_api():
             q = _name_query(InboundHotel.hotel_name, InboundHotel, InboundRequest,
                             InboundHotel.request_id == InboundRequest.id, base_filters)
             items = _to_items(q.all(), False)
+
+    # ── MEET & ASSIST ──────────────────────────────────────────────────────────
+    elif supplier_type == 'MEET_ASSIST':
+        from app.models.supplier import Supplier
+
+        attr_label = ''
+
+        if attribute == 'supplier_type':
+            attr_label = 'Supplier Type'
+            # Get distinct supplier types from GROUND_HANDLER suppliers
+            attr_values = db.session.query(
+                func.coalesce(Supplier.entity_type, 'COMPANY').label('v')
+            ).select_from(Supplier).filter(
+                Supplier.supplier_type == 'GROUND_HANDLER',
+                Supplier.is_active == True
+            ).distinct().order_by('v').all()
+            attr_values = [r.v for r in attr_values if r.v]
+
+            # Query arrivals with supplier_type
+            arrival_rows = (
+                db.session.query(
+                    Supplier.name.label('name'),
+                    func.coalesce(Supplier.entity_type, 'COMPANY').label('attr_val'),
+                    func.count(ArrivalBatch.id).label('total'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
+                )
+                .join(InboundRequest, ArrivalBatch.request_id == InboundRequest.id)
+                .join(Supplier, ArrivalBatch.supplier_id == Supplier.id)
+                .filter(
+                    ArrivalBatch.arrival_date >= date_from,
+                    ArrivalBatch.arrival_date <= date_to,
+                    Supplier.supplier_type == 'GROUND_HANDLER',
+                    *([Supplier.entity_type == attr_filter] if attr_filter else [])
+                )
+                .group_by(Supplier.name, Supplier.entity_type)
+            ).all()
+
+            # Query departures with supplier_type
+            departure_rows = (
+                db.session.query(
+                    Supplier.name.label('name'),
+                    func.coalesce(Supplier.entity_type, 'COMPANY').label('attr_val'),
+                    func.count(DepartureBatch.id).label('total'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
+                )
+                .join(InboundRequest, DepartureBatch.request_id == InboundRequest.id)
+                .join(Supplier, DepartureBatch.supplier_id == Supplier.id)
+                .filter(
+                    DepartureBatch.departure_date >= date_from,
+                    DepartureBatch.departure_date <= date_to,
+                    Supplier.supplier_type == 'GROUND_HANDLER',
+                    *([Supplier.entity_type == attr_filter] if attr_filter else [])
+                )
+                .group_by(Supplier.name, Supplier.entity_type)
+            ).all()
+
+            # Merge arrival and departure data by supplier and supplier_type
+            merged_data = {}
+            for row in arrival_rows:
+                key = (row.name, row.attr_val)
+                if key not in merged_data:
+                    merged_data[key] = {'key': row.name, 'attr_val': row.attr_val, 'total': 0, 'confirmed': 0, 'requested': 0, 'invoiced': 0}
+                merged_data[key]['total'] += row.total or 0
+                merged_data[key]['confirmed'] += row.confirmed or 0
+                merged_data[key]['requested'] += row.requested or 0
+                merged_data[key]['invoiced'] += row.invoiced or 0
+
+            for row in departure_rows:
+                key = (row.name, row.attr_val)
+                if key not in merged_data:
+                    merged_data[key] = {'key': row.name, 'attr_val': row.attr_val, 'total': 0, 'confirmed': 0, 'requested': 0, 'invoiced': 0}
+                merged_data[key]['total'] += row.total or 0
+                merged_data[key]['confirmed'] += row.confirmed or 0
+                merged_data[key]['requested'] += row.requested or 0
+                merged_data[key]['invoiced'] += row.invoiced or 0
+
+            items = [v for v in merged_data.values() if v['total'] > 0]
+            items.sort(key=lambda x: x['total'], reverse=True)
+        else:
+            # Query by supplier name only (no attribute)
+            arrival_rows = (
+                db.session.query(
+                    Supplier.name.label('name'),
+                    func.count(ArrivalBatch.id).label('total'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
+                )
+                .join(InboundRequest, ArrivalBatch.request_id == InboundRequest.id)
+                .join(Supplier, ArrivalBatch.supplier_id == Supplier.id)
+                .filter(
+                    ArrivalBatch.arrival_date >= date_from,
+                    ArrivalBatch.arrival_date <= date_to,
+                    Supplier.supplier_type == 'GROUND_HANDLER',
+                )
+                .group_by(Supplier.name)
+            ).all()
+
+            departure_rows = (
+                db.session.query(
+                    Supplier.name.label('name'),
+                    func.count(DepartureBatch.id).label('total'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
+                )
+                .join(InboundRequest, DepartureBatch.request_id == InboundRequest.id)
+                .join(Supplier, DepartureBatch.supplier_id == Supplier.id)
+                .filter(
+                    DepartureBatch.departure_date >= date_from,
+                    DepartureBatch.departure_date <= date_to,
+                    Supplier.supplier_type == 'GROUND_HANDLER',
+                )
+                .group_by(Supplier.name)
+            ).all()
+
+            # Merge by supplier name
+            merged_data = {}
+            for row in arrival_rows:
+                if row.name not in merged_data:
+                    merged_data[row.name] = {'key': row.name, 'total': 0, 'confirmed': 0, 'requested': 0, 'invoiced': 0}
+                merged_data[row.name]['total'] += row.total or 0
+                merged_data[row.name]['confirmed'] += row.confirmed or 0
+                merged_data[row.name]['requested'] += row.requested or 0
+                merged_data[row.name]['invoiced'] += row.invoiced or 0
+
+            for row in departure_rows:
+                if row.name not in merged_data:
+                    merged_data[row.name] = {'key': row.name, 'total': 0, 'confirmed': 0, 'requested': 0, 'invoiced': 0}
+                merged_data[row.name]['total'] += row.total or 0
+                merged_data[row.name]['confirmed'] += row.confirmed or 0
+                merged_data[row.name]['requested'] += row.requested or 0
+                merged_data[row.name]['invoiced'] += row.invoiced or 0
+
+            items = [v for v in merged_data.values() if v['total'] > 0]
+            items.sort(key=lambda x: x['total'], reverse=True)
 
     return jsonify({
         'supplier_type': supplier_type,
