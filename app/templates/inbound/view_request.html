@@ -11918,8 +11918,8 @@ function saveNewHotel() {
             optgroup.appendChild(option);
             select.value = hotelName;
             // Set category if provided
-            if (hotelData.category) {
-                document.getElementById('hotel_category').value = hotelData.category;
+            if (data.hotel && data.hotel.category) {
+                document.getElementById('hotel_category').value = data.hotel.category;
             }
             // Trigger change event so room categories and other handlers fire
             select.dispatchEvent(new Event('change', { bubbles: true }));
