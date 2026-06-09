@@ -6001,6 +6001,7 @@ def api_save_hotels(request_id):
             hotel = InboundHotel(
                 request_id=request_id,
                 hotel_name=hotel_data.get('hotel_name', ''),
+                hotel_category=hotel_data.get('hotel_category', ''),
                 status='REQUEST'
             )
 
