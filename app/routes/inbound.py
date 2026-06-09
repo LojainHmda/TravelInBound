@@ -9922,8 +9922,23 @@ def supplier_analytics_api():
                             InboundGuide.request_id == InboundRequest.id, base_filters, af)
             items = _to_items(q.all(), True)
         else:
-            q = _name_query(InboundGuide.guide_name, InboundGuide, InboundRequest,
-                            InboundGuide.request_id == InboundRequest.id, base_filters)
+            # For default "By Name" view, use Supplier FK when available, fallback to text field
+            from app.models.supplier import Supplier as _Supplier
+            supplier_name_col = func.coalesce(_Supplier.name, InboundGuide.guide_name).label('guide_name')
+            q = (
+                db.session.query(
+                    supplier_name_col.label('name'),
+                    func.count(InboundGuide.id).label('total'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
+                )
+                .join(InboundRequest, InboundGuide.request_id == InboundRequest.id)
+                .outerjoin(_Supplier, InboundGuide.supplier_id == _Supplier.id)
+                .filter(*base_filters)
+                .group_by(supplier_name_col)
+                .order_by(func.count(InboundGuide.id).desc())
+            )
             items = _to_items(q.all(), False)
 
     # ── TRANSPORT ──────────────────────────────────────────────────────────────
@@ -9977,8 +9992,22 @@ def supplier_analytics_api():
                             InboundTransport.request_id == InboundRequest.id, base_filters, af)
             items = _to_items(q.all(), True)
         else:
-            q = _name_query(InboundTransport.supplier, InboundTransport, InboundRequest,
-                            InboundTransport.request_id == InboundRequest.id, base_filters)
+            # For default "By Name" view, use Supplier FK when available, fallback to text field
+            supplier_name_col = func.coalesce(Supplier.name, InboundTransport.supplier).label('supplier_name')
+            q = (
+                db.session.query(
+                    supplier_name_col.label('name'),
+                    func.count(InboundTransport.id).label('total'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
+                )
+                .join(InboundRequest, InboundTransport.request_id == InboundRequest.id)
+                .outerjoin(Supplier, InboundTransport.supplier_id == Supplier.id)
+                .filter(*base_filters)
+                .group_by(supplier_name_col)
+                .order_by(func.count(InboundTransport.id).desc())
+            )
             items = _to_items(q.all(), False)
 
     # ── RESTAURANT ─────────────────────────────────────────────────────────────
@@ -10000,8 +10029,23 @@ def supplier_analytics_api():
                             InboundMeal.request_id == InboundRequest.id, base_filters, af)
             items = _to_items(q.all(), True)
         else:
-            q = _name_query(InboundMeal.restaurant, InboundMeal, InboundRequest,
-                            InboundMeal.request_id == InboundRequest.id, base_filters)
+            # For default "By Name" view, use Supplier FK when available, fallback to text field
+            from app.models.supplier import Supplier as _Supplier
+            supplier_name_col = func.coalesce(_Supplier.name, InboundMeal.restaurant).label('restaurant_name')
+            q = (
+                db.session.query(
+                    supplier_name_col.label('name'),
+                    func.count(InboundMeal.id).label('total'),
+                    func.sum(_when(InboundRequest.status, 'CONFIRMED')).label('confirmed'),
+                    func.sum(_when(InboundRequest.status, 'REQUEST')).label('requested'),
+                    func.sum(_when(InboundRequest.status, 'INVOICED')).label('invoiced'),
+                )
+                .join(InboundRequest, InboundMeal.request_id == InboundRequest.id)
+                .outerjoin(_Supplier, InboundMeal.supplier_id == _Supplier.id)
+                .filter(*base_filters)
+                .group_by(supplier_name_col)
+                .order_by(func.count(InboundMeal.id).desc())
+            )
             items = _to_items(q.all(), False)
 
     # ── HOTEL / ACCOMMODATION ──────────────────────────────────────────────────
