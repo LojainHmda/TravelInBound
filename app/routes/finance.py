@@ -1851,11 +1851,15 @@ def quick_add_supplier(type_key):
         suffix += 1
 
     category = (request.form.get('category') or '').strip()
+    custom_category = (request.form.get('custom_category') or '').strip()
     room_category = (request.form.get('room_category') or '').strip()
     notes = (request.form.get('notes') or '').strip()
     other_payment_method = (request.form.get('other_payment_method') or '').strip()
     bank_iban = (request.form.get('bank_iban') or '').strip() or None
     merged_notes = notes
+    # Keep category as "Other" but store custom value in notes if provided
+    if category == 'Other' and custom_category:
+        merged_notes = f"Custom Category: {custom_category}\n{merged_notes}".strip()
     if category:
         merged_notes = f"Category: {category}\n{merged_notes}".strip()
     if room_category:
@@ -1988,12 +1992,16 @@ def edit_supplier_type(type_key, supplier_id):
         cliq_alias = (request.form.get('cliq_alias') or '').strip()
         guide_languages = (request.form.get('guide_languages') or '').strip()
         category = (request.form.get('category') or '').strip()
+        custom_category = (request.form.get('custom_category') or '').strip()
         room_category = (request.form.get('room_category') or '').strip()
         notes = (request.form.get('notes') or '').strip()
         other_payment_method = (request.form.get('other_payment_method') or '').strip()
         bank_iban = (request.form.get('bank_iban') or '').strip() or None
 
         merged_notes = notes
+        # Keep category as "Other" but store custom value in notes if provided
+        if category == 'Other' and custom_category:
+            merged_notes = f"Custom Category: {custom_category}\n{merged_notes}".strip()
         if category:
             merged_notes = f"Category: {category}\n{merged_notes}".strip()
         if room_category:

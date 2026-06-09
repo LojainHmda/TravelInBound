@@ -95,15 +95,21 @@ class Supplier(db.Model):
 
     @property
     def accommodation_category(self):
-        """Extract accommodation category from notes (not room category)"""
+        """Extract accommodation category from notes, showing only predefined values"""
+        VALID_CATEGORIES = ['5-Star', '4-Star', '3-Star', 'Boutique', 'Camp', 'Airbnb', 'Other']
+
         if not self.notes:
             return ''
 
         for line in self.notes.split('\n'):
-            if line and 'Category: ' in line and not line.startswith('Room'):
-                parts = line.split('Category: ')
-                if len(parts) == 2:
-                    return parts[1].strip()
+            if line.startswith('Category: '):
+                value = line[len('Category: '):].strip()
+                # Return if it's a valid predefined category
+                if value in VALID_CATEGORIES:
+                    return value
+                # If value exists but is not predefined, return "Other"
+                elif value:
+                    return 'Other'
 
         return ''
 

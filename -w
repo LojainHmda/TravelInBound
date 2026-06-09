@@ -1,0 +1,3462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="ImY4YTlkZGM3NzgwYzU4OWM1YTBlMTk5MDBiNTY0Yjc3ZDQ4NzE5NzYi.aiabcQ.Il59y-qlnm8aYWra3dtQscWzOSQ">
+    <title>Travel Booking Management System</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd', 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8a' },
+                        accent: { 50: '#fffbeb', 100: '#fef3c7', 200: '#fde68a', 300: '#fcd34d', 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706', 700: '#b45309', 800: '#92400e', 900: '#78350f' },
+                        slate: { 50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1', 400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#334155', 800: '#1e293b', 900: '#0f172a' }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <!-- Custom CSS (cache-busted by file mtime so browsers can cache across pages) -->
+    <link rel="stylesheet" href="/static/css/main.css?v=1779492960">
+    <!-- Button Theme CSS (loads last to override other styles) -->
+    <link rel="stylesheet" href="/static/css/button-theme.css?v=1779492960">
+    <!-- AI Chat CSS -->
+    <link rel="stylesheet" href="/static/css/ai-chat.css?v=1780759357">
+    
+    
+    
+
+<style>
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f5f5;
+}
+
+body.modal-open {
+    overflow: hidden !important;
+}
+
+.hub-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+.hub-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.hub-title {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0;
+}
+
+.hub-subtitle {
+    color: #666;
+    margin: 0.35rem 0 0;
+    font-size: 0.95rem;
+}
+
+.top-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.top-actions .form-control {
+    min-width: 230px;
+}
+
+.top-actions .form-control::placeholder {
+    font-size: 0.875rem;
+}
+
+.supplier-table-wrap {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.supplier-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.supplier-table thead th {
+    background: #f8fafc;
+    color: #475569;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    padding: 10px 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.supplier-table tbody td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #eef2f7;
+    font-size: 0.9rem;
+    color: #1f2937;
+}
+
+.supplier-row-name {
+    font-weight: 600;
+}
+
+.supplier-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.lang-tag {
+    display: inline-block;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 2px 7px;
+    margin: 2px 2px 2px 0;
+    white-space: nowrap;
+}
+
+.supplier-action-btn {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #fff;
+    color: #374151;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.supplier-action-btn:hover {
+    background: #f8fafc;
+}
+
+.supplier-action-btn.delete {
+    color: #b91c1c;
+    border-color: #fecaca;
+    background: #fff5f5;
+}
+
+.supplier-status-toggle {
+    height: 30px;
+    padding: 0 10px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+
+.supplier-status-toggle.status-active {
+    color: #15803d !important;
+    background: #dcfce7 !important;
+    border-color: #86efac !important;
+}
+
+.supplier-status-toggle.status-active:hover {
+    color: #166534 !important;
+    background: #bbf7d0 !important;
+    border-color: #4ade80 !important;
+}
+
+.supplier-status-toggle.status-suspended {
+    color: #b91c1c !important;
+    background: #fef2f2 !important;
+    border-color: #fecaca !important;
+}
+
+.supplier-status-toggle.status-suspended:hover {
+    color: #991b1b !important;
+    background: #fee2e2 !important;
+    border-color: #fca5a5 !important;
+}
+
+.quick-sup-grid label {
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 2px;
+    display: block;
+    font-size: 12px;
+    line-height: 1.25;
+}
+
+.quick-sup-grid input,
+.quick-sup-grid select,
+.quick-sup-grid textarea {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    line-height: 1.25;
+    min-height: 30px;
+}
+
+.quick-sup-grid textarea {
+    resize: none;
+}
+
+.supplier-modal-foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 10px 12px;
+    border-top: 1px solid #e5e7eb;
+    background: #fafafa;
+}
+
+</style>
+
+    
+    <style>
+        /* Top Navigation Bar */
+        .top-navbar {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: white;
+            padding: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1055;
+            height: 70px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            border-bottom: 2px solid #efdea4;
+        }
+        
+        .navbar-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 100%;
+            padding: 0 16px;
+            max-width: 100%;
+        }
+        
+        /* Three-section navbar layout */
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            flex: 0 0 auto;
+            min-width: 60px;
+        }
+        
+        .navbar-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+        }
+        
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex: 0 0 auto;
+            min-width: 60px;
+            gap: 12px;
+        }
+        
+        /* Menu Toggle Button */
+        .menu-toggle-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            color: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .menu-toggle-btn:hover {
+            background: rgba(239, 222, 164, 0.15);
+            border-color: rgba(239, 222, 164, 0.3);
+            color: #efdea4;
+        }
+        
+        .menu-toggle-btn i {
+            font-size: 1.1rem;
+        }
+        
+        /* Logo Section */
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .navbar-brand:hover {
+            color: white;
+            text-decoration: none;
+        }
+        
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+        
+        .logo-text-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        
+        .logo-text {
+            color: #efdea4;
+            font-weight: 600;
+            font-size: 1.1rem;
+            line-height: 1.2;
+            margin: 0;
+            white-space: nowrap;
+        }
+        
+        .logo-tagline {
+            color: #94a3b8;
+            font-size: 0.7rem;
+            font-weight: 400;
+            margin: 0;
+        }
+        
+        @media (max-width: 640px) {
+            .logo-text-container {
+                display: none;
+            }
+        }
+        
+        /* Main Navigation */
+        .main-nav {
+            display: none; /* Hidden per user request */
+            align-items: center;
+            gap: 20px;
+            flex: 1;
+            justify-content: center;
+        }
+        
+        .nav-item {
+            position: relative;
+        }
+        
+        .nav-link {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: #FFBF00;
+            background: rgba(255, 191, 0, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .nav-link i {
+            font-size: 0.9rem;
+            width: 16px;
+            text-align: center;
+        }
+        
+        /* Dropdown Menu (Die Menu) */
+        .dropdown {
+            position: relative;
+        }
+        
+        .dropdown-toggle::after {
+            content: '\f107';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            margin-left: 8px;
+            transition: transform 0.3s ease;
+        }
+        
+        .dropdown.show .dropdown-toggle::after {
+            transform: rotate(180deg);
+        }
+        
+        /* Button group dropdown support */
+        .btn-group {
+            position: relative;
+        }
+        
+        .btn-group .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 1000;
+            display: none;
+            min-width: 160px;
+            padding: 5px 0;
+            margin: 2px 0 0;
+            background-color: #fff;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 4px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+        }
+        
+        .btn-group.show .dropdown-menu,
+        .dropdown.show .dropdown-menu {
+            display: block !important;
+        }
+        
+        .dropdown-menu .dropdown-item {
+            display: block;
+            width: 100%;
+            padding: 6px 20px;
+            clear: both;
+            font-weight: 400;
+            color: #333333 !important;
+            text-align: inherit;
+            text-decoration: none;
+            white-space: nowrap;
+            background-color: transparent;
+            border: 0;
+        }
+        
+        .dropdown-menu .dropdown-item:hover {
+            color: #000000 !important;
+            background-color: #f8f9fa;
+        }
+        
+        /* Navigation dropdown menus - dark theme */
+        .main-nav .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            min-width: 220px;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border: 1px solid rgba(255, 191, 0, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1060;
+            margin-top: 8px;
+            padding: 8px 0;
+        }
+        
+        .main-nav .dropdown.show .dropdown-menu {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: translateY(0) !important;
+            display: block !important;
+        }
+        
+        .main-nav .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: rgba(255, 255, 255, 0.8) !important;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            border-radius: 0;
+        }
+        
+        .main-nav .dropdown-item:first-child {
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .main-nav .dropdown-item:last-child {
+            border-radius: 0 0 12px 12px;
+        }
+        
+        .main-nav .dropdown-item:hover {
+            background: linear-gradient(135deg, rgba(239, 222, 164, 0.15) 0%, rgba(230, 209, 146, 0.15) 100%);
+            color: #efdea4 !important;
+            transform: translateX(4px);
+        }
+        
+        .main-nav .dropdown-item i {
+            width: 16px;
+            text-align: center;
+            color: #efdea4;
+        }
+        
+        /* User Section */
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.85rem;
+            padding: 6px 10px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.2s ease;
+        }
+        
+        .user-info:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #efdea4 0%, #e6d192 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1e293b;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        
+        .user-name {
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        @media (max-width: 640px) {
+            .user-name {
+                display: none;
+            }
+            .user-info {
+                padding: 4px;
+                background: transparent;
+            }
+        }
+        
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .logout-btn:hover {
+            color: #efdea4;
+            background: rgba(239, 222, 164, 0.1);
+            border-color: rgba(239, 222, 164, 0.3);
+        }
+        
+        /* Mobile Menu Toggle - Always visible for easier navigation */
+        .mobile-menu-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(239, 222, 164, 0.1);
+            border: 1px solid #FFBF00;
+            border-radius: 8px;
+            color: #FFBF00;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: absolute;
+            left: 20px;
+        }
+        
+        .mobile-menu-toggle:hover {
+            background: rgba(255, 191, 0, 0.2);
+        }
+        
+        /* Hide main nav on smaller screens */
+        @media (max-width: 768px) {
+            .main-nav {
+                display: none;
+            }
+        }
+        
+        /* Body and Layout */
+        body {
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            margin: 0;
+            padding-top: 70px; /* Account for fixed navbar */
+        }
+        
+        .app-container {
+            min-height: calc(100vh - 70px);
+        }
+        
+        /* Mobile Sidebar */
+        #sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            color: #fff;
+            position: fixed;
+            left: 0;
+            top: 70px; /* Start below navbar */
+            bottom: 0;
+            z-index: 1050;
+            transition: transform 0.3s ease;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            transform: translateX(-100%); /* Hidden by default */
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        #sidebar.show {
+            transform: translateX(0);
+        }
+        
+        #content {
+            width: 100%;
+            min-height: calc(100vh - 70px);
+            padding: 0;
+        }
+        
+        .sidebar-header {
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        #close-sidebar {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        
+        #close-sidebar:hover {
+            color: #FFBF00;
+        }
+        
+        .sidebar-nav {
+            padding: 0;
+            list-style: none;
+            margin-top: 20px;
+        }
+        
+        .sidebar-nav li {
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-nav a {
+            padding: 12px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            display: block;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 8px;
+            margin: 4px 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sidebar-nav .submenu a {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            margin: 2px 20px;
+        }
+        
+        .sidebar-nav a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+        
+        .sidebar-nav a:hover::before, .sidebar-nav a.active::before {
+            opacity: 1;
+        }
+        
+        .sidebar-nav a:hover, .sidebar-nav a.active {
+            color: white;
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .sidebar-nav a i {
+            width: 25px;
+            margin-right: 10px;
+            text-align: center;
+        }
+        
+        .sidebar-footer {
+            padding: 15px 20px;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        #toggle-sidebar {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        /* Floating menu button for mobile */
+        .menu-button-float {
+            display: none;
+            position: fixed;
+            z-index: 1060;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background-color: #FFBF00;
+            color: #000;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+            border: none;
+            font-size: 24px;
+            text-align: center;
+            cursor: pointer;
+        }
+        
+        /* Sidebar Overlay */
+        #sidebar-overlay {
+            display: none;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 70px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1040;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        #sidebar-overlay.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="top-navbar">
+        <div class="navbar-container">
+            <!-- Left Section: Menu Toggle -->
+            <div class="navbar-left">
+                <button class="menu-toggle-btn" id="menu-toggle-btn" aria-label="Open Menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <!-- Center Section: Logo + App Name -->
+            <div class="navbar-center">
+                <a href="/" class="navbar-brand">
+                    <div class="logo-icon">
+                        <img src="/static/images/logo.png" alt="Company Logo">
+                    </div>
+                    <div class="logo-text-container">
+                        <span class="logo-text">Windows of Jordan</span>
+                        <span class="logo-tagline">Travel Management</span>
+                    </div>
+                </a>
+            </div>
+            
+            <!-- Right Section: User Profile & Actions -->
+            <div class="navbar-right">
+                <div class="user-section">
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            
+                                A
+                            
+                        </div>
+                        
+                            <span class="user-name">admin</span>
+                        
+                    </div>
+                    
+                    
+                    <a href="/auth/logout" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="logout-text">Logout</span>
+                    </a>
+                    
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Hidden: Main Navigation (kept for reference, dropdown code) -->
+    <div class="main-nav" style="display: none;">
+                <div class="nav-item">
+                    <a href="/" class="nav-link ">
+                        <i class="fas fa-home"></i>
+                        Home
+                    </a>
+                </div>
+                
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle">
+                        <i class="fas fa-suitcase-rolling"></i>
+                        Tours & Booking
+                    </a>
+                    <div class="dropdown-menu">
+                        <a href="/inbound/" class="dropdown-item">
+                            <i class="fas fa-map-marked-alt"></i>
+                            Inbound Tours
+                        </a>
+                        <a href="/inbound/new" class="dropdown-item">
+                            <i class="fas fa-plus-circle"></i>
+                            New Booking
+                        </a>
+                        <a href="/find-bookings" class="dropdown-item">
+                            <i class="fas fa-search"></i>
+                            Search & History
+                        </a>
+                        <a href="/operations" class="dropdown-item">
+                            <i class="fas fa-plane"></i>
+                            Travel Operations
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle">
+                        <i class="fas fa-users"></i>
+                        Management
+                    </a>
+                    <div class="dropdown-menu">
+                        <a href="/customers/" class="dropdown-item">
+                            <i class="fas fa-users"></i>
+                            Customers
+                        </a>
+                        <a href="/finance/suppliers" class="dropdown-item">
+                            <i class="fas fa-building"></i>
+                            Suppliers
+                        </a>
+                        
+                        <a href="/finance/" class="dropdown-item">
+                            <i class="fas fa-money-bill-wave"></i>
+                            Finance
+                        </a>
+                        
+                        
+                        <a href="/auth/admin/users" class="dropdown-item">
+                            <i class="fas fa-users-cog"></i>
+                            User Management
+                        </a>
+                        
+                    </div>
+                </div>
+                
+                <div class="nav-item">
+                    <a href="/dashboard" class="nav-link ">
+                        <i class="fas fa-chart-line"></i>
+                        Dashboard
+                    </a>
+                </div>
+            </div>
+    
+    <div class="app-container">
+        <!-- Mobile Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <button id="close-sidebar" aria-label="Close Menu">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <ul class="sidebar-nav">
+                <li>
+                    <a href="/" class="">
+                        <i class="fas fa-home"></i>
+                        Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="/inbound/" class="">
+                        <i class="fas fa-map-marked-alt"></i>
+                        Inbound Tours
+                    </a>
+                </li>
+                <li>
+                    <a href="/inbound/new" class="">
+                        <i class="fas fa-plus-circle"></i>
+                        New Booking
+                    </a>
+                </li>
+                <li>
+                    <a href="/find-bookings" class="">
+                        <i class="fas fa-search"></i>
+                        Search & History
+                    </a>
+                </li>
+                <li>
+                    <a href="/operations" class="">
+                        <i class="fas fa-plane"></i>
+                        Travel Operations
+                    </a>
+                </li>
+                <li>
+                    <a href="/customers/" class="">
+                        <i class="fas fa-users"></i>
+                        Customers
+                    </a>
+                </li>
+                <li>
+                    <a href="/finance/suppliers" class="">
+                        <i class="fas fa-building"></i>
+                        Suppliers
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="/finance/" class="active">
+                        <i class="fas fa-money-bill-wave"></i>
+                        Finance
+                    </a>
+                </li>
+                
+                
+                <li>
+                    <a href="/auth/admin/users" class="">
+                        <i class="fas fa-users-cog"></i>
+                        User Management
+                    </a>
+                </li>
+                
+            </ul>
+        </nav>
+        
+        <!-- Main Content Area -->
+        <div id="content">
+            
+            <!-- Flash Messages -->
+            
+            
+            
+            
+            <!-- Main navigation is now in the top navbar -->
+            
+            <!-- Main Content -->
+            <main class="my-4" style="padding: 0;">
+                
+<div class="hub-container">
+    <div class="hub-header">
+        <div>
+            <h1 class="hub-title"><i class="fas fa-handshake me-2"></i>Meet and assist</h1>
+            <p class="hub-subtitle">19 suppliers</p>
+        </div>
+        <div class="top-actions">
+            <form method="GET" action="/finance/suppliers/type/meet-assist" class="d-flex gap-2">
+                <input type="text" name="q" value="" class="form-control" placeholder="Search by Name / City">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+            <button type="button" class="btn btn-secondary" onclick="printSuppliersList()">
+                <i class="fas fa-print"></i> Print
+            </button>
+            <button type="button" id="openQuickSupplierModal" class="btn btn-success">Add New Meet and assist</button>
+        </div>
+    </div>
+
+    <div class="supplier-table-wrap">
+        <table class="supplier-table">
+            <thead>
+                <tr>
+                    <th style="width: 35%;">Name</th>
+                    
+                    <th style="width: 20%;">Language</th>
+                    
+                    
+                    <th style="width: 20%;">City</th>
+                    
+                    <th style="width: 15%;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td class="supplier-row-name">1234567</td>
+                    
+                    <td>
+                        
+                            
+                                
+                                <span class="lang-tag">German</span>
+                            
+                                
+                                <span class="lang-tag">English</span>
+                            
+                                
+                                <span class="lang-tag">Persian</span>
+                            
+                                
+                                <span class="lang-tag">Korean</span>
+                            
+                                
+                                <span class="lang-tag">Swedish</span>
+                            
+                                
+                                <span class="lang-tag">Norwegian</span>
+                            
+                                
+                                <span class="lang-tag">Italian</span>
+                            
+                        
+                    </td>
+                    
+                    
+                    <td>-</td>
+                    
+                    <td>
+                        <div class="supplier-actions">
+                            <a href="/supplier/68" class="supplier-action-btn" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/finance/suppliers/type/meet-assist/edit/68" class="supplier-action-btn" title="Edit">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <form method="POST" action="/finance/supplier/68/toggle-status" onsubmit="return confirm('Suspend this supplier? It will be hidden from request dropdowns.');" style="margin:0;">
+                                <button type="submit" class="supplier-status-toggle status-active" title="Click to suspend">
+                                    Active
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td class="supplier-row-name">Hussam Khalouf</td>
+                    
+                    <td>
+                        
+                            <span style="color:#9ca3af;">—</span>
+                        
+                    </td>
+                    
+                    
+                    <td>Amm</td>
+                    
+                    <td>
+                        <div class="supplier-actions">
+                            <a href="/supplier/16" class="supplier-action-btn" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/finance/suppliers/type/meet-assist/edit/16" class="supplier-action-btn" title="Edit">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <form method="POST" action="/finance/supplier/16/toggle-status" onsubmit="return confirm('Suspend this supplier? It will be hidden from request dropdowns.');" style="margin:0;">
+                                <button type="submit" class="supplier-status-toggle status-active" title="Click to suspend">
+                                    Active
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td class="supplier-row-name">Mowafaq El Saidy</td>
+                    
+                    <td>
+                        
+                            <span style="color:#9ca3af;">—</span>
+                        
+                    </td>
+                    
+                    
+                    <td>-</td>
+                    
+                    <td>
+                        <div class="supplier-actions">
+                            <a href="/supplier/54" class="supplier-action-btn" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/finance/suppliers/type/meet-assist/edit/54" class="supplier-action-btn" title="Edit">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <form method="POST" action="/finance/supplier/54/toggle-status" onsubmit="return confirm('Suspend this supplier? It will be hidden from request dropdowns.');" style="margin:0;">
+                                <button type="submit" class="supplier-status-toggle status-active" title="Click to suspend">
+                                    Active
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td class="supplier-row-name">SHAHEEEEDDDDDDDDDDD</td>
+                    
+                    <td>
+                        
+                            
+                                
+                                <span class="lang-tag">German</span>
+                            
+                                
+                                <span class="lang-tag">Japanese</span>
+                            
+                        
+                    </td>
+                    
+                    
+                    <td>-</td>
+                    
+                    <td>
+                        <div class="supplier-actions">
+                            <a href="/supplier/72" class="supplier-action-btn" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/finance/suppliers/type/meet-assist/edit/72" class="supplier-action-btn" title="Edit">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <form method="POST" action="/finance/supplier/72/toggle-status" onsubmit="return confirm('Suspend this supplier? It will be hidden from request dropdowns.');" style="margin:0;">
+                                <button type="submit" class="supplier-status-toggle status-active" title="Click to suspend">
+                                    Active
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td class="supplier-row-name">SHAHHE</td>
+                    
+                    <td>
+                        
+                            
+                                
+                                <span class="lang-tag">German</span>
+                            
+                        
+                    </td>
+                    
+                    
+                    <td>-</td>
+                    
+                    <td>
+                        <div class="supplier-actions">
+                            <a href="/supplier/61" class="supplier-action-btn" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/finance/suppliers/type/meet-assist/edit/61" class="supplier-action-btn" title="Edit">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <form method="POST" action="/finance/supplier/61/toggle-status" onsubmit="return confirm('Suspend this supplier? It will be hidden from request dropdowns.');" style="margin:0;">
+                                <button type="submit" class="supplier-status-toggle status-active" title="Click to suspend">
+                                    Active
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td class="supplier-row-name">Sami</td>
+                    
+                    <td>
+                        
+                            <span style="color:#9ca3af;">—</span>
+                        
+                    </td>
+                    
+                    
+                    <td>-</td>
+                    
+                    <td>
+                        <div class="supplier-actions">
+                            <a href="/supplier/17" class="supplier-action-btn" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/finance/suppliers/type/meet-assist/edit/17" class="supplier-action-btn" title="Edit">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <form method="POST" action="/finance/supplier/17/toggle-status" onsubmit="return confirm('Suspend this supplier? It will be hidden from request dropdowns.');" style="margin:0;">
+                                <button type="submit" class="supplier-status-toggle status-active" title="Click to suspend">
+                                    Active
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td class="supplier-row-name">WEFRRF</td>
+                    
+                    <td>
+                        
+                            
+                                
+                                <span class="lang-tag">French</span>
+                            
+                        
+                    </td>
+                    
+                    
+                    <td>-</td>
+                    
+                    <td>
+                        <div class="supplier-actions">
+                            <a href="/supplier/60" class="supplier-action-btn" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/finance/suppliers/type/meet-assist/edit/60" class="supplier-action-btn" title="Edit">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <form method="POST" action="/finance/supplier/60/toggle-status" onsubmit="return confirm('Suspend this supplier? It will be hidden from request dropdowns.');" style="margin:0;">
+                                <button type="submit" class="supplier-status-toggle status-active" title="Click to suspend">
+                                    Active
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td class="supplier-row-name">hamzeh</td>
+                    
+                    <td>
+                        
+                            
+                                
+                                <span class="lang-tag">Arabic</span>
+                            
+                        
+                    </td>
+                    
+                    
+                    <td>Amman</td>
+                    
+                    <td>
+                        <div class="supplier-actions">
+                            <a href="/supplier/42" class="supplier-action-btn" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/finance/suppliers/type/meet-assist/edit/42" class="supplier-action-btn" title="Edit">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <form method="POST" action="/finance/supplier/42/toggle-status" onsubmit="return confirm('Suspend this supplier? It will be hidden from request dropdowns.');" style="margin:0;">
+                                <button type="submit" class="supplier-status-toggle status-active" title="Click to suspend">
+                                    Active
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td class="supplier-row-name">mousa</td>
+                    
+                    <td>
+                        
+                            <span style="color:#9ca3af;">—</span>
+                        
+                    </td>
+                    
+                    
+                    <td>-</td>
+                    
+                    <td>
+                        <div class="supplier-actions">
+                            <a href="/supplier/53" class="supplier-action-btn" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/finance/suppliers/type/meet-assist/edit/53" class="supplier-action-btn" title="Edit">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <form method="POST" action="/finance/supplier/53/toggle-status" onsubmit="return confirm('Suspend this supplier? It will be hidden from request dropdowns.');" style="margin:0;">
+                                <button type="submit" class="supplier-status-toggle status-active" title="Click to suspend">
+                                    Active
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td class="supplier-row-name">name!</td>
+                    
+                    <td>
+                        
+                            <span style="color:#9ca3af;">—</span>
+                        
+                    </td>
+                    
+                    
+                    <td>-</td>
+                    
+                    <td>
+                        <div class="supplier-actions">
+                            <a href="/supplier/52" class="supplier-action-btn" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/finance/suppliers/type/meet-assist/edit/52" class="supplier-action-btn" title="Edit">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <form method="POST" action="/finance/supplier/52/toggle-status" onsubmit="return confirm('Suspend this supplier? It will be hidden from request dropdowns.');" style="margin:0;">
+                                <button type="submit" class="supplier-status-toggle status-active" title="Click to suspend">
+                                    Active
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td class="supplier-row-name">shahed</td>
+                    
+                    <td>
+                        
+                            
+                                
+                                <span class="lang-tag">Russian</span>
+                            
+                        
+                    </td>
+                    
+                    
+                    <td>-</td>
+                    
+                    <td>
+                        <div class="supplier-actions">
+                            <a href="/supplier/49" class="supplier-action-btn" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/finance/suppliers/type/meet-assist/edit/49" class="supplier-action-btn" title="Edit">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <form method="POST" action="/finance/supplier/49/toggle-status" onsubmit="return confirm('Suspend this supplier? It will be hidden from request dropdowns.');" style="margin:0;">
+                                <button type="submit" class="supplier-status-toggle status-active" title="Click to suspend">
+                                    Active
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td class="supplier-row-name">shahed22</td>
+                    
+                    <td>
+                        
+                            
+                                
+                                <span class="lang-tag">French</span>
+                            
+                        
+                    </td>
+                    
+                    
+                    <td>-</td>
+                    
+                    <td>
+                        <div class="supplier-actions">
+                            <a href="/supplier/69" class="supplier-action-btn" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/finance/suppliers/type/meet-assist/edit/69" class="supplier-action-btn" title="Edit">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <form method="POST" action="/finance/supplier/69/toggle-status" onsubmit="return confirm('Suspend this supplier? It will be hidden from request dropdowns.');" style="margin:0;">
+                                <button type="submit" class="supplier-status-toggle status-active" title="Click to suspend">
+                                    Active
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td class="supplier-row-name">shaheeeeeed</td>
+                    
+                    <td>
+                        
+                            
+                                
+                                <span class="lang-tag">French</span>
+                            
+                        
+                    </td>
+                    
+                    
+                    <td>-</td>
+                    
+                    <td>
+                        <div class="supplier-actions">
+                            <a href="/supplier/62" class="supplier-action-btn" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/finance/suppliers/type/meet-assist/edit/62" class="supplier-action-btn" title="Edit">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <form method="POST" action="/finance/supplier/62/toggle-status" onsubmit="return confirm('Suspend this supplier? It will be hidden from request dropdowns.');" style="margin:0;">
+                                <button type="submit" class="supplier-status-toggle status-active" title="Click to suspend">
+                                    Active
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td class="supplier-row-name">shahhhhhhhhhed</td>
+                    
+                    <td>
+                        
+                            
+                                
+                                <span class="lang-tag">Arabic</span>
+                            
+                                
+                                <span class="lang-tag">French</span>
+                            
+                                
+                                <span class="lang-tag">Turkish</span>
+                            
+                                
+                                <span class="lang-tag">Greek</span>
+                            
+                        
+                    </td>
+                    
+                    
+                    <td>-</td>
+                    
+                    <td>
+                        <div class="supplier-actions">
+                            <a href="/supplier/71" class="supplier-action-btn" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/finance/suppliers/type/meet-assist/edit/71" class="supplier-action-btn" title="Edit">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <form method="POST" action="/finance/supplier/71/toggle-status" onsubmit="return confirm('Suspend this supplier? It will be hidden from request dropdowns.');" style="margin:0;">
+                                <button type="submit" class="supplier-status-toggle status-active" title="Click to suspend">
+                                    Active
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td class="supplier-row-name">sked</td>
+                    
+                    <td>
+                        
+                            
+                                
+                                <span class="lang-tag">English</span>
+                            
+                        
+                    </td>
+                    
+                    
+                    <td>-</td>
+                    
+                    <td>
+                        <div class="supplier-actions">
+                            <a href="/supplier/63" class="supplier-action-btn" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/finance/suppliers/type/meet-assist/edit/63" class="supplier-action-btn" title="Edit">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <form method="POST" action="/finance/supplier/63/toggle-status" onsubmit="return confirm('Activate this supplier? It will appear in request dropdowns again.');" style="margin:0;">
+                                <button type="submit" class="supplier-status-toggle status-suspended" title="Click to activate">
+                                    Suspended
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td class="supplier-row-name">x</td>
+                    
+                    <td>
+                        
+                            <span style="color:#9ca3af;">—</span>
+                        
+                    </td>
+                    
+                    
+                    <td>-</td>
+                    
+                    <td>
+                        <div class="supplier-actions">
+                            <a href="/supplier/39" class="supplier-action-btn" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/finance/suppliers/type/meet-assist/edit/39" class="supplier-action-btn" title="Edit">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <form method="POST" action="/finance/supplier/39/toggle-status" onsubmit="return confirm('Suspend this supplier? It will be hidden from request dropdowns.');" style="margin:0;">
+                                <button type="submit" class="supplier-status-toggle status-active" title="Click to suspend">
+                                    Active
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td class="supplier-row-name">x2</td>
+                    
+                    <td>
+                        
+                            
+                                
+                                <span class="lang-tag">Arabic</span>
+                            
+                        
+                    </td>
+                    
+                    
+                    <td>-</td>
+                    
+                    <td>
+                        <div class="supplier-actions">
+                            <a href="/supplier/50" class="supplier-action-btn" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/finance/suppliers/type/meet-assist/edit/50" class="supplier-action-btn" title="Edit">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <form method="POST" action="/finance/supplier/50/toggle-status" onsubmit="return confirm('Suspend this supplier? It will be hidden from request dropdowns.');" style="margin:0;">
+                                <button type="submit" class="supplier-status-toggle status-active" title="Click to suspend">
+                                    Active
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td class="supplier-row-name">x3</td>
+                    
+                    <td>
+                        
+                            
+                                
+                                <span class="lang-tag">English</span>
+                            
+                        
+                    </td>
+                    
+                    
+                    <td>-</td>
+                    
+                    <td>
+                        <div class="supplier-actions">
+                            <a href="/supplier/51" class="supplier-action-btn" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/finance/suppliers/type/meet-assist/edit/51" class="supplier-action-btn" title="Edit">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <form method="POST" action="/finance/supplier/51/toggle-status" onsubmit="return confirm('Suspend this supplier? It will be hidden from request dropdowns.');" style="margin:0;">
+                                <button type="submit" class="supplier-status-toggle status-active" title="Click to suspend">
+                                    Active
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td class="supplier-row-name">xx</td>
+                    
+                    <td>
+                        
+                            
+                                
+                                <span class="lang-tag">Arabic</span>
+                            
+                        
+                    </td>
+                    
+                    
+                    <td>-</td>
+                    
+                    <td>
+                        <div class="supplier-actions">
+                            <a href="/supplier/48" class="supplier-action-btn" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/finance/suppliers/type/meet-assist/edit/48" class="supplier-action-btn" title="Edit">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <form method="POST" action="/finance/supplier/48/toggle-status" onsubmit="return confirm('Suspend this supplier? It will be hidden from request dropdowns.');" style="margin:0;">
+                                <button type="submit" class="supplier-status-toggle status-active" title="Click to suspend">
+                                    Active
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+    
+    
+    
+    
+<div id="addMeetAssistRepresentativeModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50" style="display: none; align-items: center; justify-content: center; padding: 1rem;">
+    <div class="bg-white rounded-lg shadow-2xl max-w-md sm:max-w-lg w-full flex flex-col overflow-hidden relative" style="max-height: 75vh; margin: auto;">
+        <div class="px-3 sm:px-4 py-2 sm:py-2.5 border-b border-slate-200 flex items-center justify-between bg-white z-20 flex-shrink-0 rounded-t-lg">
+            <h3 class="text-xs sm:text-sm font-semibold text-slate-800">
+                <i class="fas fa-plus-circle text-teal-500 mr-1.5"></i>Add New Representative
+            </h3>
+            <button type="button" id="closeQuickMaRepModal" class="text-slate-400 hover:text-slate-600 p-1">
+                <i class="fas fa-times text-sm sm:text-base"></i>
+            </button>
+        </div>
+        <div class="p-2 sm:p-3 overflow-y-auto flex-1 min-h-0" style="max-height: calc(75vh - 120px);">
+            <div id="add-ma-representative-hub-error" class="hidden mb-2 p-1.5 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs"></div>
+            <div class="space-y-1.5 sm:space-y-2">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Supplier Type <span class="text-red-500">*</span></label>
+                        <select id="new_ma_rep_supplier_type" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500" required>
+                            <option value="">Select supplier type...</option>
+                            <option value="Company">Company</option>
+                            <option value="Freelance">Freelance</option>
+                            <option value="Staff">Staff</option>
+                        </select>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Representative Name <span class="text-red-500">*</span></label>
+                        <input type="text" id="new_ma_rep_name" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500" placeholder="Enter representative name" required>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Languages *</label>
+                        <div class="space-y-2">
+                            <select id="new_ma_rep_languages" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500" required>
+                                <option value="">Select a language...</option>
+                                <option value="Arabic">Arabic</option>
+                                <option value="English">English</option>
+                                <option value="French">French</option>
+                                <option value="German">German</option>
+                                <option value="Spanish">Spanish</option>
+                                <option value="Italian">Italian</option>
+                                <option value="Russian">Russian</option>
+                                <option value="Chinese">Chinese</option>
+                                <option value="Japanese">Japanese</option>
+                                <option value="Korean">Korean</option>
+                                <option value="Turkish">Turkish</option>
+                                <option value="Hebrew">Hebrew</option>
+                                <option value="Persian">Persian</option>
+                                <option value="Hindi">Hindi</option>
+                                <option value="Portuguese">Portuguese</option>
+                                <option value="Dutch">Dutch</option>
+                                <option value="Greek">Greek</option>
+                                <option value="Swedish">Swedish</option>
+                                <option value="Norwegian">Norwegian</option>
+                                <option value="Danish">Danish</option>
+                                <option value="Polish">Polish</option>
+                                <option value="Czech">Czech</option>
+                                <option value="Hungarian">Hungarian</option>
+                                <option value="Romanian">Romanian</option>
+                                <option value="Bulgarian">Bulgarian</option>
+                                <option value="Croatian">Croatian</option>
+                                <option value="Serbian">Serbian</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <div id="selected_ma_rep_languages" class="flex flex-wrap gap-1 min-h-[24px]"></div>
+                            <input type="hidden" id="new_ma_rep_languages_hidden" value="">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Phone</label>
+                        <input type="text" id="new_ma_rep_phone" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500" placeholder="+962 7 123 4567">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Email</label>
+                        <input type="email" id="new_ma_rep_email" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500" placeholder="email@example.com">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">City</label>
+                        <input type="text" id="new_ma_rep_city" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500" placeholder="City">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Country</label>
+                        <input type="text" id="new_ma_rep_country" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500" placeholder="Country" value="Jordan">
+                    </div>
+                    
+                    
+                    
+                    
+
+
+<div>
+    <label class="block text-xs font-medium text-slate-700 mb-0.5">Payment Terms</label>
+    <select id="new_ma_rep_payment_terms" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500">
+        <option value="">Select payment terms...</option>
+        <option value="Credit">Credit</option>
+        <option value="NET 15">NET 15</option>
+        <option value="NET 30">NET 30</option>
+        <option value="NET 45">NET 45</option>
+        <option value="NET 60">NET 60</option>
+        <option value="Prepaid">Prepaid</option>
+        
+        <option value="Employee">Employee</option>
+        
+        <option value="Other">Other</option>
+    </select>
+</div>
+<div>
+    <label class="block text-xs font-medium text-slate-700 mb-0.5">Payment Method</label>
+    <select id="new_ma_rep_payment_method" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500">
+        <option value="">Select payment method...</option>
+        <option value="Cash">Cash</option>
+        <option value="Cliq">Cliq</option>
+        <option value="Bank">Bank</option>
+        <option value="Other">Other</option>
+    </select>
+</div>
+<div id="new_ma_rep_bank_name_wrap" style="display:none;">
+    <label class="block text-xs font-medium text-slate-700 mb-0.5">Bank Name</label>
+    <input type="text" id="new_ma_rep_bank_name" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500" placeholder="Bank name">
+</div>
+<div id="new_ma_rep_bank_account_wrap" style="display:none;">
+    <label class="block text-xs font-medium text-slate-700 mb-0.5">Bank Account</label>
+    <input type="text" id="new_ma_rep_bank_account" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500" placeholder="Account number">
+</div>
+<div id="new_ma_rep_bank_iban_wrap" style="display:none;">
+    <label class="block text-xs font-medium text-slate-700 mb-0.5">IBAN</label>
+    <input type="text" id="new_ma_rep_bank_iban" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500" placeholder="IBAN">
+</div>
+<div id="new_ma_rep_cliq_wrap" style="display:none;">
+    <label class="block text-xs font-medium text-slate-700 mb-0.5">Cliq num/Alias</label>
+    <input type="text" id="new_ma_rep_cliq_alias" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500" placeholder="Enter cliq num or alias">
+</div>
+<div id="new_ma_rep_other_wrap" style="display:none;">
+    <label class="block text-xs font-medium text-slate-700 mb-0.5">Payment Method Details</label>
+    <input type="text" id="new_ma_rep_other_payment_method" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500" placeholder="Enter custom payment method">
+</div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Default Currency</label>
+                        <select id="new_ma_rep_default_currency" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="JOD">JOD</option>
+                            <option value="GBP">GBP</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Tax Number</label>
+                        <input type="text" id="new_ma_rep_tax_number" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500" placeholder="Tax ID">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-medium text-slate-700 mb-0.5">Notes</label>
+                        <textarea id="new_ma_rep_notes" rows="1" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500 resize-none" placeholder="Additional notes"></textarea>
+                    </div>
+                </div>
+                <div class="text-xs text-slate-500 mt-1">
+                    <span class="text-red-500">*</span> Required fields. Other fields are optional but recommended.
+                </div>
+            </div>
+        </div>
+        <div class="px-3 sm:px-4 py-2 sm:py-2.5 border-t border-slate-200 flex justify-end gap-2 bg-white z-20 flex-shrink-0 rounded-b-lg">
+            <button type="button" id="cancelQuickMaRepModal" class="px-3 py-1.5 text-slate-600 hover:bg-slate-100 rounded transition-colors text-xs">
+                Cancel
+            </button>
+            <button type="button" id="submitQuickMaRepModal" class="px-3 py-1.5 bg-teal-600 text-white rounded hover:bg-teal-700 transition-colors text-xs">
+                <i class="fas fa-save mr-1"></i>Add Representative
+            </button>
+        </div>
+    </div>
+</div>
+
+
+            </main>
+            
+
+
+        </div><!-- end of #content -->
+
+    </div><!-- end of .app-container -->
+    
+    <!-- Sidebar Overlay for Mobile -->
+    <div id="sidebar-overlay"></div>
+    
+    <!-- Customer Selection Modal -->
+    <!-- Customer Selection Modal with Search -->
+<div class="modal fade" id="customerSelectionModal" tabindex="-1" aria-labelledby="customerSelectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+                <h5 class="modal-title" id="customerSelectionModalLabel">
+                    <i class="fas fa-users me-2"></i>Select Customer
+                </h5>
+                <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal" aria-label="Close" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
+                    <i class="fas fa-xmark" style="font-size: 1rem; color: #333;"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Search Filter -->
+                <div class="mb-3">
+                    <div class="input-group search-input-group">
+                        <span class="input-group-text search-icon">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" class="form-control search-field" id="customerSelectionSearchInput" 
+                               placeholder="Search by name, email, phone, or company..." 
+                               autocomplete="off">
+                        <button class="btn btn-clear-search" type="button" id="clearSearchBtn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Quick Filter Buttons -->
+                <div class="mb-3">
+                    <div class="btn-group" role="group" aria-label="Customer filters">
+                        <button type="button" class="btn btn-outline-primary btn-sm filter-btn active" data-filter="all" onclick="applyCustomerFilter(this, 'all')">
+                            <i class="fas fa-globe"></i> All
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm filter-btn" data-filter="recent" onclick="applyCustomerFilter(this, 'recent')">
+                            <i class="fas fa-clock"></i> Recent
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm filter-btn" data-filter="frequent" onclick="applyCustomerFilter(this, 'frequent')">
+                            <i class="fas fa-star"></i> Frequent
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Customer List -->
+                <div class="customer-list-container" style="max-height: 400px; overflow-y: auto;">
+                    <div id="customerListLoader" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading customers...</span>
+                        </div>
+                        <div class="mt-2 text-muted">Loading customers...</div>
+                    </div>
+                    
+                    <div id="customerList" class="d-none">
+                        <!-- Customer items will be populated here -->
+                    </div>
+                    
+                    <div id="noCustomersFound" class="text-center py-4 d-none">
+                        <i class="fas fa-user-slash text-muted" style="font-size: 3rem;"></i>
+                        <div class="mt-3 text-muted">No customers found</div>
+                        <button type="button" class="btn btn-sm mt-2 text-dark" style="background-color: #FFBF00; border-color: #FFBF00;" onclick="showNewCustomerForm()">
+                            <i class="fas fa-plus"></i> Add New Customer
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="button" class="btn text-dark" style="background-color: #FFBF00; border-color: #FFBF00;" onclick="showNewCustomerForm()">
+                    <i class="fas fa-plus"></i> Add New Customer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.customer-item {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: white;
+}
+
+.customer-item:hover {
+    border-color: #0d6efd;
+    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.15);
+    transform: translateY(-1px);
+}
+
+.customer-item.selected {
+    border-color: #0d6efd;
+    background-color: #f8f9ff;
+    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.25);
+}
+
+.customer-name {
+    font-weight: 600;
+    color: #212529;
+    font-size: 1.1rem;
+}
+
+.customer-details {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+.customer-meta {
+    display: flex;
+    gap: 15px;
+    margin-top: 8px;
+    font-size: 0.85rem;
+}
+
+.customer-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #6c757d;
+}
+
+.customer-stats {
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    color: #495057;
+}
+
+.filter-btn.active {
+    background-color: #0d6efd;
+    color: white;
+    border-color: #0d6efd;
+}
+
+.search-input-group {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.search-input-group:focus-within {
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
+}
+
+.search-icon {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-right: none;
+    color: #495057;
+    font-weight: 500;
+}
+
+.search-field {
+    border: 1px solid #dee2e6;
+    border-left: none;
+    border-right: none;
+    background-color: #ffffff;
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.search-field::placeholder {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.search-field:focus {
+    border-color: #0d6efd;
+    background-color: #ffffff;
+    box-shadow: none;
+    outline: none;
+}
+
+.btn-clear-search {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-left: none;
+    color: #495057;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.btn-clear-search:hover {
+    background-color: #e9ecef;
+    color: #212529;
+    border-color: #adb5bd;
+}
+
+.btn-clear-search:focus {
+    box-shadow: none;
+    outline: none;
+}
+</style>
+
+<script>
+(function() {
+// Prevent duplicate declarations by using IIFE
+if (window.customerSelectionInitialized) {
+    return;
+}
+window.customerSelectionInitialized = true;
+
+let allCustomers = [];
+let filteredCustomers = [];
+let selectedCustomerId = null;
+window.customerCurrentFilter = 'all';
+
+// Customer selection modal functions
+window.openCustomerSelectionModal = function(callback) {
+    window.customerSelectionCallback = callback;
+    selectedCustomerId = null;
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('customerSelectionModal'));
+    modal.show();
+    
+    // Load customers
+    loadCustomers();
+}
+
+window.loadCustomers = function() {
+    // Show loader
+    document.getElementById('customerListLoader').classList.remove('d-none');
+    document.getElementById('customerList').classList.add('d-none');
+    document.getElementById('noCustomersFound').classList.add('d-none');
+    
+    // Fetch customers from API
+    fetch('/customers/api/list')
+        .then(response => response.json())
+        .then(data => {
+            // API returns array directly, not {success, customers}
+            if (Array.isArray(data)) {
+                allCustomers = data;
+            } else if (data.success) {
+                allCustomers = data.customers || [];
+            } else {
+                allCustomers = [];
+                console.error('API Error:', data.error);
+            }
+            window.applyCurrentFilter();
+            hideLoader();
+        })
+        .catch(error => {
+            console.error('Error loading customers:', error);
+            hideLoader();
+            showNoCustomersFound();
+        });
+}
+
+function hideLoader() {
+    document.getElementById('customerListLoader').classList.add('d-none');
+}
+
+window.applyCurrentFilter = function() {
+    let filtered = [...allCustomers];
+    
+    console.log('applyCurrentFilter called with filter:', window.customerCurrentFilter);
+    console.log('All customers count:', allCustomers.length);
+    
+    // Apply filter
+    switch(window.customerCurrentFilter) {
+        case 'recent':
+            // Sort by created_at (most recently added first) - show only 5
+            filtered = filtered.sort((a, b) => {
+                const dateA = new Date(a.created_at || a.updated_at || 0);
+                const dateB = new Date(b.created_at || b.updated_at || 0);
+                return dateB - dateA;
+            }).slice(0, 5);
+            break;
+        case 'frequent':
+            // Sort by booking count (most frequent first)
+            filtered = filtered.sort((a, b) => (b.booking_count || 0) - (a.booking_count || 0)).slice(0, 20);
+            break;
+        default:
+            // All customers - sort alphabetically
+            filtered = filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    }
+    
+    console.log('Filtered customers count:', filtered.length);
+    filteredCustomers = filtered;
+    renderCustomerList();
+}
+
+function renderCustomerList() {
+    const customerList = document.getElementById('customerList');
+    const searchTerm = document.getElementById('customerSelectionSearchInput').value.toLowerCase();
+    
+    // Filter by search term
+    let displayCustomers = filteredCustomers;
+    if (searchTerm) {
+        displayCustomers = filteredCustomers.filter(customer => 
+            (customer.name || '').toLowerCase().includes(searchTerm) ||
+            (customer.email || '').toLowerCase().includes(searchTerm) ||
+            (customer.phone || '').toLowerCase().includes(searchTerm) ||
+            (customer.company || '').toLowerCase().includes(searchTerm)
+        );
+    }
+    
+    if (displayCustomers.length === 0) {
+        showNoCustomersFound();
+        return;
+    }
+    
+    // Render customer items
+    customerList.innerHTML = displayCustomers.map(customer => `
+        <div class="customer-item" onclick="selectCustomer(${customer.id})" data-customer-id="${customer.id}">
+            <div class="customer-name">${customer.name || 'Unnamed Customer'}</div>
+            <div class="customer-details">
+                ${customer.email || ''} ${customer.phone ? '• ' + customer.phone : ''}
+                ${customer.company ? '• ' + customer.company : ''}
+            </div>
+            <div class="customer-meta">
+                <div class="customer-meta-item">
+                    <i class="fas fa-calendar"></i>
+                    <span>${customer.created_at ? new Date(customer.created_at).toLocaleDateString() : 'N/A'}</span>
+                </div>
+                <div class="customer-meta-item">
+                    <i class="fas fa-suitcase"></i>
+                    <span class="customer-stats">${customer.booking_count || 0} bookings</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    customerList.classList.remove('d-none');
+    document.getElementById('noCustomersFound').classList.add('d-none');
+}
+
+function showNoCustomersFound() {
+    document.getElementById('customerList').classList.add('d-none');
+    document.getElementById('noCustomersFound').classList.remove('d-none');
+}
+
+window.selectCustomer = function(customerId) {
+    selectedCustomerId = customerId;
+    
+    // Update visual selection
+    document.querySelectorAll('.customer-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+    
+    const selectedItem = document.querySelector(`[data-customer-id="${customerId}"]`);
+    if (selectedItem) {
+        selectedItem.classList.add('selected');
+    }
+    
+    // Find customer data
+    const customer = allCustomers.find(c => c.id === customerId);
+    
+    // Close modal using data-bs-dismiss approach
+    const modalEl = document.getElementById('customerSelectionModal');
+    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    modal.hide();
+    
+    // Call callback with full customer object
+    if (window.customerSelectionCallback && customer) {
+        window.customerSelectionCallback(customer);
+    }
+}
+
+window.applyCustomerFilter = function(btn, filter) {
+    console.log('applyCustomerFilter called with filter:', filter);
+    
+    // Update active state
+    document.querySelectorAll('#customerSelectionModal .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    // Apply filter
+    window.customerCurrentFilter = filter;
+    window.applyCurrentFilter();
+}
+
+window.showNewCustomerForm = function() {
+    // Hide customer selection modal
+    const customerModal = bootstrap.Modal.getInstance(document.getElementById('customerSelectionModal'));
+    if (customerModal) {
+        customerModal.hide();
+    }
+    
+    // Show quick add modal
+    const quickAddModal = new bootstrap.Modal(document.getElementById('quickAddCustomerModal'));
+    quickAddModal.show();
+    
+    // Clear form
+    document.getElementById('quickAddCustomerForm').reset();
+}
+
+window.quickAddCustomer = function() {
+    const form = document.getElementById('quickAddCustomerForm');
+    const formData = new FormData(form);
+    
+    // Convert to JSON - include all fields from the form
+    const data = {
+        first_name: formData.get('first_name'),
+        last_name: formData.get('last_name'),
+        email: formData.get('email'),
+        phone: formData.get('phone'),
+        customer_type: formData.get('customer_type') || 'Direct',
+        company_name: formData.get('company_name'),
+        tax_number: formData.get('tax_number'),
+        address: formData.get('address'),
+        city: formData.get('city'),
+        country: formData.get('country'),
+        notes: formData.get('notes')
+    };
+    
+    // Validate required fields
+    if (!data.first_name) {
+        alert('Please fill in the first name (required)');
+        return;
+    }
+    if (!data.email) {
+        alert('Please fill in the email (required)');
+        return;
+    }
+    if (!data.phone) {
+        alert('Please fill in the phone (required)');
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = document.getElementById('quickAddSubmitBtn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+    
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                     document.querySelector('input[name="csrf_token"]')?.value || '';
+    
+    // Send to API
+    fetch('/customers/api/create', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            // Close quick add modal
+            const quickAddModal = bootstrap.Modal.getInstance(document.getElementById('quickAddCustomerModal'));
+            quickAddModal.hide();
+            
+            // Reload customers and select the new one
+            loadCustomers();
+            
+            // Show success message
+            setTimeout(() => {
+                if (window.customerSelectionCallback) {
+                    window.customerSelectionCallback(result.customer.id, result.customer.name);
+                }
+                
+                // Reopen customer selection modal
+                const customerModal = new bootstrap.Modal(document.getElementById('customerSelectionModal'));
+                customerModal.show();
+            }, 500);
+        } else {
+            alert('Error adding customer: ' + (result.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error adding customer. Please try again.');
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Search input
+    const searchInput = document.getElementById('customerSelectionSearchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            renderCustomerList();
+        });
+    }
+    
+    // Clear search button
+    const clearBtn = document.getElementById('clearSearchBtn');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            renderCustomerList();
+        });
+    }
+    
+    // Filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Update active state
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Apply filter
+            window.customerCurrentFilter = this.dataset.filter;
+            window.applyCurrentFilter();
+        });
+    });
+    
+    // Show/hide company fields based on customer type in Quick Add modal
+    const quickAddCustomerType = document.getElementById('customer_type');
+    const quickAddCompanyFields = document.querySelector('#quickAddCustomerModal .company-fields');
+    
+    if (quickAddCustomerType && quickAddCompanyFields) {
+        function toggleQuickAddCompanyFields() {
+            const customerType = quickAddCustomerType.value;
+            if (customerType === 'Corporate' || customerType === 'Travel Agent') {
+                quickAddCompanyFields.style.display = 'block';
+            } else {
+                quickAddCompanyFields.style.display = 'none';
+            }
+        }
+        
+        // Initial state
+        toggleQuickAddCompanyFields();
+        
+        // On change
+        quickAddCustomerType.addEventListener('change', toggleQuickAddCompanyFields);
+    }
+});
+
+})(); // End IIFE
+</script>
+
+<!-- Quick Add Customer Modal -->
+<div class="modal fade" id="quickAddCustomerModal" tabindex="-1" aria-labelledby="quickAddCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header text-dark" style="background-color: #FFBF00;">
+                <h5 class="modal-title" id="quickAddCustomerModalLabel">
+                    <i class="fas fa-user-plus me-2"></i>Quick Add Customer
+                </h5>
+                <button type="button" class="btn btn-sm" data-bs-dismiss="modal" aria-label="Close" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: rgba(0,0,0,0.1);">
+                    <i class="fas fa-xmark" style="font-size: 1rem; color: #333;"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <form id="quickAddCustomerForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="first_name" class="form-label">
+                                First Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="last_name" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">
+                                Email <span class="text-danger">*</span>
+                            </label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="phone" class="form-label">
+                                Phone <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="phone" name="phone" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="customer_type" class="form-label">Customer Type</label>
+                        <select class="form-select" id="customer_type" name="customer_type">
+                            <option value="Direct" selected>Direct</option>
+                            <option value="Travel Agent">Travel Agent</option>
+                            <option value="Corporate">Corporate</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="row company-fields">
+                        <div class="col-md-6 mb-3">
+                            <label for="company_name" class="form-label">Company Name</label>
+                            <input type="text" class="form-control" id="company_name" name="company_name">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="tax_number" class="form-label">Tax Number</label>
+                            <input type="text" class="form-control" id="tax_number" name="tax_number">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address</label>
+                        <textarea class="form-control" id="address" name="address" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="city" class="form-label">City</label>
+                            <input type="text" class="form-control" id="city" name="city">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="country" class="form-label">Country</label>
+                            <input type="text" class="form-control" id="country" name="country">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="button" class="btn text-dark" style="background-color: #FFBF00; border-color: #FFBF00;" id="quickAddSubmitBtn" onclick="quickAddCustomer()">
+                    <i class="fas fa-plus"></i> Add Customer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- Custom JS -->
+    <script src="/static/js/booking.js"></script>
+    <script src="/static/js/invoice.js"></script>
+    <!-- Screen Context JS -->
+    <script src="/static/js/screen-context.js"></script>
+    <!-- AI Chat JS -->
+    <script src="/static/js/ai-chat.js"></script>
+    <script src="/static/js/supplier_payment_fields.js?v=1780763538"></script>
+    
+    <!-- Top Navigation and Dropdown Menu JS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Dropdown Menu Functionality
+            const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+            
+            dropdownToggles.forEach(toggle => {
+                // Skip if this is a Bootstrap dropdown (has data-bs-toggle)
+                if (toggle.getAttribute('data-bs-toggle') === 'dropdown') {
+                    return; // Let Bootstrap handle it
+                }
+                
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const dropdown = this.closest('.dropdown') || this.closest('.btn-group');
+                    
+                    if (!dropdown) {
+                        console.warn('Dropdown element not found for toggle:', this);
+                        return;
+                    }
+                    
+                    // Close all other dropdowns
+                    document.querySelectorAll('.dropdown.show, .btn-group.show').forEach(openDropdown => {
+                        if (openDropdown !== dropdown) {
+                            openDropdown.classList.remove('show');
+                        }
+                    });
+                    
+                    // Toggle current dropdown
+                    dropdown.classList.toggle('show');
+                    
+                    console.log('Dropdown clicked:', dropdown.classList.contains('show'));
+                });
+            });
+            
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.dropdown') && !e.target.closest('.btn-group')) {
+                    document.querySelectorAll('.dropdown.show, .btn-group.show').forEach(dropdown => {
+                        dropdown.classList.remove('show');
+                    });
+                }
+            });
+            
+            // Mobile sidebar functionality
+            const menuToggle = document.getElementById('menu-toggle-btn');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const closeSidebar = document.getElementById('close-sidebar');
+            
+            if (menuToggle) {
+                menuToggle.addEventListener('click', function() {
+                    sidebar.classList.add('show');
+                    overlay.classList.add('show');
+                });
+            }
+            
+            if (closeSidebar) {
+                closeSidebar.addEventListener('click', function() {
+                    sidebar.classList.remove('show');
+                    overlay.classList.remove('show');
+                });
+            }
+            
+            if (overlay) {
+                overlay.addEventListener('click', function() {
+                    sidebar.classList.remove('show');
+                    overlay.classList.remove('show');
+                });
+            }
+            
+            // Close mobile sidebar when window is resized to desktop
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('show');
+                    overlay.classList.remove('show');
+                }
+            });
+            
+            // Close mobile sidebar when clicking on sidebar links
+            document.querySelectorAll('.sidebar-nav a').forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.remove('show');
+                        overlay.classList.remove('show');
+                    }
+                });
+            });
+        });
+    </script>
+    <style>
+        .phone-error-msg {
+            display: block;
+            color: #dc2626;
+            font-size: 0.78rem;
+            margin-top: 3px;
+        }
+        input.phone-invalid {
+            border-color: #dc2626 !important;
+            outline-color: #dc2626 !important;
+        }
+    </style>
+    <script>
+    (function () {
+        var PHONE_MSG = 'Only digits (0–9), spaces, and + are allowed.';
+        var PHONE_RE = /^[0-9 +]*$/;
+
+        /* Selectors that identify phone inputs across the whole app */
+        var PHONE_NAMES = [
+            'input[name="phone"]',
+            'input[name="guide_phone"]',
+            'input[name="contact_phone"]',
+            'input[name="hotel_phone"]',
+            'input[name="transport_phone"]',
+            'input[name="driver_phone"]',
+            'input[name="telephone_number"]',
+            'input[type="tel"]',
+        ];
+        var PHONE_IDS = [
+            '#newCustomerPhone', '#customerPhone', '#quick_phone',
+            '#new_airline_phone', '#new_hotel_phone', '#new_restaurant_phone',
+            '#new_transport_phone', '#new_guide_phone', '#new_ma_rep_phone',
+            '#guide_phone',
+        ];
+        var SELECTOR = PHONE_NAMES.concat(PHONE_IDS).join(', ');
+
+        function getOrCreateError(input) {
+            var id = input.id || input.name;
+            var errId = 'phone-err-' + id;
+            var existing = input.parentNode && input.parentNode.querySelector('#' + errId);
+            if (existing) return existing;
+            var span = document.createElement('span');
+            span.id = errId;
+            span.className = 'phone-error-msg';
+            span.setAttribute('role', 'alert');
+            input.insertAdjacentElement('afterend', span);
+            return span;
+        }
+
+        function validate(input) {
+            var val = input.value;
+            if (val && !PHONE_RE.test(val)) {
+                input.classList.add('phone-invalid');
+                getOrCreateError(input).textContent = PHONE_MSG;
+                return false;
+            } else {
+                input.classList.remove('phone-invalid');
+                var errSpan = input.parentNode && input.parentNode.querySelector('[id^="phone-err-"]');
+                if (errSpan) errSpan.textContent = '';
+                return true;
+            }
+        }
+
+        /* Live validation on input */
+        document.addEventListener('input', function (e) {
+            if (e.target.matches && e.target.matches(SELECTOR)) {
+                validate(e.target);
+            }
+        }, true);
+
+        /* Block submit if any phone field is invalid */
+        document.addEventListener('submit', function (e) {
+            var form = e.target;
+            var inputs = form.querySelectorAll(SELECTOR);
+            var ok = true;
+            inputs.forEach(function (inp) {
+                if (!validate(inp)) {
+                    ok = false;
+                    inp.focus();
+                }
+            });
+            if (!ok) e.preventDefault();
+        }, true);
+
+        /* Also validate on blur so error shows immediately after tab-out */
+        document.addEventListener('blur', function (e) {
+            if (e.target.matches && e.target.matches(SELECTOR)) {
+                validate(e.target);
+            }
+        }, true);
+    })();
+    </script>
+    
+    
+
+
+<script>
+(function () {
+    const MA_REP_OTHER_CONFIG = [
+        { id: 'new_ma_rep_languages', key: 'meetassist_hub_languages' },
+        { id: 'new_ma_rep_payment_terms', key: 'meetassist_hub_payment_terms' },
+        { id: 'new_ma_rep_default_currency', key: 'meetassist_hub_default_currency' }
+    ];
+    const selectedMaRepLanguages = [];
+    let globalMaRepLanguagesCache = [];
+
+    function ensureOption(selectEl, value) {
+        const val = String(value || '').trim();
+        if (!selectEl || !val) return false;
+        const exists = Array.from(selectEl.options).some(opt => (opt.value || '').toLowerCase() === val.toLowerCase());
+        if (exists) return false;
+        const option = document.createElement('option');
+        option.value = val;
+        option.textContent = val;
+        const otherOption = Array.from(selectEl.options).find(opt => opt.value === 'Other');
+        if (otherOption) selectEl.insertBefore(option, otherOption);
+        else selectEl.appendChild(option);
+        return true;
+    }
+
+    function openCustomPrompt(message, onSubmit) {
+        const existingOverlay = document.getElementById('custom-prompt-overlay');
+        if (existingOverlay) existingOverlay.remove();
+        const overlay = document.createElement('div');
+        overlay.id = 'custom-prompt-overlay';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;';
+        const dialog = document.createElement('div');
+        dialog.style.cssText = 'background:white;border-radius:12px;padding:24px;min-width:360px;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
+        dialog.innerHTML = `
+            <div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:12px;">${message}</div>
+            <input type="text" id="custom-prompt-input" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;" placeholder="Type value..." autofocus>
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+                <button type="button" id="custom-prompt-cancel" style="padding:6px 16px;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;color:#475569;font-size:12px;cursor:pointer;">Cancel</button>
+                <button type="button" id="custom-prompt-ok" style="padding:6px 16px;border:none;border-radius:6px;background:#3b82f6;color:white;font-size:12px;cursor:pointer;font-weight:500;">Add</button>
+            </div>
+        `;
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+        const input = document.getElementById('custom-prompt-input');
+        const okBtn = document.getElementById('custom-prompt-ok');
+        const cancelBtn = document.getElementById('custom-prompt-cancel');
+        const submit = () => {
+            const value = (input?.value || '').trim();
+            overlay.remove();
+            onSubmit(value);
+        };
+        const cancel = () => overlay.remove();
+        okBtn?.addEventListener('click', submit);
+        cancelBtn?.addEventListener('click', cancel);
+        input?.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') submit();
+            if (e.key === 'Escape') cancel();
+        });
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) cancel();
+        });
+        setTimeout(() => input?.focus(), 50);
+    }
+
+    async function fetchGlobalOptionValues(key) {
+        try {
+            const resp = await fetch(`/inbound/api/supplier-option-values/global?key=${encodeURIComponent(key)}`);
+            const data = await resp.json();
+            if (data && data.success && Array.isArray(data.values)) {
+                return data.values
+                    .map(v => String(v || '').trim())
+                    .filter(Boolean);
+            }
+        } catch (_) {}
+        return [];
+    }
+
+    async function persistGlobalOptionValue(key, value) {
+        const v = String(value || '').trim();
+        if (!key || !v) return false;
+        try {
+            const resp = await fetch('/inbound/api/supplier-option-values/global', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: key, value: v })
+            });
+            const data = await resp.json();
+            return !!(resp.ok && data && data.success);
+        } catch (_) {
+            return false;
+        }
+    }
+
+    function updateSelectedMaRepLanguagesDisplay() {
+        const container = document.getElementById('selected_ma_rep_languages');
+        const hiddenInput = document.getElementById('new_ma_rep_languages_hidden');
+        if (!container || !hiddenInput) return;
+        container.innerHTML = '';
+        selectedMaRepLanguages.forEach((lang, index) => {
+            const badge = document.createElement('span');
+            badge.className = 'inline-flex items-center px-2 py-1 bg-teal-100 text-teal-800 text-xs rounded-full';
+            badge.innerHTML = `
+                ${lang}
+                <button type="button" class="ml-1 text-teal-600 hover:text-teal-800" onclick="removeMaRepLanguage(${index})">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            `;
+            container.appendChild(badge);
+        });
+        hiddenInput.value = selectedMaRepLanguages.join(', ');
+    }
+
+    window.removeMaRepLanguage = function removeMaRepLanguage(index) {
+        selectedMaRepLanguages.splice(index, 1);
+        updateSelectedMaRepLanguagesDisplay();
+    };
+
+    function attachMaRepLanguageSelection() {
+        const select = document.getElementById('new_ma_rep_languages');
+        if (!select || select.dataset.maRepLangAttached === '1') return;
+        select.dataset.maRepLangAttached = '1';
+        select.addEventListener('change', function () {
+            const selectedValue = this.value;
+            if (!selectedValue) return;
+            if (selectedValue === 'Other') {
+                openCustomPrompt('Enter new language:', async function (customLanguage) {
+                    const val = String(customLanguage || '').trim();
+                    if (!val) {
+                        select.value = '';
+                        return;
+                    }
+                    ensureOption(select, val);
+                    if (!selectedMaRepLanguages.includes(val)) selectedMaRepLanguages.push(val);
+                    updateSelectedMaRepLanguagesDisplay();
+                    select.value = '';
+                    await persistGlobalOptionValue('meetassist_hub_languages', val);
+                    globalMaRepLanguagesCache = await fetchGlobalOptionValues('meetassist_hub_languages');
+                    globalMaRepLanguagesCache.forEach(lang => ensureOption(select, lang));
+                });
+                return;
+            }
+            if (!selectedMaRepLanguages.includes(selectedValue)) {
+                selectedMaRepLanguages.push(selectedValue);
+                updateSelectedMaRepLanguagesDisplay();
+            }
+            this.value = '';
+        });
+    }
+
+    async function hydrateMaRepOtherValues() {
+        for (const cfg of MA_REP_OTHER_CONFIG) {
+            const selectEl = document.getElementById(cfg.id);
+            if (!selectEl) continue;
+            const values = await fetchGlobalOptionValues(cfg.key);
+            if (cfg.key === 'meetassist_hub_languages') globalMaRepLanguagesCache = values.slice();
+            values.forEach(v => ensureOption(selectEl, v));
+            if (cfg.id === 'new_ma_rep_languages') continue;
+            if (selectEl.dataset.otherHandlerAttached === '1') continue;
+            selectEl.dataset.otherHandlerAttached = '1';
+            selectEl.addEventListener('change', function () {
+                if (selectEl.value !== 'Other') return;
+                openCustomPrompt('Enter new value:', async function (customValue) {
+                    const val = String(customValue || '').trim();
+                    if (!val) {
+                        selectEl.value = '';
+                        return;
+                    }
+                    ensureOption(selectEl, val);
+                    selectEl.value = val;
+                    await persistGlobalOptionValue(cfg.key, val);
+                });
+            });
+        }
+    }
+
+    function buildSupplierFormData(payload, fileInputId) {
+        const formData = new FormData();
+        Object.keys(payload || {}).forEach(key => {
+            formData.append(key, payload[key] == null ? '' : String(payload[key]));
+        });
+        const fileInput = fileInputId ? document.getElementById(fileInputId) : null;
+        if (fileInput && fileInput.files && fileInput.files[0]) {
+            formData.append('contract_file', fileInput.files[0]);
+        }
+        return formData;
+    }
+
+    function applyCliqAndContractToSupplierDialog(prefix) {
+        if (typeof window.bindSupplierPaymentMethodFields === 'function') {
+            window.bindSupplierPaymentMethodFields(prefix);
+        }
+        const taxInput = document.getElementById(`${prefix}_tax_number`);
+        const bankAccountInput = document.getElementById(`${prefix}_bank_account`);
+        if (!taxInput || !bankAccountInput) return;
+        const taxWrap = taxInput.closest('div');
+        if (!taxWrap) return;
+
+        const existingContractInput = document.getElementById(`${prefix}_contract_file`);
+        let contractWrap = document.getElementById(`${prefix}_contract_wrap`);
+        if (!existingContractInput && !contractWrap) {
+            contractWrap = document.createElement('div');
+            contractWrap.id = `${prefix}_contract_wrap`;
+            const labelClass = 'block text-xs font-medium text-slate-700 mb-0.5';
+            contractWrap.innerHTML = `
+                <label class="${labelClass}">Contract Attachment</label>
+                <input type="file" id="${prefix}_contract_file" class="${bankAccountInput.className || ''}" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+            `;
+            taxWrap.insertAdjacentElement('afterend', contractWrap);
+        }
+    }
+
+    function initMeetAssistRepresentativePopupEnhancements() {
+        applyCliqAndContractToSupplierDialog('new_ma_rep');
+        attachMaRepLanguageSelection();
+        hydrateMaRepOtherValues().then(() => {
+            const langSelect = document.getElementById('new_ma_rep_languages');
+            if (langSelect && Array.isArray(globalMaRepLanguagesCache)) {
+                globalMaRepLanguagesCache.forEach(lang => ensureOption(langSelect, lang));
+            }
+        });
+    }
+
+    window.openAddMeetAssistRepresentativeModal = function openAddMeetAssistRepresentativeModal() {
+        const modal = document.getElementById('addMeetAssistRepresentativeModal');
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        modal.style.display = 'flex';
+        initMeetAssistRepresentativePopupEnhancements();
+        document.getElementById('new_ma_rep_name')?.focus();
+    };
+
+    window.closeAddMeetAssistRepresentativeModal = function closeAddMeetAssistRepresentativeModal() {
+        if (typeof window.addRepresentativeTargetSelectId !== 'undefined') {
+            window.addRepresentativeTargetSelectId = null;
+        }
+        const modal = document.getElementById('addMeetAssistRepresentativeModal');
+        if (!modal) return;
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        modal.style.display = 'none';
+        document.getElementById('new_ma_rep_supplier_type').value = '';
+        document.getElementById('new_ma_rep_name').value = '';
+        selectedMaRepLanguages.length = 0;
+        updateSelectedMaRepLanguagesDisplay();
+        const select = document.getElementById('new_ma_rep_languages');
+        if (select) select.value = '';
+        document.getElementById('new_ma_rep_phone').value = '';
+        document.getElementById('new_ma_rep_email').value = '';
+        document.getElementById('new_ma_rep_city').value = '';
+        document.getElementById('new_ma_rep_country').value = 'Jordan';
+        document.getElementById('new_ma_rep_payment_terms').value = '';
+        document.getElementById('new_ma_rep_payment_method').value = '';
+        document.getElementById('new_ma_rep_default_currency').value = 'USD';
+        document.getElementById('new_ma_rep_bank_name').value = '';
+        document.getElementById('new_ma_rep_bank_account').value = '';
+        const cliqEl = document.getElementById('new_ma_rep_cliq_alias');
+        if (cliqEl) cliqEl.value = '';
+        if (typeof window.syncSupplierPaymentMethodFields === 'function') {
+            window.syncSupplierPaymentMethodFields('new_ma_rep');
+        }
+        const contractEl = document.getElementById('new_ma_rep_contract_file');
+        if (contractEl) contractEl.value = '';
+        document.getElementById('new_ma_rep_tax_number').value = '';
+        document.getElementById('new_ma_rep_notes').value = '';
+        document.getElementById('add-ma-representative-hub-error')?.classList.add('hidden');
+    };
+
+    window.saveNewMeetAssistRepresentative = function saveNewMeetAssistRepresentative() {
+        const supplierType = document.getElementById('new_ma_rep_supplier_type').value.trim();
+        if (!supplierType) {
+            const err = document.getElementById('add-ma-representative-hub-error');
+            if (err) {
+                err.textContent = 'Please select a supplier type';
+                err.classList.remove('hidden');
+            }
+            return;
+        }
+        const repName = document.getElementById('new_ma_rep_name').value.trim();
+        if (!repName) {
+            const err = document.getElementById('add-ma-representative-hub-error');
+            if (err) {
+                err.textContent = 'Please enter a representative name';
+                err.classList.remove('hidden');
+            }
+            return;
+        }
+        if (selectedMaRepLanguages.length === 0) {
+            const err = document.getElementById('add-ma-representative-hub-error');
+            if (err) {
+                err.textContent = 'Please select at least one language';
+                err.classList.remove('hidden');
+            }
+            return;
+        }
+        const financial = getSupplierDialogFinancialFields('new_ma_rep');
+        const payload = {
+            supplier_type: supplierType,
+            name: repName,
+            languages: selectedMaRepLanguages.join(', '),
+            phone: document.getElementById('new_ma_rep_phone').value.trim(),
+            email: document.getElementById('new_ma_rep_email').value.trim(),
+            city: document.getElementById('new_ma_rep_city').value.trim(),
+            country: document.getElementById('new_ma_rep_country').value.trim(),
+            payment_terms: financial.payment_terms,
+            payment_method: financial.payment_method || '',
+            default_currency: document.getElementById('new_ma_rep_default_currency').value.trim() || 'USD',
+            bank_name: financial.bank_name,
+            bank_account: financial.bank_account,
+            cliq_alias: financial.cliq_alias,
+            tax_number: document.getElementById('new_ma_rep_tax_number').value.trim(),
+            notes: document.getElementById('new_ma_rep_notes').value.trim()
+        };
+        const csrfVal = (typeof window.csrfToken !== 'undefined' ? window.csrfToken : '') || '';
+        const headers = csrfVal ? { 'X-CSRFToken': csrfVal } : {};
+        fetch('/inbound/api/add-ground-handler', {
+            method: 'POST',
+            headers: headers,
+            body: buildSupplierFormData(payload, 'new_ma_rep_contract_file')
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const targetSelectId = window.addRepresentativeTargetSelectId || null;
+                if (typeof window.addRepresentativeTargetSelectId !== 'undefined') {
+                    window.addRepresentativeTargetSelectId = null;
+                }
+                const savedName = repName;
+                window.closeAddMeetAssistRepresentativeModal();
+
+                function applyMergedRepresentatives(repData) {
+                    if (repData && Array.isArray(repData.representatives)
+                        && typeof representativesList !== 'undefined') {
+                        representativesList = repData.representatives.map(function (r) {
+                            return { id: r.id, name: r.name };
+                        });
+                        if (typeof refreshRepresentativeDropdowns === 'function') {
+                            refreshRepresentativeDropdowns();
+                        }
+                    }
+                    if (targetSelectId) {
+                        const targetSelect = document.getElementById(targetSelectId);
+                        if (targetSelect) targetSelect.value = savedName;
+                        if (typeof updateArrivalDriverInSummary === 'function') updateArrivalDriverInSummary();
+                        if (typeof updateDepartureDriverInSummary === 'function') updateDepartureDriverInSummary();
+                    }
+                }
+
+                fetch('/inbound/api/representatives')
+                    .then(r => r.json())
+                    .then(function (repData) {
+                        applyMergedRepresentatives(repData);
+                        if (typeof showNotification === 'function') {
+                            showNotification('Representative added successfully', 'success');
+                        }
+                        if (!targetSelectId) {
+                            window.location.reload();
+                        }
+                    })
+                    .catch(function () {
+                        if (targetSelectId && typeof representativesList !== 'undefined'
+                            && !representativesList.find(function (r) { return r.name === savedName; })) {
+                            representativesList.push({ id: 0, name: savedName });
+                            representativesList.sort(function (a, b) {
+                                return (a.name || '').localeCompare(b.name || '');
+                            });
+                            if (typeof refreshRepresentativeDropdowns === 'function') {
+                                refreshRepresentativeDropdowns();
+                            }
+                            const targetSelect = document.getElementById(targetSelectId);
+                            if (targetSelect) targetSelect.value = savedName;
+                        }
+                        if (typeof showNotification === 'function') {
+                            showNotification('Representative added successfully', 'success');
+                        }
+                        if (!targetSelectId) {
+                            window.location.reload();
+                        }
+                    });
+            } else {
+                const err = document.getElementById('add-ma-representative-hub-error');
+                if (err) {
+                    err.textContent = data.error || 'Error adding representative';
+                    err.classList.remove('hidden');
+                }
+            }
+        })
+        .catch(() => {
+            const err = document.getElementById('add-ma-representative-hub-error');
+            if (err) {
+                err.textContent = 'Error adding representative';
+                err.classList.remove('hidden');
+            }
+        });
+    };
+})();
+</script>
+
+<script>
+(function () {
+    const isAirlinePage = "meet-assist" === "airline";
+    const isTransportationPage = "meet-assist" === "transportation";
+    const isGuidesPage = "meet-assist" === "guides";
+    const isMeetAssistPage = "meet-assist" === "meet-assist";
+    const isRestaurantPage = "meet-assist" === "restaurant";
+    const DEFAULT_ROOM_CATEGORIES = ['Standard Rooms', 'Junior Suites', 'Executive Suites', 'Presidential Suites'];
+    let globalRoomCategoriesCache = [];
+    const overlay = document.getElementById('addHotelModal');
+    const transportOverlay = document.getElementById('addTransportModal');
+    const airlineOverlay = document.getElementById('addAirlineModal');
+    const openBtn = document.getElementById('openQuickSupplierModal');
+    const closeBtn = document.getElementById('closeQuickSupplierModal');
+    const cancelBtn = document.getElementById('cancelQuickSupplierModal');
+    const submitBtn = document.getElementById('submitQuickSupplierModal');
+    const paymentMethodSelect = document.querySelector('#addHotelModal select[name="payment_method"]');
+    const popupAccommodationCategory = document.getElementById('new_hotel_category');
+    const popupAccommodationRoomCategory = document.getElementById('new_hotel_room_category');
+    const popupAddRoomCategoryBtn = document.getElementById('popupAddRoomCategoryBtn');
+
+    if (isAirlinePage && airlineOverlay && openBtn) {
+        const closeAirlineBtn = document.getElementById('closeQuickAirlineModal');
+        const cancelAirlineBtn = document.getElementById('cancelQuickAirlineModal');
+        const submitAirlineBtn = document.getElementById('submitQuickAirlineModal');
+        openBtn.addEventListener('click', function () { window.openAddAirlineModal(); });
+        if (closeAirlineBtn) closeAirlineBtn.addEventListener('click', function () { window.closeAddAirlineModal(); });
+        if (cancelAirlineBtn) cancelAirlineBtn.addEventListener('click', function () { window.closeAddAirlineModal(); });
+        if (submitAirlineBtn) submitAirlineBtn.addEventListener('click', function () { window.saveNewAirline(); });
+        airlineOverlay.addEventListener('click', function (e) {
+            if (e.target === airlineOverlay) window.closeAddAirlineModal();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') window.closeAddAirlineModal();
+        });
+        return;
+    }
+
+    if (isTransportationPage && transportOverlay && openBtn) {
+        const closeTransportBtn = document.getElementById('closeQuickTransportModal');
+        const cancelTransportBtn = document.getElementById('cancelQuickTransportModal');
+        const submitTransportBtn = document.getElementById('submitQuickTransportModal');
+        openBtn.addEventListener('click', function () { window.openAddTransportModal(); });
+        if (closeTransportBtn) closeTransportBtn.addEventListener('click', function () { window.closeAddTransportModal(); });
+        if (cancelTransportBtn) cancelTransportBtn.addEventListener('click', function () { window.closeAddTransportModal(); });
+        if (submitTransportBtn) submitTransportBtn.addEventListener('click', function () { window.saveNewTransport(); });
+        transportOverlay.addEventListener('click', function (e) {
+            if (e.target === transportOverlay) window.closeAddTransportModal();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') window.closeAddTransportModal();
+        });
+        return;
+    }
+
+    const guideOverlay = document.getElementById('addGuideModal');
+    if (isGuidesPage && guideOverlay && openBtn) {
+        const closeGuideBtn = document.getElementById('closeQuickGuideModal');
+        const cancelGuideBtn = document.getElementById('cancelQuickGuideModal');
+        const submitGuideBtn = document.getElementById('submitQuickGuideModal');
+        openBtn.addEventListener('click', function () { window.openAddGuideModal(); });
+        if (closeGuideBtn) closeGuideBtn.addEventListener('click', function () { window.closeAddGuideModal(); });
+        if (cancelGuideBtn) cancelGuideBtn.addEventListener('click', function () { window.closeAddGuideModal(); });
+        if (submitGuideBtn) submitGuideBtn.addEventListener('click', function () { window.saveNewGuide(); });
+        guideOverlay.addEventListener('click', function (e) {
+            if (e.target === guideOverlay) window.closeAddGuideModal();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') window.closeAddGuideModal();
+        });
+        return;
+    }
+
+    const meetAssistRepresentativeOverlay = document.getElementById('addMeetAssistRepresentativeModal');
+    if (isMeetAssistPage && meetAssistRepresentativeOverlay && openBtn) {
+        const closeMaRepBtn = document.getElementById('closeQuickMaRepModal');
+        const cancelMaRepBtn = document.getElementById('cancelQuickMaRepModal');
+        const submitMaRepBtn = document.getElementById('submitQuickMaRepModal');
+        openBtn.addEventListener('click', function () { window.openAddMeetAssistRepresentativeModal(); });
+        if (closeMaRepBtn) closeMaRepBtn.addEventListener('click', function () { window.closeAddMeetAssistRepresentativeModal(); });
+        if (cancelMaRepBtn) cancelMaRepBtn.addEventListener('click', function () { window.closeAddMeetAssistRepresentativeModal(); });
+        if (submitMaRepBtn) submitMaRepBtn.addEventListener('click', function () { window.saveNewMeetAssistRepresentative(); });
+        meetAssistRepresentativeOverlay.addEventListener('click', function (e) {
+            if (e.target === meetAssistRepresentativeOverlay) window.closeAddMeetAssistRepresentativeModal();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') window.closeAddMeetAssistRepresentativeModal();
+        });
+        return;
+    }
+
+    const restaurantOverlay = document.getElementById('addRestaurantModal');
+    if (isRestaurantPage && restaurantOverlay && openBtn) {
+        const closeRestaurantBtn = document.getElementById('closeQuickRestaurantModal');
+        const cancelRestaurantBtn = document.getElementById('cancelQuickRestaurantModal');
+        const submitRestaurantBtn = document.getElementById('submitQuickRestaurantModal');
+        openBtn.addEventListener('click', function () { window.openAddRestaurantModal(); });
+        if (closeRestaurantBtn) closeRestaurantBtn.addEventListener('click', function () { window.closeAddRestaurantModal(); });
+        if (cancelRestaurantBtn) cancelRestaurantBtn.addEventListener('click', function () { window.closeAddRestaurantModal(); });
+        if (submitRestaurantBtn) submitRestaurantBtn.addEventListener('click', function () { window.saveNewRestaurant(); });
+        restaurantOverlay.addEventListener('click', function (e) {
+            if (e.target === restaurantOverlay) window.closeAddRestaurantModal();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') window.closeAddRestaurantModal();
+        });
+        return;
+    }
+
+    if (!overlay) return;
+
+    function ensureOption(selectEl, value) {
+        const val = String(value || '').trim();
+        if (!selectEl || !val) return false;
+        const exists = Array.from(selectEl.options).some(opt => (opt.value || '').toLowerCase() === val.toLowerCase());
+        if (exists) return false;
+        const option = document.createElement('option');
+        option.value = val;
+        option.textContent = val;
+        selectEl.appendChild(option);
+        return true;
+    }
+
+    async function fetchGlobalRoomCategories() {
+        try {
+            const resp = await fetch('/inbound/api/hotel/room-categories/global');
+            const data = await resp.json();
+            if (data && data.success && Array.isArray(data.categories)) {
+                globalRoomCategoriesCache = data.categories
+                    .map(v => String(v || '').trim())
+                    .filter(Boolean);
+            }
+        } catch (_) {}
+        return globalRoomCategoriesCache;
+    }
+
+    async function persistGlobalRoomCategory(category) {
+        const value = String(category || '').trim();
+        if (!value) return;
+        if (DEFAULT_ROOM_CATEGORIES.some(c => c.toLowerCase() === value.toLowerCase())) return;
+        try {
+            const resp = await fetch('/inbound/api/hotel/room-categories/global', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ category: value })
+            });
+            if (!resp.ok) throw new Error('failed');
+        } catch (_) {
+            if (typeof showNotification === 'function') {
+                showNotification('Could not save global room category.', 'error');
+            }
+        }
+    }
+
+    function syncAccommodationCategoriesFromHotelTab() {
+        if (!popupAccommodationCategory) return;
+        let customCategories = [];
+        try {
+            const raw = localStorage.getItem('custom_other_values_new_hotel_category');
+            const parsed = raw ? JSON.parse(raw) : [];
+            customCategories = Array.isArray(parsed) ? parsed : [];
+        } catch (_) {
+            customCategories = [];
+        }
+        customCategories.forEach(cat => {
+            const value = String(cat || '').trim();
+            if (!value) return;
+            const exists = Array.from(popupAccommodationCategory.options).some(
+                opt => (opt.value || '').toLowerCase() === value.toLowerCase()
+            );
+            if (!exists) {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = value;
+                const otherOption = Array.from(popupAccommodationCategory.options).find(opt => opt.value === 'Other');
+                if (otherOption) popupAccommodationCategory.insertBefore(option, otherOption);
+                else popupAccommodationCategory.appendChild(option);
+            }
+        });
+    }
+
+    async function openRoomCategoryPromptLikeDialog() {
+        if (!popupAccommodationRoomCategory) return;
+        const existingOverlay = document.getElementById('custom-prompt-overlay');
+        if (existingOverlay) existingOverlay.remove();
+        const select = popupAccommodationRoomCategory;
+        const globalCategories = await fetchGlobalRoomCategories();
+        globalCategories.forEach(v => ensureOption(select, v));
+        const existingValues = new Set(Array.from(select.options).map(opt => opt.value.toLowerCase()));
+        const presets = [
+            { value: 'Standard Rooms', label: 'Standard Rooms' },
+            { value: 'Junior Suites', label: 'Junior Suites' },
+            { value: 'Executive Suites', label: 'Executive Suites' },
+            { value: 'Presidential Suites', label: 'Presidential Suites' }
+        ];
+        const presetValues = presets.map(p => p.value.toLowerCase());
+        const savedCustom = (globalCategories || [])
+            .filter(v => !presetValues.includes(v.toLowerCase()))
+            .map(v => ({ value: v, label: v }));
+        const promptOptions = [...presets, ...savedCustom];
+        const checkboxHtml = promptOptions.map(p => {
+            const checked = existingValues.has(p.value.toLowerCase()) ? ' checked' : '';
+            return `<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#334155;cursor:pointer;"><input type="checkbox" name="room-cat-preset" value="${p.value}"${checked}> ${p.label}</label>`;
+        }).join('');
+        const overlayPrompt = document.createElement('div');
+        overlayPrompt.id = 'custom-prompt-overlay';
+        overlayPrompt.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;';
+        const dialog = document.createElement('div');
+        dialog.style.cssText = 'background:white;border-radius:12px;padding:24px;min-width:360px;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
+        dialog.innerHTML = `
+            <div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:12px;">Enter new Room Category:</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
+                ${checkboxHtml}
+            </div>
+            <input type="text" id="custom-prompt-input" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;" placeholder="Or type custom category..." autofocus>
+            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+                <button type="button" id="custom-prompt-cancel" style="padding:6px 16px;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;color:#475569;font-size:12px;cursor:pointer;">Cancel</button>
+                <button type="button" id="custom-prompt-ok" style="padding:6px 16px;border:none;border-radius:6px;background:#3b82f6;color:white;font-size:12px;cursor:pointer;font-weight:500;">Add</button>
+            </div>
+        `;
+        overlayPrompt.appendChild(dialog);
+        document.body.appendChild(overlayPrompt);
+        const input = document.getElementById('custom-prompt-input');
+        const okBtn = document.getElementById('custom-prompt-ok');
+        const cancelBtn = document.getElementById('custom-prompt-cancel');
+        document.querySelectorAll('input[name="room-cat-preset"]').forEach(cb => {
+            cb.addEventListener('change', function() {});
+        });
+        setTimeout(() => input.focus(), 50);
+        async function submit() {
+            const checkedList = document.querySelectorAll('input[name="room-cat-preset"]:checked');
+            const trimmedInput = input.value.trim();
+            const values = Array.from(checkedList).map(cb => cb.value);
+            if (trimmedInput) values.push(trimmedInput);
+            overlayPrompt.remove();
+            if (values.length === 0) return;
+            let lastAdded = null;
+            values.forEach(trimmed => {
+                const exists = Array.from(select.options).some(opt => opt.value.toLowerCase() === trimmed.toLowerCase());
+                if (exists) {
+                    if (typeof showNotification === 'function') {
+                        showNotification('This room category already exists.', 'warning');
+                    }
+                    lastAdded = trimmed;
+                } else {
+                    const option = document.createElement('option');
+                    option.value = trimmed;
+                    option.textContent = trimmed;
+                    select.appendChild(option);
+                    lastAdded = trimmed;
+                }
+            });
+            await Promise.all(values.map(v => persistGlobalRoomCategory(v)));
+            await fetchGlobalRoomCategories();
+            if (lastAdded) select.value = lastAdded;
+        }
+        function cancel() { overlayPrompt.remove(); }
+        okBtn.addEventListener('click', submit);
+        cancelBtn.addEventListener('click', cancel);
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') submit();
+            if (e.key === 'Escape') cancel();
+        });
+        overlayPrompt.addEventListener('click', function(e) {
+            if (e.target === overlayPrompt) cancel();
+        });
+    }
+
+    function closeModal() {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('flex');
+        overlay.style.display = 'none';
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('modal-open');
+    }
+
+    function syncPaymentMethodFields() {
+        if (typeof window.syncAccommodationPaymentMethodFields === 'function') {
+            window.syncAccommodationPaymentMethodFields();
+        }
+    }
+
+    function openModal() {
+        overlay.classList.remove('hidden');
+        overlay.classList.add('flex');
+        overlay.style.display = 'flex';
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+        syncAccommodationCategoriesFromHotelTab();
+        syncPaymentMethodFields();
+    }
+
+    if (openBtn) openBtn.addEventListener('click', openModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    if (submitBtn) {
+        submitBtn.addEventListener('click', async function () {
+            const requiredName = overlay.querySelector('input[name="name"]');
+            if (requiredName && !requiredName.value.trim()) {
+                requiredName.focus();
+                return;
+            }
+            const url = overlay.getAttribute('data-submit-url');
+            if (!url) return;
+            const formData = new FormData();
+            overlay.querySelectorAll('[name]').forEach(el => {
+                if (!(el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement)) return;
+                if (el instanceof HTMLInputElement && el.type === 'file') {
+                    if (el.files && el.files[0]) formData.append(el.name, el.files[0]);
+                } else {
+                    formData.append(el.name, el.value || '');
+                }
+            });
+            try {
+                const resp = await fetch(url, { method: 'POST', body: formData });
+                if (!resp.ok) throw new Error('Save failed');
+                window.location.reload();
+            } catch (_) {
+                alert('Could not save supplier. Please try again.');
+            }
+        });
+    }
+    if (popupAddRoomCategoryBtn && popupAccommodationRoomCategory) {
+        popupAddRoomCategoryBtn.addEventListener('click', function () {
+            openRoomCategoryPromptLikeDialog();
+        });
+    }
+    if (paymentMethodSelect) paymentMethodSelect.addEventListener('change', syncPaymentMethodFields);
+    if (overlay) {
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) closeModal();
+        });
+    }
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeModal();
+    });
+    syncAccommodationCategoriesFromHotelTab();
+    // Keep room-category dropdown in sync with the shared set used by tab dialog.
+    if (popupAccommodationRoomCategory) {
+        fetchGlobalRoomCategories().then(cats => {
+            (cats || []).forEach(v => ensureOption(popupAccommodationRoomCategory, v));
+        });
+    }
+    syncPaymentMethodFields();
+})();
+
+function printSuppliersList() {
+    const printUrl = new URL('/finance/suppliers/type/meet-assist/print', window.location.origin);
+    const params = new URLSearchParams(window.location.search);
+    params.forEach(function(value, key) {
+        printUrl.searchParams.set(key, value);
+    });
+    printInPlace(printUrl.toString());
+}
+
+function printInPlace(url) {
+    let frame = document.getElementById('supplier-print-frame');
+    if (!frame) {
+        frame = document.createElement('iframe');
+        frame.id = 'supplier-print-frame';
+        frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
+        document.body.appendChild(frame);
+    }
+    frame.onload = function() {
+        try {
+            frame.contentWindow.focus();
+            frame.contentWindow.print();
+        } catch (e) {
+            alert('Could not open print dialog. Please try again.');
+        }
+    };
+    const sep = url.indexOf('?') >= 0 ? '&' : '?';
+    frame.src = url + sep + '_print_ts=' + Date.now();
+}
+</script>
+
+</body>
+</html>

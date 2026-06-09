@@ -238,6 +238,7 @@
         modal.classList.add('hidden');
         modal.classList.remove('flex');
         modal.style.display = 'none';
+        document.getElementById('new_ma_rep_supplier_type').value = '';
         document.getElementById('new_ma_rep_name').value = '';
         selectedMaRepLanguages.length = 0;
         updateSelectedMaRepLanguagesDisplay();
@@ -265,6 +266,15 @@
     };
 
     window.saveNewMeetAssistRepresentative = function saveNewMeetAssistRepresentative() {
+        const supplierType = document.getElementById('new_ma_rep_supplier_type').value.trim();
+        if (!supplierType) {
+            const err = document.getElementById('add-ma-representative-hub-error');
+            if (err) {
+                err.textContent = 'Please select a supplier type';
+                err.classList.remove('hidden');
+            }
+            return;
+        }
         const repName = document.getElementById('new_ma_rep_name').value.trim();
         if (!repName) {
             const err = document.getElementById('add-ma-representative-hub-error');
@@ -284,6 +294,7 @@
         }
         const financial = getSupplierDialogFinancialFields('new_ma_rep');
         const payload = {
+            supplier_type: supplierType,
             name: repName,
             languages: selectedMaRepLanguages.join(', '),
             phone: document.getElementById('new_ma_rep_phone').value.trim(),

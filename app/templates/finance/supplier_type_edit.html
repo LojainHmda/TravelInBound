@@ -268,12 +268,16 @@ body {
                 </div>
                 <div class="field">
                     <label>Category</label>
-                    <select name="category">
+                    <select name="category" id="accommodationCategory">
                         <option value="">Select...</option>
-                        {% for opt in ['5-Star','4-Star','3-Star','Boutique','Camp','Other'] %}
+                        {% for opt in ['5-Star','4-Star','3-Star','Boutique','Camp','Airbnb','Other'] %}
                         <option value="{{ opt }}" {% if category == opt %}selected{% endif %}>{{ opt }}</option>
                         {% endfor %}
                     </select>
+                </div>
+                <div class="field" id="customCategoryWrap" style="display:none;">
+                    <label>Custom Category</label>
+                    <input type="text" id="customCategoryInput" name="custom_category" placeholder="Enter custom category name" value="">
                 </div>
                 <div class="field">
                     <label>Room Category</label>
@@ -1074,6 +1078,38 @@ body {
 
         entityTypeSelect.addEventListener('change', updateTransportFieldVisibility);
         updateTransportFieldVisibility(); // Initial state
+    }
+
+    // ── Accommodation Category with custom value support ─────────────
+    var categorySelect = document.getElementById('accommodationCategory');
+    var customCategoryWrap = document.getElementById('customCategoryWrap');
+    var customCategoryInput = document.getElementById('customCategoryInput');
+    var standardCategories = ['5-Star','4-Star','3-Star','Boutique','Camp','Airbnb','Other'];
+    var currentCategory = '{{ category }}';
+
+    if (categorySelect && customCategoryWrap && customCategoryInput) {
+        // Initialize: if current category is not standard, set it as custom
+        if (currentCategory && !standardCategories.includes(currentCategory)) {
+            categorySelect.value = 'Other';
+            customCategoryInput.value = currentCategory;
+        }
+
+        function updateCategoryFields() {
+            var selectedValue = categorySelect.value;
+            if (selectedValue === 'Other') {
+                customCategoryWrap.style.display = '';
+            } else {
+                customCategoryWrap.style.display = 'none';
+                customCategoryInput.value = '';
+            }
+        }
+
+        categorySelect.addEventListener('change', updateCategoryFields);
+
+        // Form submission: category stays as "Other", custom value is submitted separately
+        // No need to modify category field - just keep it as "Other"
+
+        updateCategoryFields();
     }
 
     // ── Room Category dropdown (Edit accommodation) ────────────────────

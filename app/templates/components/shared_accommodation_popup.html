@@ -83,15 +83,20 @@
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-700 mb-0.5">Category</label>
-                    <select name="category" id="new_hotel_category">
+                    <select name="hotel_category" id="new_hotel_category">
                         <option value="">Select...</option>
                         <option value="5-Star">5-Star</option>
                         <option value="4-Star">4-Star</option>
                         <option value="3-Star">3-Star</option>
                         <option value="Boutique">Boutique</option>
                         <option value="Camp">Camp</option>
+                        <option value="Airbnb">Airbnb</option>
                         <option value="Other">Other</option>
                     </select>
+                </div>
+                <div id="newCustomCategoryWrap" style="display:none;">
+                    <label class="block text-xs font-medium text-slate-700 mb-0.5">Custom Category</label>
+                    <input type="text" id="newCustomCategoryInput" name="custom_category" placeholder="Enter custom category name">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-700 mb-0.5">Room Category</label>

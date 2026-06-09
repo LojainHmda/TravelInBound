@@ -299,13 +299,13 @@ body { background: #f1f5f9; }
         <div class="sa-row">
           <span class="sa-lbl">Status</span>
           <div class="status-chips" id="saStatusChips">
-            <div class="sts-chip on requested" data-sts="REQUEST" onclick="toggleSaStatus('REQUEST')">
+            <div class="sts-chip requested" data-sts="REQUEST" onclick="toggleSaStatus('REQUEST')">
               <i class="fas fa-circle" style="font-size:7px;"></i> Requested
             </div>
-            <div class="sts-chip on confirmed" data-sts="CONFIRMED" onclick="toggleSaStatus('CONFIRMED')">
+            <div class="sts-chip confirmed" data-sts="CONFIRMED" onclick="toggleSaStatus('CONFIRMED')">
               <i class="fas fa-check-circle" style="font-size:9px;"></i> Confirmed
             </div>
-            <div class="sts-chip on invoiced" data-sts="INVOICED" onclick="toggleSaStatus('INVOICED')">
+            <div class="sts-chip invoiced" data-sts="INVOICED" onclick="toggleSaStatus('INVOICED')">
               <i class="fas fa-file-invoice" style="font-size:9px;"></i> Invoiced
             </div>
           </div>
@@ -420,7 +420,7 @@ const M = {
     view:         'attribute',  // 'attribute' only (removed 'suppliers')
     attribute:    '',
     attrFilter:   '',
-    statuses:     ['REQUEST','CONFIRMED','INVOICED'],
+    statuses:     [],
   },
 };
 
@@ -644,10 +644,10 @@ async function refreshRunDown() {
 // category key → attribute breakdown options (for "Attribute" view)
 const ATTR_DEFS = {
   'guides':        [{val:'',lbl:'By Guide Name'},{val:'language',lbl:'Language'}],
-  'transportation':[{val:'',lbl:'By Company'},{val:'vehicle_type',lbl:'Vehicle Type'}],
+  'transportation':[{val:'',lbl:'By Name'},{val:'supplier_type',lbl:'Supplier Type'},{val:'vehicle_type',lbl:'Vehicle Type'}],
   'restaurant':    [{val:'',lbl:'By Restaurant'},{val:'meal_type',lbl:'Meal Type'},{val:'location',lbl:'Location'}],
   'accommodation': [{val:'',lbl:'By Hotel'},{val:'hotel_category',lbl:'Category'},{val:'meal_plan',lbl:'Meal Plan'},{val:'location',lbl:'Location'}],
-  'meet-assist':   [{val:'',lbl:'By Company'}],
+  'meet-assist':   [{val:'',lbl:'By Name'},{val:'supplier_type',lbl:'Supplier Type'}],
 };
 
 // category key → supplier_type for the aggregation API
@@ -656,7 +656,7 @@ const CAT_SERVICE_MAP = {
   'transportation':'TRANSPORT',
   'restaurant':    'RESTAURANT',
   'accommodation': 'HOTEL',
-  'meet-assist':   'GROUND_HANDLER',
+  'meet-assist':   'MEET_ASSIST',
 };
 
 function _syncSaSupplierType() {
@@ -776,7 +776,6 @@ function toggleSaStatus(s) {
   const i = M.sa.statuses.indexOf(s);
   if (i > -1) M.sa.statuses.splice(i,1); else M.sa.statuses.push(s);
   renderSaControls();
-  applySaColumnVisibility();
 }
 
 async function loadSaData() {
@@ -860,13 +859,20 @@ const STYPE_NAME_LABEL = {
   'guides':        'Guide',
   'transportation':'Supplier / Company',
   'restaurant':    'Restaurant',
-  'meet-assist':   'Company',
+  'meet-assist':   'Supplier / Company',
 };
 
 function buildSaColumns(attrLabel) {
   const nameLabel = STYPE_NAME_LABEL[M.sa.supplierType] || 'Name';
   const cols = [{key:'key', label: nameLabel}];
-  if (M.sa.attribute && attrLabel) cols.push({key:'attr_val', label: attrLabel});
+  if (M.sa.attribute && attrLabel) {
+    // For transportation/meet-assist with supplier_type, use 'Supplier Type' label
+    if ((M.sa.supplierType === 'transportation' || M.sa.supplierType === 'meet-assist') && M.sa.attribute === 'supplier_type') {
+      cols.push({key:'attr_val', label: 'Supplier Type'});
+    } else {
+      cols.push({key:'attr_val', label: attrLabel});
+    }
+  }
   cols.push({key:'confirmed', label:'Confirmed'});
   cols.push({key:'requested', label:'Requested'});
   cols.push({key:'invoiced',  label:'Invoiced'});
@@ -881,9 +887,21 @@ function renderAttrValueChips(values, label) {
   if (!values.length) { row.style.display = 'none'; wrap.innerHTML = ''; return; }
   row.style.display = 'flex';
   lbl.textContent = label;
-  wrap.innerHTML = values.map(v =>
-    `<div class="attr-pill${M.sa.attrFilter === v ? ' on' : ''}" onclick='setAttrFilter(${JSON.stringify(v)})'>${esc(v)}</div>`
-  ).join('');
+
+  // Format display values for Supplier Type
+  const formatDisplay = (v) => {
+    if (label === 'Supplier Type') {
+      if (v === 'Company') return 'Company';
+      if (v === 'Freelance') return 'Freelance';
+      if (v === 'Staff') return 'Staff';
+    }
+    return v;
+  };
+
+  wrap.innerHTML = values.map(v => {
+    const displayVal = formatDisplay(v);
+    return `<div class="attr-pill${M.sa.attrFilter === v ? ' on' : ''}" onclick='setAttrFilter(${JSON.stringify(v)})'>${esc(displayVal)}</div>`;
+  }).join('');
 }
 
 function renderSaTable(columns, items) {
@@ -893,6 +911,17 @@ function renderSaTable(columns, items) {
     if (col.key in BADGES) return true;
     if (items.length > 0) return typeof items[0][col.key] === 'number';
     return false;
+  };
+
+  const formatCellValue = (col, v) => {
+    if (col.key === 'attr_val' && col.label === 'Supplier Type') {
+      // Format entity type values: COMPANY → Company, FREELANCER → Freelance, STAFF → Staff
+      if (v === 'COMPANY') return 'Company';
+      if (v === 'FREELANCER') return 'Freelance';
+      if (v === 'STAFF') return 'Staff';
+      return esc(v ?? '—');
+    }
+    return esc(v ?? '—');
   };
 
   document.getElementById('saHead').innerHTML =
@@ -910,7 +939,7 @@ function renderSaTable(columns, items) {
         return `<td${colAttr} class="num"><span class="cnt-badge ${BADGES[col.key]}">${v ?? 0}</span></td>`;
       if (typeof v === 'number')
         return `<td${colAttr} class="num">${v}</td>`;
-      return `<td${colAttr}>${esc(v ?? '—')}</td>`;
+      return `<td${colAttr}>${formatCellValue(col, v)}</td>`;
     });
     return '<tr>' + cells.join('') + '</tr>';
   }).join('');
@@ -984,6 +1013,7 @@ function applyAllFilters() {
   const to   = document.getElementById('saDateTo').value;
   if (!from || !to) return;
   _applyDateChange(from, to);
+  applySaColumnVisibility();
 }
 
 function printSaTable() {
