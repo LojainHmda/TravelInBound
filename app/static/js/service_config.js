@@ -395,6 +395,7 @@ class ServiceConfigManager {
             const hotelData = {
                 hotel_index: hotelIndex,
                 hotel_name: card.querySelector('[name*="hotel_name"]')?.value || '',
+                hotel_category: card.querySelector('[name*="hotel_category"]')?.value || '',
                 // Hotel-level check-in/check-out dates (dates are managed at hotel level ONLY)
                 check_in_date: card.querySelector('[name="check_in_date"]')?.value || '',
                 check_out_date: card.querySelector('[name="check_out_date"]')?.value || '',
