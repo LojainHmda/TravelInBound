@@ -96,11 +96,26 @@ class Supplier(db.Model):
     @property
     def accommodation_category(self):
         """Extract accommodation category from notes, showing only predefined values"""
+        import json
         VALID_CATEGORIES = ['5-Star', '4-Star', '3-Star', 'Boutique', 'Camp', 'Airbnb', 'Other']
 
         if not self.notes:
             return ''
 
+        # Try parsing as JSON first (new format)
+        try:
+            notes_dict = json.loads(self.notes)
+            if isinstance(notes_dict, dict) and 'category' in notes_dict:
+                value = str(notes_dict['category']).strip()
+                if value in VALID_CATEGORIES:
+                    return value
+                elif value:
+                    return 'Other'
+        except (json.JSONDecodeError, TypeError, ValueError):
+            # Not JSON, try text format
+            pass
+
+        # Try text format (legacy format)
         for line in self.notes.split('\n'):
             if line.startswith('Category: '):
                 value = line[len('Category: '):].strip()

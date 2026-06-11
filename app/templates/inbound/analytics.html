@@ -368,7 +368,7 @@ body { background: #f1f5f9; }
         <thead>
           <tr>
             <th>Date</th><th>Request #</th><th>Contact</th><th>PAX</th>
-            <th>Service</th><th>Description</th><th>Status</th><th>Cost</th><th></th>
+            <th>Service</th><th>Description</th><th>Category</th><th>Status</th><th>Cost</th><th></th>
           </tr>
         </thead>
         <tbody id="rdBody">
@@ -385,6 +385,7 @@ body { background: #f1f5f9; }
               </span>
             </td>
             <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ svc.description }}">{{ svc.description }}</td>
+            <td>{% if svc.service_type == 'HOTEL' and svc.details %}{{ svc.details.split(', Meal:')[0].replace('Category: ', '') if 'Category: ' in svc.details else '—' }}{% else %}—{% endif %}</td>
             <td><span class="sts-badge sts-{{ svc.status.lower() }}">{{ svc.status }}</span></td>
             <td style="font-weight:600;color:#059669;white-space:nowrap;">{% if svc.cost %}${{ "%.0f"|format(svc.cost) }}{% else %}—{% endif %}</td>
             <td><a href="{{ url_for('inbound.view_request',id=svc.request_id) }}" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:11px;"><i class="fas fa-eye"></i></a></td>
@@ -510,7 +511,7 @@ function patchRunDown(services) {
         <table class="rd-table">
           <thead><tr>
             <th>Date</th><th>Request #</th><th>Contact</th><th>PAX</th>
-            <th>Service</th><th>Description</th><th>Status</th><th>Cost</th><th></th>
+            <th>Service</th><th>Description</th><th>Category</th><th>Status</th><th>Cost</th><th></th>
           </tr></thead>
           <tbody id="rdBody"></tbody>
         </table>
@@ -531,6 +532,7 @@ function patchRunDown(services) {
       </td>
       <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
           title="${esc(svc.description)}">${esc(svc.description)}</td>
+      <td>${svc.service_type === 'HOTEL' && svc.hotel_category ? esc(svc.hotel_category) : '—'}</td>
       <td><span class="sts-badge sts-${svc.status.toLowerCase()}">${svc.status}</span></td>
       <td style="font-weight:600;color:#059669;white-space:nowrap;">${svc.cost ? '$' + Math.round(svc.cost) : '—'}</td>
       <td><a href="/inbound/${svc.request_id}/view" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:11px;"><i class="fas fa-eye"></i></a></td>

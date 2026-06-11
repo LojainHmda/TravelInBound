@@ -24,6 +24,7 @@ from app.models.service import ServiceItem
 from app.models.booking import Booking
 from app.models.invoice import Invoice
 from app.models.customer import Customer
+from app.models.supplier import Supplier
 from app.services.proforma_doc_generator import ProformaDocGenerator
 from app.services.voucher_trip_plan_generator import VoucherTripPlanGenerator
 from app.utils import is_valid_phone, PHONE_ERROR
@@ -9550,6 +9551,13 @@ def analytics_dashboard():
             service_stats['HOTEL']['confirmed'] += 1
         service_stats['HOTEL']['pax'] += req.pax or 0
         if not service_types or 'HOTEL' in service_types:
+            # Get category from hotel record, fallback to supplier if empty
+            hotel_category = hotel.hotel_category
+            if not hotel_category and hotel.hotel_name:
+                supplier = Supplier.query.filter_by(name=hotel.hotel_name, supplier_type='HOTEL').first()
+                if supplier:
+                    hotel_category = supplier.accommodation_category
+
             all_services.append({
                 'date': hotel.check_in_date,
                 'service_type': 'HOTEL',
@@ -9558,7 +9566,7 @@ def analytics_dashboard():
                 'contact_name': req.contact_name,
                 'pax': req.pax,
                 'description': f"{hotel.hotel_name} - {hotel.location or ''} ({hotel.nights} nights)",
-                'details': f"Category: {hotel.hotel_category or 'N/A'}, Meal: {hotel.meal_plan}",
+                'details': f"Category: {hotel_category or 'N/A'}, Meal: {hotel.meal_plan}",
                 'status': hotel.status,
                 'cost': hotel.total_cost,
                 'currency': hotel.currency,
@@ -10065,9 +10073,13 @@ def supplier_analytics_api():
         }
         if attribute in ATTR_COLS:
             attr_col, attr_label = ATTR_COLS[attribute]
-            # Use master data for hotel_category, regular queries for others
+            # Use master data for hotel_category, but also include categories actually in use
             if attribute == 'hotel_category':
-                attr_values = _attr_values_from_master(HotelCategory)
+                master_values = _attr_values_from_master(HotelCategory)
+                # Also get categories from actual InboundHotel records
+                used_values = _attr_values(InboundHotel, attr_col, attr_value_filters)
+                # Merge and deduplicate, keeping master order first then adding new ones
+                attr_values = list(dict.fromkeys(master_values + used_values))
             else:
                 attr_values = _attr_values(InboundHotel, attr_col, attr_value_filters)
             af = [attr_col == attr_filter] if attr_filter else []
@@ -10335,6 +10347,13 @@ def analytics_run_down_data():
                 InboundRequest.contact_name.contains(search_query),
             ))
         for h in q.all():
+            # Get category from hotel record, fallback to supplier if empty
+            hotel_category = h.hotel_category
+            if not hotel_category and h.hotel_name:
+                supplier = Supplier.query.filter_by(name=h.hotel_name, supplier_type='HOTEL').first()
+                if supplier:
+                    hotel_category = supplier.accommodation_category
+
             rows.append({
                 'date': h.check_in_date.strftime('%Y-%m-%d'),
                 'date_display': h.check_in_date.strftime('%d %b %Y'),
@@ -10344,6 +10363,7 @@ def analytics_run_down_data():
                 'contact_name': h.request.contact_name,
                 'pax': h.request.pax,
                 'description': f"{h.hotel_name or ''} – {h.location or ''} ({h.nights}n)",
+                'hotel_category': hotel_category or '',
                 'status': h.status,
                 'cost': h.total_cost,
                 'currency': h.currency,
