@@ -1,618 +1,564 @@
 {% extends "base.html" %}
 
-{% block title %}Operations Dashboard{% endblock %}
+{% block title %}Run Down{% endblock %}
 
 {% block content %}
 <style>
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
-    background: #f5f5f7;
+body { background: #f1f5f9; }
+
+.rd-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 18px 20px 40px;
 }
 
-.container-fluid {
-    max-width: 1200px;
+/* ── Header ── */
+.rd-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.rd-header h1 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+.rd-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rd-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all .15s;
+}
+.rd-btn-secondary {
+  background: white;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+.rd-btn-secondary:hover { background: #f8fafc; color: #334155; }
+.rd-btn-print {
+  background: #1e293b;
+  color: white;
+}
+.rd-btn-print:hover { background: #0f172a; color: white; }
+
+/* ── Date filter bar ── */
+.rd-date-bar {
+  background: white;
+  border-radius: 12px;
+  padding: 14px 18px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+  border: 1px solid #f1f5f9;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.rd-date-bar-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.rd-date-inputs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.rd-date-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.rd-date-group label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+.rd-date-group input[type=date] {
+  padding: 7px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #1e293b;
+  background: #f8fafc;
+  min-width: 148px;
+}
+.rd-date-group input[type=date]:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+}
+.rd-date-sep { color: #cbd5e1; font-size: 18px; padding-top: 14px; }
+.rd-btn-date-apply {
+  background: #2563eb;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  transition: background .15s;
+}
+.rd-btn-date-apply:hover { background: #1d4ed8; }
+.rd-date-hint {
+  font-size: 12px;
+  color: #64748b;
+  margin-left: auto;
 }
 
-/* Modern Tab Buttons */
-.ops-tabs {
-    display: flex;
-    gap: 12px;
-    padding: 20px 0 24px 0;
-    border-bottom: 1px solid #e5e7eb;
-    margin-bottom: 24px;
+/* ── Services grid ── */
+.rd-services-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 10px;
+}
+.rd-services-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  padding-top: 8px;
+}
+@media (max-width: 768px) {
+  .rd-services-grid { grid-template-columns: 1fr; }
 }
 
-.ops-tab {
-    position: relative;
-    padding: 10px 20px;
-    background: transparent;
-    border: none;
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: 500;
-    color: #3c3c43;
-    cursor: pointer;
-    transition: all 0.2s ease;
+/* ── Service card ── */
+.rd-service-card {
+  background: white;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  overflow: visible;
+  transition: box-shadow .2s, border-color .2s;
+}
+.rd-service-card:hover {
+  box-shadow: 0 4px 14px rgba(0,0,0,.06);
+}
+.rd-service-card.has-supplier {
+  border-color: #93c5fd;
+}
+.rd-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fafbfc;
+}
+.rd-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.rd-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+.rd-card-body {
+  padding: 14px;
+}
+.rd-field-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  margin-bottom: 6px;
 }
 
-.ops-tab:hover {
-    background: #f5f5f7;
+/* ── Supplier field (rectangle) ── */
+.rd-supplier-wrap {
+  position: relative;
 }
-
-.ops-tab.active {
-    background: #d1e7ff;
-    color: #0066cc;
+.rd-supplier-field {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  display: flex;
+  align-items: stretch;
+  transition: border-color .15s, box-shadow .15s;
 }
-
-.ops-tab .badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: #ff3b30;
-    color: white;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 6px;
-    border-radius: 10px;
-    min-width: 18px;
+.rd-supplier-wrap:focus-within .rd-supplier-field {
+  border-color: #3b82f6;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(59,130,246,.1);
 }
-
-/* Service Cards */
-.service-card {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    transition: all 0.2s ease;
+.rd-supplier-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #1e293b;
+  min-width: 0;
 }
-
-.service-card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    transform: translateY(-1px);
+.rd-supplier-input:focus { outline: none; }
+.rd-supplier-input::placeholder { color: #94a3b8; }
+.rd-supplier-clear {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  padding: 0 10px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: color .15s;
 }
+.rd-supplier-clear:hover { color: #ef4444; }
 
-.service-icon {
-    font-size: 28px;
-    width: 48px;
-    text-align: center;
+/* ── Dropdown (opens above input) ── */
+.rd-dropdown {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 300;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 -6px 24px rgba(0,0,0,.1);
+  max-height: 220px;
+  overflow-y: auto;
 }
-
-.service-details {
-    flex: 1;
+.rd-dropdown.open { display: block; }
+.rd-dd-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-bottom: 1px solid #f8fafc;
+  transition: background .1s;
 }
-
-.service-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #1d1d1f;
-    margin-bottom: 6px;
+.rd-dd-item:last-child { border-bottom: none; }
+.rd-dd-item:hover { background: #eff6ff; }
+.rd-dd-name { font-size: 13px; font-weight: 600; color: #1e293b; }
+.rd-dd-meta { font-size: 11px; color: #94a3b8; }
+.rd-dd-muted {
+  font-size: 12px;
+  color: #94a3b8;
+  cursor: default;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
 }
+.rd-dd-muted:hover { background: transparent; }
 
-.service-meta {
-    display: flex;
-    gap: 16px;
-    font-size: 14px;
-    color: #86868b;
+/* ── Apply button ── */
+.rd-card-actions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
 }
-
-.service-meta-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+.rd-btn-apply {
+  background: #2563eb;
+  color: white;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background .15s;
 }
+.rd-btn-apply:hover { background: #1d4ed8; }
+.rd-btn-apply:disabled { opacity: .6; cursor: not-allowed; }
 
-.service-action {
-    margin-left: auto;
+/* ── Modal ── */
+.rd-modal-table-wrap { overflow-x: auto; }
+.rd-modal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
 }
-
-.btn-complete {
-    background: #34c759;
-    color: white;
-    border: none;
-    padding: 8px 20px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 500;
+.rd-modal-table th {
+  background: #f8fafc;
+  padding: 9px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+  white-space: nowrap;
 }
-
-.btn-assign {
-    background: #e5e7eb;
-    color: #3c3c43;
-    border: none;
-    padding: 8px 20px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 500;
+.rd-modal-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  vertical-align: middle;
 }
-
-.btn-track {
-    background: #34c759;
-    color: white;
-    border: none;
-    padding: 8px 24px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 500;
+.rd-modal-table tr:last-child td { border-bottom: none; }
+.rd-modal-table tr:hover td { background: #f8fafc; }
+.rd-modal-table .num { text-align: center; font-weight: 600; }
+.rd-view-link {
+  color: #2563eb;
+  font-weight: 600;
+  font-size: 12px;
+  text-decoration: none;
 }
-
-.btn-view {
-    background: #007aff;
-    color: white;
-    border: none;
-    padding: 8px 20px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 500;
+.rd-view-link:hover { text-decoration: underline; }
+.rd-modal-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #94a3b8;
 }
+.rd-modal-empty i { font-size: 28px; margin-bottom: 10px; display: block; }
+.rd-modal-empty p { margin: 0; font-size: 13px; }
 
-.tab-content-section {
-    display: none;
+.sts-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  white-space: nowrap;
 }
+.sts-request   { background: #f1f5f9; color: #475569; }
+.sts-quoted    { background: #dbeafe; color: #1e40af; }
+.sts-reserved  { background: #ede9fe; color: #4338ca; }
+.sts-confirmed { background: #dcfce7; color: #166534; }
+.sts-invoiced  { background: #fef9c3; color: #713f12; }
+.sts-completed { background: #d1fae5; color: #065f46; }
+.sts-cancelled { background: #fee2e2; color: #dc2626; }
 
-.tab-content-section.active {
+/* ── Modal status filters ── */
+.rd-modal-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+}
+.rd-modal-filters-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  margin-right: 4px;
+}
+.rd-sts-chip {
+  padding: 4px 11px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #e5e7eb;
+  background: white;
+  color: #374151;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.rd-sts-chip.on.requested { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+.rd-sts-chip.on.confirmed { background: #dcfce7; color: #166534; border-color: #86efac; }
+.rd-sts-chip.on.invoiced  { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+
+/* ── Print layout ── */
+.rd-print-header {
+  display: none;
+}
+@media print {
+  body { background: white !important; }
+  .sidebar, .main-nav, .rd-header-actions, .rd-date-hint,
+  .rd-supplier-clear, .rd-card-actions, .rd-btn-date-apply, .modal, .modal-backdrop,
+  .rd-modal-filters, .rd-btn, nav, footer { display: none !important; }
+
+  .rd-wrap { max-width: 100%; padding: 0; }
+  .rd-print-header {
     display: block;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #1e293b;
+  }
+  .rd-print-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 6px;
+  }
+  .rd-print-header p {
+    font-size: 12px;
+    color: #475569;
+    margin: 0;
+    line-height: 1.5;
+  }
+  .rd-date-bar {
+    box-shadow: none;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 16px;
+  }
+  .rd-service-card {
+    break-inside: avoid;
+    box-shadow: none;
+    margin-bottom: 8px;
+  }
+  .rd-services-grid { gap: 10px; }
+  .rd-dropdown { display: none !important; }
+  .rd-supplier-field { background: white; }
 }
 </style>
 
-<div class="container-fluid py-4">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 style="font-size: 28px; font-weight: 700; color: #1d1d1f;">Operations Dashboard</h2>
-        <a href="{{ url_for('main.index') }}" class="btn btn-sm btn-secondary">
-            <i class="fas fa-arrow-left me-1"></i>Back to Hub
-        </a>
+<div class="rd-wrap" id="runDownApp"
+     data-date-from="{{ date_from.strftime('%Y-%m-%d') }}"
+     data-date-to="{{ date_to.strftime('%Y-%m-%d') }}"
+     data-services="{{ services | map(attribute='key') | join(',') }}">
+
+  {# Print-only header #}
+  <div class="rd-print-header" id="rdPrintHeader">
+    <h2>Run Down Report</h2>
+    <p id="rdPrintHeaderDates"></p>
+  </div>
+
+  <div class="rd-header">
+    <h1><i class="fas fa-clipboard-list" style="color:#2563eb;margin-right:8px;font-size:22px;"></i>Run Down</h1>
+    <div class="rd-header-actions">
+      <button type="button" class="rd-btn rd-btn-print" id="rdPrintBtn">
+        <i class="fas fa-print"></i> Print
+      </button>
+      <a href="{{ url_for('main.index') }}" class="rd-btn rd-btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Hub
+      </a>
     </div>
+  </div>
 
-    <!-- Tabs Navigation -->
-    <div class="ops-tabs">
-        <button class="ops-tab active" onclick="switchTab('daily')">
-            Daily Rundown
-            <span class="badge">{{ status_counts.PROCESSING }}</span>
-        </button>
-        <button class="ops-tab" onclick="switchTab('arrivals')">
-            Arrivals
-        </button>
-        <button class="ops-tab" onclick="switchTab('departures')">
-            Departures
-        </button>
-        <button class="ops-tab" onclick="switchTab('transport')">
-            Transport
-        </button>
-        <button class="ops-tab" onclick="switchTab('tours')">
-            Tours & Guides
-        </button>
-        <button class="ops-tab" onclick="switchTab('restaurants')">
-            Restaurants
-        </button>
-        <button class="ops-tab" onclick="switchTab('calendar')">
-            Calendar View
-        </button>
+  {# Date range filter #}
+  <div class="rd-date-bar">
+    <div class="rd-date-bar-label">
+      <i class="fas fa-calendar-alt"></i> Date Range
     </div>
-
-    <!-- Daily Rundown Tab -->
-    <div id="daily-content" class="tab-content-section active">
-        {% if processing_requests %}
-            {% for request in processing_requests %}
-            <!-- Tour Header -->
-            <div style="margin-bottom: 24px;">
-                <h5 style="font-size: 18px; font-weight: 600; color: #1d1d1f; margin-bottom: 4px;">
-                    <a href="{{ url_for('inbound.view_request', id=request.id) }}" 
-                       style="display: inline-block; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; margin-right: 8px; transition: all 0.2s ease;"
-                       onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(139,92,246,0.4)';"
-                       onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
-                        <i class="fas fa-file-alt"></i> {{ request.request_number }}
-                    </a>
-                    {{ request.contact_name }}
-                </h5>
-                <p style="font-size: 14px; color: #86868b; margin-bottom: 12px;">
-                    <i class="fas fa-calendar"></i> {{ request.from_date.strftime('%b %d') }} - {{ request.to_date.strftime('%b %d, %Y') }} | 
-                    <i class="fas fa-users"></i> {{ request.pax }} PAX | 
-                    <i class="fas fa-globe"></i> {{ request.nationality }}
-                </p>
-
-                <!-- Service Cards -->
-                {% if request.itinerary_rows %}
-                    {% for row in request.itinerary_rows %}
-                    
-                    <!-- Hotel Service Card -->
-                    {% if row.flag_hotel %}
-                    <div class="service-card">
-                        <div class="service-icon">🏨</div>
-                        <div class="service-details">
-                            <div class="service-title">Hotel - {{ row.date.strftime('%A, %b %d') }}</div>
-                            <div class="service-meta">
-                                <span class="service-meta-item"><i class="fas fa-users"></i> {{ request.pax }} passengers</span>
-                                <span class="service-meta-item"><i class="fas fa-map-marker-alt"></i> {{ row.description[:50] }}...</span>
-                                
-                                {# Show cash expenses for this date #}
-                                {% for expense in request.inbound_cash_expenses %}
-                                    {% if expense.date == row.date %}
-                                    <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="service-meta-item" style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 11px; text-decoration: none; cursor: pointer;">
-                                        <i class="fas fa-money-bill-wave"></i> {{ expense.description or expense.category or 'Expense' }}: ${{ expense.amount }}
-                                    </a>
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="service-action">
-                            <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn-view">View</a>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    <!-- Transport Service Card -->
-                    {% if row.flag_transport %}
-                    <div class="service-card">
-                        <div class="service-icon">🚌</div>
-                        <div class="service-details">
-                            <div class="service-title">Transport - {{ row.date.strftime('%A, %b %d') }}</div>
-                            <div class="service-meta">
-                                <span class="service-meta-item"><i class="fas fa-clock"></i> {{ row.date.strftime('%H:%M') }}</span>
-                                <span class="service-meta-item"><i class="fas fa-users"></i> {{ request.pax }} passengers</span>
-                                
-                                {# Show cash expenses for this date #}
-                                {% for expense in request.inbound_cash_expenses %}
-                                    {% if expense.date == row.date %}
-                                    <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="service-meta-item" style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 11px; text-decoration: none; cursor: pointer;">
-                                        <i class="fas fa-money-bill-wave"></i> {{ expense.description or expense.category or 'Expense' }}: ${{ expense.amount }}
-                                    </a>
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="service-action">
-                            <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn-track">Track</a>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    <!-- Meal Service Card -->
-                    {% if row.flag_meal %}
-                    <div class="service-card">
-                        <div class="service-icon">🍽️</div>
-                        <div class="service-details">
-                            <div class="service-title">Meal - {{ row.date.strftime('%A, %b %d') }}</div>
-                            <div class="service-meta">
-                                <span class="service-meta-item"><i class="fas fa-users"></i> {{ request.pax }} passengers</span>
-                                <span class="service-meta-item"><i class="fas fa-map-marker-alt"></i> {{ row.description[:50] }}</span>
-                                
-                                {# Show cash expenses for this date #}
-                                {% for expense in request.inbound_cash_expenses %}
-                                    {% if expense.date == row.date %}
-                                    <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="service-meta-item" style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 11px; text-decoration: none; cursor: pointer;">
-                                        <i class="fas fa-money-bill-wave"></i> {{ expense.description or expense.category or 'Expense' }}: ${{ expense.amount }}
-                                    </a>
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="service-action">
-                            <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn-view">View</a>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    <!-- Guide Service Card -->
-                    {% if row.flag_guide %}
-                    <div class="service-card">
-                        <div class="service-icon">👔</div>
-                        <div class="service-details">
-                            <div class="service-title">Guide - {{ row.date.strftime('%A, %b %d') }}</div>
-                            <div class="service-meta">
-                                <span class="service-meta-item"><i class="fas fa-users"></i> {{ request.pax }} passengers</span>
-                                <span class="service-meta-item"><i class="fas fa-user"></i> Guide Needed</span>
-                                
-                                {# Show cash expenses for this date #}
-                                {% for expense in request.inbound_cash_expenses %}
-                                    {% if expense.date == row.date %}
-                                    <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="service-meta-item" style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 11px; text-decoration: none; cursor: pointer;">
-                                        <i class="fas fa-money-bill-wave"></i> {{ expense.description or expense.category or 'Expense' }}: ${{ expense.amount }}
-                                    </a>
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="service-action">
-                            <button class="btn-assign">Assign Guide</button>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    {% endfor %}
-                {% else %}
-                    <p style="color: #86868b; text-align: center; padding: 40px 0;">No itinerary data available</p>
-                {% endif %}
-            </div>
-            {% endfor %}
-        {% else %}
-            <div style="text-align: center; padding: 60px 20px;">
-                <i class="fas fa-calendar-times" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
-                <p style="font-size: 16px; color: #86868b;">No active operations in PROCESSING status</p>
-            </div>
-        {% endif %}
+    <div class="rd-date-inputs">
+      <div class="rd-date-group">
+        <label for="rdDateFrom">From</label>
+        <input type="date" id="rdDateFrom" value="{{ date_from.strftime('%Y-%m-%d') }}">
+      </div>
+      <span class="rd-date-sep">–</span>
+      <div class="rd-date-group">
+        <label for="rdDateTo">To</label>
+        <input type="date" id="rdDateTo" value="{{ date_to.strftime('%Y-%m-%d') }}">
+      </div>
+      <button type="button" class="rd-btn-date-apply" id="rdDateApply">
+        <i class="fas fa-check"></i> Apply
+      </button>
     </div>
+    <div class="rd-date-hint" id="rdPrintMeta"></div>
+  </div>
 
-    <!-- Arrivals Tab -->
-    <div id="arrivals-content" class="tab-content-section">
-        {% if processing_requests %}
-            {% for request in processing_requests %}
-            <!-- Arrival Card -->
-            <div class="service-card">
-                <div class="service-icon">✈️</div>
-                <div class="service-details">
-                    <div class="service-title">
-                        Arrival - {{ request.from_border or 'TBD' }}
-                        <a href="{{ url_for('inbound.view_request', id=request.id) }}" 
-                           style="display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; text-decoration: none; margin-left: 8px; transition: all 0.2s ease;"
-                           onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(59,130,246,0.4)';"
-                           onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
-                            <i class="fas fa-file-alt"></i> {{ request.request_number }}
-                        </a>
-                    </div>
-                    <div class="service-meta">
-                        <span class="service-meta-item"><i class="fas fa-calendar"></i> {{ request.from_date.strftime('%b %d, %Y') if request.from_date else 'TBD' }}</span>
-                        <span class="service-meta-item"><i class="fas fa-clock"></i> {{ request.from_date.strftime('%H:%M') if request.from_date else '09:00' }}</span>
-                        <span class="service-meta-item"><i class="fas fa-users"></i> {{ request.pax }} passengers</span>
-                        <span class="service-meta-item"><i class="fas fa-map-marker-alt"></i> {{ request.from_border or 'Airport' }}</span>
-                        <span class="service-meta-item"><i class="fas fa-user"></i> {{ request.contact_name }}</span>
-                    </div>
-                </div>
-                <div class="service-action">
-                    <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn-view">View</a>
-                </div>
-            </div>
-            {% endfor %}
-        {% else %}
-            <div style="text-align: center; padding: 60px 20px;">
-                <i class="fas fa-plane-arrival" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
-                <p style="font-size: 16px; color: #86868b;">No arrivals scheduled</p>
-            </div>
-        {% endif %}
-    </div>
-
-    <!-- Departures Tab -->
-    <div id="departures-content" class="tab-content-section">
-        {% if processing_requests %}
-            {% for request in processing_requests %}
-            <!-- Departure Card -->
-            <div class="service-card">
-                <div class="service-icon">🛫</div>
-                <div class="service-details">
-                    <div class="service-title">
-                        Departure - {{ request.to_border or 'TBD' }}
-                        <a href="{{ url_for('inbound.view_request', id=request.id) }}" 
-                           style="display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; text-decoration: none; margin-left: 8px; transition: all 0.2s ease;"
-                           onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(245,158,11,0.4)';"
-                           onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
-                            <i class="fas fa-file-alt"></i> {{ request.request_number }}
-                        </a>
-                    </div>
-                    <div class="service-meta">
-                        <span class="service-meta-item"><i class="fas fa-calendar"></i> {{ request.to_date.strftime('%b %d, %Y') if request.to_date else 'TBD' }}</span>
-                        <span class="service-meta-item"><i class="fas fa-clock"></i> {{ request.to_date.strftime('%H:%M') if request.to_date else '19:00' }}</span>
-                        <span class="service-meta-item"><i class="fas fa-users"></i> {{ request.pax }} passengers</span>
-                        <span class="service-meta-item"><i class="fas fa-map-marker-alt"></i> {{ request.to_border or 'Airport' }}</span>
-                        <span class="service-meta-item"><i class="fas fa-user"></i> {{ request.contact_name }}</span>
-                    </div>
-                </div>
-                <div class="service-action">
-                    <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn-view">View</a>
-                </div>
-            </div>
-            {% endfor %}
-        {% else %}
-            <div style="text-align: center; padding: 60px 20px;">
-                <i class="fas fa-plane-departure" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
-                <p style="font-size: 16px; color: #86868b;">No departures scheduled</p>
-            </div>
-        {% endif %}
-    </div>
-
-    <!-- Transport Tab -->
-    <div id="transport-content" class="tab-content-section">
-        {% if processing_requests %}
-            <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-                    <thead>
-                        <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.2);">From Date</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.2);">To Date</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.2);">PAX</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.2);">Vech Type</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.2);">SUPPLIER</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.2);">Driver</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.2);">Pickup Point</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.2);">Pickup Time</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.2);">Drop-off Point</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.2);">Note</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600;">STATUS</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for request in processing_requests %}
-                            {% if request.itinerary_rows %}
-                                {% for row in request.itinerary_rows %}
-                                    {% if row.flag_transport %}
-                                    <tr style="border-bottom: 1px solid #e5e7eb;">
-                                        <td style="padding: 10px 8px; text-align: center;">{{ row.date.strftime('%d') }}</td>
-                                        <td style="padding: 10px 8px; text-align: center;">{{ row.date.strftime('%d') }}</td>
-                                        <td style="padding: 10px 8px; text-align: center;">{{ request.pax }}</td>
-                                        <td style="padding: 10px 8px; text-align: center;">BUS</td>
-                                        <td style="padding: 10px 8px; text-align: center;">-</td>
-                                        <td style="padding: 10px 8px; text-align: center;">-</td>
-                                        <td style="padding: 10px 8px; text-align: center;">{{ row.description[:30] if row.description else '-' }}</td>
-                                        <td style="padding: 10px 8px; text-align: center;">{{ row.date.strftime('%H:%M') if row.date else '-' }}</td>
-                                        <td style="padding: 10px 8px; text-align: center;">-</td>
-                                        <td style="padding: 10px 8px; text-align: center;">-</td>
-                                        <td style="padding: 10px 8px; text-align: center;">
-                                            <span style="background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">REQUESTED</span>
-                                        </td>
-                                    </tr>
-                                    {% endif %}
-                                {% endfor %}
-                            {% endif %}
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <div style="text-align: center; padding: 60px 20px;">
-                <i class="fas fa-bus" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
-                <p style="font-size: 16px; color: #86868b;">No transport services scheduled</p>
-            </div>
-        {% endif %}
-    </div>
-
-    <!-- Tours & Guides Tab -->
-    <div id="tours-content" class="tab-content-section">
-        <div style="text-align: center; padding: 60px 20px;">
-            <i class="fas fa-user-tie" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
-            <p style="font-size: 16px; color: #86868b;">Tours & Guides view coming soon</p>
+  {# Service cards #}
+  <div class="rd-services-title">Services</div>
+  <div class="rd-services-grid">
+    {% for svc in services %}
+    <div class="rd-service-card" data-rd-card="{{ svc.key }}">
+      <div class="rd-card-head">
+        <div class="rd-card-icon" style="background: {{ svc.accent }}18; color: {{ svc.accent }};">
+          <i class="fas {{ svc.icon }}"></i>
         </div>
-    </div>
-
-    <!-- Restaurants Tab -->
-    <div id="restaurants-content" class="tab-content-section">
-        <div style="text-align: center; padding: 60px 20px;">
-            <i class="fas fa-utensils" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
-            <p style="font-size: 16px; color: #86868b;">Restaurants view coming soon</p>
+        <h3 class="rd-card-title">{{ svc.label }}</h3>
+      </div>
+      <div class="rd-card-body">
+        <div class="rd-field-label">Supplier</div>
+        <div class="rd-supplier-wrap">
+          <div class="rd-dropdown" data-rd-dropdown="{{ svc.key }}" role="listbox"></div>
+          <div class="rd-supplier-field">
+            <input type="text"
+                   class="rd-supplier-input"
+                   data-rd-input="{{ svc.key }}"
+                   placeholder="Search supplier…"
+                   autocomplete="off"
+                   aria-label="{{ svc.label }} supplier">
+            <button type="button" class="rd-supplier-clear" data-rd-clear="{{ svc.key }}" title="Clear" aria-label="Clear supplier">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
         </div>
+        <div class="rd-card-actions">
+          <button type="button" class="rd-btn-apply" data-rd-apply="{{ svc.key }}">
+            <i class="fas fa-check"></i> Apply
+          </button>
+        </div>
+      </div>
     </div>
-
-    <!-- Calendar View Tab -->
-    <div id="calendar-content" class="tab-content-section">
-        {% if processing_requests %}
-            {# Build a dictionary of all dates across all bookings #}
-            {% set all_dates = {} %}
-            {% for request in processing_requests %}
-                {% if request.itinerary_rows %}
-                    {% for row in request.itinerary_rows %}
-                        {% set date_str = row.date.strftime('%Y-%m-%d') %}
-                        {% if date_str not in all_dates %}
-                            {% set _ = all_dates.update({date_str: {'date': row.date, 'bookings': []}}) %}
-                        {% endif %}
-                        {% set _ = all_dates[date_str]['bookings'].append({
-                            'request': request,
-                            'hotel': row.flag_hotel,
-                            'transport': row.flag_transport,
-                            'meal': row.flag_meal,
-                            'guide': row.flag_guide
-                        }) %}
-                    {% endfor %}
-                {% endif %}
-            {% endfor %}
-
-            <!-- Unified Calendar Grid -->
-            {% if all_dates %}
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px;">
-                {% for date_str in all_dates.keys()|sort %}
-                {% set date_data = all_dates[date_str] %}
-                {% set date = date_data['date'] %}
-                {% set bookings = date_data['bookings'] %}
-                
-                <div class="service-card" style="flex-direction: column; padding: 12px; align-items: flex-start;">
-                    <!-- Date Header -->
-                    <div style="background: #d1e7ff; color: #0066cc; padding: 8px; border-radius: 8px; text-align: center; width: 100%; margin-bottom: 8px;">
-                        <div style="font-size: 24px; font-weight: 700;">{{ date.strftime('%d') }}</div>
-                        <div style="font-size: 12px;">{{ date.strftime('%b %Y') }}</div>
-                    </div>
-
-                    <!-- Day Name -->
-                    <div style="font-size: 13px; font-weight: 500; color: #3c3c43; margin-bottom: 8px; text-align: center; width: 100%;">
-                        {{ date.strftime('%A') }}
-                    </div>
-
-                    <!-- Booking Links -->
-                    <div style="width: 100%; margin-bottom: 8px;">
-                        {% set unique_requests = [] %}
-                        {% for booking in bookings %}
-                            {% if booking.request not in unique_requests %}
-                                {% set _ = unique_requests.append(booking.request) %}
-                            {% endif %}
-                        {% endfor %}
-                        
-                        {% for req in unique_requests %}
-                        <a href="{{ url_for('inbound.view_request', id=req.id) }}" 
-                           style="display: flex; align-items: center; gap: 6px; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; padding: 6px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; text-decoration: none; margin-bottom: 4px; transition: all 0.2s ease;"
-                           onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 2px 8px rgba(139,92,246,0.4)';"
-                           onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
-                            <i class="fas fa-file-alt"></i>
-                            <span>{{ req.request_number }} - {{ req.contact_name }}</span>
-                        </a>
-                        {% endfor %}
-                    </div>
-
-                    <!-- Aggregate Service Badges for this date -->
-                    <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; width: 100%;">
-                        {% set has_hotel = namespace(value=False) %}
-                        {% set has_transport = namespace(value=False) %}
-                        {% set has_meal = namespace(value=False) %}
-                        {% set has_guide = namespace(value=False) %}
-                        
-                        {% for booking in bookings %}
-                            {% if booking.hotel %}{% set has_hotel.value = True %}{% endif %}
-                            {% if booking.transport %}{% set has_transport.value = True %}{% endif %}
-                            {% if booking.meal %}{% set has_meal.value = True %}{% endif %}
-                            {% if booking.guide %}{% set has_guide.value = True %}{% endif %}
-                        {% endfor %}
-                        
-                        {% if has_hotel.value %}
-                        <span style="background: #007aff; color: white; font-size: 11px; padding: 4px 8px; border-radius: 12px; display: flex; align-items: center; gap: 4px;">
-                            <i class="fas fa-bed"></i> Hotel
-                        </span>
-                        {% endif %}
-                        {% if has_transport.value %}
-                        <span style="background: #5856d6; color: white; font-size: 11px; padding: 4px 8px; border-radius: 12px; display: flex; align-items: center; gap: 4px;">
-                            <i class="fas fa-car"></i> Transport
-                        </span>
-                        {% endif %}
-                        {% if has_meal.value %}
-                        <span style="background: #ff9500; color: white; font-size: 11px; padding: 4px 8px; border-radius: 12px; display: flex; align-items: center; gap: 4px;">
-                            <i class="fas fa-utensils"></i> Meal
-                        </span>
-                        {% endif %}
-                        {% if has_guide.value %}
-                        <span style="background: #34c759; color: white; font-size: 11px; padding: 4px 8px; border-radius: 12px; display: flex; align-items: center; gap: 4px;">
-                            <i class="fas fa-user-tie"></i> Guide
-                        </span>
-                        {% endif %}
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-                <p style="color: #86868b; text-align: center; padding: 20px 0;">No itinerary data</p>
-            {% endif %}
-        {% else %}
-            <div style="text-align: center; padding: 60px 20px;">
-                <i class="fas fa-calendar-alt" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
-                <p style="font-size: 16px; color: #86868b;">No calendar data available</p>
-            </div>
-        {% endif %}
-    </div>
+    {% endfor %}
+  </div>
 </div>
 
-<script>
-function switchTab(tabName) {
-    // Hide all tabs
-    document.querySelectorAll('.tab-content-section').forEach(section => {
-        section.classList.remove('active');
-    });
-    
-    // Remove active class from all tab buttons
-    document.querySelectorAll('.ops-tab').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    
-    // Show selected tab
-    document.getElementById(tabName + '-content').classList.add('active');
-    
-    // Activate clicked button
-    event.target.closest('.ops-tab').classList.add('active');
-}
-</script>
+{# Requests modal #}
+<div class="modal fade" id="rdRequestsModal" tabindex="-1" aria-labelledby="rdModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content" style="border-radius:12px;border:none;overflow:hidden;">
+      <div class="modal-header" style="background:#1e293b;color:white;padding:14px 20px;">
+        <div>
+          <h5 class="modal-title" id="rdModalTitle" style="font-size:15px;font-weight:700;margin:0;">Supplier Requests</h5>
+          <p id="rdModalSubtitle" style="font-size:12px;opacity:.75;margin:2px 0 0;"></p>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span id="rdModalCount" style="background:rgba(255,255,255,.15);padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600;"></span>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+      </div>
+      <div class="rd-modal-filters" id="rdModalFilters">
+        <span class="rd-modal-filters-label">Filter by status</span>
+        <button type="button" class="rd-sts-chip requested on" data-rd-sts="REQUEST">Requested</button>
+        <button type="button" class="rd-sts-chip confirmed on" data-rd-sts="CONFIRMED">Confirmed</button>
+        <button type="button" class="rd-sts-chip invoiced on" data-rd-sts="INVOICED">Invoiced</button>
+      </div>
+      <div class="modal-body" id="rdModalBody" style="padding:0;"></div>
+      <div class="modal-footer" style="padding:10px 20px;border-top:1px solid #f1f5f9;">
+        <button type="button" class="rd-btn rd-btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/run_down.js') }}"></script>
 {% endblock %}

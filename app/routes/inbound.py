@@ -7767,6 +7767,243 @@ def api_start_processing(request_id):
 # RUN-DOWN PLAN DASHBOARD
 # ============================================================
 
+RUN_DOWN_SERVICES = [
+    {'key': 'HOTEL', 'label': 'Accommodation', 'icon': 'fa-hotel', 'accent': '#1d4ed8'},
+    {'key': 'TRANSPORT', 'label': 'Transportation', 'icon': 'fa-bus', 'accent': '#c2410c'},
+    {'key': 'GUIDE', 'label': 'Guides', 'icon': 'fa-user-tie', 'accent': '#6d28d9'},
+    {'key': 'MEAL', 'label': 'Restaurant', 'icon': 'fa-utensils', 'accent': '#9333ea'},
+    {'key': 'GROUND_HANDLER', 'label': 'Meet & Assist', 'icon': 'fa-handshake', 'accent': '#b45309'},
+    {'key': 'OPTIONAL', 'label': 'Optional', 'icon': 'fa-star', 'accent': '#15803d'},
+]
+
+_RUN_DOWN_SUPPLIER_PATTERNS = {
+    'HOTEL': ['HOTEL', 'ACCOMMODATION'],
+    'TRANSPORT': ['TRANSPORT', 'TRANSPORTATION', 'TRANSFER'],
+    'GUIDE': ['GUIDE'],
+    'MEAL': ['RESTAURANT', 'MEAL', 'FOOD'],
+    'GROUND_HANDLER': ['GROUND_HANDLER', 'MEET', 'ASSIST'],
+}
+
+
+def _parse_run_down_dates(default_to_today=True):
+    """Parse date_from/date_to query params for run-down endpoints."""
+    today = datetime.now().date()
+    date_from_str = request.args.get('date_from', '')
+    date_to_str = request.args.get('date_to', '')
+    try:
+        date_from = (
+            datetime.strptime(date_from_str, '%Y-%m-%d').date()
+            if date_from_str else (today if default_to_today else None)
+        )
+        date_to = (
+            datetime.strptime(date_to_str, '%Y-%m-%d').date()
+            if date_to_str else (today if default_to_today else None)
+        )
+        if date_from and date_to and date_from > date_to:
+            date_from, date_to = date_to, date_from
+        return date_from, date_to
+    except ValueError:
+        return None, None
+
+
+def _run_down_row(request_obj, service_date, description, status, pax, service_type, record_id=None):
+    """Build a normalized run-down request row for API responses."""
+    return {
+        'record_id': record_id,
+        'request_id': request_obj.id,
+        'request_number': request_obj.request_number,
+        'contact_name': request_obj.contact_name or '—',
+        'date': service_date.strftime('%Y-%m-%d'),
+        'date_display': service_date.strftime('%d %b %Y'),
+        'description': description,
+        'status': status or 'REQUEST',
+        'pax': pax or request_obj.pax or 0,
+        'service_type': service_type,
+        'view_url': url_for('inbound.view_request', id=request_obj.id),
+    }
+
+
+def _fetch_run_down_supplier_requests(service_key, supplier, date_from, date_to):
+    """Return inbound service rows for a supplier within a date range."""
+    from app.models.inbound import InboundOptional
+    from sqlalchemy import or_ as _or
+
+    supplier_id = supplier.id
+    supplier_name = supplier.name
+    rows = []
+
+    if service_key == 'HOTEL':
+        hotels = (
+            InboundHotel.query.join(InboundRequest)
+            .filter(
+                InboundHotel.check_in_date >= date_from,
+                InboundHotel.check_in_date <= date_to,
+                InboundHotel.hotel_name.ilike(supplier_name),
+            )
+            .all()
+        )
+        for hotel in hotels:
+            req = hotel.request
+            rows.append(_run_down_row(
+                req,
+                hotel.check_in_date,
+                f"{hotel.hotel_name or supplier_name} – {hotel.location or ''} ({hotel.nights}n)".strip(' –'),
+                hotel.status,
+                req.pax,
+                'HOTEL',
+                hotel.id,
+            ))
+
+    elif service_key == 'TRANSPORT':
+        transports = (
+            InboundTransport.query.join(InboundRequest)
+            .filter(
+                InboundTransport.date >= date_from,
+                InboundTransport.date <= date_to,
+                _or(
+                    InboundTransport.supplier_id == supplier_id,
+                    InboundTransport.supplier.ilike(supplier_name),
+                ),
+            )
+            .all()
+        )
+        for transport in transports:
+            req = transport.request
+            rows.append(_run_down_row(
+                req,
+                transport.date,
+                f"{transport.vehicle_type or 'Transport'} – {transport.pickup_location or 'TBA'} → {transport.dropoff_location or 'TBA'}",
+                transport.status,
+                transport.pax or req.pax,
+                'TRANSPORT',
+                transport.id,
+            ))
+
+    elif service_key == 'GUIDE':
+        guides = (
+            InboundGuide.query.join(InboundRequest)
+            .filter(
+                InboundGuide.date >= date_from,
+                InboundGuide.date <= date_to,
+                InboundGuide.is_cancelled == False,
+                _or(
+                    InboundGuide.supplier_id == supplier_id,
+                    InboundGuide.guide_name.ilike(supplier_name),
+                ),
+            )
+            .all()
+        )
+        for guide in guides:
+            req = guide.request
+            rows.append(_run_down_row(
+                req,
+                guide.date,
+                f"{guide.guide_name or supplier_name} – {guide.language or 'N/A'}",
+                guide.status,
+                req.pax,
+                'GUIDE',
+                guide.id,
+            ))
+
+    elif service_key == 'MEAL':
+        meals = (
+            InboundMeal.query.join(InboundRequest)
+            .filter(
+                InboundMeal.date >= date_from,
+                InboundMeal.date <= date_to,
+                _or(
+                    InboundMeal.supplier_id == supplier_id,
+                    InboundMeal.restaurant.ilike(supplier_name),
+                ),
+            )
+            .all()
+        )
+        for meal in meals:
+            req = meal.request
+            rows.append(_run_down_row(
+                req,
+                meal.date,
+                f"{meal.meal_type or 'Meal'} at {meal.supplier_name or supplier_name}",
+                meal.status,
+                req.pax,
+                'MEAL',
+                meal.id,
+            ))
+
+    elif service_key == 'GROUND_HANDLER':
+        arrivals = (
+            ArrivalBatch.query.join(InboundRequest)
+            .filter(
+                ArrivalBatch.arrival_date >= date_from,
+                ArrivalBatch.arrival_date <= date_to,
+                ArrivalBatch.supplier_id == supplier_id,
+            )
+            .all()
+        )
+        for batch in arrivals:
+            req = batch.request
+            rows.append(_run_down_row(
+                req,
+                batch.arrival_date,
+                f"Arrival – {batch.arrival_point or 'TBA'} ({batch.batch_name or 'Batch'})",
+                'CONFIRMED' if batch.meet_assist else 'REQUEST',
+                batch.pax_count or req.pax,
+                'GROUND_HANDLER',
+                batch.id,
+            ))
+        departures = (
+            DepartureBatch.query.join(InboundRequest)
+            .filter(
+                DepartureBatch.departure_date >= date_from,
+                DepartureBatch.departure_date <= date_to,
+                DepartureBatch.supplier_id == supplier_id,
+            )
+            .all()
+        )
+        for batch in departures:
+            req = batch.request
+            rows.append(_run_down_row(
+                req,
+                batch.departure_date,
+                f"Departure – {batch.departure_point or 'TBA'} ({batch.batch_name or 'Batch'})",
+                'CONFIRMED' if batch.meet_assist else 'REQUEST',
+                batch.pax_count or req.pax,
+                'GROUND_HANDLER',
+                batch.id,
+            ))
+
+    elif service_key == 'OPTIONAL':
+        optionals = (
+            InboundOptional.query.join(InboundRequest)
+            .filter(
+                _or(
+                    InboundOptional.date == None,
+                    db.and_(
+                        InboundOptional.date >= date_from,
+                        InboundOptional.date <= date_to,
+                    ),
+                ),
+                InboundOptional.supplier.ilike(supplier_name),
+            )
+            .all()
+        )
+        for optional in optionals:
+            req = optional.request
+            svc_date = optional.date or date_from
+            rows.append(_run_down_row(
+                req,
+                svc_date,
+                optional.service_name,
+                optional.status,
+                req.pax,
+                'OPTIONAL',
+                optional.id,
+            ))
+
+    rows.sort(key=lambda r: (r['date'], r['request_number']))
+    return rows
+
+
 def get_status_color(status):
     """Map booking status to color for visual coding"""
     status_colors = {
@@ -7781,27 +8018,89 @@ def get_status_color(status):
     return status_colors.get(status, '#94a3b8')
 
 @inbound_bp.route('/run-down')
-
 def run_down_plan():
-    """Run-down plan dashboard showing all PROCESSING itineraries"""
-    # Get all PROCESSING itineraries for current user
-    processing_requests = InboundRequest.query.filter_by(
-        user_id=1,
-        status='PROCESSING'
-    ).order_by(InboundRequest.from_date).all()
+    """Run-down page: date-filtered services with supplier lookup."""
+    today = datetime.now().date()
+    date_from_str = request.args.get('date_from', '')
+    date_to_str = request.args.get('date_to', '')
+    try:
+        date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date() if date_from_str else today
+        date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date() if date_to_str else today
+        if date_from > date_to:
+            date_from, date_to = date_to, date_from
+    except ValueError:
+        date_from = date_to = today
 
-    # Get counts by status for stats bar
-    status_counts = {
-        'REQUEST': InboundRequest.query.filter_by(status='REQUEST').count(),
-        'QUOTED': InboundRequest.query.filter_by(status='QUOTED').count(),
-        'CONFIRMED': InboundRequest.query.filter_by(status='CONFIRMED').count(),
-        'PROCESSING': InboundRequest.query.filter_by(status='PROCESSING').count(),
-        'COMPLETED': InboundRequest.query.filter_by(status='COMPLETED').count()
-    }
+    return render_template(
+        'inbound/run_down.html',
+        services=RUN_DOWN_SERVICES,
+        date_from=date_from,
+        date_to=date_to,
+    )
 
-    return render_template('inbound/run_down.html',
-                         processing_requests=processing_requests,
-                         status_counts=status_counts)
+
+@inbound_bp.route('/run-down/suppliers')
+def run_down_suppliers():
+    """JSON: searchable suppliers for a run-down service category."""
+    from sqlalchemy import or_ as _or
+
+    service_key = request.args.get('service', '').upper()
+    query = request.args.get('q', '').strip()
+    date_from, date_to = _parse_run_down_dates()
+    if date_from is None or date_to is None:
+        return jsonify({'error': 'Invalid date format'}), 400
+
+    patterns = _RUN_DOWN_SUPPLIER_PATTERNS.get(service_key)
+    if patterns is None and service_key != 'OPTIONAL':
+        return jsonify({'error': 'Unknown service type'}), 400
+
+    q = Supplier.query.filter(Supplier.is_active == True)
+    if patterns:
+        q = q.filter(_or(*[Supplier.supplier_type.ilike(f'%{p}%') for p in patterns]))
+    if query:
+        q = q.filter(Supplier.name.ilike(f'%{query}%'))
+    q = q.order_by(Supplier.name).limit(40)
+
+    suppliers = [
+        {'id': s.id, 'name': s.name, 'city': s.city or '', 'country': s.country or ''}
+        for s in q.all()
+    ]
+    return jsonify({
+        'service': service_key,
+        'suppliers': suppliers,
+        'date_from': date_from.strftime('%Y-%m-%d'),
+        'date_to': date_to.strftime('%Y-%m-%d'),
+    })
+
+
+@inbound_bp.route('/run-down/supplier-requests')
+def run_down_supplier_requests():
+    """JSON: inbound requests for a supplier within a service and date range."""
+    service_key = request.args.get('service', '').upper()
+    supplier_id = request.args.get('supplier_id', type=int)
+    date_from, date_to = _parse_run_down_dates()
+    if date_from is None or date_to is None:
+        return jsonify({'error': 'Invalid date format'}), 400
+    if not supplier_id:
+        return jsonify({'error': 'supplier_id is required'}), 400
+    if service_key not in {s['key'] for s in RUN_DOWN_SERVICES}:
+        return jsonify({'error': 'Unknown service type'}), 400
+
+    supplier = Supplier.query.get_or_404(supplier_id)
+    rows = _fetch_run_down_supplier_requests(service_key, supplier, date_from, date_to)
+    service_label = next((s['label'] for s in RUN_DOWN_SERVICES if s['key'] == service_key), service_key)
+
+    return jsonify({
+        'service': service_key,
+        'service_label': service_label,
+        'supplier': {'id': supplier.id, 'name': supplier.name},
+        'date_from': date_from.strftime('%Y-%m-%d'),
+        'date_to': date_to.strftime('%Y-%m-%d'),
+        'date_from_display': date_from.strftime('%d %b %Y'),
+        'date_to_display': date_to.strftime('%d %b %Y'),
+        'requests': rows,
+        'total': len(rows),
+    })
 
 @inbound_bp.route('/api/run-down-data')
 
