@@ -7806,13 +7806,12 @@ def _parse_run_down_dates(default_to_today=True):
         return None, None
 
 
-def _run_down_row(request_obj, service_date, description, status, pax, service_type, record_id=None):
+def _run_down_row(request_obj, service_date, description, status, pax, service_type, record_id=None, meal_type=None, meal_note=None, voucher_notes=None, check_out_date=None, room_type=None, meal_plan=None, hotel_obj=None):
     """Build a normalized run-down request row for API responses."""
-    return {
+    base_row = {
         'record_id': record_id,
         'request_id': request_obj.id,
         'request_number': request_obj.request_number,
-        'contact_name': request_obj.contact_name or '—',
         'date': service_date.strftime('%Y-%m-%d'),
         'date_display': service_date.strftime('%d %b %Y'),
         'description': description,
@@ -7821,6 +7820,63 @@ def _run_down_row(request_obj, service_date, description, status, pax, service_t
         'service_type': service_type,
         'view_url': url_for('inbound.view_request', id=request_obj.id),
     }
+
+    # Add extended fields for specific services
+    if service_type == 'MEAL':
+        group_name = request_obj.agent_ref or ''
+
+        base_row.update({
+            'day_of_week': service_date.strftime('%a'),
+            'group_name': group_name,
+            'nationality': request_obj.nationality or '—',
+            'meal': meal_type if meal_type else 'Meal',
+            'notes': request_obj.special_note or '—',
+            'restaurant_note': request_obj.restaurant_voucher_note or voucher_notes or '—',
+        })
+    elif service_type == 'HOTEL':
+        group_name = request_obj.agent_ref or ''
+
+        # Calculate room counts from HotelRoom records and collect all room categories
+        sgl = dbl = twn = trpl = other = 0
+        room_categories = set()
+        if hotel_obj and hasattr(hotel_obj, 'rooms'):
+            for room in hotel_obj.rooms:
+                room_type_upper = (room.room_type or '').upper()
+                if room_type_upper == 'SINGLE':
+                    sgl += room.room_count or 1
+                elif room_type_upper == 'DOUBLE':
+                    dbl += room.room_count or 1
+                elif room_type_upper == 'TWIN':
+                    twn += room.room_count or 1
+                elif room_type_upper == 'TRIPLE':
+                    trpl += room.room_count or 1
+                elif room_type_upper == 'OTHER':
+                    other += room.room_count or 1
+                # Collect all unique room categories
+                if room.room_category:
+                    room_categories.add(room.room_category)
+
+        total = sgl + dbl + twn + trpl + other
+        room_category = ', '.join(sorted(room_categories)) if room_categories else '—'
+
+        base_row.update({
+            'check_out_date': check_out_date.strftime('%d %b %Y') if check_out_date else '—',
+            'group_name': group_name,
+            'nationality': request_obj.nationality or '—',
+            'meal_plan': meal_plan or '—',
+            'room_category': room_category,
+            'sgl': sgl,
+            'dbl': dbl,
+            'twn': twn,
+            'trpl': trpl,
+            'other': other,
+            'total': total,
+        })
+    else:
+        # Original fields for other services
+        base_row['contact_name'] = request_obj.contact_name or '—'
+
+    return base_row
 
 
 def _fetch_run_down_supplier_requests(service_key, supplier, date_from, date_to):
@@ -7852,6 +7908,10 @@ def _fetch_run_down_supplier_requests(service_key, supplier, date_from, date_to)
                 req.pax,
                 'HOTEL',
                 hotel.id,
+                check_out_date=hotel.check_out_date,
+                room_type=hotel.room_type,
+                meal_plan=hotel.meal_plan,
+                hotel_obj=hotel,
             ))
 
     elif service_key == 'TRANSPORT':
@@ -7928,6 +7988,9 @@ def _fetch_run_down_supplier_requests(service_key, supplier, date_from, date_to)
                 req.pax,
                 'MEAL',
                 meal.id,
+                meal_type=meal.meal_type,
+                meal_note=meal.meal_note,
+                voucher_notes=meal.voucher_notes,
             ))
 
     elif service_key == 'GROUND_HANDLER':
@@ -8059,7 +8122,7 @@ def run_down_suppliers():
         q = q.filter(_or(*[Supplier.supplier_type.ilike(f'%{p}%') for p in patterns]))
     if query:
         q = q.filter(Supplier.name.ilike(f'%{query}%'))
-    q = q.order_by(Supplier.name).limit(40)
+    q = q.order_by(Supplier.name).limit(500)
 
     suppliers = [
         {'id': s.id, 'name': s.name, 'city': s.city or '', 'country': s.country or ''}

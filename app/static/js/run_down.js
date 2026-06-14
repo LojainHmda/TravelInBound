@@ -278,34 +278,127 @@
       </div>`;
     }
 
-    return `<div class="rd-modal-table-wrap">
-      <table class="rd-modal-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Request</th>
-            <th>Contact</th>
-            <th>PAX</th>
-            <th>Description</th>
-            <th>Status</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          ${requests.map((r) => `
+    // Determine service type for different column layouts
+    const isMealService = state.modal && state.modal.serviceKey === 'MEAL';
+    const isHotelService = state.modal && state.modal.serviceKey === 'HOTEL';
+
+    if (isMealService) {
+      // Restaurant table with extended columns
+      return `<div class="rd-modal-table-wrap">
+        <table class="rd-modal-table">
+          <thead>
             <tr>
-              <td>${escapeHtml(r.date_display)}</td>
-              <td><strong>${escapeHtml(r.request_number)}</strong></td>
-              <td>${escapeHtml(r.contact_name)}</td>
-              <td class="num">${r.pax}</td>
-              <td>${escapeHtml(r.description)}</td>
-              <td>${statusBadge(r.status)}</td>
-              <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+              <th>Day</th>
+              <th>Date</th>
+              <th>Request</th>
+              <th>Group Name</th>
+              <th>Nationality</th>
+              <th>Meal</th>
+              <th>PAX No</th>
+              <th>Notes</th>
+              <th>Restaurant Note</th>
+              <th>Status</th>
+              <th></th>
             </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    </div>`;
+          </thead>
+          <tbody>
+            ${requests.map((r) => `
+              <tr>
+                <td>${escapeHtml(r.day_of_week || '—')}</td>
+                <td>${escapeHtml(r.date_display)}</td>
+                <td><strong>${escapeHtml(r.request_number)}</strong></td>
+                <td>${escapeHtml(r.group_name || '—')}</td>
+                <td>${escapeHtml(r.nationality || '—')}</td>
+                <td>${escapeHtml(r.meal || '—')}</td>
+                <td class="num">${r.pax}</td>
+                <td>${escapeHtml(r.notes || '—')}</td>
+                <td>${escapeHtml(r.restaurant_note || '—')}</td>
+                <td>${statusBadge(r.status)}</td>
+                <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>`;
+    } else if (isHotelService) {
+      // Accommodation table with extended columns
+      return `<div class="rd-modal-table-wrap">
+        <table class="rd-modal-table">
+          <thead>
+            <tr>
+              <th>Date From</th>
+              <th>Date To</th>
+              <th>Request</th>
+              <th>Group Name</th>
+              <th>PAX</th>
+              <th>Nationality</th>
+              <th>Meal Plan</th>
+              <th>Room Category</th>
+              <th>SGL</th>
+              <th>DBL</th>
+              <th>TWN</th>
+              <th>TRPL</th>
+              <th>OTHER</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${requests.map((r) => `
+              <tr>
+                <td>${escapeHtml(r.date_display)}</td>
+                <td>${escapeHtml(r.check_out_date || '—')}</td>
+                <td><strong>${escapeHtml(r.request_number)}</strong></td>
+                <td>${escapeHtml(r.group_name || '—')}</td>
+                <td class="num">${r.pax}</td>
+                <td>${escapeHtml(r.nationality || '—')}</td>
+                <td>${escapeHtml(r.meal_plan || '—')}</td>
+                <td>${escapeHtml(r.room_category || '—')}</td>
+                <td class="num">${r.sgl || 0}</td>
+                <td class="num">${r.dbl || 0}</td>
+                <td class="num">${r.twn || 0}</td>
+                <td class="num">${r.trpl || 0}</td>
+                <td class="num">${r.other || 0}</td>
+                <td class="num">${r.total || 0}</td>
+                <td>${statusBadge(r.status)}</td>
+                <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>`;
+    } else {
+      // Original table for other services
+      return `<div class="rd-modal-table-wrap">
+        <table class="rd-modal-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Request</th>
+              <th>Contact</th>
+              <th>PAX</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${requests.map((r) => `
+              <tr>
+                <td>${escapeHtml(r.date_display)}</td>
+                <td><strong>${escapeHtml(r.request_number)}</strong></td>
+                <td>${escapeHtml(r.contact_name)}</td>
+                <td class="num">${r.pax}</td>
+                <td>${escapeHtml(r.description)}</td>
+                <td>${statusBadge(r.status)}</td>
+                <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>`;
+    }
   }
 
   function refreshModalTable() {
@@ -407,9 +500,24 @@
     window.print();
   }
 
+  function showDateAppliedIndicator() {
+    const indicator = $('rdDateApplySuccess');
+    if (indicator) indicator.classList.add('show');
+  }
+
+  function hideDateAppliedIndicator() {
+    const indicator = $('rdDateApplySuccess');
+    if (indicator) indicator.classList.remove('show');
+  }
+
   function bindEvents() {
     const dateApplyBtn = $('rdDateApply');
-    if (dateApplyBtn) dateApplyBtn.addEventListener('click', applyDateRange);
+    if (dateApplyBtn) {
+      dateApplyBtn.addEventListener('click', () => {
+        applyDateRange();
+        showDateAppliedIndicator();
+      });
+    }
 
     const printBtn = $('rdPrintBtn');
     if (printBtn) printBtn.addEventListener('click', printPage);
@@ -463,6 +571,11 @@
         closeAllDropdowns(null);
       }
     });
+
+    const fromEl = $('rdDateFrom');
+    const toEl = $('rdDateTo');
+    if (fromEl) fromEl.addEventListener('change', hideDateAppliedIndicator);
+    if (toEl) toEl.addEventListener('change', hideDateAppliedIndicator);
   }
 
   function init() {
