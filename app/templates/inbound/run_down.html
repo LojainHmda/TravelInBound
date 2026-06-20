@@ -360,6 +360,56 @@ body { background: #f1f5f9; }
   text-decoration: none;
 }
 .rd-view-link:hover { text-decoration: underline; }
+.rd-transport-detail-row td {
+  padding: 0 !important;
+  background: transparent !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-top: none !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+}
+.rd-transport-details {
+  margin-left: 480px;
+  margin-right: 8px;
+  padding: 10px 12px;
+  background: transparent;
+  display: flex;
+  gap: 0;
+  align-items: center;
+  font-size: 12px;
+  color: #52524f;
+  min-height: 38px;
+}
+.rd-transport-day {
+  flex: 0 0 auto;
+  padding: 0 8px 0 0;
+  background: transparent;
+  border: none;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  margin-right: 8px;
+  white-space: nowrap;
+}
+.rd-transport-itinerary {
+  flex: 1;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+}
+.rd-transport-day strong,
+.rd-transport-itinerary strong {
+  color: #64748b;
+  font-weight: 700;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-right: 2px;
+}
 .rd-modal-empty {
   text-align: center;
   padding: 40px 20px;
@@ -543,6 +593,39 @@ body { background: #f1f5f9; }
   <div class="rd-services-title">Services</div>
   <div class="rd-services-grid">
     {% for svc in services %}
+    {% if svc.key == 'OPTIONAL' %}
+    {# Agent card (renders before Optional) #}
+    <div class="rd-service-card" data-rd-agent-card>
+      <div class="rd-card-head">
+        <div class="rd-card-icon" style="background: #8b5cf618; color: #8b5cf6;">
+          <i class="fas fa-user"></i>
+        </div>
+        <h3 class="rd-card-title">Agents</h3>
+      </div>
+      <div class="rd-card-body">
+        <div class="rd-field-label">Agent</div>
+        <div class="rd-supplier-wrap" data-rd-agent-wrap>
+          <div class="rd-dropdown" data-rd-agent-dropdown role="listbox"></div>
+          <div class="rd-supplier-field">
+            <input type="text"
+                   class="rd-supplier-input"
+                   data-rd-agent-input
+                   placeholder="Search agent…"
+                   autocomplete="off"
+                   aria-label="Agent">
+            <button type="button" class="rd-supplier-clear" data-rd-agent-clear title="Clear" aria-label="Clear agent">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        <div class="rd-card-actions">
+          <button type="button" class="rd-btn-apply" data-rd-agent-apply>
+            <i class="fas fa-check"></i> Apply
+          </button>
+        </div>
+      </div>
+    </div>
+    {% endif %}
     <div class="rd-service-card" data-rd-card="{{ svc.key }}">
       <div class="rd-card-head">
         <div class="rd-card-icon" style="background: {{ svc.accent }}18; color: {{ svc.accent }};">

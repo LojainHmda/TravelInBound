@@ -31,6 +31,13 @@
     appliedDateFrom: '',
     appliedDateTo: '',
     services: {},
+    agent: {
+      agentName: '',
+      query: '',
+      results: [],
+      open: false,
+      loading: false,
+    },
     modal: null,
     modalStatusFilters: new Set(['REQUEST', 'CONFIRMED', 'INVOICED']),
     printTs: '',
@@ -101,6 +108,10 @@
         renderDropdown(key);
       }
     });
+    if (exceptKey !== 'agent') {
+      state.agent.open = false;
+      renderAgentDropdown();
+    }
   }
 
   function renderDropdown(serviceKey) {
@@ -206,6 +217,137 @@
     if (card) card.classList.remove('has-supplier');
   }
 
+  function renderAgentDropdown() {
+    const list = document.querySelector('[data-rd-agent-dropdown]');
+    if (!list) return;
+
+    if (!state.agent.open) {
+      list.classList.remove('open');
+      list.innerHTML = '';
+      return;
+    }
+
+    list.classList.add('open');
+    if (state.agent.loading) {
+      list.innerHTML = '<div class="rd-dd-item rd-dd-muted"><i class="fas fa-spinner fa-spin"></i> Searching…</div>';
+      return;
+    }
+    if (!state.agent.results.length) {
+      list.innerHTML = '<div class="rd-dd-item rd-dd-muted">No agents found</div>';
+      return;
+    }
+
+    list.innerHTML = state.agent.results.map((a) => {
+      return `<button type="button" class="rd-dd-item" data-rd-pick-agent data-name="${escapeAttr(a.name)}">
+        <span class="rd-dd-name">${escapeHtml(a.name)}</span>
+      </button>`;
+    }).join('');
+  }
+
+  async function fetchAgents(query) {
+    state.agent.loading = true;
+    state.agent.open = true;
+    renderAgentDropdown();
+
+    const url = `/inbound/run-down/agents?`
+      + `date_from=${encodeURIComponent(state.appliedDateFrom)}`
+      + `&date_to=${encodeURIComponent(state.appliedDateTo)}`
+      + (query ? `&q=${encodeURIComponent(query)}` : '');
+
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Search failed');
+      state.agent.results = data.agents || [];
+    } catch (err) {
+      console.error('Agent search error', err);
+      state.agent.results = [];
+    } finally {
+      state.agent.loading = false;
+      renderAgentDropdown();
+    }
+  }
+
+  function debouncedAgentSearch(query) {
+    clearTimeout(searchTimers['agent']);
+    searchTimers['agent'] = setTimeout(() => fetchAgents(query), 220);
+  }
+
+  function selectAgent(name) {
+    state.agent.agentName = name;
+    state.agent.query = name;
+    state.agent.open = false;
+    renderAgentDropdown();
+
+    const input = document.querySelector('[data-rd-agent-input]');
+    if (input) input.value = name;
+
+    const card = document.querySelector('[data-rd-agent-card]');
+    if (card) card.classList.toggle('has-supplier', Boolean(name));
+  }
+
+  function clearAgent() {
+    state.agent.agentName = '';
+    state.agent.query = '';
+    state.agent.results = [];
+    state.agent.open = false;
+    renderAgentDropdown();
+
+    const input = document.querySelector('[data-rd-agent-input]');
+    if (input) input.value = '';
+
+    const card = document.querySelector('[data-rd-agent-card]');
+    if (card) card.classList.remove('has-supplier');
+  }
+
+  async function applyAgent() {
+    if (!state.agent.agentName) {
+      const input = document.querySelector('[data-rd-agent-input]');
+      if (input) input.focus();
+      return;
+    }
+
+    const applyBtn = document.querySelector('[data-rd-agent-apply]');
+    if (applyBtn) {
+      applyBtn.disabled = true;
+      applyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading…';
+    }
+
+    const url = `/inbound/run-down/agent-requests?agent=${encodeURIComponent(state.agent.agentName)}`
+      + `&date_from=${encodeURIComponent(state.appliedDateFrom)}`
+      + `&date_to=${encodeURIComponent(state.appliedDateTo)}`;
+
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load requests');
+
+      state.modalStatusFilters = new Set(['REQUEST', 'CONFIRMED', 'INVOICED']);
+      document.querySelectorAll('[data-rd-sts]').forEach((chip) => chip.classList.add('on'));
+
+      state.modal = {
+        serviceKey: 'AGENT',
+        serviceLabel: 'Agents',
+        agentName: data.agent,
+        agentType: data.agent_type || 'Direct',
+        dateLabel: data.date_from === data.date_to
+          ? data.date_from_display
+          : `${data.date_from_display} – ${data.date_to_display}`,
+        requests: data.requests || [],
+        total: data.total || 0,
+      };
+      openModal();
+    } catch (err) {
+      console.error('Apply error', err);
+      alert('Could not load agent requests. Please try again.');
+    } finally {
+      if (applyBtn) {
+        applyBtn.disabled = false;
+        applyBtn.innerHTML = '<i class="fas fa-check"></i> Apply';
+      }
+    }
+  }
+
   function applyDateRange() {
     const fromEl = $('rdDateFrom');
     const toEl = $('rdDateTo');
@@ -232,6 +374,10 @@
         debouncedSearch(key, svc.query);
       }
     });
+
+    if (state.agent.query || state.agent.open) {
+      debouncedAgentSearch(state.agent.query);
+    }
   }
 
   function readDateInputs() {
@@ -281,6 +427,9 @@
     // Determine service type for different column layouts
     const isMealService = state.modal && state.modal.serviceKey === 'MEAL';
     const isHotelService = state.modal && state.modal.serviceKey === 'HOTEL';
+    const isGuideService = state.modal && state.modal.serviceKey === 'GUIDE';
+    const isTransportService = state.modal && state.modal.serviceKey === 'TRANSPORT';
+    const isGroundHandlerService = state.modal && state.modal.serviceKey === 'GROUND_HANDLER';
 
     if (isMealService) {
       // Restaurant table with extended columns
@@ -320,6 +469,128 @@
           </tbody>
         </table>
       </div>`;
+    } else if (isGuideService) {
+      // Guides table with extended columns
+      return `<div class="rd-modal-table-wrap">
+        <table class="rd-modal-table">
+          <thead>
+            <tr>
+              <th>Date From</th>
+              <th>Date To</th>
+              <th>Request</th>
+              <th>Group Name</th>
+              <th>PAX</th>
+              <th>Nationality</th>
+              <th>Language</th>
+              <th>Notes</th>
+              <th>Guide Notes</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${requests.map((r) => `
+              <tr>
+                <td>${escapeHtml(r.date_from || '—')}</td>
+                <td>${escapeHtml(r.date_to || '—')}</td>
+                <td><strong>${escapeHtml(r.request_number)}</strong></td>
+                <td>${escapeHtml(r.group_name || '—')}</td>
+                <td class="num">${r.pax}</td>
+                <td>${escapeHtml(r.nationality || '—')}</td>
+                <td>${escapeHtml(r.language || '—')}</td>
+                <td>${escapeHtml(r.notes || '—')}</td>
+                <td>${escapeHtml(r.guide_note || '—')}</td>
+                <td>${statusBadge(r.status)}</td>
+                <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>`;
+    } else if (isTransportService) {
+      // Transportation table with extended columns
+      return `<div class="rd-modal-table-wrap">
+        <table class="rd-modal-table">
+          <thead>
+            <tr>
+              <th>Num</th>
+              <th>Date From</th>
+              <th>Date To</th>
+              <th>Request</th>
+              <th>Group Name</th>
+              <th>Nationality</th>
+              <th>PAX</th>
+              <th>Notes</th>
+              <th>Transportation Notes</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${requests.map((r, idx) => `
+              <tr>
+                <td class="num">${idx + 1}</td>
+                <td>${escapeHtml(r.date_from || '—')}</td>
+                <td>${escapeHtml(r.date_to || '—')}</td>
+                <td><strong>${escapeHtml(r.request_number)}</strong></td>
+                <td>${escapeHtml(r.group_name || '—')}</td>
+                <td>${escapeHtml(r.nationality || '—')}</td>
+                <td class="num">${r.pax}</td>
+                <td>${escapeHtml(r.notes || '—')}</td>
+                <td>${escapeHtml(r.transport_note || '—')}</td>
+                <td>${statusBadge(r.status)}</td>
+                <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+              </tr>
+              <tr class="rd-transport-detail-row">
+                <td colspan="11">
+                  <div class="rd-transport-details">
+                    <div class="rd-transport-day"><strong>Day:</strong> ${escapeHtml(r.day_of_week || '—')}</div>
+                    <div class="rd-transport-itinerary"><strong>Itinerary:</strong> ${escapeHtml(r.pickup_location || '—')} → ${escapeHtml(r.dropoff_location || '—')}</div>
+                  </div>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>`;
+    } else if (isGroundHandlerService) {
+      // Meet & Assist table with extended columns
+      return `<div class="rd-modal-table-wrap">
+        <table class="rd-modal-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Request</th>
+              <th>Group Name</th>
+              <th>PAX</th>
+              <th>Nationality</th>
+              <th>Language</th>
+              <th>Description</th>
+              <th>Notes</th>
+              <th>M&A Notes</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${requests.map((r) => `
+              <tr>
+                <td>${escapeHtml(r.date_display)}</td>
+                <td><strong>${escapeHtml(r.request_number)}</strong></td>
+                <td>${escapeHtml(r.group_name || '—')}</td>
+                <td class="num">${r.pax}</td>
+                <td>${escapeHtml(r.nationality || '—')}</td>
+                <td>${escapeHtml(r.language || '—')}</td>
+                <td>${escapeHtml(r.description || '—')}</td>
+                <td>${escapeHtml(r.notes || '—')}</td>
+                <td>${escapeHtml(r.ma_notes || '—')}</td>
+                <td>${statusBadge(r.status)}</td>
+                <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>`;
     } else if (isHotelService) {
       // Accommodation table with extended columns
       return `<div class="rd-modal-table-wrap">
@@ -333,12 +604,11 @@
               <th>PAX</th>
               <th>Nationality</th>
               <th>Meal Plan</th>
+              <th>Nights</th>
               <th>Room Category</th>
               <th>SGL</th>
               <th>DBL</th>
-              <th>TWN</th>
               <th>TRPL</th>
-              <th>OTHER</th>
               <th>Total</th>
               <th>Status</th>
               <th></th>
@@ -354,13 +624,46 @@
                 <td class="num">${r.pax}</td>
                 <td>${escapeHtml(r.nationality || '—')}</td>
                 <td>${escapeHtml(r.meal_plan || '—')}</td>
+                <td class="num">${r.nights || 0}</td>
                 <td>${escapeHtml(r.room_category || '—')}</td>
                 <td class="num">${r.sgl || 0}</td>
                 <td class="num">${r.dbl || 0}</td>
-                <td class="num">${r.twn || 0}</td>
                 <td class="num">${r.trpl || 0}</td>
-                <td class="num">${r.other || 0}</td>
                 <td class="num">${r.total || 0}</td>
+                <td>${statusBadge(r.status)}</td>
+                <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>`;
+    } else if (state.modal && state.modal.serviceKey === 'AGENT') {
+      // Agent table with request details
+      return `<div class="rd-modal-table-wrap">
+        <table class="rd-modal-table">
+          <thead>
+            <tr>
+              <th>From Date</th>
+              <th>To Date</th>
+              <th>Request ID</th>
+              <th>Contact Name</th>
+              <th>Group Name</th>
+              <th>PAX</th>
+              <th>Nationality</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${requests.map((r) => `
+              <tr>
+                <td>${escapeHtml(r.from_date || '—')}</td>
+                <td>${escapeHtml(r.to_date || '—')}</td>
+                <td><strong>${escapeHtml(r.request_number)}</strong></td>
+                <td>${escapeHtml(r.contact_name || '—')}</td>
+                <td>${escapeHtml(r.group_name || '—')}</td>
+                <td class="num">${r.pax}</td>
+                <td>${escapeHtml(r.nationality || '—')}</td>
                 <td>${statusBadge(r.status)}</td>
                 <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
               </tr>
@@ -481,7 +784,11 @@
     const title = $('rdModalTitle');
     const subtitle = $('rdModalSubtitle');
 
-    if (title) title.textContent = `${m.serviceLabel} — ${m.supplierName}`;
+    if (m.serviceKey === 'AGENT') {
+      if (title) title.textContent = `${m.serviceLabel} — ${m.agentName} — ${m.agentType}`;
+    } else {
+      if (title) title.textContent = `${m.serviceLabel} — ${m.supplierName}`;
+    }
     if (subtitle) subtitle.textContent = `Requests for ${m.dateLabel}`;
 
     refreshModalTable();
@@ -567,10 +874,46 @@
         selectSupplier(pick.dataset.rdPick, Number(pick.dataset.id), pick.dataset.name);
         return;
       }
-      if (!e.target.closest('.rd-supplier-wrap')) {
+      const pickAgent = e.target.closest('[data-rd-pick-agent]');
+      if (pickAgent) {
+        selectAgent(pickAgent.dataset.name);
+        return;
+      }
+      if (!e.target.closest('.rd-supplier-wrap') && !e.target.closest('[data-rd-agent-wrap]')) {
         closeAllDropdowns(null);
       }
     });
+
+    const agentInput = document.querySelector('[data-rd-agent-input]');
+    if (agentInput) {
+      agentInput.addEventListener('focus', () => {
+        state.agent.open = true;
+        debouncedAgentSearch(state.agent.query || agentInput.value);
+      });
+
+      agentInput.addEventListener('input', () => {
+        state.agent.query = agentInput.value;
+        state.agent.agentName = '';
+        debouncedAgentSearch(state.agent.query);
+      });
+
+      agentInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          state.agent.open = false;
+          renderAgentDropdown();
+        }
+      });
+    }
+
+    const agentClearBtn = document.querySelector('[data-rd-agent-clear]');
+    if (agentClearBtn) {
+      agentClearBtn.addEventListener('click', clearAgent);
+    }
+
+    const agentApplyBtn = document.querySelector('[data-rd-agent-apply]');
+    if (agentApplyBtn) {
+      agentApplyBtn.addEventListener('click', applyAgent);
+    }
 
     const fromEl = $('rdDateFrom');
     const toEl = $('rdDateTo');

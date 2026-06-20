@@ -3662,7 +3662,7 @@ def api_save_service_data(request_id):
             # (flights are unique entries, not consolidated by date range)
             flights_html = render_template_string('''
                 {% for arr in arrivals %}
-                <tr class="hover:bg-gray-50" data-service-type="arrival" data-record-id="{{ arr.id }}">
+                <tr class="hover:bg-gray-50" data-service-type="arrival" data-record-id="{{ arr.id }}" data-visa-status="{{ arr.visa_status or '' }}">
                     <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-green-100 text-green-800"><i class="fas fa-plane-arrival mr-1"></i>Arrival</span></td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">{{ arr.arrival_date.strftime('%d %b %Y') if arr.arrival_date else '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">{{ arr.arrival_time.strftime('%H:%M') if arr.arrival_time else '-' }}</td>
@@ -3680,7 +3680,7 @@ def api_save_service_data(request_id):
                 </tr>
                 {% endfor %}
                 {% for dep in departures %}
-                <tr class="hover:bg-gray-50" data-service-type="departure" data-record-id="{{ dep.id }}">
+                <tr class="hover:bg-gray-50" data-service-type="departure" data-record-id="{{ dep.id }}" data-visa-status="{{ dep.visa_status or '' }}">
                     <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-orange-100 text-orange-800"><i class="fas fa-plane-departure mr-1"></i>Departure</span></td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">{{ dep.departure_date.strftime('%d %b %Y') if dep.departure_date else '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">{{ dep.departure_time.strftime('%H:%M') if dep.departure_time else '-' }}</td>
@@ -6172,7 +6172,8 @@ def api_get_flights_data(request_id):
             'driver_name': arr.driver_name or '',
             'meet_assist': bool(getattr(arr, 'meet_assist', False)),
             'representative_name': getattr(arr, 'representative_name', '') or '',
-            'notes': arr.notes or ''  # Same pattern as arrival_point - direct attribute access with or fallback
+            'notes': arr.notes or '',
+            'visa_status': getattr(arr, 'visa_status', '')
         })
         
         # Debug logging for each arrival
@@ -7806,7 +7807,7 @@ def _parse_run_down_dates(default_to_today=True):
         return None, None
 
 
-def _run_down_row(request_obj, service_date, description, status, pax, service_type, record_id=None, meal_type=None, meal_note=None, voucher_notes=None, check_out_date=None, room_type=None, meal_plan=None, hotel_obj=None):
+def _run_down_row(request_obj, service_date, description, status, pax, service_type, record_id=None, meal_type=None, meal_note=None, voucher_notes=None, check_out_date=None, room_type=None, meal_plan=None, hotel_obj=None, end_date=None, language=None, guide_notes=None, transport_notes=None, pickup_location=None, dropoff_location=None, meet_assist_notes=None, supplier_obj=None):
     """Build a normalized run-down request row for API responses."""
     base_row = {
         'record_id': record_id,
@@ -7859,11 +7860,16 @@ def _run_down_row(request_obj, service_date, description, status, pax, service_t
         total = sgl + dbl + twn + trpl + other
         room_category = ', '.join(sorted(room_categories)) if room_categories else '—'
 
+        nights_calc = 0
+        if hotel_obj and hotel_obj.check_in_date and hotel_obj.check_out_date:
+            nights_calc = (hotel_obj.check_out_date - hotel_obj.check_in_date).days
+
         base_row.update({
             'check_out_date': check_out_date.strftime('%d %b %Y') if check_out_date else '—',
             'group_name': group_name,
             'nationality': request_obj.nationality or '—',
             'meal_plan': meal_plan or '—',
+            'nights': nights_calc,
             'room_category': room_category,
             'sgl': sgl,
             'dbl': dbl,
@@ -7871,6 +7877,45 @@ def _run_down_row(request_obj, service_date, description, status, pax, service_t
             'trpl': trpl,
             'other': other,
             'total': total,
+        })
+    elif service_type == 'GUIDE':
+        group_name = request_obj.agent_ref or ''
+
+        base_row.update({
+            'date_from': service_date.strftime('%d %b %Y'),
+            'date_to': end_date.strftime('%d %b %Y') if end_date else service_date.strftime('%d %b %Y'),
+            'group_name': group_name,
+            'nationality': request_obj.nationality or '—',
+            'language': language or '—',
+            'notes': request_obj.special_note or '—',
+            'guide_note': guide_notes or '—',
+        })
+    elif service_type == 'TRANSPORT':
+        group_name = request_obj.agent_ref or ''
+
+        base_row.update({
+            'date_from': service_date.strftime('%d %b %Y'),
+            'date_to': end_date.strftime('%d %b %Y') if end_date else service_date.strftime('%d %b %Y'),
+            'day_of_week': service_date.strftime('%a'),
+            'group_name': group_name,
+            'nationality': request_obj.nationality or '—',
+            'notes': request_obj.special_note or '—',
+            'transport_note': transport_notes or '—',
+            'pickup_location': pickup_location or '—',
+            'dropoff_location': dropoff_location or '—',
+        })
+    elif service_type == 'GROUND_HANDLER':
+        group_name = request_obj.agent_ref or request_obj.contact_name or ''
+        supplier_languages = '—'
+        if supplier_obj and supplier_obj.languages:
+            supplier_languages = supplier_obj.languages
+
+        base_row.update({
+            'group_name': group_name,
+            'nationality': request_obj.nationality or '—',
+            'language': supplier_languages,
+            'notes': request_obj.special_note or '—',
+            'ma_notes': meet_assist_notes or '—',
         })
     else:
         # Original fields for other services
@@ -7929,14 +7974,21 @@ def _fetch_run_down_supplier_requests(service_key, supplier, date_from, date_to)
         )
         for transport in transports:
             req = transport.request
+            # Ensure pickup and dropoff values are retrieved
+            pickup = transport.pickup_location or transport.pickup_point or ''
+            dropoff = transport.dropoff_location or transport.drop_off_point or ''
             rows.append(_run_down_row(
                 req,
                 transport.date,
-                f"{transport.vehicle_type or 'Transport'} – {transport.pickup_location or 'TBA'} → {transport.dropoff_location or 'TBA'}",
+                f"{transport.vehicle_type or 'Transport'} – {pickup or 'TBA'} → {dropoff or 'TBA'}",
                 transport.status,
                 transport.pax or req.pax,
                 'TRANSPORT',
                 transport.id,
+                end_date=transport.end_date,
+                transport_notes=transport.note,
+                pickup_location=pickup,
+                dropoff_location=dropoff,
             ))
 
     elif service_key == 'GUIDE':
@@ -7946,10 +7998,7 @@ def _fetch_run_down_supplier_requests(service_key, supplier, date_from, date_to)
                 InboundGuide.date >= date_from,
                 InboundGuide.date <= date_to,
                 InboundGuide.is_cancelled == False,
-                _or(
-                    InboundGuide.supplier_id == supplier_id,
-                    InboundGuide.guide_name.ilike(supplier_name),
-                ),
+                InboundGuide.guide_name.ilike(supplier_name),
             )
             .all()
         )
@@ -7963,6 +8012,9 @@ def _fetch_run_down_supplier_requests(service_key, supplier, date_from, date_to)
                 req.pax,
                 'GUIDE',
                 guide.id,
+                end_date=guide.end_date,
+                language=guide.language,
+                guide_notes=guide.additional_comments,
             ))
 
     elif service_key == 'MEAL':
@@ -8005,14 +8057,19 @@ def _fetch_run_down_supplier_requests(service_key, supplier, date_from, date_to)
         )
         for batch in arrivals:
             req = batch.request
+            description = f"Arrival – {batch.arrival_point or 'TBA'}"
+            if batch.batch_name and batch.batch_name != 'Batch':
+                description += f" ({batch.batch_name})"
             rows.append(_run_down_row(
                 req,
                 batch.arrival_date,
-                f"Arrival – {batch.arrival_point or 'TBA'} ({batch.batch_name or 'Batch'})",
+                description,
                 'CONFIRMED' if batch.meet_assist else 'REQUEST',
                 batch.pax_count or req.pax,
                 'GROUND_HANDLER',
                 batch.id,
+                meet_assist_notes=batch.notes,
+                supplier_obj=batch.supplier_ref,
             ))
         departures = (
             DepartureBatch.query.join(InboundRequest)
@@ -8025,14 +8082,19 @@ def _fetch_run_down_supplier_requests(service_key, supplier, date_from, date_to)
         )
         for batch in departures:
             req = batch.request
+            description = f"Departure – {batch.departure_point or 'TBA'}"
+            if batch.batch_name and batch.batch_name != 'Batch':
+                description += f" ({batch.batch_name})"
             rows.append(_run_down_row(
                 req,
                 batch.departure_date,
-                f"Departure – {batch.departure_point or 'TBA'} ({batch.batch_name or 'Batch'})",
+                description,
                 'CONFIRMED' if batch.meet_assist else 'REQUEST',
                 batch.pax_count or req.pax,
                 'GROUND_HANDLER',
                 batch.id,
+                meet_assist_notes=batch.notes,
+                supplier_obj=batch.supplier_ref,
             ))
 
     elif service_key == 'OPTIONAL':
@@ -8157,6 +8219,110 @@ def run_down_supplier_requests():
         'service': service_key,
         'service_label': service_label,
         'supplier': {'id': supplier.id, 'name': supplier.name},
+        'date_from': date_from.strftime('%Y-%m-%d'),
+        'date_to': date_to.strftime('%Y-%m-%d'),
+        'date_from_display': date_from.strftime('%d %b %Y'),
+        'date_to_display': date_to.strftime('%d %b %Y'),
+        'requests': rows,
+        'total': len(rows),
+    })
+
+@inbound_bp.route('/run-down/agents')
+def run_down_agents():
+    """JSON: searchable agents (customers) for the Agent Run Down."""
+    query = request.args.get('q', '').strip()
+    date_from, date_to = _parse_run_down_dates()
+    if date_from is None or date_to is None:
+        return jsonify({'error': 'Invalid date format'}), 400
+
+    q = Customer.query
+
+    if query:
+        q = q.filter(
+            (Customer.first_name.ilike(f'%{query}%')) |
+            (Customer.last_name.ilike(f'%{query}%')) |
+            (Customer.company_name.ilike(f'%{query}%'))
+        )
+
+    q = q.order_by(Customer.first_name, Customer.last_name).limit(500)
+    customers = q.all()
+
+    agents = []
+    for c in customers:
+        name = c.name if c.name else (c.company_name or 'Unknown')
+        agents.append({'name': name})
+
+    return jsonify({
+        'agents': agents,
+        'date_from': date_from.strftime('%Y-%m-%d'),
+        'date_to': date_to.strftime('%Y-%m-%d'),
+    })
+
+
+@inbound_bp.route('/run-down/agent-requests')
+def run_down_agent_requests():
+    """JSON: inbound requests for a customer (agent) within a date range."""
+    from sqlalchemy import and_
+
+    agent_name = request.args.get('agent', '').strip()
+    date_from, date_to = _parse_run_down_dates()
+    if date_from is None or date_to is None:
+        return jsonify({'error': 'Invalid date format'}), 400
+    if not agent_name:
+        return jsonify({'error': 'agent is required'}), 400
+
+    customer = None
+    customers = Customer.query.all()
+    for c in customers:
+        customer_full_name = c.name if c.name else (c.company_name or '')
+        if customer_full_name.lower() == agent_name.lower():
+            customer = c
+            break
+
+    if not customer:
+        return jsonify({
+            'agent': agent_name,
+            'date_from': date_from.strftime('%Y-%m-%d'),
+            'date_to': date_to.strftime('%Y-%m-%d'),
+            'date_from_display': date_from.strftime('%d %b %Y'),
+            'date_to_display': date_to.strftime('%d %b %Y'),
+            'requests': [],
+            'total': 0,
+        })
+
+    requests_query = (
+        InboundRequest.query
+        .filter(
+            InboundRequest.customer_id == customer.id,
+            and_(
+                InboundRequest.from_date <= date_to,
+                InboundRequest.to_date >= date_from,
+            ),
+        )
+        .all()
+    )
+
+    rows = []
+    for req in requests_query:
+        customer_type = customer.customer_type or 'Direct'
+
+        rows.append({
+            'request_id': req.id,
+            'request_number': req.request_number,
+            'contact_name': req.contact_name or '—',
+            'group_name': req.agent_ref or '—',
+            'pax': req.pax or 0,
+            'nationality': req.nationality or '—',
+            'from_date': req.from_date.strftime('%d %b %Y') if req.from_date else '—',
+            'to_date': req.to_date.strftime('%d %b %Y') if req.to_date else '—',
+            'type': customer_type,
+            'status': req.status or 'REQUEST',
+            'view_url': url_for('inbound.view_request', id=req.id),
+        })
+
+    return jsonify({
+        'agent': agent_name,
+        'agent_type': customer.customer_type or 'Direct',
         'date_from': date_from.strftime('%Y-%m-%d'),
         'date_to': date_to.strftime('%Y-%m-%d'),
         'date_from_display': date_from.strftime('%d %b %Y'),

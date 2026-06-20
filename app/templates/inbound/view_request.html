@@ -2025,7 +2025,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                     <tbody id="full-summary-flights">
                                         {% if request.arrival_batches %}
                                             {% for batch in request.arrival_batches %}
-                                            <tr class="hover:bg-gray-50" data-service-type="arrival" data-record-id="{{ batch.id }}">
+                                            <tr class="hover:bg-gray-50" data-service-type="arrival" data-record-id="{{ batch.id }}" data-visa-status="{{ batch.visa_status }}">
                                                 <td class="summary-compact-col"><span class="px-2 py-0.5 rounded-full text-[10px] bg-green-100 text-green-800"><i class="fas fa-plane-arrival mr-1"></i>Arrival</span></td>
                                                 <td class="text-center summary-date-col">{{ batch.arrival_date.strftime('%d %b %Y') if batch.arrival_date else '-' }}</td>
                                                 <td class="text-center summary-compact-col">{{ batch.arrival_time.strftime('%H:%M') if batch.arrival_time else '-' }}</td>
@@ -2151,8 +2151,9 @@ input[type="date"]::-webkit-calendar-table-body {
                                 <table class="w-full text-xs summary-table">
                                     <thead>
                                         <tr>
-                                            <th class="text-center summary-date-col">Date</th>
                                             <th class="text-left">Supplier</th>
+                                            <th class="text-center summary-date-col">Date From</th>
+                                            <th class="text-center summary-date-col">Date To</th>
                                             <th class="text-left">Vehicle</th>
                                             <th class="text-left">Pickup</th>
                                             <th class="text-left">Drop-off</th>
@@ -2165,8 +2166,9 @@ input[type="date"]::-webkit-calendar-table-body {
                                         {% if trip_summary_transports %}
                                             {% for transport in trip_summary_transports %}
                                             <tr class="hover:bg-gray-50" data-transport-key="{{ transport.vehicle_type or '' }}-{{ transport.pickup_point or '' }}-{{ transport.drop_off_point or '' }}" data-service-type="transport" data-record-id="{{ transport.id }}">
-                                                <td class="text-center summary-date-col">{{ transport.date_range_display if transport.end_date and transport.end_date != transport.date else (transport.service_date.strftime('%d %b %Y') if transport.service_date else '-') }}</td>
                                                 <td>{{ transport.supplier_name or (transport.supplier.name if transport.supplier else '-') }}</td>
+                                                <td class="text-center summary-date-col">{{ (transport.service_date.strftime('%d %b %Y') if transport.service_date else transport.date.strftime('%d %b %Y') if transport.date else '-') }}</td>
+                                                <td class="text-center summary-date-col">{{ (transport.end_date.strftime('%d %b %Y') if transport.end_date else '-') }}</td>
                                                 <td>{{ transport.vehicle_type or '-' }}</td>
                                                 <td>{{ transport.pickup_point or '-' }}</td>
                                                 <td>{{ transport.drop_off_point or '-' }}</td>
@@ -2187,7 +2189,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                             </tr>
                                             {% endfor %}
                                         {% else %}
-                                            <tr><td colspan="8" class="px-4 py-3 text-center text-gray-500">No transport added</td></tr>
+                                            <tr><td colspan="9" class="px-4 py-3 text-center text-gray-500">No transport added</td></tr>
                                         {% endif %}
                                     </tbody>
                                 </table>
@@ -5087,23 +5089,26 @@ function updateFullSummaryTables() {
         if (transportRows.length > 0) {
             transportSummaryBody.innerHTML = transportRows.map(tr => {
                 const cells = tr.cells;
-                const vehicleType = cells[1]?.textContent.trim() || '';
-                const pickup = cells[2]?.textContent.trim() || '';
-                const dropoff = cells[3]?.textContent.trim() || '';
+                const supplier = cells[0]?.textContent.trim() || '-';
+                const dateFrom = cells[1]?.textContent.trim() || '-';
+                const dateTo = cells[2]?.textContent.trim() || '-';
+                const vehicleType = cells[3]?.textContent.trim() || '';
+                const pickup = cells[4]?.textContent.trim() || '';
+                const dropoff = cells[5]?.textContent.trim() || '';
                 const transportKey = `${vehicleType}-${pickup}-${dropoff}`;
-                const status = cells[4]?.textContent.trim() || 'PENDING';
-                const supplier = tr.getAttribute('data-transport-supplier') || '-';
-                const statusClass = status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
+                const status = cells[6]?.textContent.trim() || 'PENDING';
+                const statusClass = status === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
                                    status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700';
                 const recordId = tr.getAttribute('data-record-id') || tr.getAttribute('data-transport-id') || '';
                 return `<tr class="hover:bg-gray-50" data-transport-key="${transportKey}" data-service-type="transport" data-record-id="${recordId}">
-                    <td class="text-center summary-date-col">${cells[0]?.textContent.trim() || '-'}</td>
                     <td>${supplier}</td>
+                    <td class="text-center summary-date-col">${dateFrom}</td>
+                    <td class="text-center summary-date-col">${dateTo}</td>
                     <td>${vehicleType || '-'}</td>
                     <td>${pickup || '-'}</td>
                     <td>${dropoff || '-'}</td>
                     <td class="text-center summary-compact-col print-hide-status"><span class="px-2 py-0.5 rounded text-[10px] ${statusClass}">${status}</span></td>
-                    <td class="summary-notes-col">${cells[5]?.textContent.trim() || '-'}</td>
+                    <td class="summary-notes-col">${cells[7]?.textContent.trim() || '-'}</td>
                     <td class="text-center summary-compact-col whitespace-nowrap print-hide-actions">
                         <div class="flex items-center justify-center gap-2">
                             <button onclick="handleEditServiceRow('transport', ${recordId})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
@@ -5113,7 +5118,7 @@ function updateFullSummaryTables() {
                 </tr>`;
             }).join('');
         } else {
-            transportSummaryBody.innerHTML = '<tr><td colspan="8" class="px-4 py-3 text-center text-gray-500">No transport added</td></tr>';
+            transportSummaryBody.innerHTML = '<tr><td colspan="9" class="px-4 py-3 text-center text-gray-500">No transport added</td></tr>';
         }
     } else if (transportSummaryBody && !transportsSourceTbody) {
         refreshTransportSummaryTableFromServer();
@@ -5337,7 +5342,18 @@ function printFullSummary(useCurrentWindowForPrint = false) {
     stripLastColumnForPrint('full-summary-guides');
 
     let printContent = tempContainer.innerHTML;
-    
+
+    // Extract visa status from the first arrival row in the summary table
+    const firstArrivalRow = document.querySelector('#full-summary-flights tr[data-service-type="arrival"]');
+    const visaStatusValue = firstArrivalRow ? (firstArrivalRow.getAttribute('data-visa-status') || '') : '';
+    const visaStatusMap = {
+        'NOT_INCLUDED': 'Not Included',
+        'INCLUDED': 'Included',
+        'VISA_FREE': 'Visa Free',
+        'RESTRICTED': 'Restricted'
+    };
+    const visaStatusDisplay = visaStatusMap[visaStatusValue] || visaStatusValue;
+
     const printWindow = useCurrentWindowForPrint ? window : window.open('', '_blank');
     if (!printWindow) {
         showNotification('Popup was blocked. Please allow popups and try again.', 'warning');
@@ -5424,7 +5440,7 @@ function printFullSummary(useCurrentWindowForPrint = false) {
                         </div>
                         <div style="border: 1px solid black; padding: 6px 10px; background: white; font-size: 12px; text-align: left; min-width: 80px;">
                             Visa:<br>
-                            Dep - Tx:
+                            ${visaStatusDisplay}
                         </div>
                     </div>
                 </div>
@@ -5647,39 +5663,39 @@ function generateSummaryTable() {
                         <table class="w-full border-collapse">
                             <thead>
                                 <tr class="bg-gray-100">
-                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Date</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Supplier</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Date From</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Date To</th>
                                     <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Vehicle Type</th>
                                     <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Pickup Point</th>
                                     <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Drop-off Point</th>
-                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Driver</th>
-                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Phone</th>
                                     <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Status</th>
-                                    <th class="border border-gray-300 px-4 py-2 text-right font-semibold">Cost</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Notes</th>
                                 </tr>
                             </thead>
                             <tbody>
     `;
-    
+
     const transportRows = document.querySelectorAll('#transports-table-body tr');
     if (transportRows.length > 0) {
         transportRows.forEach(row => {
             const cells = row.cells;
             tableHTML += `
                 <tr class="hover:bg-gray-50">
-                    <td class="border border-gray-300 px-4 py-2 text-center">${cells[0].textContent.trim()}</td>
-                    <td class="border border-gray-300 px-4 py-2">${cells[1].textContent.trim()}</td>
-                    <td class="border border-gray-300 px-4 py-2">${cells[2].textContent.trim()}</td>
+                    <td class="border border-gray-300 px-4 py-2">${cells[0].textContent.trim()}</td>
+                    <td class="border border-gray-300 px-4 py-2 text-center">${cells[1].textContent.trim()}</td>
+                    <td class="border border-gray-300 px-4 py-2 text-center">${cells[2].textContent.trim()}</td>
                     <td class="border border-gray-300 px-4 py-2">${cells[3].textContent.trim()}</td>
-                    <td class="border border-gray-300 px-4 py-2">-</td>
-                    <td class="border border-gray-300 px-4 py-2">-</td>
+                    <td class="border border-gray-300 px-4 py-2">${cells[4].textContent.trim()}</td>
+                    <td class="border border-gray-300 px-4 py-2">${cells[5].textContent.trim()}</td>
                     <td class="border border-gray-300 px-4 py-2 text-center">
                         <span class="px-2 py-1 rounded text-xs ${
-                            cells[4].textContent.includes('CONFIRMED') ? 'bg-green-100 text-green-700' : 
-                            cells[4].textContent.includes('REQUESTED') ? 'bg-yellow-100 text-yellow-700' : 
+                            cells[6].textContent.includes('CONFIRMED') ? 'bg-green-100 text-green-700' :
+                            cells[6].textContent.includes('REQUESTED') ? 'bg-yellow-100 text-yellow-700' :
                             'bg-gray-100 text-gray-700'
-                        }">${cells[4].textContent.trim()}</span>
+                        }">${cells[6].textContent.trim()}</span>
                     </td>
-                    <td class="border border-gray-300 px-4 py-2 text-right">-</td>
+                    <td class="border border-gray-300 px-4 py-2">${cells[7].textContent.trim()}</td>
                 </tr>
             `;
         });
@@ -9011,6 +9027,7 @@ function updateFlightsSummaryTable() {
                     data.arrivals.forEach(arrival => {
                         const row = document.createElement('tr');
                         row.setAttribute('data-record-id', arrival.id);
+                        row.setAttribute('data-visa-status', arrival.visa_status || '');
                         row.innerHTML = `
                             <td class="px-2 py-1.5 text-center text-xs">${formatDate(arrival.arrival_date)}</td>
                             <td class="px-2 py-1.5 text-center text-xs">${arrival.arrival_time || '-'}</td>

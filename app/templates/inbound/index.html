@@ -633,8 +633,13 @@ button.btn-print {
             <input type="hidden" name="req_sort" value="{{ req_sort|default('desc') }}">
             <div class="filter-group">
                 <label>File No</label>
-                <input type="text" name="request_number" placeholder="e.g., INB-202501-0001" 
-                       value="{{ request.args.get('request_number', '') }}">
+                <input type="text" name="request_number" placeholder="Enter File Number (numbers only)"
+                       inputmode="numeric"
+                       value="{{ request.args.get('request_number', '') }}"
+                       id="fileNumberInput">
+                <div id="fileNumberError" class="text-danger small mt-2" style="display:none;">
+                    Numbers only
+                </div>
             </div>
             <div class="filter-group">
                 <label>Agent</label>
@@ -1022,6 +1027,47 @@ document.addEventListener('DOMContentLoaded', function() {
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
+
+    // Enforce numeric-only input for File Number field
+    var fileNumberInput = document.getElementById('fileNumberInput');
+    var fileNumberError = document.getElementById('fileNumberError');
+    if (fileNumberInput) {
+        fileNumberInput.addEventListener('input', function() {
+            var beforeValue = this.value;
+            this.value = this.value.replace(/[^0-9]/g, '');
+            var hasInvalidChars = beforeValue !== this.value;
+            if (hasInvalidChars) {
+                fileNumberError.style.display = 'block';
+                setTimeout(function() {
+                    if (fileNumberInput.value === '') {
+                        fileNumberError.style.display = 'none';
+                    }
+                }, 2000);
+            } else if (this.value === '') {
+                fileNumberError.style.display = 'none';
+            }
+        });
+        fileNumberInput.addEventListener('paste', function(e) {
+            e.preventDefault();
+            var pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            var numericOnly = pastedText.replace(/[^0-9]/g, '');
+            var hasInvalidChars = pastedText !== numericOnly;
+            this.value = numericOnly;
+            if (hasInvalidChars) {
+                fileNumberError.style.display = 'block';
+                setTimeout(function() {
+                    if (fileNumberInput.value === '') {
+                        fileNumberError.style.display = 'none';
+                    }
+                }, 2000);
+            } else if (this.value === '') {
+                fileNumberError.style.display = 'none';
+            }
+        });
+        fileNumberInput.addEventListener('focus', function() {
+            fileNumberError.style.display = 'none';
+        });
+    }
 
     // Invoiced row: view icon opens a small menu with two invoice options.
     document.querySelectorAll('.invoice-menu-toggle').forEach(function(btn) {
