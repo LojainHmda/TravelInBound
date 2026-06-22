@@ -3115,6 +3115,10 @@ def api_save_service_data(request_id):
                     meal.currency = form_data.get('meal_cost_currency', 'JOD')
                     meal.location = form_data.get('meal_location', '')
                     meal.status = form_data.get('meal_status', STATUS_REQUEST)
+                    # Save restaurant PAX count independently from request PAX
+                    meal_pax = form_data.get('meal_pax', '')
+                    meal.pax_count = int(meal_pax) if meal_pax and str(meal_pax).strip() else None
+                    print(f"[SAVE MEAL UPDATE] meal_pax from form: {repr(meal_pax)}, meal.pax_count set to: {meal.pax_count}")
                     if form_data.get('meal_from_date'):
                         meal.date = datetime.strptime(form_data['meal_from_date'], '%Y-%m-%d').date()
                     meal.end_date = None  # Restaurant uses single date only
@@ -3172,7 +3176,11 @@ def api_save_service_data(request_id):
                     meal.location = form_data.get('meal_location', '')
                     meal.status = form_data.get('meal_status', STATUS_REQUEST)
                     meal.supplier_id = resolved_supplier_id
-                    
+                    # Save restaurant PAX count independently from request PAX
+                    meal_pax = form_data.get('meal_pax', '')
+                    meal.pax_count = int(meal_pax) if meal_pax and str(meal_pax).strip() else None
+                    print(f"[SAVE MEAL CREATE] meal_pax from form: {repr(meal_pax)}, meal.pax_count set to: {meal.pax_count}")
+
                     db.session.add(meal)
                     db.session.flush()  # Flush to get the ID and catch any errors early
                     print(f"[SAVE SERVICE] Created single meal entry for date {from_date}")
@@ -3680,7 +3688,7 @@ def api_save_service_data(request_id):
                 </tr>
                 {% endfor %}
                 {% for dep in departures %}
-                <tr class="hover:bg-gray-50" data-service-type="departure" data-record-id="{{ dep.id }}" data-visa-status="{{ dep.visa_status or '' }}">
+                <tr class="hover:bg-gray-50" data-service-type="departure" data-record-id="{{ dep.id }}" data-departure-tax="{{ dep.departure_tax or '' }}">
                     <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-orange-100 text-orange-800"><i class="fas fa-plane-departure mr-1"></i>Departure</span></td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">{{ dep.departure_date.strftime('%d %b %Y') if dep.departure_date else '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">{{ dep.departure_time.strftime('%H:%M') if dep.departure_time else '-' }}</td>
@@ -5328,7 +5336,7 @@ def api_get_service_record(request_id, service_type, record_id):
                     'restaurant_name': (record.supplier_ref.name if record.supplier_ref else None) or record.restaurant or '',
                     'location': record.location or '',
                     'meal_notes': record.meal_note or '',
-                    'pax_count': getattr(record, 'pax_count', None) or 0,
+                    'pax_count': getattr(record, 'pax_count', None),
                     'supplier_id': record.supplier_id
                 }
 

@@ -1034,6 +1034,12 @@ input[type="date"]::-webkit-calendar-table-body {
                             {% endif %}
                         </button>
                     </div>
+                    <!-- Record Selection Container (Numbered tabs for records) -->
+                    <div id="service-record-tabs" class="hidden px-3 pt-2 pb-2">
+                        <div class="flex items-center gap-1 p-1.5 rounded-full flex-wrap" style="background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);">
+                            <!-- Record tabs will be generated here by JavaScript -->
+                        </div>
+                    </div>
                     <!-- Tab Content Container -->
                     <div id="service-tab-content" class="hidden border border-slate-200 rounded-xl bg-slate-50 mt-2"></div>
                 </div>
@@ -1891,7 +1897,7 @@ input[type="date"]::-webkit-calendar-table-body {
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">PAX Count</label>
-                                    <input type="number" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="meal_pax" min="1" value="{{ request.pax or 1 }}" data-service="meal">
+                                    <input type="number" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="meal_pax" min="1" value="" data-service="meal" placeholder="Number of guests">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Cost per Person</label>
@@ -2049,7 +2055,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                         {% endif %}
                                         {% if request.departure_batches %}
                                             {% for batch in request.departure_batches %}
-                                            <tr class="hover:bg-gray-50" data-service-type="departure" data-record-id="{{ batch.id }}">
+                                            <tr class="hover:bg-gray-50" data-service-type="departure" data-record-id="{{ batch.id }}" data-departure-tax="{{ batch.departure_tax }}">
                                                 <td class="summary-compact-col"><span class="px-2 py-0.5 rounded-full text-[10px] bg-orange-100 text-orange-800"><i class="fas fa-plane-departure mr-1"></i>Departure</span></td>
                                                 <td class="text-center summary-date-col">{{ batch.departure_date.strftime('%d %b %Y') if batch.departure_date else '-' }}</td>
                                                 <td class="text-center summary-compact-col">{{ batch.departure_time.strftime('%H:%M') if batch.departure_time else '-' }}</td>
@@ -2165,7 +2171,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                     <tbody id="full-summary-transports">
                                         {% if trip_summary_transports %}
                                             {% for transport in trip_summary_transports %}
-                                            <tr class="hover:bg-gray-50" data-transport-key="{{ transport.vehicle_type or '' }}-{{ transport.pickup_point or '' }}-{{ transport.drop_off_point or '' }}" data-service-type="transport" data-record-id="{{ transport.id }}">
+                                            <tr class="hover:bg-gray-50" data-transport-key="{{ transport.vehicle_type or '' }}-{{ transport.pickup_point or '' }}-{{ transport.drop_off_point or '' }}" data-supplier-name="{{ transport.supplier_name or (transport.supplier.name if transport.supplier else '') }}" data-service-type="transport" data-record-id="{{ transport.id }}">
                                                 <td>{{ transport.supplier_name or (transport.supplier.name if transport.supplier else '-') }}</td>
                                                 <td class="text-center summary-date-col">{{ (transport.service_date.strftime('%d %b %Y') if transport.service_date else transport.date.strftime('%d %b %Y') if transport.date else '-') }}</td>
                                                 <td class="text-center summary-date-col">{{ (transport.end_date.strftime('%d %b %Y') if transport.end_date else '-') }}</td>
@@ -2206,7 +2212,8 @@ input[type="date"]::-webkit-calendar-table-body {
                                     <thead>
                                         <tr>
                                             <th class="text-left">Guide Name</th>
-                                            <th class="text-center summary-date-col">Date</th>
+                                            <th class="text-center summary-date-col">Date From</th>
+                                            <th class="text-center summary-date-col">Date To</th>
                                             <th class="text-left summary-compact-col">Language</th>
                                             <th class="text-left summary-compact-col">Telephone</th>
                                             <th class="text-center summary-compact-col print-hide-status">Status</th>
@@ -2219,7 +2226,8 @@ input[type="date"]::-webkit-calendar-table-body {
                                             {% for guide in request.inbound_guides %}
                                             <tr class="hover:bg-gray-50" data-guide-name="{{ guide.guide_name or '' }}" data-guide-supplier-id="{{ guide.supplier_id or '' }}" data-service-type="guide" data-record-id="{{ guide.id }}">
                                                 <td class="font-medium">{{ guide.guide_name or '-' }}</td>
-                                                <td class="text-center summary-date-col">{{ guide.date_range_display if guide.end_date and guide.end_date != guide.date else (guide.service_date.strftime('%d %b %Y') if guide.service_date else '-') }}</td>
+                                                <td class="text-center summary-date-col">{{ guide.date.strftime('%d %b %Y') if guide.date else '-' }}</td>
+                                                <td class="text-center summary-date-col">{{ guide.end_date.strftime('%d %b %Y') if guide.end_date else '-' }}</td>
                                                 <td class="summary-compact-col">{{ guide.language or '-' }}</td>
                                                 <td class="summary-compact-col">{{ guide.telephone_number or guide.telephone or '-' }}</td>
                                                 <td class="text-center summary-compact-col print-hide-status">
@@ -2239,7 +2247,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                             </tr>
                                             {% endfor %}
                                         {% else %}
-                                            <tr><td colspan="7" class="px-4 py-3 text-center text-gray-500">No guides added</td></tr>
+                                            <tr><td colspan="8" class="px-4 py-3 text-center text-gray-500">No guides added</td></tr>
                                         {% endif %}
                                     </tbody>
                                 </table>
@@ -2268,7 +2276,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                     <tbody id="full-summary-meals">
                                         {% if request.inbound_meals %}
                                             {% for meal in request.inbound_meals %}
-                                            <tr class="hover:bg-gray-50" data-meal-key="{{ meal.meal_type or '' }}-{{ meal.supplier_name or '' }}" data-service-type="meal" data-record-id="{{ meal.id }}">
+                                            <tr class="hover:bg-gray-50" data-meal-key="{{ meal.meal_type or '' }}-{{ meal.supplier_name or '' }}" data-supplier-name="{{ meal.supplier_name or '' }}" data-service-type="meal" data-record-id="{{ meal.id }}">
                                                 <td class="text-center summary-date-col">{{ meal.date.strftime('%d %b %Y') if meal.date else '-' }}</td>
                                                 <td class="summary-compact-col">{{ meal.meal_type or '-' }}</td>
                                                 <td class="font-medium">{{ meal.supplier_name or '-' }}</td>
@@ -2276,7 +2284,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                                     <span class="px-2 py-0.5 rounded text-[10px] {% if meal.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif meal.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% elif meal.status == 'WAITING_LIST' %}bg-blue-100 text-blue-700{% elif meal.status == 'CANCELLED' %}bg-red-100 text-red-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ meal.status or 'PENDING' }}</span>
                                                 </td>
                                                 <td>{{ meal.location or '-' }}</td>
-                                                <td class="text-center summary-compact-col">{{ request.pax or 0 }}</td>
+                                                <td class="text-center summary-compact-col">{{ meal.pax_count or '-' }}</td>
                                                 <td class="summary-notes-col">{{ meal.meal_note or '-' }}</td>
                                                 <td class="text-center summary-compact-col whitespace-nowrap print-hide-actions">
                                                     {% if not view_only %}
@@ -2804,10 +2812,6 @@ input[type="date"]::-webkit-calendar-table-body {
                         </tr>
                     </tbody>
                 </table>
-                <div class="flex gap-3 mb-4 items-start">
-                    <span class="font-bold text-xs flex-shrink-0">Note and Special Request</span>
-                    <div id="hotelVoucherNoteBox" data-field="hotel-voucher-notes" class="flex-1 border border-black min-h-[60px] px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-400" style="white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word;" contenteditable="true">{{ request.hotel_voucher_note or '' }}</div>
-                </div>
                 <div class="text-[10px] text-slate-600 mb-2">
                     BB = Bed and Breakfast &nbsp;|&nbsp; HB = Half Board &nbsp;|&nbsp; FB = Full Board &nbsp;|&nbsp; RO = Room Only
                 </div>
@@ -3260,6 +3264,8 @@ const requestId = {{ inbound_request.id }};
 const requestNumber = "{{ (inbound_request.request_number or '') | e }}";
 const requestPax = "{{ inbound_request.pax or '' }}";
 const REQUEST_MAPPED_STATUS = "{{ mapped_status }}";
+const isNewRequest = {% if not inbound_request.is_saved %}true{% else %}false{% endif %};
+const viewOnly = {% if view_only %}true{% else %}false{% endif %};
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
 const SYSTEM_NOTES_FIELD_IDS = [
@@ -4251,14 +4257,15 @@ function updateTabColors() {
 }
 
 /**
- * SERVICE TAB LOGIC (Global vs Specific)
+ * SERVICE TAB LOGIC (Record Selection Layer)
  */
 function switchServiceTab(serviceName, rowId = null, tabOptions = null) {
     const targetPanel = document.getElementById('service-panel-' + serviceName);
     const tabContainer = document.getElementById('service-tab-content');
+    const recordTabsContainer = document.getElementById('service-record-tabs');
     const itineraryPanel = document.getElementById('service-panel-itinerary');
     const activeBtn = document.querySelector('.service-btn[data-service="' + serviceName + '"]');
-    
+
     // Update Context
     currentServiceContext = {
         serviceName: serviceName,
@@ -4281,22 +4288,23 @@ function switchServiceTab(serviceName, rowId = null, tabOptions = null) {
             icon.style.color = '';
         }
     });
-    
+
     // Hide all service panels in container
     if (tabContainer) {
         tabContainer.querySelectorAll('.service-panel').forEach(panel => {
             panel.classList.add('hidden');
         });
     }
-    
+
     // Handle itinerary tab specially (it's outside the container)
     if (serviceName === 'itinerary') {
         // Hide other service panels container
         if (tabContainer) tabContainer.classList.add('hidden');
-        
+        if (recordTabsContainer) recordTabsContainer.classList.add('hidden');
+
         // Show itinerary panel
         if (itineraryPanel) itineraryPanel.classList.remove('hidden');
-        
+
         // Style itinerary tab as active (purple theme)
         if (activeBtn) {
             activeBtn.classList.add('active-tab', 'font-semibold', 'bg-purple-600', 'shadow-md');
@@ -4312,15 +4320,17 @@ function switchServiceTab(serviceName, rowId = null, tabOptions = null) {
         updateTabColors();
         return;
     }
-    
+
     // Hide itinerary panel when switching to other tabs
     if (itineraryPanel) itineraryPanel.classList.add('hidden');
 
-    if (targetPanel && tabContainer) {
+    if (targetPanel && tabContainer && recordTabsContainer) {
         const isCurrentlyActive = activeBtn && activeBtn.classList.contains('active-tab');
-        
+
         if (isCurrentlyActive && rowId === null) {
+            // Toggle: if already active, close it and show itinerary
             tabContainer.classList.add('hidden');
+            recordTabsContainer.classList.add('hidden');
             resetContext();
             localStorage.removeItem('activeServiceTab');
             // Show itinerary by default when closing a service tab
@@ -4340,12 +4350,7 @@ function switchServiceTab(serviceName, rowId = null, tabOptions = null) {
             localStorage.setItem('activeServiceTab', 'itinerary');
             updateTabColors();
         } else {
-            if (!tabContainer.contains(targetPanel)) {
-                tabContainer.appendChild(targetPanel);
-            }
-            tabContainer.classList.remove('hidden');
-            targetPanel.classList.remove('hidden');
-            
+            // Activate the service tab
             activeBtn.classList.add('active-tab', 'font-semibold');
             activeBtn.classList.remove('bg-white', 'text-slate-500');
             activeBtn.style.border = '2px solid #3b82f6';
@@ -4356,15 +4361,165 @@ function switchServiceTab(serviceName, rowId = null, tabOptions = null) {
                 activeIcon.style.color = '#3b82f6';
             }
 
-            if (!(tabOptions && tabOptions.skipContextUi)) {
-                updateServiceContextUI(serviceName, rowId);
+            // If rowId is specified, directly load that record
+            if (rowId) {
+                if (!tabContainer.contains(targetPanel)) {
+                    tabContainer.appendChild(targetPanel);
+                }
+                tabContainer.classList.remove('hidden');
+                recordTabsContainer.classList.add('hidden');
+                targetPanel.classList.remove('hidden');
+
+                if (!(tabOptions && tabOptions.skipContextUi)) {
+                    updateServiceContextUI(serviceName, rowId);
+                }
+            } else {
+                // VIEW mode or EDIT mode logic
+
+                if (viewOnly) {
+                    // VIEW SCREEN: Use original behavior (hide form, show summary only)
+                    // Do nothing - keep original view behavior
+                } else if (isNewRequest) {
+                    // NEW REQUEST EDIT: show form directly (original behavior)
+                    if (!tabContainer.contains(targetPanel)) {
+                        tabContainer.appendChild(targetPanel);
+                    }
+                    tabContainer.classList.remove('hidden');
+                    recordTabsContainer.classList.add('hidden');
+                    targetPanel.classList.remove('hidden');
+
+                    if (!(tabOptions && tabOptions.skipContextUi)) {
+                        updateServiceContextUI(serviceName, null);
+                    }
+                } else {
+                    // EXISTING REQUEST EDIT: show numbered record tabs + "New" button
+                    displayRecordTabs(serviceName);
+                    tabContainer.classList.add('hidden');
+                    recordTabsContainer.classList.remove('hidden');
+                }
             }
+
             updateTabColors();
         }
     }
     if (serviceName === 'transport') {
         refreshTransportFlightChips();
     }
+}
+
+/**
+ * Display numbered record tabs for a service
+ */
+function displayRecordTabs(serviceName) {
+    const recordTabsContainer = document.getElementById('service-record-tabs');
+    if (!recordTabsContainer) return;
+
+    // Count records by finding DOM elements with data-service-type and data-record-id
+    const recordElements = document.querySelectorAll(`[data-service-type="${serviceName}"][data-record-id]`);
+    const count = recordElements.length;
+
+    const tabsDiv = recordTabsContainer.querySelector('div');
+    if (!tabsDiv) return;
+
+    // Clear existing tabs
+    tabsDiv.innerHTML = '';
+
+    // Determine if this service type should show names or numbers
+    const useNames = ['hotel', 'transport', 'guide', 'meal'].includes(serviceName);
+
+    // Add tabs for each record (with either numbers or names)
+    for (let i = 1; i <= count; i++) {
+        const tab = document.createElement('button');
+        tab.type = 'button';
+        tab.className = 'flex flex-1 items-center justify-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all bg-white text-slate-700 hover:bg-slate-100 border border-slate-300';
+
+        // Determine the label (number or name)
+        let label = String(i); // Default to number
+
+        if (useNames) {
+            const recordElement = recordElements[i - 1];
+            if (recordElement) {
+                const name = recordElement.dataset.hotelName ||
+                            recordElement.dataset.supplierName ||
+                            recordElement.dataset.guideName ||
+                            '';
+                if (name) {
+                    label = name;
+                }
+            }
+        }
+
+        tab.textContent = label;
+        tab.title = label; // Tooltip for long names
+        tab.onclick = () => switchServiceTabToRecord(serviceName, i);
+        tabsDiv.appendChild(tab);
+    }
+
+    // Add "New" button
+    const newBtn = document.createElement('button');
+    newBtn.type = 'button';
+    newBtn.className = 'flex flex-1 items-center justify-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all bg-green-500 text-white hover:bg-green-600 border border-green-600';
+    newBtn.innerHTML = '<i class="fas fa-plus mr-1"></i>New';
+    newBtn.onclick = () => switchServiceTabToNewRecord(serviceName);
+    tabsDiv.appendChild(newBtn);
+}
+
+/**
+ * Load and display a specific record for editing
+ */
+function switchServiceTabToRecord(serviceName, recordNumber) {
+    // Get the record ID from DOM by finding the nth record for this service type
+    const recordSelector = `[data-service-type="${serviceName}"][data-record-id]`;
+    const records = Array.from(document.querySelectorAll(recordSelector));
+
+    if (recordNumber < 1 || recordNumber > records.length) {
+        console.error(`Record ${recordNumber} not found for service ${serviceName}`);
+        return;
+    }
+
+    const recordElement = records[recordNumber - 1];
+    const recordId = recordElement.dataset.recordId;
+
+    if (!recordId) {
+        console.error(`No record ID found for ${serviceName} record ${recordNumber}`);
+        return;
+    }
+
+    // Hide record tabs
+    const recordTabsContainer = document.getElementById('service-record-tabs');
+    if (recordTabsContainer) recordTabsContainer.classList.add('hidden');
+
+    // Use the existing handleEditServiceRow function to load the record
+    // This handles all the form population, API calls, and UI updates
+    handleEditServiceRow(serviceName, recordId);
+}
+
+/**
+ * Show empty form for creating a new record
+ */
+function switchServiceTabToNewRecord(serviceName) {
+    // Hide record tabs and show the empty form
+    const recordTabsContainer = document.getElementById('service-record-tabs');
+    const tabContainer = document.getElementById('service-tab-content');
+    const targetPanel = document.getElementById('service-panel-' + serviceName);
+
+    if (recordTabsContainer) recordTabsContainer.classList.add('hidden');
+    if (tabContainer && targetPanel) {
+        if (!tabContainer.contains(targetPanel)) {
+            tabContainer.appendChild(targetPanel);
+        }
+        tabContainer.classList.remove('hidden');
+        targetPanel.classList.remove('hidden');
+    }
+
+    // Clear the form and update context to global (new record)
+    clearServiceForm(serviceName);
+    updateServiceContextUI(serviceName, null);
+
+    currentServiceContext = {
+        serviceName: serviceName,
+        rowId: null
+    };
 }
 
 // Updates Badge text and Form Inputs based on Context (Global vs Specific)
@@ -4808,7 +4963,7 @@ function createServiceRowHtml(serviceType, entry) {
             `;
         case 'departure':
             return `
-                <tr class="hover:bg-slate-50" data-service-type="departure" data-record-id="${entry.id}">
+                <tr class="hover:bg-slate-50" data-service-type="departure" data-record-id="${entry.id}" data-departure-tax="${entry.departure_tax || 'NOT_INCLUDED'}">
                     <td class="px-2 py-1.5 text-slate-700">${entry.departure_date ? new Date(entry.departure_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}</td>
                     <td class="px-2 py-1.5 text-slate-500">${entry.departure_time ? new Date('1970-01-01T' + entry.departure_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
                     <td class="px-2 py-1.5 text-slate-700">${entry.departure_point || '-'}</td>
@@ -4828,22 +4983,14 @@ function createServiceRowHtml(serviceType, entry) {
                 </tr>
             `;
         case 'guide':
-            // Format date range if end_date exists and is different from date
-            let guideDate = '-';
-            if (entry.service_date) {
-                const startDate = new Date(entry.service_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-                if (entry.end_date && entry.end_date !== entry.service_date) {
-                    const endDate = new Date(entry.end_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-                    guideDate = `${startDate} - ${endDate}`;
-                } else {
-                    guideDate = startDate;
-                }
-            }
+            const guideFromDate = entry.service_date ? new Date(entry.service_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+            const guideToDate = entry.end_date ? new Date(entry.end_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
             const guideStatusClass = entry.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : entry.status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700';
             return `
                 <tr class="hover:bg-gray-50" data-guide-name="${entry.guide_name || ''}" data-guide-supplier-id="${entry.supplier_id || ''}" data-service-type="guide" data-record-id="${entry.id}">
                     <td class="font-medium">${entry.guide_name || '-'}</td>
-                    <td class="text-center summary-date-col">${guideDate}</td>
+                    <td class="text-center summary-date-col">${guideFromDate}</td>
+                    <td class="text-center summary-date-col">${guideToDate}</td>
                     <td class="summary-compact-col">${entry.language || '-'}</td>
                     <td class="summary-compact-col">${entry.telephone_number || entry.telephone || '-'}</td>
                     <td class="text-center summary-compact-col print-hide-status">
@@ -5055,7 +5202,8 @@ function updateFullSummaryTables() {
         departureRows.forEach(tr => {
             const cells = tr.cells;
             const recordId = tr.getAttribute('data-record-id') || '';
-            flightsHtml += `<tr class="hover:bg-gray-50" data-service-type="departure" data-record-id="${recordId}">
+            const departureTax = tr.getAttribute('data-departure-tax') || '';
+            flightsHtml += `<tr class="hover:bg-gray-50" data-service-type="departure" data-record-id="${recordId}" data-departure-tax="${departureTax}">
                 <td class="summary-compact-col"><span class="px-2 py-0.5 rounded-full text-[10px] bg-orange-100 text-orange-800"><i class="fas fa-plane-departure mr-1"></i>Departure</span></td>
                 <td class="text-center summary-date-col">${cells[0]?.textContent.trim() || '-'}</td>
                 <td class="text-center summary-compact-col">${cells[1]?.textContent.trim() || '-'}</td>
@@ -5343,16 +5491,36 @@ function printFullSummary(useCurrentWindowForPrint = false) {
 
     let printContent = tempContainer.innerHTML;
 
-    // Extract visa status from the first arrival row in the summary table
-    const firstArrivalRow = document.querySelector('#full-summary-flights tr[data-service-type="arrival"]');
-    const visaStatusValue = firstArrivalRow ? (firstArrivalRow.getAttribute('data-visa-status') || '') : '';
+    // Extract all visa status values from all arrival rows in the summary table
+    const arrivalRows = document.querySelectorAll('#full-summary-flights tr[data-service-type="arrival"]');
     const visaStatusMap = {
         'NOT_INCLUDED': 'Not Included',
         'INCLUDED': 'Included',
         'VISA_FREE': 'Visa Free',
         'RESTRICTED': 'Restricted'
     };
-    const visaStatusDisplay = visaStatusMap[visaStatusValue] || visaStatusValue;
+    const visaValues = [];
+    arrivalRows.forEach(row => {
+        const value = row.getAttribute('data-visa-status') || '';
+        if (value) {
+            visaValues.push(visaStatusMap[value] || value);
+        }
+    });
+
+    // Extract all departure tax values from all departure rows in the summary table
+    const departureRows = document.querySelectorAll('#full-summary-flights tr[data-service-type="departure"]');
+    const departureTaxMap = {
+        'NOT_INCLUDED': 'Not Included',
+        'INCLUDED': 'Included',
+        'NONE': 'None'
+    };
+    const depTaxValues = [];
+    departureRows.forEach(row => {
+        const value = row.getAttribute('data-departure-tax') || '';
+        if (value) {
+            depTaxValues.push(departureTaxMap[value] || value);
+        }
+    });
 
     const printWindow = useCurrentWindowForPrint ? window : window.open('', '_blank');
     if (!printWindow) {
@@ -5438,9 +5606,15 @@ function printFullSummary(useCurrentWindowForPrint = false) {
                         <div style="font-size: 12px; color: #555; white-space: nowrap; text-align: right;">
                             Opened Date: {{ request.created_at.strftime('%d %b %Y') if request.created_at else '-' }} &ndash; Last Modified Date: {{ request.updated_at.strftime('%d %b %Y') if request.updated_at else '-' }}
                         </div>
-                        <div style="border: 1px solid black; padding: 6px 10px; background: white; font-size: 12px; text-align: left; min-width: 80px;">
-                            Visa:<br>
-                            ${visaStatusDisplay}
+                        <div style="border: 1px solid black; padding: 8px 12px; background: white; font-size: 12px; text-align: left; min-width: 140px;">
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                ${visaValues.length > 0 ? `<div style="display: flex; flex-wrap: wrap; gap: 15px;">
+                                    ${visaValues.map(v => `<div><span style="font-weight: 600;">Visa:</span> ${v}</div>`).join('')}
+                                </div>` : ''}
+                                ${depTaxValues.length > 0 ? `<div style="display: flex; flex-wrap: wrap; gap: 15px;">
+                                    ${depTaxValues.map(v => `<div><span style="font-weight: 600;">Dep-Tx:</span> ${v}</div>`).join('')}
+                                </div>` : ''}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -6931,7 +7105,7 @@ function clearServiceFormFields(serviceType) {
         if (dnt) dnt.value = 'yes';
     } else if (serviceType === 'meal') {
         const paxField = document.getElementById('meal_pax');
-        if (paxField) paxField.value = '{{ request.pax or 1 }}';
+        if (paxField) paxField.value = '';
     }
     
     // For hotel: reset room distribution fields
@@ -7212,7 +7386,7 @@ function populateServiceForm(serviceType, record) {
             'meal_cost_currency': record.meal_cost_currency || record.currency || 'JOD',
             'meal_notes': record.meal_notes || record.meal_note || '',
             'meal_location': record.location,
-            'meal_pax_count': record.pax_count ?? record.meal_pax_count ?? 0,
+            'meal_pax': (record.pax_count !== null && record.pax_count !== undefined) ? record.pax_count : '',
             'meal_supplier': record.supplier_id
         }
     };
@@ -7257,24 +7431,48 @@ function populateServiceForm(serviceType, record) {
         }
     }
 
-    // Hotel date inputs use Flatpickr altInput; force sync so edit mode always shows saved dates.
+    // Sync date fields with Flatpickr for all services
+    const syncDateField = (fieldId, dateValue) => {
+        if (!dateValue) return;
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+        field.value = dateValue;
+        field.setAttribute('value', dateValue);
+        if (field._flatpickr) {
+            field._flatpickr.setDate(dateValue, false);
+            field._flatpickr.redraw();
+        }
+        // Prevent late default-date logic from overriding loaded edit values.
+        field.setAttribute('data-user-selected', 'true');
+        if (field._setUserSelected) field._setUserSelected(true);
+    };
+
+    // Hotel date inputs
     if (serviceType === 'hotel') {
-        const syncHotelDate = (fieldId, dateValue) => {
-            if (!dateValue) return;
-            const field = document.getElementById(fieldId);
-            if (!field) return;
-            field.value = dateValue;
-            field.setAttribute('value', dateValue);
-            if (field._flatpickr) {
-                field._flatpickr.setDate(dateValue, false);
-                field._flatpickr.redraw();
-            }
-            // Prevent late default-date logic from overriding loaded edit values.
-            field.setAttribute('data-user-selected', 'true');
-            if (field._setUserSelected) field._setUserSelected(true);
-        };
-        syncHotelDate('hotel_check_in', record.check_in_date);
-        syncHotelDate('hotel_check_out', record.check_out_date);
+        syncDateField('hotel_check_in', record.check_in_date);
+        syncDateField('hotel_check_out', record.check_out_date);
+    }
+
+    // Departure date inputs
+    if (serviceType === 'departure') {
+        syncDateField('departure_date', record.departure_date);
+    }
+
+    // Transport date inputs
+    if (serviceType === 'transport') {
+        syncDateField('transport_from_date', record.from_date || record.service_date);
+        syncDateField('transport_to_date', record.to_date || record.service_date);
+    }
+
+    // Guide date inputs
+    if (serviceType === 'guide') {
+        syncDateField('guide_from_date', record.from_date || record.service_date);
+        syncDateField('guide_to_date', record.to_date || record.service_date);
+    }
+
+    // Meal/Restaurant date inputs
+    if (serviceType === 'meal') {
+        syncDateField('meal_from_date', record.from_date || record.date || record.service_date);
     }
     
     if (serviceType === 'guide') {
@@ -7757,13 +7955,35 @@ async function saveServiceData(serviceType) {
                     type: field.type
                 });
             }
+            // Debug logging for meal_pax
+            if (field.id === 'meal_pax') {
+                console.log(`[saveServiceData] Found meal_pax field:`, {
+                    id: field.id,
+                    value: field.value,
+                    type: field.type
+                });
+            }
         }
         // Handle radio buttons (use name attribute, only collect checked value)
         if (field.type === 'radio' && field.name && field.checked) {
             formData[field.name] = field.value;
         }
     });
-    
+
+    // Debug logging for meal service
+    if (serviceType === 'meal') {
+        console.log(`[saveServiceData] ===== MEAL SERVICE FRONTEND DEBUG =====`);
+        console.log(`[saveServiceData] Form data for meal:`, {
+            meal_pax: formData.meal_pax,
+            meal_pax_type: typeof formData.meal_pax,
+            meal_restaurant: formData.meal_restaurant,
+            meal_type: formData.meal_type,
+            meal_from_date: formData.meal_from_date
+        });
+        console.log(`[saveServiceData] Full formData object:`, formData);
+        console.log(`[saveServiceData] =========================================`);
+    }
+
     // Debug logging for arrival service
     if (serviceType === 'arrival') {
         console.log(`[saveServiceData] ===== ARRIVAL NOTES FRONTEND DEBUG =====`);
@@ -8767,17 +8987,13 @@ function createSummaryRowHtml(serviceType, entry) {
             `;
         case 'guide':
             const guideDate2 = entry.service_date ? new Date(entry.service_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
-            // Format date range if end_date exists
-            let guideDateDisplay = guideDate2;
-            if (entry.end_date && entry.end_date !== entry.service_date) {
-                const endDate2 = entry.end_date ? new Date(entry.end_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
-                guideDateDisplay = `${guideDate2} - ${endDate2}`;
-            }
+            const guideEndDate2 = entry.end_date ? new Date(entry.end_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
             const guideStatusClass2 = entry.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : entry.status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700';
             return `
                 <tr class="hover:bg-gray-50" data-guide-name="${entry.guide_name || ''}" data-guide-supplier-id="${entry.supplier_id || ''}" data-service-type="guide" data-record-id="${entry.id}">
                     <td class="font-medium">${entry.guide_name || '-'}</td>
-                    <td class="text-center summary-date-col">${guideDateDisplay}</td>
+                    <td class="text-center summary-date-col">${guideDate2}</td>
+                    <td class="text-center summary-date-col">${guideEndDate2}</td>
                     <td class="summary-compact-col">${entry.language || '-'}</td>
                     <td class="summary-compact-col">${entry.telephone_number || entry.telephone || '-'}</td>
                     <td class="text-center summary-compact-col print-hide-status">
@@ -10558,14 +10774,14 @@ function updatePaxInAllTabs(pax) {
     // Ensure pax is a valid number
     const paxValue = parseInt(pax) || 0;
     
-    // Do NOT include arrival_pax_count and departure_pax_count here!
-    // Arrival and Departure tabs have their own independent PAX values
+    // Do NOT include arrival_pax_count, departure_pax_count, or meal_pax here!
+    // Arrival, Departure, and Restaurant (Meal) tabs have their own independent PAX values
     // that should not be overwritten by the Request Details PAX
     const paxFields = [
-        { id: 'hotel_pax_display', isInput: false },
-        { id: 'meal_pax', isInput: true }
+        { id: 'hotel_pax_display', isInput: false }
         // REMOVED: { id: 'arrival_pax_count', isInput: true },
         // REMOVED: { id: 'departure_pax_count', isInput: true },
+        // REMOVED: { id: 'meal_pax', isInput: true }, - Restaurant PAX must be independent
     ];
     
     // Update each field - use a more aggressive approach to ensure updates work
@@ -12589,6 +12805,39 @@ document.addEventListener('DOMContentLoaded', function() {
     refreshTransportFlightChips();
     updateTabBadges();
     maybeAutoPrintTourFileFromQuery();
+
+    // CRITICAL: Ensure meal_pax is never initialized with Request PAX
+    // The Restaurant PAX must remain independent and empty until the user enters a value
+    const mealPaxField = document.getElementById('meal_pax');
+    if (mealPaxField) {
+        // Store the original value to detect if anything tries to overwrite it
+        mealPaxField._originalValue = mealPaxField.value || '';
+        // Ensure it starts empty - do NOT apply any default values
+        mealPaxField.value = '';
+        console.log('[DOMContentLoaded] Initialized meal_pax to empty (independent from Request PAX)');
+
+        // Add a change listener to protect against external modifications
+        mealPaxField.addEventListener('change', function(e) {
+            console.log('[meal_pax] Value changed:', this.value);
+        });
+    }
+
+    // CRITICAL: Prevent updatePaxInAllTabs or any other code from overwriting meal_pax
+    // by overriding the setter to ignore attempts to modify it when it shouldn't be
+    const requestPaxField = document.querySelector('form#editMode input[name="pax"]');
+    if (requestPaxField) {
+        requestPaxField.addEventListener('change', function() {
+            // After request pax changes, verify meal_pax was not inadvertently modified
+            const mealPax = document.getElementById('meal_pax');
+            if (mealPax) {
+                // Log if someone tried to modify it
+                console.log('[Request PAX Changed] meal_pax should remain independent:', {
+                    meal_pax_value: mealPax.value,
+                    request_pax_value: this.value
+                });
+            }
+        });
+    }
 });
 
 // Add Transport Modal Logic
@@ -13082,7 +13331,6 @@ function printHotelVoucher() {
         <p style="margin-bottom:16px;font-size:12px">Please provide with the following.</p>
         <table><thead><tr><th style="width:14%;">Check In</th><th style="width:14%;">Check Out</th><th style="width:7%;">SGL</th><th style="width:7%;">DBL</th><th style="width:7%;">TWN</th><th style="width:7%;">TRPL</th><th style="width:8%;">OTHER</th><th style="width:36%;">Note</th></tr></thead><tbody>${rowsHtml}</tbody></table>
         <table><thead><tr><th style="width:12%;">Type</th><th style="width:16%;">Room Category</th><th style="width:14%;">Room Option</th><th style="width:10%;">Board</th><th style="width:12%;">Dietary Req</th><th style="width:6%;">Adt</th><th style="width:6%;">Chd</th><th style="width:24%;">Note</th></tr></thead><tbody>${roomListRowsHtml}</tbody></table>
-        <div class="hv-notes-wrap"><span class="hv-notes-title">Note and Special Request.</span><div class="hv-notes">${escapeHtml(specialNote)}</div></div>
         <div class="hv-meal">BB = Bed and Breakfast | HB = Half Board | FB = Full Board | RO = Room Only</div>
         <div class="hv-disclaimer">Our Company is responsible only for service listed above.<br>The presentation of this voucher must be attached to your invoice otherwise payment may be delayed.</div>
         <div class="hv-sig"><span>Authorised Signature :</span><div class="line"></div></div>

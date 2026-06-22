@@ -126,6 +126,14 @@ class InboundRequest(db.Model):
             return 'Linked request'
         return ''
 
+    @property
+    def meal_pax_total(self):
+        """Calculate total pax from all meals, or fall back to request pax if no meals have pax_count set"""
+        if self.inbound_meals:
+            total = sum((m.pax_count for m in self.inbound_meals if m.pax_count), 0)
+            return total if total > 0 else self.pax
+        return self.pax
+
     @classmethod
     def generate_linked_request_number(cls, parent_request):
         """Generate child request number as {parent_number}-1, -2, ..."""
@@ -645,6 +653,7 @@ class InboundMeal(db.Model):
     meal_time = db.Column(db.Time, nullable=True)
     meal_note = db.Column(db.Text, nullable=True)  # Additional notes for restaurant/meal
     voucher_notes = db.Column(db.Text, nullable=True)  # Notes specific to voucher (editable, saved per restaurant)
+    pax_count = db.Column(db.Integer, nullable=True)  # PAX count for this restaurant (independent from request PAX)
 
     # Costing
     cost_per_person = db.Column(db.Float, default=0.0)

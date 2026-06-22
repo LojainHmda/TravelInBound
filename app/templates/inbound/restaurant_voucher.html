@@ -162,7 +162,7 @@
             </div>
             <div class="restaurant-voucher-booking-right">
                 <div class="voucher-box">Request No: {{ request.request_number or request.document_sequence or '-' }}</div>
-                <div class="guests-box">Pax #: {{ request.pax or 0 }}</div>
+                <div class="guests-box">Pax #: {{ request.meal_pax_total or 0 }}</div>
             </div>
         </div>
         <p class="restaurant-voucher-provide">Please provide with the following.</p>
