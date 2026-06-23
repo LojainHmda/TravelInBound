@@ -1945,7 +1945,7 @@ input[type="date"]::-webkit-calendar-table-body {
                         <!-- Voucher Button (bottom-left, only when request status is Confirmed) -->
                         {% if mapped_status == 'CONFIRMED' %}
                         <div class="p-3 border-t border-slate-200 bg-white flex justify-between items-center">
-                            <button type="button" onclick="openRestaurantVoucherModal()" class="inline-flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-medium text-sm transition-colors shadow-sm">
+                            <button type="button" onclick="openRestaurantVoucherModal(typeof currentServiceContext !== 'undefined' && currentServiceContext.serviceName === 'meal' ? currentServiceContext.rowId : null)" class="inline-flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-medium text-sm transition-colors shadow-sm">
                                 <i class="fas fa-file-invoice"></i>
                                 <span>Voucher</span>
                             </button>
