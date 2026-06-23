@@ -13293,7 +13293,8 @@ function openHotelVoucherModal(hotelId) {
     const hotels = d.hotels || [];
     let targetHotel = null;
     if (hotelId) {
-        targetHotel = hotels.find(h => h.id === hotelId);
+        const hotelIdNum = parseInt(hotelId, 10);
+        targetHotel = hotels.find(h => parseInt(h.id, 10) === hotelIdNum);
     } else if (hotels.length > 0) {
         targetHotel = hotels[0];
         window.currentHotelVoucherId = targetHotel.id;
@@ -13391,7 +13392,8 @@ function printHotelVoucher() {
     let hotelsToPrint = d.hotels || [];
     const curId = window.currentHotelVoucherId;
     if (curId && hotelsToPrint.length > 0) {
-        const h = hotelsToPrint.find(x => x.id === curId);
+        const curIdNum = parseInt(curId, 10);
+        const h = hotelsToPrint.find(x => parseInt(x.id, 10) === curIdNum);
         hotelsToPrint = h ? [h] : hotelsToPrint;
     }
     let rowsHtml = '';
