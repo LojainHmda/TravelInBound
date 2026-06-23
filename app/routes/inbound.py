@@ -5881,7 +5881,8 @@ def generate_hotel_voucher(id):
     return render_template('inbound/hotel_voucher.html', request=request_obj)
 
 @inbound_bp.route('/<int:id>/restaurant-voucher')
-def generate_restaurant_voucher(id):
+@inbound_bp.route('/<int:id>/restaurant-voucher/<int:meal_id>')
+def generate_restaurant_voucher(id, meal_id=None):
     """Generate restaurant services voucher for the request (print layout)"""
     request_obj = InboundRequest.query.get_or_404(id)
     if request_obj.user_id != 1:
@@ -5889,7 +5890,12 @@ def generate_restaurant_voucher(id):
     confirmed_statuses = ['CONFIRMED', 'SUPPLIER_CONFIRMED', 'QUOTED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS', 'INVOICE', 'COMPLETED', 'INVOICED']
     if request_obj.status not in confirmed_statuses:
         abort(400, 'Restaurant voucher is only available when request is confirmed')
-    return render_template('inbound/restaurant_voucher.html', request=request_obj)
+
+    target_meal = None
+    if meal_id:
+        target_meal = InboundMeal.query.filter_by(id=meal_id, request_id=id).first()
+
+    return render_template('inbound/restaurant_voucher.html', request=request_obj, target_meal=target_meal)
 
 @inbound_bp.route('/<int:request_id>/voucher')
 def generate_voucher(request_id):

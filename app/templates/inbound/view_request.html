@@ -1861,6 +1861,12 @@ input[type="date"]::-webkit-calendar-table-body {
                                     </select>
                                 </div>
                                 <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">City</label>
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="meal_city" data-service="meal">
+                                        <option value="">Select...</option>
+                                    </select>
+                                </div>
+                                <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Restaurant <span class="text-red-500">*</span></label>
                                     <div class="flex gap-2">
                                         <select class="flex-1 px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="meal_restaurant" data-service="meal">
@@ -2650,7 +2656,7 @@ input[type="date"]::-webkit-calendar-table-body {
                     </div>
                     <div class="flex flex-col gap-1">
                         <div class="border border-black px-3 py-0.5" style="height:fit-content">Request No: {{ request.request_number or request.document_sequence or '-' }}</div>
-                        <div class="border border-black px-3 py-0.5 text-xs" style="height:fit-content">Pax #: {{ request.pax or 0 }}</div>
+                        <div class="border border-black px-3 py-0.5 text-xs" style="height:fit-content">Pax #: <span id="restaurantVoucherPaxValue">{{ request.pax or 0 }}</span></div>
                     </div>
                 </div>
                 <p class="mb-4 text-sm">Please provide with the following.</p>
@@ -2717,7 +2723,8 @@ input[type="date"]::-webkit-calendar-table-body {
             "total_cost": {{ m.total_cost or 0 }},
             "currency": "{{ m.currency or 'JOD' }}",
             "notes": "{{ (m.meal_note or '') | e }}",
-            "voucherNotes": "{{ (m.voucher_notes or '-') | e }}"
+            "voucherNotes": "{{ (m.voucher_notes or '-') | e }}",
+            "pax_count": {{ m.pax_count or 0 }}
         }{% if not loop.last %},{% endif %}
         {% endfor %}
     ];
@@ -3401,6 +3408,102 @@ function initSystemNotesPersistence() {
         field.addEventListener('input', () => persistSystemNotesForCurrentContext(serviceType));
     });
 }
+
+// Store original restaurant suppliers data for filtering
+let restaurantSuppliersData = [
+    {% for supplier in restaurant_suppliers %}
+    { id: {{ supplier.id }}, name: "{{ supplier.name | e }}", city: "{{ supplier.city or '' | e }}" }{{ "," if not loop.last }}
+    {% endfor %}
+];
+
+// Normalize city names for consistent display
+function normalizeCityName(city) {
+    if (!city) return '';
+    return city.charAt(0).toUpperCase() + city.slice(1).toLowerCase();
+}
+
+// Initialize and populate the City dropdown
+function initializeMealCityFilter() {
+    const citySelect = document.getElementById('meal_city');
+    const restaurantSelect = document.getElementById('meal_restaurant');
+
+    if (!citySelect || !restaurantSelect) {
+        console.warn('[MealCityFilter] City or Restaurant select not found');
+        return;
+    }
+
+    // Extract unique cities from restaurant suppliers data
+    const citiesSet = new Set();
+    restaurantSuppliersData.forEach(supplier => {
+        if (supplier.city) {
+            const normalized = normalizeCityName(supplier.city);
+            citiesSet.add(normalized);
+        }
+    });
+
+    // Sort cities alphabetically
+    const cities = Array.from(citiesSet).sort();
+
+    // Populate city dropdown with unique cities
+    cities.forEach(city => {
+        const option = document.createElement('option');
+        option.value = city;
+        option.textContent = city;
+        citySelect.appendChild(option);
+    });
+
+    // Add event listener to filter restaurants when city is selected
+    citySelect.addEventListener('change', function() {
+        const selectedCity = this.value.trim();
+
+        // Store current restaurant selection to preserve it if valid
+        const currentRestaurantId = restaurantSelect.value;
+
+        // Clear and repopulate restaurant dropdown based on city selection
+        restaurantSelect.innerHTML = '<option value="">Select restaurant...</option>';
+
+        let addedOptions = 0;
+        restaurantSuppliersData.forEach(supplier => {
+            const supplierCity = supplier.city ? normalizeCityName(supplier.city) : '';
+
+            // If city is selected, filter; otherwise show all
+            if (!selectedCity || supplierCity === selectedCity) {
+                const option = document.createElement('option');
+                option.value = supplier.id;
+                option.textContent = supplier.name;
+                restaurantSelect.appendChild(option);
+                addedOptions++;
+            }
+        });
+
+        // Add "Add New Restaurant" option
+        if (addedOptions > 0) {
+            const divider = document.createElement('optgroup');
+            divider.label = '──────────';
+            restaurantSelect.appendChild(divider);
+        }
+        const addNewOption = document.createElement('option');
+        addNewOption.value = '__ADD_NEW__';
+        addNewOption.textContent = '+ Add New Restaurant...';
+        restaurantSelect.appendChild(addNewOption);
+
+        // Try to preserve the restaurant selection if it still exists in the filtered list
+        let optionFound = false;
+        for (let option of restaurantSelect.options) {
+            if (option.value === currentRestaurantId) {
+                restaurantSelect.value = currentRestaurantId;
+                optionFound = true;
+                break;
+            }
+        }
+
+        // If the previously selected restaurant is not in the new city, reset the selection
+        if (!optionFound) {
+            restaurantSelect.value = '';
+        }
+    });
+}
+
 /** Maps "itineraryRowId:supplierId" -> InboundGuide id (updated after saves/deletes). */
 let itineraryGuideSlotSaved = {{ itinerary_guide_slot_saved | default({}) | tojson }};
 /** Last saved itinerary guide picks per row (rowId string -> supplier id strings). Guide tab strip + badge use this until SAVE ITINERARY (or full itinerary reload). */
@@ -7106,8 +7209,26 @@ function clearServiceFormFields(serviceType) {
     } else if (serviceType === 'meal') {
         const paxField = document.getElementById('meal_pax');
         if (paxField) paxField.value = '';
+        // When clearing meal form, restore restaurant dropdown to show all restaurants
+        const restaurantSelect = document.getElementById('meal_restaurant');
+        if (restaurantSelect) {
+            restaurantSelect.innerHTML = '<option value="">Select restaurant...</option>';
+            restaurantSuppliersData.forEach(supplier => {
+                const option = document.createElement('option');
+                option.value = supplier.id;
+                option.textContent = supplier.name;
+                restaurantSelect.appendChild(option);
+            });
+            const divider = document.createElement('optgroup');
+            divider.label = '──────────';
+            restaurantSelect.appendChild(divider);
+            const addNewOption = document.createElement('option');
+            addNewOption.value = '__ADD_NEW__';
+            addNewOption.textContent = '+ Add New Restaurant...';
+            restaurantSelect.appendChild(addNewOption);
+        }
     }
-    
+
     // For hotel: reset room distribution fields
     if (serviceType === 'hotel') {
         const sglField = document.getElementById('hotel_single_rooms');
@@ -7473,8 +7594,27 @@ function populateServiceForm(serviceType, record) {
     // Meal/Restaurant date inputs
     if (serviceType === 'meal') {
         syncDateField('meal_from_date', record.from_date || record.date || record.service_date);
+
+        // When loading a meal for editing, populate the City dropdown based on the restaurant
+        const restaurantNameOrId = record.restaurant_name || record.supplier_id;
+        if (restaurantNameOrId) {
+            // Find the supplier in restaurantSuppliersData to get its city
+            const supplier = restaurantSuppliersData.find(s =>
+                s.id == restaurantNameOrId || s.name === restaurantNameOrId
+            );
+            if (supplier && supplier.city) {
+                const cityDropdown = document.getElementById('meal_city');
+                if (cityDropdown) {
+                    const normalizedCity = normalizeCityName(supplier.city);
+                    cityDropdown.value = normalizedCity;
+                    // Trigger the city filter to update the restaurant dropdown
+                    const changeEvent = new Event('change', { bubbles: true });
+                    cityDropdown.dispatchEvent(changeEvent);
+                }
+            }
+        }
     }
-    
+
     if (serviceType === 'guide') {
         const supSel = document.getElementById('guide_supplier_id');
         const supOpt = supSel && supSel.selectedIndex >= 0 ? supSel.options[supSel.selectedIndex] : null;
@@ -12956,12 +13096,15 @@ function syncRestaurantVoucherFromSummary() {
         if (!mealId || isNaN(mealId)) return;
         const cells = tr.cells;
         if (!cells || cells.length < 5) return;
+        const paxText = cells[5]?.textContent?.trim() || '0';
+        const paxValue = parseInt(paxText, 10) || 0;
         const mealData = {
             id: mealId,
             restaurant_name: cells[2]?.textContent?.trim() || '-',
             date: cells[0]?.textContent?.trim() || '-',
             meal_type: cells[1]?.textContent?.trim() || '-',
-            notes: cells[6]?.textContent?.trim() || '-'
+            notes: cells[6]?.textContent?.trim() || '-',
+            pax_count: paxValue
         };
         meals.push(mealData);
     });
@@ -12988,7 +13131,8 @@ function openRestaurantVoucherModal(mealId) {
     let meals = d.meals || [];
     let targetMeal = null;
     if (mealId) {
-        targetMeal = meals.find(m => m.id === mealId);
+        const mealIdNum = parseInt(mealId, 10);
+        targetMeal = meals.find(m => parseInt(m.id, 10) === mealIdNum);
     }
     if (!targetMeal && meals.length > 0) {
         targetMeal = meals[0];
@@ -12998,6 +13142,13 @@ function openRestaurantVoucherModal(mealId) {
     if (restaurantNameEl) restaurantNameEl.textContent = targetMeal ? (targetMeal.restaurant_name || '-') : '-';
     const mealIdDebugEl = document.getElementById('restaurantVoucherMealIdVal');
     if (mealIdDebugEl) mealIdDebugEl.textContent = targetMeal ? targetMeal.id : (meals.length > 0 ? meals.map(m => m.id).join(', ') : '-');
+    // Update guests and PAX display to use the target meal's pax_count instead of request PAX
+    if (targetMeal && typeof restaurantVoucherPrintData !== 'undefined') {
+        restaurantVoucherPrintData.guests = targetMeal.pax_count || 0;
+        // Also update the display in the modal
+        const paxDisplay = document.getElementById('restaurantVoucherPaxValue');
+        if (paxDisplay) paxDisplay.textContent = targetMeal.pax_count || 0;
+    }
     const tbody = document.getElementById('restaurantVoucherPreviewTbody');
     if (tbody && meals.length > 0) {
         const rows = tbody.querySelectorAll('tr[data-meal-id]');
@@ -13345,7 +13496,8 @@ function printRestaurantVoucher() {
     let mealsToPrint = d.meals || [];
     const curId = window.currentRestaurantVoucherId;
     if (curId && mealsToPrint.length > 0) {
-        const m = mealsToPrint.find(x => x.id === curId);
+        const curIdNum = parseInt(curId, 10);
+        const m = mealsToPrint.find(x => parseInt(x.id, 10) === curIdNum);
         mealsToPrint = m ? [m] : mealsToPrint;
     }
     const noteBox = document.getElementById('restaurantVoucherNoteBox');
@@ -15679,6 +15831,9 @@ document.addEventListener('DOMContentLoaded', function() {
             updateDefaultDatesInTabs(initialRange.fromDate, initialRange.toDate);
         }, 100);
     }
+
+    // Initialize Restaurant City Filter
+    initializeMealCityFilter();
 });
 </script>
 {% include 'components/shared_transport_popup_controller.html' %}

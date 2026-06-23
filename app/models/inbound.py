@@ -128,11 +128,11 @@ class InboundRequest(db.Model):
 
     @property
     def meal_pax_total(self):
-        """Calculate total pax from all meals, or fall back to request pax if no meals have pax_count set"""
+        """Calculate total pax from all meals - uses restaurant PAX values only, never falls back to request PAX"""
         if self.inbound_meals:
             total = sum((m.pax_count for m in self.inbound_meals if m.pax_count), 0)
-            return total if total > 0 else self.pax
-        return self.pax
+            return total
+        return 0
 
     @classmethod
     def generate_linked_request_number(cls, parent_request):
