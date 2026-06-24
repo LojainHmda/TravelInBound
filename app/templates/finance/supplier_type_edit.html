@@ -147,6 +147,7 @@ body {
 .file-label a { color: #334155; text-decoration: none; }
 .file-label a:hover { text-decoration: underline; color: #1d4ed8; }
 .field textarea { resize: vertical; min-height: 60px; }
+.field input[type="file"] { padding: 0; min-height: auto; background: transparent; border: none; }
 .field .hint { font-size: 11px; color: #94a3b8; margin-top: 2px; }
 .required-note { font-size: 11px; color: #94a3b8; margin-top: 0.5rem; }
 .form-actions {
@@ -362,11 +363,10 @@ body {
                 </div>
                 <div class="field">
                     <label>Contract Attachment</label>
-                    <label class="file-row">
-                        <span class="file-btn">Choose File</span>
-                        <span class="file-label">{% if contract_file %}<a href="{{ url_for('static', filename='uploads/supplier_contracts/' + contract_file) }}" target="_blank" onclick="event.stopPropagation()">{{ contract_file }}</a>{% endif %}</span>
-                        <input type="file" name="contract_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="this.previousElementSibling.textContent=this.files[0].name">
-                    </label>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <input type="file" name="contract_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="flex:1;min-width:0;" data-original-file="{% if contract_file %}{{ contract_file }}{% endif %}" data-original-url="{% if contract_file %}{{ url_for('static', filename='uploads/supplier_contracts/' + contract_file) }}{% endif %}">
+                        <button type="button" class="file-clear-btn" style="display:{% if not contract_file %}none{% endif %};padding:2px 6px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:3px;cursor:pointer;font-size:0.7rem;color:#475569;white-space:nowrap;transition:background-color 0.2s;height:fit-content;flex-shrink:0;" onmouseover="this.style.backgroundColor='#e2e8f0'" onmouseout="this.style.backgroundColor='#f1f5f9'">Clear</button>
+                    </div>
                 </div>
                 <div class="field full">
                     <label>Notes</label>
@@ -568,11 +568,10 @@ body {
                 </div>
                 <div class="field">
                     <label>Contract Attachment</label>
-                    <label class="file-row">
-                        <span class="file-btn">Choose File</span>
-                        <span class="file-label">{% if contract_file %}<a href="{{ url_for('static', filename='uploads/supplier_contracts/' + contract_file) }}" target="_blank" onclick="event.stopPropagation()">{{ contract_file }}</a>{% endif %}</span>
-                        <input type="file" name="contract_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="this.previousElementSibling.textContent=this.files[0].name">
-                    </label>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <input type="file" name="contract_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="flex:1;min-width:0;" data-original-file="{% if contract_file %}{{ contract_file }}{% endif %}" data-original-url="{% if contract_file %}{{ url_for('static', filename='uploads/supplier_contracts/' + contract_file) }}{% endif %}">
+                        <button type="button" class="file-clear-btn" style="display:{% if not contract_file %}none{% endif %};padding:2px 6px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:3px;cursor:pointer;font-size:0.7rem;color:#475569;white-space:nowrap;transition:background-color 0.2s;height:fit-content;flex-shrink:0;" onmouseover="this.style.backgroundColor='#e2e8f0'" onmouseout="this.style.backgroundColor='#f1f5f9'">Clear</button>
+                    </div>
                 </div>
                 <div class="field full">
                     <label>Notes</label>
@@ -668,11 +667,10 @@ body {
                 </div>
                 <div class="field">
                     <label>Contract Attachment</label>
-                    <label class="file-row">
-                        <span class="file-btn">Choose File</span>
-                        <span class="file-label">{% if contract_file %}<a href="{{ url_for('static', filename='uploads/supplier_contracts/' + contract_file) }}" target="_blank" onclick="event.stopPropagation()">{{ contract_file }}</a>{% endif %}</span>
-                        <input type="file" name="contract_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="this.previousElementSibling.textContent=this.files[0].name">
-                    </label>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <input type="file" name="contract_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="flex:1;min-width:0;" data-original-file="{% if contract_file %}{{ contract_file }}{% endif %}" data-original-url="{% if contract_file %}{{ url_for('static', filename='uploads/supplier_contracts/' + contract_file) }}{% endif %}">
+                        <button type="button" class="file-clear-btn" style="display:{% if not contract_file %}none{% endif %};padding:2px 6px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:3px;cursor:pointer;font-size:0.7rem;color:#475569;white-space:nowrap;transition:background-color 0.2s;height:fit-content;flex-shrink:0;" onmouseover="this.style.backgroundColor='#e2e8f0'" onmouseout="this.style.backgroundColor='#f1f5f9'">Clear</button>
+                    </div>
                 </div>
                 <div class="field full">
                     <label>Notes</label>
@@ -768,11 +766,10 @@ body {
                 </div>
                 <div class="field">
                     <label>Contract Attachment</label>
-                    <label class="file-row">
-                        <span class="file-btn">Choose File</span>
-                        <span class="file-label">{% if contract_file %}<a href="{{ url_for('static', filename='uploads/supplier_contracts/' + contract_file) }}" target="_blank" onclick="event.stopPropagation()">{{ contract_file }}</a>{% endif %}</span>
-                        <input type="file" name="contract_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="this.previousElementSibling.textContent=this.files[0].name">
-                    </label>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <input type="file" name="contract_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="flex:1;min-width:0;" data-original-file="{% if contract_file %}{{ contract_file }}{% endif %}" data-original-url="{% if contract_file %}{{ url_for('static', filename='uploads/supplier_contracts/' + contract_file) }}{% endif %}">
+                        <button type="button" class="file-clear-btn" style="display:{% if not contract_file %}none{% endif %};padding:2px 6px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:3px;cursor:pointer;font-size:0.7rem;color:#475569;white-space:nowrap;transition:background-color 0.2s;height:fit-content;flex-shrink:0;" onmouseover="this.style.backgroundColor='#e2e8f0'" onmouseout="this.style.backgroundColor='#f1f5f9'">Clear</button>
+                    </div>
                 </div>
                 <div class="field full">
                     <label>Notes</label>
@@ -873,11 +870,10 @@ body {
                 </div>
                 <div class="field">
                     <label>Contract Attachment</label>
-                    <label class="file-row">
-                        <span class="file-btn">Choose File</span>
-                        <span class="file-label">{% if contract_file %}<a href="{{ url_for('static', filename='uploads/supplier_contracts/' + contract_file) }}" target="_blank" onclick="event.stopPropagation()">{{ contract_file }}</a>{% endif %}</span>
-                        <input type="file" name="contract_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="this.previousElementSibling.textContent=this.files[0].name">
-                    </label>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <input type="file" name="contract_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="flex:1;min-width:0;" data-original-file="{% if contract_file %}{{ contract_file }}{% endif %}" data-original-url="{% if contract_file %}{{ url_for('static', filename='uploads/supplier_contracts/' + contract_file) }}{% endif %}">
+                        <button type="button" class="file-clear-btn" style="display:{% if not contract_file %}none{% endif %};padding:2px 6px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:3px;cursor:pointer;font-size:0.7rem;color:#475569;white-space:nowrap;transition:background-color 0.2s;height:fit-content;flex-shrink:0;" onmouseover="this.style.backgroundColor='#e2e8f0'" onmouseout="this.style.backgroundColor='#f1f5f9'">Clear</button>
+                    </div>
                 </div>
                 <div class="field full">
                     <label>Notes</label>
@@ -974,11 +970,10 @@ body {
                 </div>
                 <div class="field">
                     <label>Contract Attachment</label>
-                    <label class="file-row">
-                        <span class="file-btn">Choose File</span>
-                        <span class="file-label">{% if contract_file %}<a href="{{ url_for('static', filename='uploads/supplier_contracts/' + contract_file) }}" target="_blank" onclick="event.stopPropagation()">{{ contract_file }}</a>{% endif %}</span>
-                        <input type="file" name="contract_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onchange="this.previousElementSibling.textContent=this.files[0].name">
-                    </label>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <input type="file" name="contract_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="flex:1;min-width:0;" data-original-file="{% if contract_file %}{{ contract_file }}{% endif %}" data-original-url="{% if contract_file %}{{ url_for('static', filename='uploads/supplier_contracts/' + contract_file) }}{% endif %}">
+                        <button type="button" class="file-clear-btn" style="display:{% if not contract_file %}none{% endif %};padding:2px 6px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:3px;cursor:pointer;font-size:0.7rem;color:#475569;white-space:nowrap;transition:background-color 0.2s;height:fit-content;flex-shrink:0;" onmouseover="this.style.backgroundColor='#e2e8f0'" onmouseout="this.style.backgroundColor='#f1f5f9'">Clear</button>
+                    </div>
                 </div>
                 <div class="field full">
                     <label>Notes</label>
@@ -1234,6 +1229,45 @@ body {
             }
         });
     }
+
+    // ── File attachment - same behavior as Add New ─────────────
+    document.querySelectorAll('input[type="file"][name="contract_file"]').forEach(function(fileInput) {
+        var clearBtn = fileInput.parentElement.querySelector('.file-clear-btn');
+        var originalFile = fileInput.getAttribute('data-original-file');
+        var originalUrl = fileInput.getAttribute('data-original-url');
+        var currentBlobUrl = null;
+
+        if (!clearBtn) return;
+
+        fileInput.addEventListener('change', function() {
+            if (!this.files || this.files.length === 0) {
+                return;
+            }
+            var file = this.files[0];
+            if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
+            currentBlobUrl = URL.createObjectURL(file);
+            clearBtn.style.display = 'block';
+        });
+
+        fileInput.addEventListener('click', function(e) {
+            // If clicking on filename area (right side, offset > 80), open preview instead of file picker
+            if ((currentBlobUrl || originalUrl) && e.offsetX > 80 && e.offsetY < 24) {
+                var urlToOpen = currentBlobUrl || originalUrl;
+                window.open(urlToOpen, '_blank');
+                e.preventDefault();
+            }
+        });
+
+        clearBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            fileInput.value = '';
+            if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
+            currentBlobUrl = null;
+            clearBtn.style.display = originalFile ? 'block' : 'none';
+        });
+
+        clearBtn.style.display = originalFile ? 'block' : 'none';
+    });
 })();
 </script>
 {% endblock %}

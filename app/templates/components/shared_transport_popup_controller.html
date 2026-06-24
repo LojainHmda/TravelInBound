@@ -140,9 +140,46 @@
             const labelClass = 'block text-xs font-medium text-slate-700 mb-0.5';
             contractWrap.innerHTML = `
                 <label class="${labelClass}">Contract Attachment</label>
-                <input type="file" id="${prefix}_contract_file" class="${bankAccountInput.className || ''}" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <input type="file" id="${prefix}_contract_file" class="${bankAccountInput.className || ''}" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="flex:1;min-width:0;">
+                    <button type="button" id="${prefix}_clear_file" style="display:none;padding:2px 6px;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:3px;cursor:pointer;font-size:0.7rem;color:#475569;white-space:nowrap;transition:background-color 0.2s;height:fit-content;flex-shrink:0;" onmouseover="this.style.backgroundColor='#e2e8f0'" onmouseout="this.style.backgroundColor='#f1f5f9'">Clear</button>
+                </div>
             `;
             taxWrap.insertAdjacentElement('afterend', contractWrap);
+
+            const fileInput = document.getElementById(`${prefix}_contract_file`);
+            const clearBtn = document.getElementById(`${prefix}_clear_file`);
+            let currentBlobUrl = null;
+
+            fileInput.addEventListener('change', function() {
+                // Only process if a file is actually selected
+                if (!this.files || this.files.length === 0) {
+                    // File picker was opened but closed without selecting
+                    // Do NOT clear the previously selected file
+                    return;
+                }
+
+                const file = this.files[0];
+                if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
+                currentBlobUrl = URL.createObjectURL(file);
+                clearBtn.style.display = 'block';
+            });
+
+            clearBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                fileInput.value = '';
+                clearBtn.style.display = 'none';
+                if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
+                currentBlobUrl = null;
+            });
+
+            // Make filename clickable to preview
+            fileInput.addEventListener('click', function(e) {
+                if (currentBlobUrl && e.offsetX > 80 && e.offsetY < 24) {
+                    window.open(currentBlobUrl, '_blank');
+                    e.preventDefault();
+                }
+            });
         }
     }
 

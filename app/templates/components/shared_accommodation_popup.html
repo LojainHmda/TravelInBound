@@ -192,7 +192,10 @@
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-700 mb-0.5">Contract Attachment</label>
-                    <input type="file" id="new_hotel_contract_file" name="contract_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <input type="file" id="new_hotel_contract_file" name="contract_file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="flex:1;min-width:0;">
+                        <div id="new_hotel_contract_preview" style="display:none;align-items:center;gap:4px;flex-shrink:0;"></div>
+                    </div>
                 </div>
                 <div class="sm:col-span-2">
                     <label class="block text-xs font-medium text-slate-700 mb-0.5">Notes</label>

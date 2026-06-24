@@ -458,6 +458,49 @@ body.modal-open {
 
     if (!overlay) return;
 
+    // Initialize file preview for accommodation contract attachment
+    function initAccommodationFilePreview() {
+        const fileInput = document.getElementById('new_hotel_contract_file');
+        const previewDiv = document.getElementById('new_hotel_contract_preview');
+        if (!fileInput || !previewDiv) return;
+
+        fileInput.addEventListener('change', function() {
+            // Only process if a file is actually selected
+            if (!this.files || this.files.length === 0) {
+                // File picker was opened but closed without selecting
+                // Do NOT clear the previously selected file
+                return;
+            }
+
+            const file = this.files[0];
+            if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
+            currentBlobUrl = URL.createObjectURL(file);
+            clearBtn.style.display = 'block';
+        });
+
+        clearBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            fileInput.value = '';
+            clearBtn.style.display = originalFile ? 'block' : 'none';
+            if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
+            currentBlobUrl = null;
+        });
+
+        // Make filename clickable to preview
+        fileInput.addEventListener('click', function(e) {
+            if ((currentBlobUrl || originalUrl) && e.offsetX > 80 && e.offsetY < 24) {
+                const urlToOpen = currentBlobUrl || originalUrl;
+                window.open(urlToOpen, '_blank');
+                e.preventDefault();
+            }
+        });
+
+        // Initial state
+        clearBtn.style.display = originalFile ? 'block' : 'none';
+    }
+
+    initAccommodationFilePreview();
+
     function ensureOption(selectEl, value) {
         const val = String(value || '').trim();
         if (!selectEl || !val) return false;
