@@ -477,6 +477,11 @@ class InboundHotel(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    # Confirmation Email Attachment
+    confirmation_email_filename = db.Column(db.String(255), nullable=True)  # Original uploaded filename
+    confirmation_email_filepath = db.Column(db.String(500), nullable=True)  # Relative path for serving
+    confirmation_email_uploaded_at = db.Column(db.DateTime, nullable=True)
+
     # Relationships
     rooms = db.relationship('HotelRoom', backref='hotel', lazy=True, cascade='all, delete-orphan')
 
@@ -597,6 +602,11 @@ class InboundTransport(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    # Confirmation Email Attachment
+    confirmation_email_filename = db.Column(db.String(255), nullable=True)  # Original uploaded filename
+    confirmation_email_filepath = db.Column(db.String(500), nullable=True)  # Relative path for serving
+    confirmation_email_uploaded_at = db.Column(db.DateTime, nullable=True)
+
     # Relationship
     supplier_ref = db.relationship('Supplier', foreign_keys=[supplier_id], lazy='joined')
 
@@ -667,6 +677,11 @@ class InboundMeal(db.Model):
     # Tracking
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Confirmation Email Attachment
+    confirmation_email_filename = db.Column(db.String(255), nullable=True)  # Original uploaded filename
+    confirmation_email_filepath = db.Column(db.String(500), nullable=True)  # Relative path for serving
+    confirmation_email_uploaded_at = db.Column(db.DateTime, nullable=True)
 
     # Relationship
     supplier_ref = db.relationship('Supplier', foreign_keys=[supplier_id], lazy='joined')

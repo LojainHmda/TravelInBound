@@ -3753,6 +3753,36 @@ def api_save_service_data(request_id):
                     'guest_names': r.guest_names or ''
                 } for r in rooms]
 
+        # For transport: include transport_id for file upload
+        if service_type == 'transport' and 'transport' in locals():
+            if transport and transport.id:
+                response_data['transport_id'] = transport.id
+
+        # For meal: include meal_id for file upload
+        print(f"[SAVE SERVICE] Building response for service_type={service_type}")
+        print(f"[SAVE SERVICE] 'meal' in locals(): {'meal' in locals()}")
+
+        if service_type == 'meal':
+            if 'meal' in locals():
+                print(f"[SAVE SERVICE] meal variable exists: {meal}")
+                print(f"[SAVE SERVICE] meal.id = {meal.id if meal else 'None'}")
+                if meal and meal.id:
+                    response_data['meal_id'] = meal.id
+                    print(f"[SAVE SERVICE] ADDED meal_id={meal.id} to response_data")
+                else:
+                    print(f"[SAVE SERVICE] DID NOT ADD meal_id - meal is {meal}, or meal.id is falsy")
+            else:
+                print(f"[SAVE SERVICE] ERROR: meal not in locals for meal service!")
+                # Try to find it anyway
+                try:
+                    if meal and meal.id:
+                        response_data['meal_id'] = meal.id
+                        print(f"[SAVE SERVICE] Found meal in outer scope, added meal_id={meal.id}")
+                except NameError:
+                    print(f"[SAVE SERVICE] meal variable not found at all!")
+
+        print(f"[SAVE SERVICE] Final response_data keys: {list(response_data.keys())}")
+        print(f"[SAVE SERVICE] Final response_data: {response_data}")
         return jsonify(response_data)
 
     except OSError as os_err:
@@ -5272,7 +5302,8 @@ def api_get_service_record(request_id, service_type, record_id):
                     'double_rooms': record.double_rooms or 0,
                     'triple_rooms': record.triple_rooms or 0,
                     'notes': record.notes or '',
-                    'hotel_confirmation_number': confirmation
+                    'hotel_confirmation_number': confirmation,
+                    'confirmation_email_filename': record.confirmation_email_filename or ''
                 }
 
         elif service_type == 'transport':
@@ -5299,6 +5330,7 @@ def api_get_service_record(request_id, service_type, record_id):
                     'pending_transport_fill': pending_fill,
                     'source_arrival_batch_id': record.source_arrival_batch_id,
                     'source_departure_batch_id': record.source_departure_batch_id,
+                    'confirmation_email_filename': record.confirmation_email_filename or ''
                 }
 
         elif service_type == 'guide':
@@ -5337,7 +5369,8 @@ def api_get_service_record(request_id, service_type, record_id):
                     'location': record.location or '',
                     'meal_notes': record.meal_note or '',
                     'pax_count': getattr(record, 'pax_count', None),
-                    'supplier_id': record.supplier_id
+                    'supplier_id': record.supplier_id,
+                    'confirmation_email_filename': record.confirmation_email_filename or ''
                 }
 
         elif service_type == 'itinerary':
@@ -11350,4 +11383,177 @@ def view_document(doc_id):
         abort(404)
 
     return send_file(full_path, download_name=doc.original_filename)
+
+
+# ============ Confirmation Email File Upload Endpoints ============
+
+@inbound_bp.route('/api/<service_type>/<int:record_id>/upload-confirmation', methods=['POST'])
+@csrf.exempt
+def api_upload_confirmation_file(service_type, record_id):
+    """Upload confirmation email file for hotel, transport, or meal service"""
+
+    print(f"[UPLOAD CONFIRMATION] Started - service_type={service_type}, record_id={record_id}")
+
+    # Validate service type
+    if service_type not in ['hotel', 'transport', 'meal']:
+        print(f"[UPLOAD CONFIRMATION] Invalid service type: {service_type}")
+        return jsonify({'success': False, 'error': 'Invalid service type'}), 400
+
+    # Get the service record
+    try:
+        if service_type == 'hotel':
+            service = InboundHotel.query.get_or_404(record_id)
+        elif service_type == 'transport':
+            service = InboundTransport.query.get_or_404(record_id)
+        else:  # meal
+            service = InboundMeal.query.get_or_404(record_id)
+        print(f"[UPLOAD CONFIRMATION] Found service record: {service}")
+    except Exception as e:
+        print(f"[UPLOAD CONFIRMATION] Service record not found: {e}")
+        return jsonify({'success': False, 'error': 'Service record not found'}), 404
+
+    if 'file' not in request.files:
+        return jsonify({'success': False, 'error': 'No file provided'}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({'success': False, 'error': 'No file selected'}), 400
+
+    if not allowed_document_file(file.filename):
+        return jsonify({'success': False, 'error': 'File type not allowed'}), 400
+
+    try:
+        # Generate unique filename
+        original_filename = secure_filename(file.filename)
+        unique_filename = f"{uuid.uuid4().hex}_{original_filename}"
+
+        # Create upload directory
+        upload_folder = os.path.join('app', 'static', 'uploads', 'confirmations', service_type, str(record_id))
+        os.makedirs(upload_folder, exist_ok=True)
+
+        # Delete old file if it exists
+        if service.confirmation_email_filepath:
+            old_path = os.path.join('app', 'static', service.confirmation_email_filepath)
+            if os.path.exists(old_path):
+                try:
+                    os.remove(old_path)
+                except:
+                    pass  # Ignore errors deleting old file
+
+        # Save file
+        filepath = os.path.join(upload_folder, unique_filename)
+        file.save(filepath)
+
+        # Update service record
+        relative_filepath = f"uploads/confirmations/{service_type}/{record_id}/{unique_filename}"
+        print(f"[UPLOAD CONFIRMATION] Before update - filename={getattr(service, 'confirmation_email_filename', 'NOT_SET')}")
+
+        service.confirmation_email_filename = original_filename
+        service.confirmation_email_filepath = relative_filepath
+        service.confirmation_email_uploaded_at = datetime.utcnow()
+
+        print(f"[UPLOAD CONFIRMATION] After update - filename={service.confirmation_email_filename}, filepath={service.confirmation_email_filepath}")
+        print(f"[UPLOAD CONFIRMATION] Updated service record - filename={original_filename}, filepath={relative_filepath}")
+
+        # Force flush to ensure attributes are updated
+        db.session.flush()
+        print(f"[UPLOAD CONFIRMATION] Session flushed")
+
+        # Commit the transaction
+        db.session.commit()
+        print(f"[UPLOAD CONFIRMATION] Database committed successfully")
+
+        # Verify the data was saved by querying it back
+        verified_service = None
+        if service_type == 'hotel':
+            verified_service = InboundHotel.query.get(record_id)
+        elif service_type == 'transport':
+            verified_service = InboundTransport.query.get(record_id)
+        else:
+            verified_service = InboundMeal.query.get(record_id)
+
+        print(f"[UPLOAD CONFIRMATION] Verified saved data - filename={verified_service.confirmation_email_filename if verified_service else 'NOT_FOUND'}")
+
+        return jsonify({
+            'success': True,
+            'message': 'File uploaded successfully',
+            'filename': original_filename,
+            'filepath': relative_filepath,
+            'uploaded_at': service.confirmation_email_uploaded_at.strftime('%Y-%m-%d %H:%M') if service.confirmation_email_uploaded_at else ''
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@inbound_bp.route('/api/<service_type>/<int:record_id>/delete-confirmation', methods=['POST'])
+@csrf.exempt
+def api_delete_confirmation_file(service_type, record_id):
+    """Delete confirmation email file for hotel, transport, or meal service"""
+
+    # Validate service type
+    if service_type not in ['hotel', 'transport', 'meal']:
+        return jsonify({'success': False, 'error': 'Invalid service type'}), 400
+
+    # Get the service record
+    try:
+        if service_type == 'hotel':
+            service = InboundHotel.query.get_or_404(record_id)
+        elif service_type == 'transport':
+            service = InboundTransport.query.get_or_404(record_id)
+        else:  # meal
+            service = InboundMeal.query.get_or_404(record_id)
+    except:
+        return jsonify({'success': False, 'error': 'Service record not found'}), 404
+
+    try:
+        # Delete file from filesystem
+        if service.confirmation_email_filepath:
+            full_path = os.path.join('app', 'static', service.confirmation_email_filepath)
+            if os.path.exists(full_path):
+                os.remove(full_path)
+
+        # Update service record
+        service.confirmation_email_filename = None
+        service.confirmation_email_filepath = None
+        service.confirmation_email_uploaded_at = None
+
+        db.session.commit()
+
+        return jsonify({'success': True, 'message': 'File deleted successfully'})
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@inbound_bp.route('/api/<service_type>/<int:record_id>/confirmation-file')
+def get_confirmation_file(service_type, record_id):
+    """Get/download confirmation email file"""
+
+    # Validate service type
+    if service_type not in ['hotel', 'transport', 'meal']:
+        abort(400)
+
+    # Get the service record
+    try:
+        if service_type == 'hotel':
+            service = InboundHotel.query.get_or_404(record_id)
+        elif service_type == 'transport':
+            service = InboundTransport.query.get_or_404(record_id)
+        else:  # meal
+            service = InboundMeal.query.get_or_404(record_id)
+    except:
+        abort(404)
+
+    if not service.confirmation_email_filepath:
+        abort(404)
+
+    full_path = os.path.join(current_app.static_folder, service.confirmation_email_filepath)
+    if not os.path.exists(full_path):
+        abort(404)
+
+    return send_file(full_path, download_name=service.confirmation_email_filename)
 

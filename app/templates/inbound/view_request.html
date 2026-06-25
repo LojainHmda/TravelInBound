@@ -1535,6 +1535,16 @@ input[type="date"]::-webkit-calendar-table-body {
                                     <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="hotel_system_notes" placeholder="Internal only" autocomplete="off">
                                 </div>
                             </div>
+                            <!-- Attach Confirmation Email -->
+                            <div class="mb-2">
+                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Attach Confirmation Email</label>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <input type="file" id="hotel_confirmation_input" style="display:none;" accept=".pdf,.png,.jpg,.jpeg,.gif,.doc,.docx,.xls,.xlsx,.txt" onchange="handleConfirmationFileSelect(event, 'hotel')">
+                                    <button type="button" onclick="document.getElementById('hotel_confirmation_input').click()" class="px-3 py-1.5 border border-slate-300 bg-white text-slate-700 rounded text-xs font-medium hover:bg-slate-50">Choose File</button>
+                                    <span id="hotel_file_display" style="font-size: 0.75rem; color: #64748b;">No file chosen</span>
+                                    <button type="button" id="hotel_clear_btn" class="px-3 py-1.5 border border-slate-300 bg-white text-slate-700 rounded text-xs font-medium hidden hover:bg-slate-50" onclick="clearConfirmationFile('hotel')">Clear</button>
+                                </div>
+                            </div>
                             <!-- Add/Save/Cancel Buttons -->
                             <div class="flex justify-end gap-2">
                                 <button type="button" id="add-btn-hotel" onclick="try { console.log('[Hotel Add Button] Clicked via onclick'); if (saveInProgress['hotel']) { console.warn('[Hotel Add Button] Save already in progress, ignoring click'); return false; } addNewServiceData('hotel'); return false; } catch(e) { console.error('[Hotel Add Button] Error:', e); alert('Error: ' + e.message); return false; }" class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-xs" style="pointer-events: auto; cursor: pointer; z-index: 10;">
@@ -1811,7 +1821,18 @@ input[type="date"]::-webkit-calendar-table-body {
                                     </div>
                                 </div>
                             </div>
-                            
+
+                            <!-- Attach Confirmation Email -->
+                            <div class="mb-2">
+                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Attach Confirmation Email</label>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <input type="file" id="transport_confirmation_input" style="display:none;" accept=".pdf,.png,.jpg,.jpeg,.gif,.doc,.docx,.xls,.xlsx,.txt" onchange="handleConfirmationFileSelect(event, 'transport')">
+                                    <button type="button" onclick="document.getElementById('transport_confirmation_input').click()" class="px-3 py-1.5 border border-slate-300 bg-white text-slate-700 rounded text-xs font-medium hover:bg-slate-50">Choose File</button>
+                                    <span id="transport_file_display" style="font-size: 0.75rem; color: #64748b;">No file chosen</span>
+                                    <button type="button" id="transport_clear_btn" class="px-3 py-1.5 border border-slate-300 bg-white text-slate-700 rounded text-xs font-medium hidden hover:bg-slate-50" onclick="clearConfirmationFile('transport')">Clear</button>
+                                </div>
+                            </div>
+
                             <!-- Add/Save Buttons -->
                             <div class="flex justify-end gap-2 pt-1">
                                 <button type="button" id="add-btn-transport" onclick="addNewServiceData('transport')" class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all font-medium text-xs shadow-sm">
@@ -1929,6 +1950,18 @@ input[type="date"]::-webkit-calendar-table-body {
                                     <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="meal_system_notes" placeholder="Internal only" autocomplete="off">
                                 </div>
                             </div>
+
+                            <!-- Attach Confirmation Email -->
+                            <div class="mb-2">
+                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Attach Confirmation Email</label>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <input type="file" id="meal_confirmation_input" style="display:none;" accept=".pdf,.png,.jpg,.jpeg,.gif,.doc,.docx,.xls,.xlsx,.txt" onchange="handleConfirmationFileSelect(event, 'meal')">
+                                    <button type="button" onclick="document.getElementById('meal_confirmation_input').click()" class="px-3 py-1.5 border border-slate-300 bg-white text-slate-700 rounded text-xs font-medium hover:bg-slate-50">Choose File</button>
+                                    <span id="meal_file_display" style="font-size: 0.75rem; color: #64748b;">No file chosen</span>
+                                    <button type="button" id="meal_clear_btn" class="px-3 py-1.5 border border-slate-300 bg-white text-slate-700 rounded text-xs font-medium hidden hover:bg-slate-50" onclick="clearConfirmationFile('meal')">Clear</button>
+                                </div>
+                            </div>
+
                             <!-- Save Button -->
                             <div class="flex justify-end gap-2">
                                 <button type="button" onclick="saveServiceData('meal')" class="px-3 py-1.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium text-xs">
@@ -7610,6 +7643,12 @@ function populateServiceForm(serviceType, record) {
                     // Trigger the city filter to update the restaurant dropdown
                     const changeEvent = new Event('change', { bubbles: true });
                     cityDropdown.dispatchEvent(changeEvent);
+
+                    // After city filter populates restaurant options, set the restaurant value
+                    const restaurantDropdown = document.getElementById('meal_restaurant');
+                    if (restaurantDropdown) {
+                        restaurantDropdown.value = supplier.id;
+                    }
                 }
             }
         }
@@ -7648,6 +7687,11 @@ function populateServiceForm(serviceType, record) {
                 loadRoomCategoriesForHotel(supplierId);
             }
         }
+    }
+
+    // Load confirmation email file if it exists (for hotel, transport, meal)
+    if (['hotel', 'transport', 'meal'].includes(serviceType) && record.id) {
+        loadExistingConfirmationFile(serviceType, record);
     }
 }
 
@@ -8233,6 +8277,45 @@ async function saveServiceData(serviceType) {
             const wasEditMode = !!currentServiceContext?.rowId;
             const wasEditRowId = currentServiceContext?.rowId;
             persistSystemNotesAfterSave(serviceType, data, wasEditRowId);
+
+            // Upload confirmation file if one is pending
+            console.log(`[saveServiceData] Checking for pending files: serviceType=${serviceType}, hasPendingFile=${!!pendingConfirmationFiles[serviceType]}`);
+            if (['hotel', 'transport', 'meal'].includes(serviceType) && pendingConfirmationFiles[serviceType]) {
+                console.log(`[saveServiceData] Found pending file for ${serviceType}, response data:`, data);
+
+                // Get the record ID from the response or context
+                let recordId = data[`${serviceType}_id`] || data.id || wasEditRowId;
+
+                // For hotel, use hotel_id from response
+                if (serviceType === 'hotel' && data.hotel_id) {
+                    recordId = data.hotel_id;
+                    console.log(`[saveServiceData] Using hotel_id from response: ${recordId}`);
+                } else if (serviceType === 'transport' && data.transport_id) {
+                    recordId = data.transport_id;
+                    console.log(`[saveServiceData] Using transport_id from response: ${recordId}`);
+                } else if (serviceType === 'meal' && data.meal_id) {
+                    recordId = data.meal_id;
+                    console.log(`[saveServiceData] Using meal_id from response: ${recordId}`);
+                } else {
+                    console.log(`[saveServiceData] No service ID in response, using wasEditRowId: ${wasEditRowId}`);
+                }
+
+                // If we still don't have an ID, we can't upload
+                if (recordId) {
+                    console.log(`[saveServiceData] Starting file upload with recordId=${recordId}`);
+                    const uploadSuccess = await uploadConfirmationFile(serviceType, recordId);
+                    if (!uploadSuccess) {
+                        console.warn(`[saveServiceData] File upload failed for ${serviceType}`);
+                    } else {
+                        console.log(`[saveServiceData] File upload succeeded for ${serviceType}`);
+                    }
+                } else {
+                    console.error(`[saveServiceData] Cannot upload file - no recordId found!`);
+                }
+            } else {
+                console.log(`[saveServiceData] No pending file to upload for ${serviceType}`);
+            }
+
             // Hide floating cancel button and reset context immediately so it stays hidden
             currentServiceContext = { serviceName: serviceType, rowId: null };
             if (serviceType === 'transport') {
@@ -15837,6 +15920,252 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize Restaurant City Filter
     initializeMealCityFilter();
 });
+
+// ============ Confirmation Email File Upload Handlers ============
+
+// Store pending files per service type (for upload after service is created/saved)
+let pendingConfirmationFiles = {
+    hotel: null,
+    transport: null,
+    meal: null
+};
+
+// Handle file selection from the file input
+function handleConfirmationFileSelect(event, serviceType) {
+    const file = event.target.files[0];
+
+    console.log(`[handleConfirmationFileSelect] Called for ${serviceType}, file selected:`, !!file);
+
+    if (!file) {
+        // File picker was cancelled/closed without selection - do nothing
+        console.log(`[handleConfirmationFileSelect] File picker cancelled for ${serviceType}`);
+        return;
+    }
+
+    // Store file for later upload
+    pendingConfirmationFiles[serviceType] = file;
+    console.log(`[handleConfirmationFileSelect] File stored in pendingConfirmationFiles[${serviceType}]:`, file.name);
+
+    // Update UI to show file selected
+    const displaySpan = document.getElementById(`${serviceType}_file_display`);
+    const clearBtn = document.getElementById(`${serviceType}_clear_btn`);
+
+    if (displaySpan) {
+        displaySpan.textContent = file.name;
+        displaySpan.style.cursor = 'pointer';
+
+        // Make filename clickable to preview
+        displaySpan.onclick = () => {
+            const url = URL.createObjectURL(file);
+            window.open(url, '_blank');
+        };
+    }
+
+    if (clearBtn) {
+        clearBtn.classList.remove('hidden');
+        console.log(`[handleConfirmationFileSelect] Showed Clear button for ${serviceType}`);
+    }
+
+    console.log(`[handleConfirmationFileSelect] File selected for ${serviceType}: ${file.name}`);
+}
+
+// Clear selected file
+async function clearConfirmationFile(serviceType) {
+    // Check if there's an existing saved file that needs to be deleted from server
+    const displaySpan = document.getElementById(`${serviceType}_file_display`);
+    const hasExistingFile = displaySpan && displaySpan.textContent !== 'No file chosen' && displaySpan.textContent.trim() !== '';
+
+    if (hasExistingFile && currentServiceContext.rowId) {
+        // Delete existing file from server
+        const deleted = await deleteConfirmationFile(serviceType, currentServiceContext.rowId);
+        if (!deleted) {
+            console.error(`[clearConfirmationFile] Failed to delete existing file for ${serviceType}`);
+            return;  // Don't clear UI if delete failed
+        }
+    }
+
+    // Clear from pending uploads
+    pendingConfirmationFiles[serviceType] = null;
+
+    // Reset file input
+    const fileInput = document.getElementById(`${serviceType}_confirmation_input`);
+    if (fileInput) fileInput.value = '';
+
+    // Reset UI
+    const clearBtn = document.getElementById(`${serviceType}_clear_btn`);
+    const fileButton = document.getElementById(`${serviceType}_file_button`);
+
+    if (displaySpan) {
+        displaySpan.textContent = 'No file chosen';
+        displaySpan.style.cursor = 'default';
+        displaySpan.style.textDecoration = 'none';
+        displaySpan.style.color = '#64748b';
+        displaySpan.onclick = null;
+    }
+
+    if (clearBtn) clearBtn.classList.add('hidden');
+    if (fileButton) fileButton.classList.add('hidden');
+
+    console.log(`[clearConfirmationFile] Cleared confirmation file for ${serviceType}`);
+}
+
+// Upload pending confirmation file after service is created/updated
+async function uploadConfirmationFile(serviceType, recordId) {
+    const file = pendingConfirmationFiles[serviceType];
+
+    console.log(`[uploadConfirmationFile] Called with: serviceType=${serviceType}, recordId=${recordId}`);
+    console.log(`[uploadConfirmationFile] Pending file exists: ${!!file}`);
+
+    if (!file) {
+        console.log(`[uploadConfirmationFile] No pending file for ${serviceType} - skipping upload`);
+        return true;
+    }
+
+    if (!recordId) {
+        console.error(`[uploadConfirmationFile] ERROR: recordId is missing!`);
+        showNotification(`Error: Cannot upload file - record not found`, 'error');
+        return false;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const url = `/inbound/api/${serviceType}/${recordId}/upload-confirmation`;
+        console.log(`[uploadConfirmationFile] Uploading: POST ${url}, file=${file.name} (${file.size} bytes)`);
+
+        const response = await fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': window.csrfToken || ''
+            }
+        });
+
+        console.log(`[uploadConfirmationFile] Response status: ${response.status}`);
+        const data = await response.json();
+        console.log(`[uploadConfirmationFile] Response data:`, data);
+
+        if (response.ok && data.success) {
+            console.log(`[uploadConfirmationFile] SUCCESS! File should now be persisted in database`);
+
+            // Clear pending file
+            pendingConfirmationFiles[serviceType] = null;
+
+            // Update UI with uploaded file info
+            const displaySpan = document.getElementById(`${serviceType}_file_display`);
+            const clearBtn = document.getElementById(`${serviceType}_clear_btn`);
+            if (displaySpan) {
+                displaySpan.textContent = file.name;
+                displaySpan.style.cursor = 'pointer';
+            }
+            if (clearBtn) clearBtn.style.display = 'block';
+
+            showNotification('Confirmation file uploaded successfully', 'success');
+            return true;
+        } else {
+            const errorMsg = data?.error || `HTTP ${response.status}`;
+            console.error(`[uploadConfirmationFile] FAILED: ${errorMsg}`);
+            showNotification(`Failed to upload confirmation file: ${errorMsg}`, 'error');
+            return false;
+        }
+    } catch (error) {
+        console.error(`[uploadConfirmationFile] Exception during upload:`, error);
+        showNotification(`Error uploading confirmation file: ${error.message}`, 'error');
+        return false;
+    }
+}
+
+// Delete confirmation file from database and disk
+async function deleteConfirmationFile(serviceType, recordId) {
+    try {
+        const response = await fetch(`/inbound/api/${serviceType}/${recordId}/delete-confirmation`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': window.csrfToken || '',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            console.log(`[deleteConfirmationFile] File deleted for ${serviceType}`);
+
+            // Reset UI
+            const displaySpan = document.getElementById(`${serviceType}_file_display`);
+            const clearBtn = document.getElementById(`${serviceType}_clear_btn`);
+
+            if (displaySpan) {
+                displaySpan.textContent = 'No file chosen';
+                displaySpan.style.cursor = 'default';
+                displaySpan.style.textDecoration = 'none';
+                displaySpan.style.color = '#64748b';
+                displaySpan.onclick = null;
+            }
+
+            if (clearBtn) clearBtn.classList.add('hidden');
+
+            return true;
+        } else {
+            console.error(`[deleteConfirmationFile] Delete failed:`, data.error);
+            showNotification(`Failed to delete confirmation file: ${data.error}`, 'error');
+            return false;
+        }
+    } catch (error) {
+        console.error(`[deleteConfirmationFile] Delete error:`, error);
+        showNotification('Error deleting confirmation file: ' + error.message, 'error');
+        return false;
+    }
+}
+
+// Load existing confirmation file when editing a service
+function loadExistingConfirmationFile(serviceType, record) {
+    console.log(`[loadExistingConfirmationFile] Called for ${serviceType}, record.id=${record.id}`);
+
+    // Database field name is always "confirmation_email_filename", not service-type prefixed
+    const filename = record.confirmation_email_filename;
+
+    console.log(`[loadExistingConfirmationFile] Looking for filename in record:`, filename);
+
+    if (!filename) {
+        console.log(`[loadExistingConfirmationFile] No existing file for ${serviceType}`);
+        return;
+    }
+
+    const displaySpan = document.getElementById(`${serviceType}_file_display`);
+    const clearBtn = document.getElementById(`${serviceType}_clear_btn`);
+
+    console.log(`[loadExistingConfirmationFile] Found displaySpan: ${!!displaySpan}, clearBtn: ${!!clearBtn}`);
+
+    if (displaySpan) {
+        displaySpan.textContent = filename;
+        displaySpan.style.cursor = 'pointer';
+
+        // Make clickable to preview
+        displaySpan.onclick = async () => {
+            console.log(`[loadExistingConfirmationFile] Clicking to preview file for ${serviceType}`);
+            try {
+                const response = await fetch(`/inbound/api/${serviceType}/${record.id}/confirmation-file`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                window.open(url, '_blank');
+            } catch (error) {
+                console.error('[loadExistingConfirmationFile] Error previewing file:', error);
+                showNotification('Error opening file', 'error');
+            }
+        };
+    }
+
+    // Show clear button
+    if (clearBtn) {
+        clearBtn.classList.remove('hidden');
+        console.log(`[loadExistingConfirmationFile] Showed Clear button for ${serviceType}`);
+    }
+
+    console.log(`[loadExistingConfirmationFile] SUCCESS - Loaded existing file for ${serviceType}: ${filename}`);
+}
 </script>
 {% include 'components/shared_transport_popup_controller.html' %}
 {% include 'components/transport_vehicle_other_controller.html' %}
