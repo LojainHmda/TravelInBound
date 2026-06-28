@@ -41,8 +41,9 @@ def create_app():
     logging.getLogger('flask_wtf.csrf').setLevel(logging.ERROR)
 
     # Init extensions
-    from app.extensions import db, login_manager, csrf
+    from app.extensions import db, login_manager, csrf, migrate
     db.init_app(app)
+    migrate.init_app(app, db)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Please log in to access this page.'

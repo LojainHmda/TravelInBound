@@ -33,11 +33,28 @@ class Config:
     }
 
 
+    # Neon pooler-compatible engine options (no statement_timeout in connect_args)
+    _PG_POOLER_ENGINE_OPTIONS = {
+        'pool_recycle': 280,
+        'pool_pre_ping': True,
+        'pool_size': 5,
+        'max_overflow': 10,
+        'pool_timeout': 20,
+        'connect_args': {
+            'connect_timeout': 5,
+            'keepalives': 1,
+            'keepalives_idle': 30,
+            'keepalives_interval': 10,
+            'keepalives_count': 5,
+        },
+    }
+
+
 class DevelopmentConfig(Config):
     DEBUG = True
     TESTING = False
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL_TEST')
-    SQLALCHEMY_ENGINE_OPTIONS = Config._PG_ENGINE_OPTIONS
+    SQLALCHEMY_ENGINE_OPTIONS = Config._PG_POOLER_ENGINE_OPTIONS
     SEND_FILE_MAX_AGE_DEFAULT = 0
 
 
@@ -45,7 +62,7 @@ class TestingConfig(Config):
     DEBUG = False
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL_TEST')
-    SQLALCHEMY_ENGINE_OPTIONS = Config._PG_ENGINE_OPTIONS
+    SQLALCHEMY_ENGINE_OPTIONS = Config._PG_POOLER_ENGINE_OPTIONS
     WTF_CSRF_ENABLED = False
 
 
