@@ -106,6 +106,7 @@ def create_app():
         from app.models.invoice import Invoice            # noqa: F401
         from app.models.expense_sheet import (GuideExpenseSheet, GuideExpenseSheetItem,  # noqa: F401
                                                GuidePaymentSheet, GuidePaymentSheetItem)
+        from app.models.invoice_line import InboundInvoiceLine  # noqa: F401
 
         # Register blueprints
         from app.routes.main import main_bp
