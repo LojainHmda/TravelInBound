@@ -104,7 +104,8 @@ def create_app():
         # Import all models so SQLAlchemy registers them
         from app.models import User                       # noqa: F401
         from app.models.invoice import Invoice            # noqa: F401
-        from app.models.expense_sheet import GuideExpenseSheet, GuidePaymentSheet  # noqa: F401
+        from app.models.expense_sheet import (GuideExpenseSheet, GuideExpenseSheetItem,  # noqa: F401
+                                               GuidePaymentSheet, GuidePaymentSheetItem)
 
         # Register blueprints
         from app.routes.main import main_bp
