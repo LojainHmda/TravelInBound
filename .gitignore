@@ -1,32 +1,43 @@
-# Environment and secrets - NEVER commit
+# Secrets
 .env
-.env.local
-.env.*.local
+*.env.local
+
+# Database
+app.db
+*.db
+*.sqlite3
+
+# Logs
+*.log
+error.txt
+output.txt
+server.log
+server_error.log
+server_output.log
+output.log
+
+# Uploads (store in cloud, not git)
+uploads/
+
+# Test artifacts
+*.pdf
+cookies.txt
 
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
 .venv/
 venv/
-ENV/
 
-# Flask
-instance/
-*.db
-app.db
+# OS
+.DS_Store
+Thumbs.db
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
-
-# OS
-.DS_Store
-Thumbs.db
 
 # Build and deploy
 *.zip
