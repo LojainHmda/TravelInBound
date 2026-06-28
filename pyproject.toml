@@ -32,3 +32,7 @@ dependencies = [
     "openpyxl>=3.1.5",
     "python-docx>=1.2.0",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
