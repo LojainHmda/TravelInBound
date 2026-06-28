@@ -8,9 +8,10 @@ from calendar import monthrange
 from sqlalchemy import extract, func, case, and_, or_
 from werkzeug.utils import secure_filename
 from flask import (
-    Blueprint, render_template, request, redirect, url_for, 
+    Blueprint, render_template, request, redirect, url_for,
     flash, jsonify, current_app, send_file, Response
 )
+from flask_login import login_required, current_user
 
 from app import db
 from app.models import (
@@ -69,12 +70,13 @@ def validate_date_for_query(date_value, default=None, param_name="date"):
         return default or date.today()
 
 @finance.route('/')
+@login_required
 def index():
     """Finance module home with financial KPIs"""
-    # Authentication disabled - all users have access
     return dashboard()
 
 @finance.route('/dashboard')
+@login_required
 def dashboard():
     """Finance dashboard with financial KPIs"""
     # Authentication disabled - all users have access
@@ -603,7 +605,7 @@ def dashboard():
     )
 
 @finance.route('/expenses')
-
+@login_required
 def expenses():
     """List and manage expenses"""
     filter_form = ExpenseFilterForm()
@@ -686,7 +688,7 @@ def expenses():
     )
 
 @finance.route('/cash-flow')
-
+@login_required
 def cash_flow():
     """Cash flow dashboard showing payments in and out"""
     try:
@@ -822,7 +824,7 @@ def cash_flow():
         return redirect(url_for('finance.index'))
 
 @finance.route('/expenses/new', methods=['GET', 'POST'])
-
+@login_required
 def new_expense():
     """Create a new expense"""
     form = ExpenseForm()
@@ -857,7 +859,7 @@ def new_expense():
     return render_template('finance/expense_form.html', form=form, expense=None)
 
 @finance.route('/expenses/<int:expense_id>/edit', methods=['GET', 'POST'])
-
+@login_required
 def edit_expense(expense_id):
     """Edit an existing expense"""
     expense = Expense.query.get_or_404(expense_id)
@@ -877,7 +879,7 @@ def edit_expense(expense_id):
     return render_template('finance/expense_form.html', form=form, expense=expense)
 
 @finance.route('/expenses/<int:expense_id>/delete', methods=['POST'])
-
+@login_required
 def delete_expense(expense_id):
     """Delete an expense"""
     expense = Expense.query.get_or_404(expense_id)
@@ -889,7 +891,7 @@ def delete_expense(expense_id):
     return redirect(url_for('finance.expenses'))
 
 @finance.route('/expenses/<int:expense_id>/attachments/upload', methods=['POST'])
-
+@login_required
 def upload_attachment(expense_id):
     """Upload attachment for an expense"""
     expense = Expense.query.get_or_404(expense_id)
@@ -926,7 +928,7 @@ def upload_attachment(expense_id):
     return redirect(url_for('finance.edit_expense', expense_id=expense_id))
 
 @finance.route('/categories')
-
+@login_required
 def expense_categories():
     """List and manage expense categories"""
     categories = ExpenseCategory.query.all()
@@ -945,7 +947,7 @@ def expense_categories():
     )
 
 @finance.route('/categories/new', methods=['GET', 'POST'])
-
+@login_required
 def new_category():
     """Create a new expense category"""
     form = ExpenseCategoryForm()
@@ -978,7 +980,7 @@ def new_category():
     )
 
 @finance.route('/categories/<int:category_id>/edit', methods=['GET', 'POST'])
-
+@login_required
 def edit_category(category_id):
     """Edit an existing expense category"""
     category = ExpenseCategory.query.get_or_404(category_id)
@@ -1006,7 +1008,7 @@ def edit_category(category_id):
     )
 
 @finance.route('/reports')
-
+@login_required
 def reports():
     """Financial reports landing page"""
     form = FinancialReportFilterForm()
@@ -1040,7 +1042,7 @@ def reports():
     return render_template('finance/reports.html', form=form)
 
 @finance.route('/reports/generate', methods=['GET', 'POST'])
-
+@login_required
 def generate_report():
     """Generate financial reports based on filters"""
     form = FinancialReportFilterForm()
@@ -1339,6 +1341,7 @@ def export_supplier_payments_csv(report_data, start_date, end_date):
     pass
 
 @finance.route('/suppliers')
+@login_required
 def list_suppliers():
     """List all suppliers with prepayment data - same as supplier costs"""
     # Wrap entire function in try-except to catch any unhandled OSError
@@ -1751,6 +1754,7 @@ def _query_suppliers_for_type(type_key, search_query=''):
 
 
 @finance.route('/suppliers/type/<type_key>')
+@login_required
 def supplier_type_page(type_key):
     """Dedicated page for a supplier type"""
     config, suppliers = _query_suppliers_for_type(type_key, request.args.get('q', ''))
@@ -1771,6 +1775,7 @@ def supplier_type_page(type_key):
 
 
 @finance.route('/suppliers/type/<type_key>/print')
+@login_required
 def print_supplier_type_page(type_key):
     """Print-friendly view of suppliers for a type page."""
     config, suppliers = _query_suppliers_for_type(type_key, request.args.get('q', ''))
@@ -1806,6 +1811,7 @@ def _bank_fields_from_payment_method(payment_method, bank_name, bank_account, cl
 
 
 @finance.route('/suppliers/type/<type_key>/quick-add', methods=['POST'])
+@login_required
 def quick_add_supplier(type_key):
     """Create supplier from the type-page popup modal."""
     type_map = {
@@ -1962,6 +1968,7 @@ def _parse_supplier_notes(notes_raw):
 
 
 @finance.route('/suppliers/type/<type_key>/edit/<int:supplier_id>', methods=['GET', 'POST'])
+@login_required
 def edit_supplier_type(type_key, supplier_id):
     """Full-page edit form for a supplier on a type page (replaces the old details screen)."""
     supplier = Supplier.query.get_or_404(supplier_id)
@@ -2122,7 +2129,7 @@ def edit_supplier_type(type_key, supplier_id):
 
 
 @finance.route('/new-supplier', methods=['GET', 'POST'])
-
+@login_required
 def new_supplier():
     """Create a new supplier"""
     from app.forms.supplier import SupplierForm
@@ -2204,7 +2211,7 @@ def new_supplier():
     return render_template('finance/new_supplier.html', form=form, is_new=True)
 
 @finance.route('/supplier-costs')
-
+@login_required
 def supplier_costs():
     """Supplier costs view - shows prepayment lines across all suppliers"""
     # Get filter parameters
@@ -2271,6 +2278,7 @@ def supplier_costs():
     )
 
 @finance.route('/clear-all-suppliers', methods=['POST'])
+@login_required
 def clear_all_suppliers():
     """Clear all supplier data from the database"""
     try:
@@ -2330,7 +2338,7 @@ def clear_all_suppliers():
         return redirect(url_for('finance.list_suppliers'))
 
 @finance.route('/supplier/<int:supplier_id>')
-
+@login_required
 def supplier_details(supplier_id):
     """Show supplier details and payment history"""
     from app.models.supplier import Supplier, SupplierPrepaymentLine
@@ -2400,6 +2408,7 @@ def supplier_details(supplier_id):
     )
 
 @finance.route('/supplier/<int:supplier_id>/toggle-status', methods=['POST'])
+@login_required
 def toggle_supplier_status(supplier_id):
     """Suspend or reactivate a supplier from the type page table."""
     from app.routes.inbound import _invalidate_supplier_dropdown_cache
@@ -2426,6 +2435,7 @@ def toggle_supplier_status(supplier_id):
 
 
 @finance.route('/supplier/<int:supplier_id>/delete', methods=['POST'])
+@login_required
 def delete_supplier(supplier_id):
     """Delete one supplier from type page table."""
     supplier = Supplier.query.get_or_404(supplier_id)

@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, send_from_directory, jsonify
+from flask_login import login_required, current_user
 from app import db
 from app.models.booking import Booking
 from app.models import STATUS_REQUEST, STATUS_IN_PROGRESS, STATUS_CONFIRMED, STATUS_BOOKED
@@ -10,6 +11,7 @@ main_bp = Blueprint('main', __name__)
 
 
 @main_bp.route('/inbound/all-files')
+@login_required
 def inbound_all_files_list():
     """Hub link: all saved inbound files (request + confirmed + invoiced). Same UI as inbound index."""
     from app.routes.inbound import _inbound_list_context
@@ -23,13 +25,13 @@ def inbound_all_files_list():
 
 
 @main_bp.route('/supplier/<int:supplier_id>')
-
+@login_required
 def supplier_redirect(supplier_id):
     """Redirect /supplier/X to /finance/supplier/X"""
     return redirect(url_for('finance.supplier_details', supplier_id=supplier_id))
 
 @main_bp.route('/')
-
+@login_required
 def index():
     """Home page showing New Booking action and weekly run-down plan"""
     from app.models.inbound import InboundRequest
@@ -152,7 +154,7 @@ def index():
         return Response(error_html, status=500, mimetype='text/html')
 
 @main_bp.route('/dashboard')
-
+@login_required
 def dashboard():
     """Advanced Analytics Dashboard - Windows of Jordan Travel Operations"""
     from sqlalchemy import func, extract
@@ -282,6 +284,7 @@ def dashboard():
     )
 
 @main_bp.route('/operations')
+@login_required
 def operations_dashboard():
     """View for the travel operations dashboard - OPTIMIZED"""
     from sqlalchemy import func
@@ -314,6 +317,7 @@ def operations_dashboard():
     )
 
 @main_bp.route('/search-history')
+@login_required
 def search_and_history():
     """Search and History page for bookings - PERFORMANCE OPTIMIZED"""
     # Get search parameters
@@ -357,7 +361,7 @@ def search_and_history():
                          has_search_params=has_search_params)
 
 @main_bp.route('/admin/dashboard')
-
+@login_required
 def admin_dashboard():
     """Admin dashboard with full system overview"""
     if not current_user.is_admin():
@@ -380,7 +384,7 @@ def admin_dashboard():
     return render_template('admin_dashboard.html', stats=stats)
 
 @main_bp.route('/find-bookings')
-
+@login_required
 def find_bookings():
     """Find Bookings page with comprehensive filtering - PERFORMANCE OPTIMIZED"""
     from datetime import datetime, timedelta
@@ -490,6 +494,7 @@ def find_bookings():
                          has_search_params=has_search_params)
 
 @main_bp.route('/health')
+@login_required
 def health():
     """Health check for production debugging - verifies DB connectivity and schema."""
     import os
@@ -533,6 +538,7 @@ def health():
     return jsonify(result)
 
 @main_bp.route('/favicon.ico')
+@login_required
 def favicon():
     """Serve favicon to prevent 404 errors"""
     return send_from_directory('static', 'favicon.ico')

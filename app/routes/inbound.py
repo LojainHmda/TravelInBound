@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, render_template_string, redirect, url_for, flash, request, jsonify, abort, send_file, current_app
+from flask_login import login_required, current_user
 from datetime import datetime, timedelta, date
 import calendar
 import time
@@ -746,7 +747,7 @@ def _map_status_for_filter(status_val):
 
 
 @inbound_bp.route('/')
-
+@login_required
 def index():
     """List all inbound requests with filtering and run-down plan"""
     ctx = _inbound_list_context()
@@ -758,6 +759,7 @@ def index():
 
 
 @inbound_bp.route('/export-list-excel')
+@login_required
 def export_list_excel():
     """Export inbound list using current filters."""
     import io
@@ -859,6 +861,7 @@ def export_list_excel():
 
 
 @inbound_bp.route('/print-list')
+@login_required
 def print_list():
     """Print-friendly view of inbound list using current filters."""
     all_files_view = (request.args.get('all_files_view') or '').strip() == '1'
@@ -1020,6 +1023,7 @@ def get_run_down_data_by_date():
     return sorted_data
 
 @inbound_bp.route('/new')
+@login_required
 def new_request():
     """Create new inbound request and go directly to itinerary creation"""
     try:
@@ -1227,6 +1231,7 @@ def _group_linked_attachment_rows(rows):
 
 
 @inbound_bp.route('/linked-attachments')
+@login_required
 def linked_attachments_page():
     """Dedicated page listing files linked to main inbound records."""
     q = (request.args.get('q') or '').strip()
@@ -1241,6 +1246,7 @@ def linked_attachments_page():
 
 
 @inbound_bp.route('/linked-attachments/create', methods=['POST'])
+@login_required
 def linked_attachments_create():
     """Create a linked attachment from the dedicated page form."""
     parent_id = request.form.get('parent_id', type=int)
@@ -1324,6 +1330,7 @@ def api_create_linked_request():
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @inbound_bp.route('/<int:id>/edit')
+@login_required
 def edit_request(id):
     """Redirect to unified view/edit page"""
     request_obj = InboundRequest.query.get_or_404(id)
@@ -1337,6 +1344,7 @@ def edit_request(id):
     return redirect(url_for('inbound.view_request', id=id, mode='edit'))
 
 @inbound_bp.route('/<int:id>/view')
+@login_required
 def view_request(id):
     """View inbound request details with unified edit functionality"""
     from flask import request as flask_request
@@ -1415,6 +1423,7 @@ def view_request(id):
 
 
 @inbound_bp.route('/<int:id>/delete', methods=['GET', 'POST'])
+@login_required
 @csrf.exempt
 def delete_request(id):
     """Permanently delete a request and all of its linked inbound records.
@@ -1473,6 +1482,7 @@ def api_trash_inbound_request(request_id):
 
 
 @inbound_bp.route('/<int:id>/restore-queue')
+@login_required
 def restore_from_invoice_queue(id):
     """Put request back on the main inbound list (undo trash / Deleted queue)."""
     request_obj = InboundRequest.query.get_or_404(id)
@@ -5814,7 +5824,7 @@ def api_generate_services(request_id):
 # Removed view_services route - no longer needed since we redirect to normal booking page
 
 @inbound_bp.route('/<int:request_id>/invoice')
-
+@login_required
 def generate_invoice(request_id):
     """Generate invoice for the request"""
     request_obj = InboundRequest.query.get_or_404(request_id)
@@ -5832,6 +5842,7 @@ def generate_invoice(request_id):
     return render_template('inbound/invoice.html', request=request_obj, saved_admin_invoice=saved_admin)
 
 @inbound_bp.route('/<int:request_id>/customer-invoice')
+@login_required
 def customer_invoice(request_id):
     """Generate customer-facing invoice (Windows of Jordan format)"""
     request_obj = InboundRequest.query.get_or_404(request_id)
@@ -5875,6 +5886,7 @@ def customer_invoice(request_id):
     return render_template('inbound/customer_invoice.html', request=request_obj, rooms_display=rooms_display, tour_ref_display=tour_ref_display, saved_customer_invoice=saved_customer)
 
 @inbound_bp.route('/<int:request_id>/save-admin-invoice', methods=['POST'])
+@login_required
 @csrf.exempt
 def save_admin_invoice(request_id):
     """Save editable admin invoice content as JSON"""
@@ -5887,6 +5899,7 @@ def save_admin_invoice(request_id):
     return jsonify({'ok': True})
 
 @inbound_bp.route('/<int:request_id>/save-customer-invoice', methods=['POST'])
+@login_required
 @csrf.exempt
 def save_customer_invoice(request_id):
     """Save editable customer invoice content as JSON"""
@@ -5899,6 +5912,7 @@ def save_customer_invoice(request_id):
     return jsonify({'ok': True})
 
 @inbound_bp.route('/<int:id>/hotel-voucher')
+@login_required
 def generate_hotel_voucher(id):
     """Generate hotel services voucher for the request (print layout)"""
     request_obj = InboundRequest.query.get_or_404(id)
@@ -5912,6 +5926,7 @@ def generate_hotel_voucher(id):
 
 @inbound_bp.route('/<int:id>/restaurant-voucher')
 @inbound_bp.route('/<int:id>/restaurant-voucher/<int:meal_id>')
+@login_required
 def generate_restaurant_voucher(id, meal_id=None):
     """Generate restaurant services voucher for the request (print layout)"""
     request_obj = InboundRequest.query.get_or_404(id)
@@ -5928,6 +5943,7 @@ def generate_restaurant_voucher(id, meal_id=None):
     return render_template('inbound/restaurant_voucher.html', request=request_obj, target_meal=target_meal)
 
 @inbound_bp.route('/<int:request_id>/voucher')
+@login_required
 def generate_voucher(request_id):
     """Generate visual timeline voucher for the request"""
     from datetime import datetime
@@ -7032,7 +7048,7 @@ def api_generate_proforma(request_id):
         }), 500
 
 @inbound_bp.route('/<int:request_id>/preview-proforma', methods=['GET'])
-
+@login_required
 def preview_proforma(request_id):
     """Preview proforma invoice on a web page before exporting to Word"""
     request_obj = InboundRequest.query.get_or_404(request_id)
@@ -8186,6 +8202,7 @@ def get_status_color(status):
     return status_colors.get(status, '#94a3b8')
 
 @inbound_bp.route('/run-down')
+@login_required
 def run_down_plan():
     """Run-down page: date-filtered services with supplier lookup."""
     today = datetime.now().date()
@@ -8208,6 +8225,7 @@ def run_down_plan():
 
 
 @inbound_bp.route('/run-down/suppliers')
+@login_required
 def run_down_suppliers():
     """JSON: searchable suppliers for a run-down service category."""
     from sqlalchemy import or_ as _or
@@ -8242,6 +8260,7 @@ def run_down_suppliers():
 
 
 @inbound_bp.route('/run-down/supplier-requests')
+@login_required
 def run_down_supplier_requests():
     """JSON: inbound requests for a supplier within a service and date range."""
     service_key = request.args.get('service', '').upper()
@@ -8271,6 +8290,7 @@ def run_down_supplier_requests():
     })
 
 @inbound_bp.route('/run-down/agents')
+@login_required
 def run_down_agents():
     """JSON: searchable agents (customers) for the Agent Run Down."""
     query = request.args.get('q', '').strip()
@@ -8303,6 +8323,7 @@ def run_down_agents():
 
 
 @inbound_bp.route('/run-down/agent-requests')
+@login_required
 def run_down_agent_requests():
     """JSON: inbound requests for a customer (agent) within a date range."""
     from sqlalchemy import and_
@@ -8498,7 +8519,7 @@ def api_run_down_data():
     })
 
 @inbound_bp.route('/run-down-export-excel')
-
+@login_required
 def run_down_export_excel():
     """Export run-down plan to Excel"""
     from app.models.customer import Customer
@@ -8653,7 +8674,7 @@ def run_down_export_excel():
     )
 
 @inbound_bp.route('/run-down-export-pdf')
-
+@login_required
 def run_down_export_pdf():
     """Export run-down plan to PDF"""
     from app.models.customer import Customer
@@ -8763,7 +8784,7 @@ def run_down_export_pdf():
 
 
 @inbound_bp.route('/wizard/step1', methods=['GET', 'POST'])
-
+@login_required
 def wizard_step1():
     """Wizard Step 1: Arrival & Departure Batches"""
     from flask import session
@@ -8867,7 +8888,7 @@ def wizard_step1():
 
 
 @inbound_bp.route('/wizard/step2', methods=['GET', 'POST'])
-
+@login_required
 def wizard_step2():
     """Wizard Step 2: Add All Services"""
     from flask import session
@@ -8923,7 +8944,7 @@ def wizard_step2():
 
 
 @inbound_bp.route('/wizard/step3', methods=['GET', 'POST'])
-
+@login_required
 def wizard_step3():
     """Wizard Step 3: Review & Create"""
     from flask import session
@@ -9439,7 +9460,7 @@ def api_export_expense_report(request_id):
         return redirect(url_for('inbound.view_request', id=request_id))
 
 @inbound_bp.route('/<int:request_id>/add-cash-expense', methods=['POST'])
-
+@login_required
 def add_cash_expense(request_id):
     """Add a cash expense item and create itinerary row"""
     request_obj = InboundRequest.query.get_or_404(request_id)
@@ -9505,7 +9526,7 @@ def add_cash_expense(request_id):
     return redirect(url_for('inbound.view_request', id=request_id))
 
 @inbound_bp.route('/<int:request_id>/update-cash-expense/<int:expense_id>', methods=['POST'])
-
+@login_required
 def update_cash_expense(request_id, expense_id):
     """Update a cash expense item"""
     request_obj = InboundRequest.query.get_or_404(request_id)
@@ -9536,7 +9557,7 @@ def update_cash_expense(request_id, expense_id):
     return redirect(url_for('inbound.view_request', id=request_id))
 
 @inbound_bp.route('/<int:request_id>/delete-cash-expense/<int:expense_id>', methods=['POST'])
-
+@login_required
 def delete_cash_expense(request_id, expense_id):
     """Delete a cash expense item"""
     request_obj = InboundRequest.query.get_or_404(request_id)
@@ -9560,7 +9581,7 @@ def delete_cash_expense(request_id, expense_id):
     return redirect(url_for('inbound.view_request', id=request_id))
 
 @inbound_bp.route('/<int:request_id>/add-meal', methods=['POST'])
-
+@login_required
 def add_meal(request_id):
     """Add a meal item and create itinerary row"""
     request_obj = InboundRequest.query.get_or_404(request_id)
@@ -9634,7 +9655,7 @@ def add_meal(request_id):
     return redirect(url_for('inbound.view_request', id=request_id))
 
 @inbound_bp.route('/<int:request_id>/delete-meal/<int:meal_id>', methods=['POST'])
-
+@login_required
 def delete_meal(request_id, meal_id):
     """Delete a meal item"""
     request_obj = InboundRequest.query.get_or_404(request_id)
@@ -10056,6 +10077,7 @@ def check_and_update_request_status(request_id):
 # ============================================================
 
 @inbound_bp.route('/analytics')
+@login_required
 def analytics_dashboard():
     """Comprehensive analytics dashboard with search across all services"""
     from app.models.inbound import InboundOptional, ArrivalBatch, DepartureBatch
@@ -10310,6 +10332,7 @@ def analytics_dashboard():
                          request_number=request_number)
 
 @inbound_bp.route('/analytics/export-excel', methods=['POST'])
+@login_required
 def analytics_export_excel():
     """Export the currently displayed Supplier Analytics table as Excel.
     Accepts table data directly from frontend to ensure exact match."""
@@ -10398,6 +10421,7 @@ def analytics_export_excel():
 
 
 @inbound_bp.route('/analytics/supplier-analytics')
+@login_required
 def supplier_analytics_api():
     """JSON API: supplier analytics.
     Always returns: key (name) | [attr_val if attribute selected] | total/confirmed/requested/invoiced
@@ -10816,6 +10840,7 @@ def supplier_analytics_api():
 
 
 @inbound_bp.route('/analytics/kpi-data')
+@login_required
 def analytics_kpi_data():
     """JSON: KPI summary statistics aligned with /finance/suppliers business categories."""
     from app.models.inbound import InboundOptional, ArrivalBatch, DepartureBatch
@@ -10887,6 +10912,7 @@ def analytics_kpi_data():
 
 
 @inbound_bp.route('/analytics/run-down-data')
+@login_required
 def analytics_run_down_data():
     """JSON: Filtered run-down service rows for the detail table."""
     from app.models.inbound import InboundOptional
@@ -11057,6 +11083,7 @@ def analytics_run_down_data():
 
 
 @inbound_bp.route('/analytics/supplier-types')
+@login_required
 def analytics_supplier_types():
     """JSON: Business supplier categories matching /finance/suppliers (excludes Airline)."""
     from app.models.supplier import Supplier as _Supplier
@@ -11097,6 +11124,7 @@ def analytics_supplier_types():
 
 
 @inbound_bp.route('/analytics/suppliers-by-type')
+@login_required
 def analytics_suppliers_by_type():
     """JSON: Supplier records from the Supplier table with service usage counts.
     Accepts category key matching /finance/suppliers (e.g. 'guides', 'accommodation').
@@ -11370,6 +11398,7 @@ def api_delete_document(doc_id):
         return jsonify({"success": False, "message": str(e)}), 500
 
 @inbound_bp.route("/documents/<int:doc_id>/view")
+@login_required
 def view_document(doc_id):
     """View/download a document"""
     doc = InboundDocument.query.get_or_404(doc_id)

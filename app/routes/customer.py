@@ -2,9 +2,10 @@ from datetime import datetime
 import os
 import uuid
 from flask import (
-    Blueprint, render_template, request, redirect, 
+    Blueprint, render_template, request, redirect,
     url_for, flash, jsonify, current_app, send_file
 )
+from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from sqlalchemy import delete
 from sqlalchemy.exc import IntegrityError, OperationalError
@@ -41,6 +42,7 @@ def _apply_customer_financial_from_form(form, customer):
 
 
 @customer_bp.route('/')
+@login_required
 def list_customers():
     """Display list of customers with filtering options"""
     # Get filter parameters (Customer Type only)
@@ -67,6 +69,7 @@ def list_customers():
     )
 
 @customer_bp.route('/new', methods=['GET', 'POST'])
+@login_required
 def new_customer():
     """Create a new customer"""
     form = CustomerForm()
@@ -131,6 +134,7 @@ def new_customer():
     )
 
 @customer_bp.route('/<int:customer_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_customer(customer_id):
     """Edit an existing customer"""
     customer = Customer.query.get_or_404(customer_id)
@@ -202,6 +206,7 @@ def edit_customer(customer_id):
 
 
 @customer_bp.route('/<int:customer_id>/delete', methods=['POST'])
+@login_required
 def delete_customer(customer_id):
     """Remove customer; clear nullable FKs on bookings/inbound requests; delete document files."""
     customer_row = Customer.query.get_or_404(customer_id)
@@ -274,6 +279,7 @@ def delete_customer(customer_id):
 
 
 @customer_bp.route('/<int:customer_id>')
+@login_required
 def view_customer(customer_id):
     """View customer details"""
     customer = Customer.query.get_or_404(customer_id)
@@ -287,6 +293,7 @@ def view_customer(customer_id):
     )
 
 @customer_bp.route('/<int:customer_id>/upload-document', methods=['POST'])
+@login_required
 def upload_document(customer_id):
     """Upload a document for a customer"""
     customer = Customer.query.get_or_404(customer_id)
@@ -338,6 +345,7 @@ def upload_document(customer_id):
     return redirect(url_for('customer.view_customer', customer_id=customer.id))
 
 @customer_bp.route('/<int:customer_id>/delete-document/<int:document_id>', methods=['POST'])
+@login_required
 def delete_document(customer_id, document_id):
     """Delete a customer document"""
     document = CustomerDocument.query.get_or_404(document_id)
@@ -362,6 +370,7 @@ def delete_document(customer_id, document_id):
     return redirect(url_for('customer.view_customer', customer_id=customer_id))
 
 @customer_bp.route('/<int:customer_id>/document/<int:document_id>')
+@login_required
 def view_document(customer_id, document_id):
     """Serve a customer document file"""
     document = CustomerDocument.query.get_or_404(document_id)

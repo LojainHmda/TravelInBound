@@ -1,96 +1,126 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
-from app import db
+
+from app.extensions import db
 from app.models.user import User, create_test_data
 
 auth_bp = Blueprint('auth', __name__)
 
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    # Authentication disabled - redirect to home page
-    return redirect(url_for('main.index'))
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+
+        if not username or not password:
+            flash('Username and password are required.', 'error')
+            return render_template('auth/login.html')
+
+        user = User.query.filter_by(username=username).first()
+
+        if user is None or not user.check_password(password):
+            flash('Invalid username or password.', 'error')
+            return render_template('auth/login.html')
+
+        if not user.active:
+            flash('Your account is disabled. Contact admin.', 'error')
+            return render_template('auth/login.html')
+
+        login_user(user, remember=False)
+        next_page = request.args.get('next')
+        return redirect(next_page or url_for('main.index'))
+
+    return render_template('auth/login.html')
+
 
 @auth_bp.route('/logout')
+@login_required
 def logout():
-    # Authentication disabled - redirect to home page
-    flash('Logout disabled - authentication removed', 'info')
-    return redirect(url_for('main.index'))
+    logout_user()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('auth.login'))
+
 
 @auth_bp.route('/admin/users')
+@login_required
 def admin_users():
-    # Authentication disabled - all users have admin access
-    users = User.query.all()
+    if not current_user.is_admin():
+        flash('Admin access required.', 'error')
+        return redirect(url_for('main.index'))
+    users = User.query.order_by(User.username).all()
     return render_template('auth/admin_users.html', users=users)
 
+
 @auth_bp.route('/admin/users/new', methods=['GET', 'POST'])
+@login_required
 def create_user():
-    # Authentication disabled - all users have admin access
-    
+    if not current_user.is_admin():
+        flash('Admin access required.', 'error')
+        return redirect(url_for('main.index'))
+
     if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        first_name = request.form.get('first_name')
-        last_name = request.form.get('last_name')
-        role = request.form.get('role')
-        password = request.form.get('password')
-        
-        # Validate required fields
-        if not username or not email or not password or not role:
-            flash('Please fill in all required fields', 'error')
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip()
+        first_name = request.form.get('first_name', '').strip()
+        last_name = request.form.get('last_name', '').strip()
+        role = request.form.get('role', '').strip()
+        password = request.form.get('password', '')
+
+        if not all([username, email, password, role]):
+            flash('All required fields must be filled.', 'error')
             return render_template('auth/create_user.html')
-        
-        # Check if username already exists
+
         if User.query.filter_by(username=username).first():
-            flash('Username already exists', 'error')
+            flash('Username already exists.', 'error')
             return render_template('auth/create_user.html')
-        
-        # Check if email already exists
+
         if User.query.filter_by(email=email).first():
-            flash('Email already exists', 'error')
+            flash('Email already exists.', 'error')
             return render_template('auth/create_user.html')
-        
-        # Create new user
-        user = User(
-            username=username,
-            email=email,
-            first_name=first_name,
-            last_name=last_name,
-            role=role
-        )
+
+        user = User(username=username, email=email, first_name=first_name,
+                    last_name=last_name, role=role)
         user.set_password(password)
-        
         db.session.add(user)
         db.session.commit()
-        
-        flash(f'User {username} created successfully', 'success')
+        flash(f'User {username} created successfully.', 'success')
         return redirect(url_for('auth.admin_users'))
-    
+
     return render_template('auth/create_user.html')
 
-@auth_bp.route('/admin/users/<int:user_id>/toggle-status')
+
+@auth_bp.route('/admin/users/<int:user_id>/toggle-status', methods=['POST'])
+@login_required
 def toggle_user_status(user_id):
-    # Authentication disabled - all users have admin access
+    if not current_user.is_admin():
+        flash('Admin access required.', 'error')
+        return redirect(url_for('main.index'))
+
     user = User.query.get_or_404(user_id)
-    
-    if user.id == 1:
-        flash('You cannot deactivate the admin account', 'error')
+    if user.id == current_user.id:
+        flash('You cannot deactivate your own account.', 'error')
         return redirect(url_for('auth.admin_users'))
-    
+
     user.active = not user.active
     db.session.commit()
-    
-    status = 'activated' if user.active else 'deactivated'
-    flash(f'User {user.username} has been {status}', 'success')
-    
+    flash(f'User {user.username} {"activated" if user.active else "deactivated"}.', 'success')
     return redirect(url_for('auth.admin_users'))
+
 
 @auth_bp.route('/init-data')
 def init_data():
-    """Initialize test data - remove in production"""
+    """Seed admin user — callable only if no users exist yet."""
+    if User.query.count() > 0:
+        flash('Data already initialized.', 'info')
+        return redirect(url_for('auth.login'))
     try:
         create_test_data()
-        flash('Test data initialized successfully', 'success')
+        flash('Admin user created. Username: admin / Password: admin123', 'success')
     except Exception as e:
-        flash(f'Error initializing data: {str(e)}', 'error')
-    
+        flash(f'Error: {e}', 'error')
     return redirect(url_for('auth.login'))
