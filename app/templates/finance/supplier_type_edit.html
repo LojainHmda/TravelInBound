@@ -248,7 +248,7 @@ body {
             <div class="form-grid">
                 <div class="field">
                     <label>City</label>
-                    <select name="city">
+                    <select name="city" data-saved-city="{{ supplier.city or '' }}">
                         <option value="">Select city...</option>
                         {% for c in ['Amman','Aqaba','Petra','Dead Sea','Jerash','Madaba','Wadi Rum','Other'] %}
                         <option value="{{ c }}" {% if supplier.city == c %}selected{% endif %}>{{ c }}</option>
@@ -1021,6 +1021,49 @@ body {
     if (pmSel) {
         pmSel.addEventListener('change', updatePaymentFields);
         updatePaymentFields();
+    }
+
+    // ── Accommodation City - Restore custom cities in edit mode ────
+    var citySelect = document.querySelector('select[name="city"]');
+    var CUSTOM_CITIES_KEY = 'custom_cities_accommodation';
+
+    if (citySelect) {
+        var savedCity = citySelect.getAttribute('data-saved-city') || '';
+
+        function restoreCustomCitiesInEditMode() {
+            try {
+                var customCities = JSON.parse(localStorage.getItem(CUSTOM_CITIES_KEY) || '[]');
+                customCities = Array.isArray(customCities) ? customCities : [];
+                customCities = customCities.filter(function(c) {
+                    return String(c || '').trim().length >= 3;
+                });
+
+                customCities.forEach(function(city) {
+                    var existingOption = Array.from(citySelect.options).find(function(opt) {
+                        return opt.value === city;
+                    });
+                    if (!existingOption) {
+                        var newOption = document.createElement('option');
+                        newOption.value = city;
+                        newOption.textContent = city;
+                        var otherOption = Array.from(citySelect.options).find(function(opt) {
+                            return opt.value === 'Other';
+                        });
+                        if (otherOption) {
+                            citySelect.insertBefore(newOption, otherOption);
+                        } else {
+                            citySelect.appendChild(newOption);
+                        }
+                    }
+                });
+
+                if (savedCity && savedCity.trim()) {
+                    citySelect.value = savedCity;
+                }
+            } catch (_) {}
+        }
+
+        restoreCustomCitiesInEditMode();
     }
 
     // ── Language tag selector (guides / meet-assist) ─────────

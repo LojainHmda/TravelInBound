@@ -2048,7 +2048,6 @@ def _auto_generate_services(request_obj, itinerary_row):
             check_out_date=check_out,
             nights=nights,
             meal_plan='BB',
-            cost_per_night=itinerary_row.base_cost if itinerary_row.cost_unit == COST_UNIT_PER_PERSON else itinerary_row.base_cost / request_obj.pax,
             total_cost=itinerary_row.calculate_row_cost(request_obj.pax),
             currency=itinerary_row.currency
         )
@@ -2736,13 +2735,11 @@ def api_save_service_data(request_id):
             if check_out_str:
                 hotel.check_out_date = datetime.strptime(check_out_str, '%Y-%m-%d').date()
 
-            # Calculate nights and cost
+            # Calculate nights
             if hotel.check_in_date and hotel.check_out_date:
                 hotel.nights = (hotel.check_out_date - hotel.check_in_date).days
 
-            cost_per_night = float(form_data.get('hotel_cost', 0) or 0)
-            hotel.cost_per_night = cost_per_night
-            hotel.total_cost = cost_per_night * (hotel.nights or 1)
+            hotel.total_cost = float(form_data.get('hotel_cost', 0) or 0)
 
             # Room distribution
             hotel.single_rooms = int(form_data.get('hotel_single_rooms', 0) or 0)
@@ -7116,7 +7113,7 @@ def preview_proforma(request_id):
             'date_from': hotel.check_in_date,
             'date_to': hotel.check_out_date,
             'pax': request_obj.pax,
-            'unit_price': hotel.cost_per_night or 0,
+            'unit_price': hotel.total_cost or 0,
             'total': hotel.total_cost or 0
         })
 
@@ -7237,7 +7234,6 @@ def update_proforma_prices(request_id):
                         pass
 
                 if service_type == 'hotel':
-                    service.cost_per_night = item['unit_price']
                     service.total_cost = item['total']
                     if item.get('description'):
                         service.hotel_name = item['description']
@@ -7361,7 +7357,7 @@ def api_export_proforma_doc(request_id):
                 'date_from': hotel.check_in_date,
                 'date_to': hotel.check_out_date,
                 'pax': request_obj.pax,
-                'unit_price': hotel.cost_per_night,
+                'unit_price': hotel.total_cost,
                 'total': hotel.total_cost
             })
 

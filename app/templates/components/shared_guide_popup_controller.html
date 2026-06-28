@@ -211,13 +211,14 @@
 
             const fileInput = document.getElementById(`${prefix}_contract_file`);
             const clearBtn = document.getElementById(`${prefix}_clear_file`);
+            let originalFile = null;
+            let originalUrl = null;
             let currentBlobUrl = null;
 
             fileInput.addEventListener('change', function() {
                 // Only process if a file is actually selected
                 if (!this.files || this.files.length === 0) {
-                    // File picker was opened but closed without selecting
-                    // Do NOT clear the previously selected file
+                    // File picker was opened but closed without selecting - keep existing file
                     return;
                 }
 
@@ -230,15 +231,16 @@
             clearBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 fileInput.value = '';
-                clearBtn.style.display = 'none';
                 if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
                 currentBlobUrl = null;
+                clearBtn.style.display = originalFile ? 'block' : 'none';
             });
 
             // Make filename clickable to preview
             fileInput.addEventListener('click', function(e) {
-                if (currentBlobUrl && e.offsetX > 80 && e.offsetY < 24) {
-                    window.open(currentBlobUrl, '_blank');
+                if ((currentBlobUrl || originalUrl) && e.offsetX > 80 && e.offsetY < 24) {
+                    const urlToOpen = currentBlobUrl || originalUrl;
+                    window.open(urlToOpen, '_blank');
                     e.preventDefault();
                 }
             });

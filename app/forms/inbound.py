@@ -59,9 +59,8 @@ class InboundHotelForm(FlaskForm):
                            default='BB')
     
     # Costing
-    cost_per_night = FloatField('Cost per Night', validators=[Optional(), NumberRange(min=0)])
     total_cost = FloatField('Total Cost', validators=[Optional(), NumberRange(min=0)])
-    currency = SelectField('Currency', 
+    currency = SelectField('Currency',
                           choices=[('USD', 'USD'), ('EUR', 'EUR'), ('JOD', 'JOD')],
                           default='USD')
 

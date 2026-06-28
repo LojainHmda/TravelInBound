@@ -465,7 +465,6 @@ class InboundHotel(db.Model):
     voucher_notes = db.Column(db.Text, nullable=True)  # Notes specific to voucher (separate from hotel notes)
 
     # Costing
-    cost_per_night = db.Column(db.Float, default=0.0)
     total_cost = db.Column(db.Float, default=0.0)
     currency = db.Column(db.String(3), default='USD')
 

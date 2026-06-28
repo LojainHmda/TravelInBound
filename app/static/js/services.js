@@ -141,15 +141,8 @@ class ServicesManager {
                         </div>
                         <div class="col-md-3">
                             <div class="mb-3">
-                                <label class="form-label">Cost per Night</label>
-                                <input type="number" class="form-control" name="cost_per_night" 
-                                       value="${hotel.cost_per_night}" step="0.01" min="0" ${hotel.is_locked ? 'readonly' : ''}>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="mb-3">
                                 <label class="form-label">Total Cost</label>
-                                <input type="number" class="form-control" name="total_cost" 
+                                <input type="number" class="form-control" name="total_cost"
                                        value="${hotel.total_cost}" step="0.01" min="0" ${hotel.is_locked ? 'readonly' : ''}>
                             </div>
                         </div>

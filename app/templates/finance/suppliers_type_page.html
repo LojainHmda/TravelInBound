@@ -368,6 +368,26 @@ body.modal-open {
     const popupAccommodationRoomCategory = document.getElementById('new_hotel_room_category');
     const popupAddRoomCategoryBtn = document.getElementById('popupAddRoomCategoryBtn');
 
+    // Clean up unwanted kark entries from localStorage and dropdown
+    try {
+        const customCitiesKey = 'custom_cities_accommodation';
+        let customCities = JSON.parse(localStorage.getItem(customCitiesKey) || '[]');
+        const badPattern = /^(kark|karak)(\d+)?$/i;
+        const filtered = customCities.filter(city => !badPattern.test(city));
+        if (filtered.length !== customCities.length) {
+            localStorage.setItem(customCitiesKey, JSON.stringify(filtered));
+        }
+
+        // Also remove from the select element if it exists
+        const citySelect = document.getElementById('new_hotel_city');
+        if (citySelect) {
+            const optionsToRemove = Array.from(citySelect.options).filter(opt =>
+                badPattern.test(opt.value)
+            );
+            optionsToRemove.forEach(opt => opt.remove());
+        }
+    } catch (_) {}
+
     if (isAirlinePage && airlineOverlay && openBtn) {
         const closeAirlineBtn = document.getElementById('closeQuickAirlineModal');
         const cancelAirlineBtn = document.getElementById('cancelQuickAirlineModal');
@@ -461,14 +481,17 @@ body.modal-open {
     // Initialize file preview for accommodation contract attachment
     function initAccommodationFilePreview() {
         const fileInput = document.getElementById('new_hotel_contract_file');
-        const previewDiv = document.getElementById('new_hotel_contract_preview');
-        if (!fileInput || !previewDiv) return;
+        const clearBtn = document.getElementById('new_hotel_contract_clear');
+        if (!fileInput || !clearBtn) return;
 
+        let originalFile = fileInput.getAttribute('data-original-file');
+        let originalUrl = fileInput.getAttribute('data-original-url');
+        let currentBlobUrl = null;
+
+        // File change: new file selected
         fileInput.addEventListener('change', function() {
-            // Only process if a file is actually selected
             if (!this.files || this.files.length === 0) {
-                // File picker was opened but closed without selecting
-                // Do NOT clear the previously selected file
+                // User cancelled file picker - keep existing file
                 return;
             }
 
@@ -478,15 +501,7 @@ body.modal-open {
             clearBtn.style.display = 'block';
         });
 
-        clearBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            fileInput.value = '';
-            clearBtn.style.display = originalFile ? 'block' : 'none';
-            if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
-            currentBlobUrl = null;
-        });
-
-        // Make filename clickable to preview
+        // Click handler: if clicking on filename area, open preview
         fileInput.addEventListener('click', function(e) {
             if ((currentBlobUrl || originalUrl) && e.offsetX > 80 && e.offsetY < 24) {
                 const urlToOpen = currentBlobUrl || originalUrl;
@@ -495,7 +510,16 @@ body.modal-open {
             }
         });
 
-        // Initial state
+        // Clear button: remove file
+        clearBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            fileInput.value = '';
+            if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
+            currentBlobUrl = null;
+            clearBtn.style.display = originalFile ? 'block' : 'none';
+        });
+
+        // Initial state: show Clear button only if there was an original file
         clearBtn.style.display = originalFile ? 'block' : 'none';
     }
 
@@ -706,6 +730,111 @@ body.modal-open {
         updateNewCategoryFields();
     }
 
+    // ── Accommodation City with custom value support ───────
+    const newCustomCityWrap = document.getElementById('newCustomCityWrap');
+    const newCustomCityInput = document.getElementById('newCustomCityInput');
+    const newHotelCitySelect = document.getElementById('new_hotel_city');
+    const CUSTOM_CITIES_KEY = 'custom_cities_accommodation';
+    const CLEANUP_VERSION_KEY = 'custom_cities_cleanup_v2';
+
+    if (newHotelCitySelect && newCustomCityWrap && newCustomCityInput) {
+        try {
+            if (!localStorage.getItem(CLEANUP_VERSION_KEY)) {
+                localStorage.removeItem(CUSTOM_CITIES_KEY);
+                localStorage.setItem(CLEANUP_VERSION_KEY, '1');
+            }
+        } catch (_) {}
+        let cityDebounceTimeout = null;
+
+        function saveCustomCityToStorage(city) {
+            try {
+                const trimmed = String(city || '').trim();
+                if (trimmed.length < 3) return;
+                let customCities = JSON.parse(localStorage.getItem(CUSTOM_CITIES_KEY) || '[]');
+                if (!customCities.includes(trimmed)) {
+                    customCities.push(trimmed);
+                    localStorage.setItem(CUSTOM_CITIES_KEY, JSON.stringify(customCities));
+                }
+            } catch (_) {}
+        }
+
+        function loadCustomCitiesFromStorage() {
+            try {
+                let customCities = JSON.parse(localStorage.getItem(CUSTOM_CITIES_KEY) || '[]');
+                customCities = Array.isArray(customCities) ? customCities : [];
+                customCities = customCities.filter(c => String(c || '').trim().length >= 3);
+                if (customCities.length < JSON.parse(localStorage.getItem(CUSTOM_CITIES_KEY) || '[]').length) {
+                    localStorage.setItem(CUSTOM_CITIES_KEY, JSON.stringify(customCities));
+                }
+                return customCities;
+            } catch (_) {
+                return [];
+            }
+        }
+
+        function restoreCustomCitiesInDropdown() {
+            const customCities = loadCustomCitiesFromStorage();
+            customCities.forEach(function(city) {
+                const existingOption = Array.from(newHotelCitySelect.options).find(opt => opt.value === city);
+                if (!existingOption) {
+                    const newOption = document.createElement('option');
+                    newOption.value = city;
+                    newOption.textContent = city;
+                    const otherOption = Array.from(newHotelCitySelect.options).find(opt => opt.value === 'Other');
+                    if (otherOption) {
+                        newHotelCitySelect.insertBefore(newOption, otherOption);
+                    } else {
+                        newHotelCitySelect.appendChild(newOption);
+                    }
+                }
+            });
+        }
+
+        function updateNewCityFields() {
+            const selectedValue = newHotelCitySelect.value;
+            if (selectedValue === 'Other') {
+                newCustomCityWrap.style.display = '';
+                newCustomCityInput.focus();
+            } else {
+                newCustomCityWrap.style.display = 'none';
+                newCustomCityInput.value = '';
+            }
+        }
+
+        function addCustomCityToDropdown(city) {
+            if (!city) return;
+            const existingOption = Array.from(newHotelCitySelect.options).find(
+                opt => opt.value === city
+            );
+            if (!existingOption) {
+                const newOption = document.createElement('option');
+                newOption.value = city;
+                newOption.textContent = city;
+                const otherOption = Array.from(newHotelCitySelect.options).find(opt => opt.value === 'Other');
+                if (otherOption) {
+                    newHotelCitySelect.insertBefore(newOption, otherOption);
+                } else {
+                    newHotelCitySelect.appendChild(newOption);
+                }
+            }
+            newHotelCitySelect.value = city;
+        }
+
+        function handleCustomCityInput() {
+            clearTimeout(cityDebounceTimeout);
+        }
+
+        function handleCustomCityBlur() {
+            clearTimeout(cityDebounceTimeout);
+        }
+
+        newHotelCitySelect.addEventListener('change', updateNewCityFields);
+        newCustomCityInput.addEventListener('input', handleCustomCityInput);
+        newCustomCityInput.addEventListener('blur', handleCustomCityBlur);
+        restoreCustomCitiesInDropdown();
+        updateNewCityFields();
+    }
+
     if (submitBtn) {
         submitBtn.addEventListener('click', async function () {
             const requiredName = overlay.querySelector('input[name="name"]');
@@ -715,6 +844,33 @@ body.modal-open {
             }
             const url = overlay.getAttribute('data-submit-url');
             if (!url) return;
+
+            const selectedCity = newHotelCitySelect.value;
+            const customCityValue = newCustomCityInput ? newCustomCityInput.value.trim() : '';
+
+            console.log('City Debug:', { selectedCity, customCityValue, hasInput: !!newCustomCityInput });
+
+            if (selectedCity === 'Other' && customCityValue && customCityValue.length >= 3) {
+                console.log('Updating city from Other to:', customCityValue);
+
+                const existingOption = Array.from(newHotelCitySelect.options).find(
+                    opt => opt.value === customCityValue
+                );
+                if (!existingOption) {
+                    const newOption = document.createElement('option');
+                    newOption.value = customCityValue;
+                    newOption.textContent = customCityValue;
+                    const otherOption = Array.from(newHotelCitySelect.options).find(opt => opt.value === 'Other');
+                    if (otherOption) {
+                        newHotelCitySelect.insertBefore(newOption, otherOption);
+                    } else {
+                        newHotelCitySelect.appendChild(newOption);
+                    }
+                }
+
+                newHotelCitySelect.value = customCityValue;
+            }
+
             const formData = new FormData();
             overlay.querySelectorAll('[name]').forEach(el => {
                 if (!(el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement)) return;
@@ -724,9 +880,16 @@ body.modal-open {
                     formData.append(el.name, el.value || '');
                 }
             });
+
+            console.log('Form city value:', formData.get('city'));
+
             try {
                 const resp = await fetch(url, { method: 'POST', body: formData });
                 if (!resp.ok) throw new Error('Save failed');
+                if (selectedCity === 'Other' && customCityValue && customCityValue.length >= 3) {
+                    console.log('Saving to localStorage:', customCityValue);
+                    saveCustomCityToStorage(customCityValue);
+                }
                 window.location.reload();
             } catch (_) {
                 alert('Could not save supplier. Please try again.');
