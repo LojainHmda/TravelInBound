@@ -43,6 +43,8 @@ def create_app():
     # Init extensions
     from app.extensions import db, login_manager, csrf, migrate
     db.init_app(app)
+    from app.services.storage import document_storage
+    document_storage.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
