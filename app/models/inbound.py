@@ -446,6 +446,9 @@ class InboundHotel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     request_id = db.Column(db.Integer, db.ForeignKey('inbound_request.id'), nullable=False)
     source_itinerary_id = db.Column(db.Integer, db.ForeignKey('itinerary_row.id'), nullable=True)  # Link to generating itinerary
+    # Supplier FK — links hotel booking to master supplier (type=ACCOMMODATION)
+    # nullable: existing rows have no supplier_id; hotel_name stays as display override
+    supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=True)
 
     # Hotel details
     hotel_name = db.Column(db.String(200), nullable=True)
@@ -483,6 +486,7 @@ class InboundHotel(db.Model):
 
     # Relationships
     rooms = db.relationship('HotelRoom', backref='hotel', lazy=True, cascade='all, delete-orphan')
+    supplier_ref = db.relationship('Supplier', foreign_keys=[supplier_id], lazy='joined')
 
     def __repr__(self):
         return f'<InboundHotel {self.hotel_name} - {self.check_in_date}>'
