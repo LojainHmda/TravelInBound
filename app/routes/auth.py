@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
-from werkzeug.security import check_password_hash
+from urllib.parse import urlparse
 
 from app.extensions import db
 from app.models.user import User, create_test_data
@@ -33,6 +33,10 @@ def login():
 
         login_user(user, remember=False)
         next_page = request.args.get('next')
+        if next_page:
+            parsed = urlparse(next_page)
+            if parsed.scheme or parsed.netloc:
+                next_page = None
         return redirect(next_page or url_for('main.index'))
 
     return render_template('auth/login.html')
