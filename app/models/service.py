@@ -1,5 +1,5 @@
 from datetime import datetime
-from app import db
+from app.extensions import db
 
 # Constants for service item status - Updated workflow
 STATUS_REQUEST = 'REQUEST'      # Booking request is created. No quote shared yet.

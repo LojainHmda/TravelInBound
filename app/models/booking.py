@@ -1,4 +1,4 @@
-from app import db
+from app.extensions import db
 from datetime import datetime
 from app.models import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED, STATUS_COMPLETED
 

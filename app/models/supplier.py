@@ -1,5 +1,5 @@
 from datetime import datetime
-from app import db
+from app.extensions import db
 from sqlalchemy import func, desc, or_
 
 class SupplierPrepaymentLine(db.Model):

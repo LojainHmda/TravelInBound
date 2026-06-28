@@ -1,5 +1,5 @@
 from datetime import datetime
-from app import db
+from app.extensions import db
 
 # Expense categories
 EXPENSE_CATEGORY_RENT = 'RENT'                  # Office rent

@@ -1,4 +1,4 @@
-from app import db
+from app.extensions import db
 from flask_dance.consumer.storage.sqla import OAuthConsumerMixin
 from sqlalchemy import UniqueConstraint
 from datetime import datetime

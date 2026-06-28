@@ -1,6 +1,6 @@
 import json
 from datetime import datetime, date
-from app import db
+from app.extensions import db
 from app.models import STATUS_REQUEST, STATUS_QUOTED, STATUS_RESERVED, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED
 
 # Cost units for pricing
