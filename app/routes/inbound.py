@@ -28,6 +28,7 @@ from app.models.customer import Customer
 from app.models.supplier import Supplier
 from app.services.proforma_doc_generator import ProformaDocGenerator
 from app.services.voucher_trip_plan_generator import VoucherTripPlanGenerator
+from app.services.storage import document_storage
 from app.utils import is_valid_phone, PHONE_ERROR
 
 # Create blueprint for inbound tour operator routes
@@ -5942,6 +5943,31 @@ def generate_restaurant_voucher(id, meal_id=None):
 
     return render_template('inbound/restaurant_voucher.html', request=request_obj, target_meal=target_meal)
 
+def _record_document(request_id: int, doc_type: str, filename: str,
+                     filepath: str, file_bytes: bytes, user_id: int = 1,
+                     mime_type: str = 'application/pdf') -> None:
+    """Record a generated document in inbound_document table (non-fatal)."""
+    try:
+        doc = InboundDocument(
+            request_id=request_id,
+            document_type=doc_type,
+            filename=filename,
+            original_filename=filename,
+            filepath=filepath,
+            file_size=len(file_bytes),
+            mime_type=mime_type,
+            uploaded_by=user_id,
+        )
+        db.session.add(doc)
+        db.session.commit()
+    except Exception as e:
+        current_app.logger.warning(f'Document record failed (non-fatal): {e}')
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+
+
 @inbound_bp.route('/<int:request_id>/voucher')
 @login_required
 def generate_voucher(request_id):
@@ -5982,6 +6008,17 @@ def generate_voucher(request_id):
         HTML(string=html).write_pdf(pdf_buffer)
         pdf = pdf_buffer.getvalue()
         pdf_buffer.close()
+
+        # Record generated voucher in inbound_document (non-fatal)
+        try:
+            original_name = f'tour_itinerary_{request_obj.request_number}.pdf'
+            rel_path, stored_name = document_storage.save(
+                pdf, request_id=request_id, doc_type='VOUCHER',
+                original_filename=original_name
+            )
+            _record_document(request_id, 'VOUCHER', stored_name, rel_path, pdf)
+        except Exception as _rec_err:
+            current_app.logger.warning(f'Voucher document record skipped: {_rec_err}')
 
         response = make_response(pdf)
         response.headers['Content-Type'] = 'application/pdf'
@@ -7438,6 +7475,20 @@ def api_export_proforma_doc(request_id):
         generator = ProformaDocGenerator()
         output_path = generator.generate_proforma(invoice_data)
 
+        # Record generated proforma in inbound_document (non-fatal)
+        try:
+            original_name = f'Proforma_{request_obj.request_number}.docx'
+            with open(output_path, 'rb') as _f:
+                doc_bytes = _f.read()
+            rel_path, stored_name = document_storage.save(
+                doc_bytes, request_id=request_id, doc_type='PROFORMA',
+                original_filename=original_name
+            )
+            _record_document(request_id, 'PROFORMA', stored_name, rel_path, doc_bytes,
+                             mime_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        except Exception as _rec_err:
+            current_app.logger.warning(f'Proforma document record skipped: {_rec_err}')
+
         # Send file for download
         return send_file(
             output_path,
@@ -7717,6 +7768,20 @@ def api_export_voucher_doc(request_id):
         # Generate Word document
         generator = VoucherTripPlanGenerator()
         output_path = generator.generate_voucher(voucher_data)
+
+        # Record generated voucher doc in inbound_document (non-fatal)
+        try:
+            original_name = f'Voucher_{request_obj.request_number}.docx'
+            with open(output_path, 'rb') as _f:
+                doc_bytes = _f.read()
+            rel_path, stored_name = document_storage.save(
+                doc_bytes, request_id=request_id, doc_type='VOUCHER',
+                original_filename=original_name
+            )
+            _record_document(request_id, 'VOUCHER', stored_name, rel_path, doc_bytes,
+                             mime_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        except Exception as _rec_err:
+            current_app.logger.warning(f'Voucher doc record skipped: {_rec_err}')
 
         # Send file for download
         return send_file(
