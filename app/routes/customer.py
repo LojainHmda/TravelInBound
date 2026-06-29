@@ -80,11 +80,24 @@ def new_customer():
         ('Direct', 'Direct'),
         ('Other', 'Other')
     ]
+    # Load payment terms with all predefined + custom values for validation
+    from app.forms.customer import get_customer_payment_terms_choices
+    form.payment_terms.choices = get_customer_payment_terms_choices()
     form.customer_type.default = 'Direct'
     # Clear any cached formdata
     if hasattr(form.customer_type, '_formdata'):
         form.customer_type._formdata = None
-    
+
+    # First attempt validation
+    if form.is_submitted():
+        form.validate()
+        # Custom values from the modal should be accepted - clear "Not a valid choice" errors
+        if form.payment_terms.data:
+            form.payment_terms.errors = [e for e in form.payment_terms.errors if 'not a valid choice' not in str(e).lower()]
+            # Also remove from form.errors dict if it exists
+            if 'payment_terms' in form.errors and not form.payment_terms.errors:
+                del form.errors['payment_terms']
+
     if form.validate_on_submit():
         customer = Customer(
             first_name=(form.agent_name.data or '').strip(),
@@ -146,6 +159,9 @@ def edit_customer(customer_id):
         ('Direct', 'Direct'),
         ('Other', 'Other')
     ]
+    # Load payment terms with all predefined + custom values for validation
+    from app.forms.customer import get_customer_payment_terms_choices
+    form.payment_terms.choices = get_customer_payment_terms_choices()
 
     if request.method == 'GET':
         form.agent_name.data = customer.first_name
@@ -167,6 +183,14 @@ def edit_customer(customer_id):
             form.bank_name.data = customer.bank_name or ''
             form.bank_account.data = customer.bank_account or ''
             form.cliq_alias.data = ''
+
+    # Custom values from the modal should be accepted - clear "Not a valid choice" errors
+    if form.is_submitted():
+        form.validate()
+        if form.payment_terms.data:
+            form.payment_terms.errors = [e for e in form.payment_terms.errors if 'not a valid choice' not in str(e).lower()]
+            if 'payment_terms' in form.errors and not form.payment_terms.errors:
+                del form.errors['payment_terms']
 
     if form.validate_on_submit():
         try:

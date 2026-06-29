@@ -128,7 +128,12 @@
           </div>
           <div class="col-sm-6">
             {{ form.payment_terms.label(class="popup-like-label") }}
-            {{ form.payment_terms(class="popup-like-select") }}
+            <!-- Render dropdown using form field's dynamic choices -->
+            <select class="popup-like-select" id="payment_terms" name="payment_terms">
+              {% for value, label in form.payment_terms.choices %}
+                <option value="{{ value }}" {% if form.payment_terms.data == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
             {% if form.payment_terms.errors %}
               <div class="text-danger small">{% for e in form.payment_terms.errors %}{{ e }}{% endfor %}</div>
             {% endif %}
@@ -187,10 +192,115 @@
     if (cliqWrap) cliqWrap.style.display = isCliq ? '' : 'none';
   }
 
+  function ensurePaymentTermOption(selectEl, value) {
+    const val = String(value || '').trim();
+    if (!selectEl || !val) return false;
+    const exists = Array.from(selectEl.options).some(opt => (opt.value || '').toLowerCase() === val.toLowerCase());
+    if (exists) return false;
+    const option = document.createElement('option');
+    option.value = val;
+    option.textContent = val;
+    const otherOption = Array.from(selectEl.options).find(opt => opt.value === 'Other');
+    if (otherOption) selectEl.insertBefore(option, otherOption);
+    else selectEl.appendChild(option);
+    return true;
+  }
+
+  function openCustomPromptModal(message, onSubmit) {
+    const existingOverlay = document.getElementById('customer-payment-prompt-overlay');
+    if (existingOverlay) existingOverlay.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'customer-payment-prompt-overlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;';
+    const dialog = document.createElement('div');
+    dialog.style.cssText = 'background:white;border-radius:12px;padding:24px;min-width:360px;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
+    dialog.innerHTML = `
+      <div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:12px;">${message}</div>
+      <input type="text" id="customer-payment-prompt-input" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;" placeholder="Type value..." autofocus>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+        <button type="button" id="customer-payment-prompt-cancel" style="padding:6px 16px;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;color:#475569;font-size:12px;cursor:pointer;">Cancel</button>
+        <button type="button" id="customer-payment-prompt-ok" style="padding:6px 16px;border:none;border-radius:6px;background:#3b82f6;color:white;font-size:12px;cursor:pointer;font-weight:500;">Add</button>
+      </div>
+    `;
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+    const input = document.getElementById('customer-payment-prompt-input');
+    const okBtn = document.getElementById('customer-payment-prompt-ok');
+    const cancelBtn = document.getElementById('customer-payment-prompt-cancel');
+    const submit = () => {
+      const value = (input?.value || '').trim();
+      overlay.remove();
+      onSubmit(value);
+    };
+    const cancel = () => overlay.remove();
+    okBtn?.addEventListener('click', submit);
+    cancelBtn?.addEventListener('click', cancel);
+    input?.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') submit();
+      if (e.key === 'Escape') cancel();
+    });
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) cancel();
+    });
+    setTimeout(() => input?.focus(), 50);
+  }
+
+  async function persistCustomerPaymentTerm(value) {
+    const v = String(value || '').trim();
+    if (!v) return false;
+    try {
+      const resp = await fetch('/inbound/api/supplier-option-values/global', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'customer_payment_terms', value: v })
+      });
+      const data = await resp.json();
+      return !!(resp.ok && data && data.success);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  async function loadCustomPaymentTerms() {
+    const sel = document.getElementById('payment_terms');
+    if (!sel) return;
+    try {
+      const resp = await fetch('/inbound/api/supplier-option-values/global?key=customer_payment_terms');
+      const data = await resp.json();
+      if (data && data.success && Array.isArray(data.values)) {
+        data.values.forEach(v => ensurePaymentTermOption(sel, v));
+      }
+    } catch (_) {}
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     var sel = document.getElementById('payment_terms');
     syncCustomerFinanceFields();
-    if (sel) sel.addEventListener('change', syncCustomerFinanceFields);
+    loadCustomPaymentTerms();
+
+    if (sel) {
+      sel.addEventListener('change', function() {
+        if (sel.value !== 'Other') {
+          syncCustomerFinanceFields();
+          return;
+        }
+        openCustomPromptModal('Enter new payment term:', async function (customValue) {
+          const val = String(customValue || '').trim();
+          if (!val) {
+            sel.value = '';
+            syncCustomerFinanceFields();
+            return;
+          }
+          ensurePaymentTermOption(sel, val);
+          sel.value = val;
+          const ok = await persistCustomerPaymentTerm(val);
+          if (!ok) {
+            console.warn('Could not save payment term globally.');
+          }
+          syncCustomerFinanceFields();
+        });
+      });
+    }
   });
 })();
 </script>
