@@ -5,9 +5,6 @@ from flask import Flask, request
 
 from app.api_exemptions import is_csrf_exempt
 
-# Re-export extension singletons so `from app import db` keeps working
-# across routes/services that haven't been migrated to app.extensions yet.
-from app.extensions import db, login_manager, csrf  # noqa: F401
 
 
 def create_app():
