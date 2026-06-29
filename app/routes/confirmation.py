@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from app import db
+from app.extensions import db
 from datetime import datetime
 import sys
 from app.models import ServiceItem, Document, ServiceConfirmation

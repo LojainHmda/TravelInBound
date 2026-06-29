@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, send_file, request
-from app import db
+from app.extensions import db
 from app.models.booking import Booking
 from app.models.customer import Customer
 from reportlab.pdfgen import canvas

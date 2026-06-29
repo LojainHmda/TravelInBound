@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from app.models.customer import Customer
 from app.models.booking import Booking
-from app import db
+from app.extensions import db
 from sqlalchemy import func
 
 # Create customers API blueprint

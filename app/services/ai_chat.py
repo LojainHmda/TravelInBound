@@ -8,7 +8,7 @@ import json
 from openai import OpenAI
 from sqlalchemy import or_, and_, func
 from datetime import datetime, date, timedelta
-from app import db
+from app.extensions import db
 from app.models.booking import Booking
 from app.models.customer import Customer
 from app.models import ServiceItem, Payment

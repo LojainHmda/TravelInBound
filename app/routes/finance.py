@@ -13,7 +13,7 @@ from flask import (
 )
 from flask_login import login_required, current_user
 
-from app import db
+from app.extensions import db
 from app.models import (
     ExpenseCategory, Expense, ExpenseAttachment, FinancialMetric, 
     ServiceItem, Payment, User, Document,

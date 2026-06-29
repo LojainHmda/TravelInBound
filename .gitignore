@@ -9,12 +9,13 @@ app.db
 
 # Logs
 *.log
-error.txt
-output.txt
+error*.txt
+output*.txt
 server.log
 server_error.log
 server_output.log
 output.log
+test_*.json
 
 # Uploads (store in cloud, not git)
 uploads/

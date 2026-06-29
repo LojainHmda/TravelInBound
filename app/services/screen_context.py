@@ -11,7 +11,7 @@ from datetime import datetime
 
 from openai import OpenAI
 from sqlalchemy import text
-from app import db
+from app.extensions import db
 from app.models import Booking, Customer, ServiceItem, Document, SupplierPayment
 
 # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.

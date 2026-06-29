@@ -9,7 +9,7 @@ from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from sqlalchemy import delete
 from sqlalchemy.exc import IntegrityError, OperationalError
-from app import db, csrf
+from app.extensions import db, csrf
 from app.forms.customer import CustomerForm, CustomerDocumentForm, CustomerSearchForm
 from app.models.customer import Customer, CustomerDocument
 from app.models.booking import Booking

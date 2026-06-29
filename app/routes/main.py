@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, send_from_directory, jsonify
 from flask_login import login_required, current_user
-from app import db
+from app.extensions import db
 from app.models.booking import Booking
 from app.models import STATUS_REQUEST, STATUS_IN_PROGRESS, STATUS_CONFIRMED, STATUS_BOOKED
 from app.models import ServiceItem

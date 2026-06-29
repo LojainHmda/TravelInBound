@@ -9,7 +9,7 @@ import os
 import sys
 from sqlalchemy.orm import selectinload
 
-from app import db, csrf
+from app.extensions import db, csrf
 from app.models.inbound import (
     InboundRequest, ItineraryRow, InboundHotel, InboundTransport,
     InboundMeal, InboundGuide, InboundCashExpense, InboundDocument,

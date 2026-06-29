@@ -7,7 +7,7 @@ import os
 import base64
 from werkzeug.utils import secure_filename
 
-from app import db
+from app.extensions import db
 from app.models.user import User
 from app.models.booking import Booking, Payment
 from app.models.customer import Customer
