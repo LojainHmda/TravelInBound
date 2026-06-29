@@ -76,7 +76,7 @@ class Agent(db.Model):
 def create_test_data():
     """Ensure default user (id=1) exists - required for inbound, bookings, etc."""
     # If default user already exists, nothing to do
-    if User.query.get(1) is not None:
+    if db.session.get(User, 1) is not None:
         return
     
     # Create admin user with explicit id=1 - required for inbound_request.user_id FK

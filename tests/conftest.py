@@ -20,7 +20,11 @@ def app():
 
 @pytest.fixture(scope='function')
 def client(app):
-    return app.test_client()
+    c = app.test_client()
+    # Ensure the client starts unauthenticated by clearing any session
+    with c:
+        pass  # Fresh client with no cookies
+    return c
 
 
 @pytest.fixture(scope='function')

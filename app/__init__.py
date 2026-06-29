@@ -15,7 +15,7 @@ def create_app():
     try:
         from dotenv import load_dotenv
         _root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        load_dotenv(os.path.join(_root, '.env'), override=True)
+        load_dotenv(os.path.join(_root, '.env'), override=False)
     except ImportError:
         pass
 
@@ -54,10 +54,10 @@ def create_app():
 
     # CSRF exemption hook
     original_protect = csrf.protect
-    def custom_protect():
+    def custom_protect(*args, **kwargs):
         if is_csrf_exempt(request):
             return
-        return original_protect()
+        return original_protect(*args, **kwargs)
     csrf.protect = custom_protect
 
     # User loader
@@ -263,7 +263,7 @@ def _bootstrap_admin(app, db, db_uri):
     """Ensure admin user id=1 exists."""
     try:
         from app.models.user import User, create_test_data
-        if User.query.get(1) is None:
+        if db.session.get(User, 1) is None:
             app.logger.info('Bootstrapping admin user (id=1)')
             create_test_data()
             if db_uri.startswith(('postgresql://', 'postgres://')):
