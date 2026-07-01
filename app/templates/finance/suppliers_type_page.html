@@ -368,6 +368,159 @@ body.modal-open {
     const popupAccommodationRoomCategory = document.getElementById('new_hotel_room_category');
     const popupAddRoomCategoryBtn = document.getElementById('popupAddRoomCategoryBtn');
 
+    // ── Payment Terms "Other" modal for Accommodation and Airline ───────────
+    const standardPaymentTerms = ['Credit', 'NET 15', 'NET 30', 'NET 45', 'NET 60', 'Prepaid', 'Employee', 'Other'];
+
+    async function fetchGlobalPaymentTerms(key) {
+        try {
+            const resp = await fetch(`/inbound/api/supplier-option-values/global?key=${encodeURIComponent(key)}`);
+            const data = await resp.json();
+            if (data && data.success && Array.isArray(data.values)) return data.values;
+        } catch (_) {}
+        return [];
+    }
+
+    async function persistGlobalPaymentTerm(key, value) {
+        const v = String(value || '').trim();
+        if (!key || !v) return false;
+        try {
+            const resp = await fetch('/inbound/api/supplier-option-values/global', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: key, value: v })
+            });
+            const data = await resp.json();
+            return !!(resp.ok && data && data.success);
+        } catch (_) {
+            return false;
+        }
+    }
+
+    async function restorePaymentTermsInDropdown(selectElement, key) {
+        const customTerms = await fetchGlobalPaymentTerms(key);
+        customTerms.forEach(term => {
+            const exists = Array.from(selectElement.options).some(opt => (opt.value || '').toLowerCase() === term.toLowerCase());
+            if (!exists) {
+                const newOption = document.createElement('option');
+                newOption.value = term;
+                newOption.textContent = term;
+                const otherOption = Array.from(selectElement.options).find(opt => opt.value === 'Other');
+                if (otherOption) {
+                    selectElement.insertBefore(newOption, otherOption);
+                } else {
+                    selectElement.appendChild(newOption);
+                }
+            }
+        });
+    }
+
+    function initPaymentTermsModalForAddNew(selectElementId, modalPrefix) {
+        const paymentTermsSelect = document.querySelector(`#${selectElementId}`);
+        if (!paymentTermsSelect) return;
+
+        let lastValue = paymentTermsSelect.value;
+
+        paymentTermsSelect.addEventListener('focus', function() {
+            lastValue = this.value;
+        });
+
+        paymentTermsSelect.addEventListener('change', function() {
+            if (this.value === 'Other') {
+                openPaymentTermsModalForAddNew(this, lastValue, modalPrefix);
+            }
+        });
+    }
+
+    function openPaymentTermsModalForAddNew(selectElement, previousValue, modalPrefix) {
+        var existingOverlay = document.getElementById(`payment-terms-overlay-${modalPrefix}`);
+        if (existingOverlay) existingOverlay.remove();
+
+        var overlayPrompt = document.createElement('div');
+        overlayPrompt.id = `payment-terms-overlay-${modalPrefix}`;
+        overlayPrompt.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;';
+
+        var dialog = document.createElement('div');
+        dialog.style.cssText = 'background:white;border-radius:12px;padding:24px;min-width:360px;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
+        dialog.innerHTML = '<div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:12px;">Enter Custom Payment Term</div><input type="text" id="payment-term-input-' + modalPrefix + '" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:16px;" placeholder="e.g., Net 90, 30 days, Custom term" autofocus><div style="display:flex;justify-content:flex-end;gap:8px;"><button type="button" id="payment-term-cancel-' + modalPrefix + '" style="padding:6px 16px;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;color:#475569;font-size:12px;cursor:pointer;">Cancel</button><button type="button" id="payment-term-ok-' + modalPrefix + '" style="padding:6px 16px;border:none;border-radius:6px;background:#3b82f6;color:white;font-size:12px;cursor:pointer;font-weight:500;">Add</button></div>';
+
+        overlayPrompt.appendChild(dialog);
+        document.body.appendChild(overlayPrompt);
+
+        var input = document.getElementById('payment-term-input-' + modalPrefix);
+        var okBtn = document.getElementById('payment-term-ok-' + modalPrefix);
+        var cancelBtn = document.getElementById('payment-term-cancel-' + modalPrefix);
+
+        setTimeout(function() { input.focus(); }, 50);
+
+        function submit() {
+            var trimmedValue = input.value.trim();
+            if (!trimmedValue) {
+                selectElement.value = previousValue;
+                overlayPrompt.remove();
+                return;
+            }
+
+            var exists = Array.from(selectElement.options).some(function(opt) {
+                return (opt.value || '').toLowerCase() === trimmedValue.toLowerCase();
+            });
+            if (!exists) {
+                var newOption = document.createElement('option');
+                newOption.value = trimmedValue;
+                newOption.textContent = trimmedValue;
+                var otherOption = Array.from(selectElement.options).find(function(opt) {
+                    return opt.value === 'Other';
+                });
+                if (otherOption) {
+                    selectElement.insertBefore(newOption, otherOption);
+                } else {
+                    selectElement.appendChild(newOption);
+                }
+            }
+
+            selectElement.value = trimmedValue;
+            var optionKey = modalPrefix + '_payment_terms';
+            persistGlobalPaymentTerm(optionKey, trimmedValue);
+            overlayPrompt.remove();
+        }
+
+        function cancel() {
+            selectElement.value = previousValue;
+            overlayPrompt.remove();
+        }
+
+        okBtn.addEventListener('click', submit);
+        cancelBtn.addEventListener('click', cancel);
+
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') submit();
+            if (e.key === 'Escape') cancel();
+        });
+
+        overlayPrompt.addEventListener('click', function(e) {
+            if (e.target === overlayPrompt) cancel();
+        });
+    }
+
+    // Initialize payment terms modal for Accommodation
+    if (overlay) {
+        initPaymentTermsModalForAddNew('new_hotel_payment_terms', 'accommodation');
+        restorePaymentTermsInDropdown(document.getElementById('new_hotel_payment_terms'), 'accommodation_payment_terms');
+    }
+
+    // Initialize payment terms modal for Airline
+    if (airlineOverlay) {
+        initPaymentTermsModalForAddNew('new_airline_payment_terms', 'airline');
+        restorePaymentTermsInDropdown(document.getElementById('new_airline_payment_terms'), 'airline_payment_terms');
+    }
+
+    // Expose function for airline popup controller to call
+    window.restoreAirlinePaymentTerms = function() {
+        const airlinePaymentTermsSelect = document.getElementById('new_airline_payment_terms');
+        if (airlinePaymentTermsSelect) {
+            restorePaymentTermsInDropdown(airlinePaymentTermsSelect, 'airline_payment_terms');
+        }
+    };
+
     // Clean up unwanted kark entries from localStorage and dropdown
     try {
         const customCitiesKey = 'custom_cities_accommodation';
@@ -475,8 +628,6 @@ body.modal-open {
         });
         return;
     }
-
-    if (!overlay) return;
 
     // Initialize file preview for accommodation contract attachment
     function initAccommodationFilePreview() {
@@ -884,7 +1035,9 @@ body.modal-open {
             console.log('Form city value:', formData.get('city'));
 
             try {
-                const resp = await fetch(url, { method: 'POST', body: formData });
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                const headers = csrfToken ? { 'X-CSRFToken': csrfToken } : {};
+                const resp = await fetch(url, { method: 'POST', body: formData, headers: headers });
                 if (!resp.ok) throw new Error('Save failed');
                 if (selectedCity === 'Other' && customCityValue && customCityValue.length >= 3) {
                     console.log('Saving to localStorage:', customCityValue);
@@ -918,6 +1071,9 @@ body.modal-open {
         });
     }
     syncPaymentMethodFields();
+
+    // Skip accommodation-specific code if not on accommodation page
+    if (!overlay) return;
 })();
 
 function printSuppliersList() {

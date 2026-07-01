@@ -239,6 +239,7 @@ body {
 
     <div class="form-card">
         <form method="POST" action="{{ url_for('finance.edit_supplier_type', type_key=type_key, supplier_id=supplier.id) }}" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="supplier_type" value="{{ new_supplier_type }}">
 
             {# ── ACCOMMODATION ─────────────────────────────────────────── #}
@@ -1000,6 +1001,154 @@ body {
 {{ super() }}
 <script>
 (function () {
+    // ── Payment Terms custom value support with API loading ──
+    var standardPaymentTerms = ['Credit', 'NET 15', 'NET 30', 'NET 45', 'NET 60', 'Prepaid', 'Employee', 'Other'];
+    var supplierPaymentTerms = '{{ supplier.payment_terms or "" }}';
+    var typeKey = '{{ type_key }}';
+
+    // Map supplier types to API keys for custom payment terms
+    var typeKeyToApiKey = {
+        'accommodation': null,  // No custom loading for accommodation
+        'airline': null,        // No custom loading for airline
+        'transportation': 'transport_payment_terms',
+        'guides': 'guide_payment_terms',
+        'meet-assist': 'meetassist_hub_payment_terms',
+        'restaurant': 'restaurant_payment_terms'
+    };
+
+    var apiKey = typeKeyToApiKey[typeKey];
+
+    function ensurePaymentTermOption(selectEl, value) {
+        if (!selectEl || !value) return false;
+        var val = String(value || '').trim();
+        if (!val) return false;
+        var exists = Array.from(selectEl.options).some(function(opt) {
+            return (opt.value || '').toLowerCase() === val.toLowerCase();
+        });
+        if (exists) return false;
+        var newOption = document.createElement('option');
+        newOption.value = val;
+        newOption.textContent = val;
+        var otherOption = Array.from(selectEl.options).find(function(opt) {
+            return opt.value === 'Other';
+        });
+        if (otherOption) {
+            selectEl.insertBefore(newOption, otherOption);
+        } else {
+            selectEl.appendChild(newOption);
+        }
+        return true;
+    }
+
+    async function loadCustomPaymentTerms() {
+        // Load from API if key exists for this type
+        if (apiKey) {
+            try {
+                var resp = await fetch('/inbound/api/supplier-option-values/global?key=' + encodeURIComponent(apiKey));
+                var data = await resp.json();
+                if (data && data.success && Array.isArray(data.values)) {
+                    var customValues = data.values
+                        .map(function(v) { return String(v || '').trim(); })
+                        .filter(Boolean)
+                        .filter(function(v) { return !standardPaymentTerms.includes(v); });
+
+                    // Add custom values to all payment_terms selects
+                    document.querySelectorAll('select[name="payment_terms"]').forEach(function(select) {
+                        customValues.forEach(function(customVal) {
+                            ensurePaymentTermOption(select, customVal);
+                        });
+                    });
+                }
+            } catch (_) {}
+        }
+
+        // Ensure currently selected custom value appears (for all types)
+        if (supplierPaymentTerms && !standardPaymentTerms.includes(supplierPaymentTerms)) {
+            document.querySelectorAll('select[name="payment_terms"]').forEach(function(select) {
+                ensurePaymentTermOption(select, supplierPaymentTerms);
+                select.value = supplierPaymentTerms;
+            });
+        }
+    }
+
+    // Load custom payment terms on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadCustomPaymentTerms);
+    } else {
+        loadCustomPaymentTerms();
+    }
+
+    // ── Payment Terms "Other" modal for custom value ───────────
+    document.querySelectorAll('select[name="payment_terms"]').forEach(function(paymentTermsSelect) {
+        var lastValue = paymentTermsSelect.value;
+
+        // Track the previous value before any change
+        paymentTermsSelect.addEventListener('focus', function() {
+            lastValue = this.value;
+        });
+
+        paymentTermsSelect.addEventListener('change', function() {
+            if (this.value === 'Other') {
+                openPaymentTermsModal(this, lastValue);
+            }
+        });
+    });
+
+    function openPaymentTermsModal(selectElement, previousValue) {
+        var existingOverlay = document.getElementById('payment-terms-overlay-edit');
+        if (existingOverlay) existingOverlay.remove();
+
+        var overlayPrompt = document.createElement('div');
+        overlayPrompt.id = 'payment-terms-overlay-edit';
+        overlayPrompt.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;';
+
+        var dialog = document.createElement('div');
+        dialog.style.cssText = 'background:white;border-radius:12px;padding:24px;min-width:360px;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
+        dialog.innerHTML = '<div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:12px;">Enter Custom Payment Term</div><input type="text" id="payment-term-input-edit" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:16px;" placeholder="e.g., Net 90, 30 days, Custom term" autofocus><div style="display:flex;justify-content:flex-end;gap:8px;"><button type="button" id="payment-term-cancel-edit" style="padding:6px 16px;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;color:#475569;font-size:12px;cursor:pointer;">Cancel</button><button type="button" id="payment-term-ok-edit" style="padding:6px 16px;border:none;border-radius:6px;background:#3b82f6;color:white;font-size:12px;cursor:pointer;font-weight:500;">Add</button></div>';
+
+        overlayPrompt.appendChild(dialog);
+        document.body.appendChild(overlayPrompt);
+
+        var input = document.getElementById('payment-term-input-edit');
+        var okBtn = document.getElementById('payment-term-ok-edit');
+        var cancelBtn = document.getElementById('payment-term-cancel-edit');
+
+        setTimeout(function() { input.focus(); }, 50);
+
+        function submit() {
+            var trimmedValue = input.value.trim();
+            if (!trimmedValue) {
+                // If no value, revert to previous
+                selectElement.value = previousValue;
+                overlayPrompt.remove();
+                return;
+            }
+
+            // Add the custom value as an option if it doesn't exist
+            ensurePaymentTermOption(selectElement, trimmedValue);
+            selectElement.value = trimmedValue;
+            overlayPrompt.remove();
+        }
+
+        function cancel() {
+            // Revert to previous value
+            selectElement.value = previousValue;
+            overlayPrompt.remove();
+        }
+
+        okBtn.addEventListener('click', submit);
+        cancelBtn.addEventListener('click', cancel);
+
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') submit();
+            if (e.key === 'Escape') cancel();
+        });
+
+        overlayPrompt.addEventListener('click', function(e) {
+            if (e.target === overlayPrompt) cancel();
+        });
+    }
+
     // ── Payment method toggle ────────────────────────────────
     var pmSel = document.getElementById('edit_payment_method');
     var bankNameWrap = document.getElementById('edit_bank_name_wrap');

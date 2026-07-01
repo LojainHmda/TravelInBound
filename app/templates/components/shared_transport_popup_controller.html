@@ -282,7 +282,7 @@
             tax_number: document.getElementById('new_transport_tax_number').value.trim(),
             notes: document.getElementById('new_transport_notes').value.trim()
         };
-        const csrfVal = (typeof window.csrfToken !== 'undefined' ? window.csrfToken : '') || '';
+        const csrfVal = (typeof window.csrfToken !== 'undefined' ? window.csrfToken : '') || (document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '');
         const headers = csrfVal ? { 'X-CSRFToken': csrfVal } : {};
         fetch('/inbound/api/add-transport', {
             method: 'POST',

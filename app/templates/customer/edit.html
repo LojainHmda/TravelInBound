@@ -128,11 +128,19 @@
           </div>
           <div class="col-sm-6">
             {{ form.payment_terms.label(class="popup-like-label") }}
-            <!-- Render dropdown using form field's dynamic choices -->
+            <!-- Render as select dropdown instead of text input -->
             <select class="popup-like-select" id="payment_terms" name="payment_terms">
-              {% for value, label in form.payment_terms.choices %}
-                <option value="{{ value }}" {% if form.payment_terms.data == value %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
+              <option value="">Select payment terms...</option>
+              <option value="Cash before arrival">Cash before arrival</option>
+              <option value="Credit">Credit</option>
+              <option value="NET 15">NET 15</option>
+              <option value="NET 30">NET 30</option>
+              <option value="NET 45">NET 45</option>
+              <option value="NET 60">NET 60</option>
+              <option value="Prepaid">Prepaid</option>
+              <option value="Cash on Delivery">Cash on Delivery</option>
+              <option value="Cliq">Cliq</option>
+              <option value="Other">Other</option>
             </select>
             {% if form.payment_terms.errors %}
               <div class="text-danger small">{% for e in form.payment_terms.errors %}{{ e }}{% endfor %}</div>

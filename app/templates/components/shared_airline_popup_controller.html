@@ -38,6 +38,9 @@
         if (typeof window.bindSupplierPaymentMethodFields === 'function') {
             window.bindSupplierPaymentMethodFields('new_airline');
         }
+        if (typeof window.restoreAirlinePaymentTerms === 'function') {
+            window.restoreAirlinePaymentTerms();
+        }
         getEl('new_airline_name')?.focus();
     };
 
@@ -91,7 +94,10 @@
         formData.append('tax_number', (getEl('new_airline_tax_number')?.value || '').trim());
         formData.append('notes', notes);
 
-        fetch(url, { method: 'POST', body: formData })
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        const headers = csrfToken ? { 'X-CSRFToken': csrfToken } : {};
+
+        fetch(url, { method: 'POST', body: formData, headers: headers })
             .then(resp => {
                 if (!resp.ok) throw new Error('Save failed');
                 window.location.reload();

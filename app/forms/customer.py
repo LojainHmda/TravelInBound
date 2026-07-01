@@ -18,60 +18,41 @@ def get_customer_type_choices():
 
 
 def load_custom_payment_terms():
-    """Load custom payment terms from global config file"""
+    """Load custom payment terms from global_supplier_option_values.json.
+
+    Returns a list of user-defined custom payment terms, or an empty list if none
+    exist or if the config file cannot be read.
+    """
     try:
         from flask import current_app, has_app_context
 
-        # Debug: log what we're trying
-        debug_log = []
-        debug_log.append(f"has_app_context: {has_app_context()}")
-
-        # Try Flask app context first (most reliable)
+        # Try Flask app context first (most reliable in request context)
         if has_app_context():
-            global_path = os.path.join(current_app.instance_path, 'global_supplier_option_values.json')
-            debug_log.append(f"Flask path: {global_path}")
-            debug_log.append(f"Flask path exists: {os.path.exists(global_path)}")
-            if os.path.exists(global_path):
-                with open(global_path, 'r', encoding='utf-8') as f:
-                    values_map = json.load(f)
-                custom_values = values_map.get('customer_payment_terms', [])
+            config_path = os.path.join(current_app.instance_path, 'global_supplier_option_values.json')
+            if os.path.exists(config_path):
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                custom_values = config.get('customer_payment_terms', [])
                 if isinstance(custom_values, list):
-                    with open('/tmp/payment_terms_debug.log', 'a') as log_f:
-                        log_f.write(f"SUCCESS via Flask: {custom_values}\n")
                     return [str(v).strip() for v in custom_values if str(v).strip()]
 
-        # Fallback: construct from __file__ location
-        this_file = os.path.abspath(__file__)
-        app_forms_dir = os.path.dirname(this_file)
-        app_dir = os.path.dirname(app_forms_dir)
+        # Fallback: locate config via file path (handles cases without app context)
+        module_dir = os.path.dirname(os.path.abspath(__file__))
+        app_dir = os.path.dirname(module_dir)
         project_root = os.path.dirname(app_dir)
-        json_path = os.path.join(project_root, 'instance', 'global_supplier_option_values.json')
+        config_path = os.path.join(project_root, 'instance', 'global_supplier_option_values.json')
 
-        debug_log.append(f"Fallback __file__: {this_file}")
-        debug_log.append(f"Fallback path: {json_path}")
-        debug_log.append(f"Fallback path exists: {os.path.exists(json_path)}")
-
-        if os.path.exists(json_path):
-            with open(json_path, 'r', encoding='utf-8') as f:
-                values_map = json.load(f)
-            custom_values = values_map.get('customer_payment_terms', [])
+        if os.path.exists(config_path):
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            custom_values = config.get('customer_payment_terms', [])
             if isinstance(custom_values, list):
-                with open('/tmp/payment_terms_debug.log', 'a') as log_f:
-                    log_f.write(f"SUCCESS via fallback: {custom_values}\n")
-                    log_f.write("Debug info:\n")
-                    for line in debug_log:
-                        log_f.write(f"  {line}\n")
                 return [str(v).strip() for v in custom_values if str(v).strip()]
 
-        # If we reach here, log failure
-        with open('/tmp/payment_terms_debug.log', 'a') as log_f:
-            log_f.write(f"FAILED - neither path worked\n")
-            for line in debug_log:
-                log_f.write(f"  {line}\n")
-
-    except Exception as e:
-        with open('/tmp/payment_terms_debug.log', 'a') as log_f:
-            log_f.write(f"EXCEPTION: {str(e)}\n")
+    except (IOError, json.JSONDecodeError, KeyError):
+        # Config file unavailable or malformed; return empty list
+        # This prevents form initialization from crashing
+        pass
 
     return []
 
@@ -99,51 +80,53 @@ def get_customer_payment_terms_choices():
     return [('', 'Select payment terms...')] + sorted(base_choices) + [('Other', 'Other')]
 
 
-class DynamicPaymentTermsField(SelectField):
-    """SelectField that accepts standard payment terms and any user-defined custom values"""
+class PaymentTermsField(SelectField):
+    """SelectField for customer payment terms supporting standard and custom values.
 
-    def validate(self, form, extra_validators=None):
-        """Override validate to accept custom payment terms without strict choices validation"""
-        # Accept empty values if Optional validator allows
+    Dynamically loads choices from both predefined payment terms and custom terms
+    stored in the global configuration. Validates submitted values against both
+    sets to ensure only recognized payment terms are accepted.
+    """
+
+    # Standard payment terms that are always available
+    STANDARD_TERMS = {
+        'Cash before arrival',
+        'Credit',
+        'NET 15',
+        'NET 30',
+        'NET 45',
+        'NET 60',
+        'Prepaid',
+        'Cash on Delivery',
+        'Cliq',
+        'Other',
+    }
+
+    def iter_choices(self):
+        """Dynamically iterate all available payment term choices."""
+        for value, label in get_customer_payment_terms_choices():
+            yield value, label, self.coerce(value) == self.data
+
+    def pre_validate(self, form):
+        """Validate that the selected payment term is standard or custom.
+
+        Allows empty selection (handled by Optional validator) and checks
+        that non-empty values are either standard terms or custom terms
+        that have been defined in the global configuration.
+        """
         if not self.data:
+            # Empty selection is valid if Optional validator permits it
             return
 
-        # Accept any non-empty value - it's either standard or a custom value from the modal
-        # The template ensures it's a reasonable length, and the API validated it when saved
-        return
+        # Load all valid payment terms (standard + custom)
+        custom_terms = set(load_custom_payment_terms())
+        valid_terms = self.STANDARD_TERMS | custom_terms
 
-    def pre_validate(self, form, extra_validators=None):
-        """Accept standard payment terms and any custom values entered via the modal"""
-        # Skip validation for empty values (Optional validator handles this)
-        if not self.data:
+        if self.data in valid_terms:
             return
 
-        # Standard payment terms - always valid
-        standard_values = {
-            'Cash before arrival', 'Credit', 'NET 15', 'NET 30', 'NET 45',
-            'NET 60', 'Prepaid', 'Cash on Delivery', 'Cliq', 'Other'
-        }
-
-        # If it's a standard value, it's valid
-        if self.data in standard_values:
-            return
-
-        # For non-standard values, check if they're in our stored custom values
-        try:
-            custom_values = set(load_custom_payment_terms())
-            if self.data in custom_values:
-                return
-        except Exception:
-            pass
-
-        # Accept any non-empty string value that's a reasonable length
-        # This allows custom values added via the modal to pass validation
-        if self.data and len(self.data) <= 100:
-            # Accept it - it's a legitimate custom value from the modal
-            return
-
-        # Reject invalid values
-        raise ValidationError('Not a valid choice.')
+        # Invalid payment term
+        raise ValidationError('Selected payment term is not recognized.')
 
 
 class CustomerForm(FlaskForm):
@@ -159,11 +142,9 @@ class CustomerForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
     phone = StringField('Phone', validators=[DataRequired(), Length(min=1, max=20), Regexp(r'^[0-9 +]+$', message='Only digits (0–9), spaces, and + are allowed.')])
     customer_type = SelectField('Customer Type', choices=get_customer_type_choices, default='Direct')
-    # StringField for payment_terms - accepts any value entered via dropdown or modal
-    # The template renders a SELECT element with JavaScript for custom value entry
-    payment_terms = StringField(
+    payment_terms = PaymentTermsField(
         'Payment Terms',
-        validators=[Optional(), Length(max=100)],
+        validators=[Optional()],
     )
     bank_name = StringField('Bank Name', validators=[Optional(), Length(max=120)])
     bank_account = StringField('Bank Account', validators=[Optional(), Length(max=255)])
