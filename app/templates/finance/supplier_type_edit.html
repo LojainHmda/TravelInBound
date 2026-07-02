@@ -238,7 +238,7 @@ body {
     {% endwith %}
 
     <div class="form-card">
-        <form method="POST" action="{{ url_for('finance.edit_supplier_type', type_key=type_key, supplier_id=supplier.id) }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ url_for('finance.edit_supplier_type', type_key=type_key, supplier_id=supplier.id) }}" enctype="multipart/form-data" id="supplierEditForm" onsubmit="handleSupplierEditFormSubmit(event)">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="supplier_type" value="{{ new_supplier_type }}">
 
@@ -273,13 +273,16 @@ body {
                     <select name="category" id="accommodationCategory">
                         <option value="">Select...</option>
                         {% for opt in ['5-Star','4-Star','3-Star','Boutique','Camp','Airbnb','Other'] %}
-                        <option value="{{ opt }}" {% if category == opt %}selected{% endif %}>{{ opt }}</option>
+                        <option value="{{ opt }}" {% if not custom_category and category == opt %}selected{% endif %}>{{ opt }}</option>
                         {% endfor %}
+                        {% if custom_category %}
+                        <option value="{{ custom_category }}" selected>{{ custom_category }}</option>
+                        {% endif %}
                     </select>
                 </div>
-                <div class="field" id="customCategoryWrap" style="display:none;">
+                <div class="field" id="customCategoryWrap" style="display:{% if custom_category %}block{% else %}none{% endif %};">
                     <label>Custom Category</label>
-                    <input type="text" id="customCategoryInput" name="custom_category" placeholder="Enter custom category name" value="">
+                    <input type="text" id="customCategoryInput" name="custom_category" placeholder="Enter custom category name" value="{{ custom_category or '' }}">
                 </div>
                 <div class="field">
                     <label>Room Category</label>
@@ -1000,6 +1003,29 @@ body {
 {% block scripts %}
 {{ super() }}
 <script>
+function handleSupplierEditFormSubmit(event) {
+    const categorySelect = document.getElementById('accommodationCategory');
+    const customCategoryInput = document.getElementById('customCategoryInput');
+    const standardCategories = ['5-Star','4-Star','3-Star','Boutique','Camp','Airbnb','Other'];
+
+    if (categorySelect && customCategoryInput) {
+        const selectedValue = categorySelect.value;
+        const customValue = customCategoryInput.value.trim();
+
+        // If a custom category is selected (not in standard list) and has a custom value
+        if (selectedValue && !standardCategories.includes(selectedValue) && customValue) {
+            // Set category to 'Other' and custom_category to the custom value
+            categorySelect.value = 'Other';
+            customCategoryInput.value = customValue;
+        } else if (selectedValue === 'Other' && customValue) {
+            // Keep as is - category='Other', custom_category=customValue
+        } else if (selectedValue && standardCategories.includes(selectedValue)) {
+            // Standard category selected - clear custom_category
+            customCategoryInput.value = '';
+        }
+    }
+}
+
 (function () {
     // ── Payment Terms custom value support with API loading ──
     var standardPaymentTerms = ['Credit', 'NET 15', 'NET 30', 'NET 45', 'NET 60', 'Prepaid', 'Employee', 'Other'];
@@ -1273,18 +1299,44 @@ body {
     var customCategoryInput = document.getElementById('customCategoryInput');
     var standardCategories = ['5-Star','4-Star','3-Star','Boutique','Camp','Airbnb','Other'];
     var currentCategory = '{{ category }}';
+    var currentCustomCategory = '{{ custom_category }}';
 
     if (categorySelect && customCategoryWrap && customCategoryInput) {
-        // Initialize: if current category is not standard, set it as custom
-        if (currentCategory && !standardCategories.includes(currentCategory)) {
-            categorySelect.value = 'Other';
-            customCategoryInput.value = currentCategory;
+        function restoreCustomCategoriesInDropdown() {
+            try {
+                var customCategories = JSON.parse(localStorage.getItem('custom_categories_accommodation') || '[]');
+                customCategories = Array.isArray(customCategories) ? customCategories : [];
+                customCategories.forEach(function(cat) {
+                    var existingOption = Array.from(categorySelect.options).find(function(opt) {
+                        return opt.value === cat;
+                    });
+                    if (!existingOption) {
+                        var newOption = document.createElement('option');
+                        newOption.value = cat;
+                        newOption.textContent = cat;
+                        var otherOption = Array.from(categorySelect.options).find(function(opt) {
+                            return opt.value === 'Other';
+                        });
+                        if (otherOption) {
+                            categorySelect.insertBefore(newOption, otherOption);
+                        } else {
+                            categorySelect.appendChild(newOption);
+                        }
+                    }
+                });
+            } catch (_) {}
         }
+
+        restoreCustomCategoriesInDropdown();
 
         function updateCategoryFields() {
             var selectedValue = categorySelect.value;
-            if (selectedValue === 'Other') {
+            var isCustom = selectedValue && !standardCategories.includes(selectedValue);
+            if (selectedValue === 'Other' || isCustom) {
                 customCategoryWrap.style.display = '';
+                if (isCustom) {
+                    customCategoryInput.value = selectedValue;
+                }
             } else {
                 customCategoryWrap.style.display = 'none';
                 customCategoryInput.value = '';
@@ -1292,10 +1344,6 @@ body {
         }
 
         categorySelect.addEventListener('change', updateCategoryFields);
-
-        // Form submission: category stays as "Other", custom value is submitted separately
-        // No need to modify category field - just keep it as "Other"
-
         updateCategoryFields();
     }
 

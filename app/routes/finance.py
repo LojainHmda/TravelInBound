@@ -1943,6 +1943,7 @@ def quick_add_supplier(type_key):
 def _parse_supplier_notes(notes_raw):
     """Extract structured fields that quick_add_supplier embeds into the notes column."""
     category = ''
+    custom_category = ''
     room_category = ''
     payment_method_embedded = ''
     contract_file = ''
@@ -1950,6 +1951,8 @@ def _parse_supplier_notes(notes_raw):
     for line in (notes_raw or '').split('\n'):
         if line.startswith('Category: ') and not category:
             category = line[len('Category: '):]
+        elif line.startswith('Custom Category: ') and not custom_category:
+            custom_category = line[len('Custom Category: '):]
         elif line.startswith('Room Category: ') and not room_category:
             room_category = line[len('Room Category: '):]
         elif line.startswith('Payment Method: ') and not payment_method_embedded:
@@ -1960,6 +1963,7 @@ def _parse_supplier_notes(notes_raw):
             clean_lines.append(line)
     return {
         'category': category,
+        'custom_category': custom_category,
         'room_category': room_category,
         'payment_method_embedded': payment_method_embedded,
         'contract_file': contract_file,
@@ -2116,6 +2120,7 @@ def edit_supplier_type(type_key, supplier_id):
         type_icon=config['icon'],
         new_supplier_type=config['new_supplier_type'],
         category=parsed['category'],
+        custom_category=parsed['custom_category'],
         room_category=parsed['room_category'],
         clean_notes=parsed['clean_notes'],
         payment_method=payment_method,

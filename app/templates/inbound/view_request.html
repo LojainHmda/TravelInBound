@@ -586,6 +586,23 @@ input[type="date"]::-webkit-calendar-table-body {
     margin: 0.25rem 0;
 }
 
+/* City & Category Filter Dropdowns - Match Hotel dropdown design */
+.hotel-filter-dropdown {
+    background-color: white;
+    color: #1e293b;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hotel-filter-dropdown:hover {
+    border-color: #cbd5e1;
+}
+
+/* Active filter state - blue border indicator (system blue: #3b82f6) */
+.hotel-filter-dropdown.filter-active {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px #3b82f6;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .tw-container { padding: 1rem; }
@@ -1357,6 +1374,29 @@ input[type="date"]::-webkit-calendar-table-body {
                         {% if not view_only %}
                         <!-- Add Hotel Form Fields (Below Table) -->
                         <div class="p-3 bg-slate-50 border-t border-slate-200">
+                            <!-- Hotel Filters Row (City and Category) - Matches Hotel dropdown styling -->
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3 items-start">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">City</label>
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs hotel-filter-dropdown" id="hotel_city_filter" onchange="updateFilterActive('hotel_city_filter'); filterHotelsByCity()">
+                                        <option value="">All Cities</option>
+                                        {% for city in accommodation_cities %}
+                                        <option value="{{ city }}">{{ city }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Category</label>
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs hotel-filter-dropdown" id="hotel_category_filter" onchange="updateFilterActive('hotel_category_filter'); filterHotelsByCategory()">
+                                        <option value="">All Categories</option>
+                                        {% for category in accommodation_categories %}
+                                        <option value="{{ category }}">{{ category }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Hotel Details Row -->
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2 items-start">
                                 <div class="w-full min-w-0">
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Hotel Name <span class="text-red-500">*</span></label>
@@ -1366,7 +1406,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                             {% for city, hotels in hotels_by_city.items() %}
                                             <optgroup label="{{ city }}">
                                                 {% for hotel in hotels %}
-                                                <option value="{{ hotel.name }}" data-supplier-id="{{ hotel.id }}">{{ hotel.name }}</option>
+                                                <option value="{{ hotel.name }}" data-supplier-id="{{ hotel.id }}" data-city="{{ hotel.city or 'Other' }}" data-category="{{ hotel.accommodation_category or '' }}">{{ hotel.name }}</option>
                                                 {% endfor %}
                                             </optgroup>
                                             {% endfor %}
@@ -1378,24 +1418,11 @@ input[type="date"]::-webkit-calendar-table-body {
                                             <i class="fas fa-plus"></i>
                                         </button>
                                     </div>
-                                    <!-- Hidden category field - also has visible display -->
+                                    <!-- Hidden category field for backend storage -->
                                     <input type="hidden" id="hotel_category" data-service="hotel">
                                     <div id="hotel-error-container" class="hidden mt-1">
                                         <span id="hotel-error-message" class="text-red-600 text-xs flex items-center gap-1"><i class="fas fa-exclamation-circle"></i></span>
                                     </div>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Category</label>
-                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="hotel_category_visible" onchange="document.getElementById('hotel_category').value = this.value;" data-service="hotel">
-                                        <option value="">Select...</option>
-                                        <option value="5-Star">5-Star</option>
-                                        <option value="4-Star">4-Star</option>
-                                        <option value="3-Star">3-Star</option>
-                                        <option value="Boutique">Boutique</option>
-                                        <option value="Camp">Camp</option>
-                                        <option value="Airbnb">Airbnb</option>
-                                        <option value="Other">Other</option>
-                                    </select>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Check-in Date <span class="text-red-500">*</span></label>
@@ -12244,6 +12271,76 @@ function attachOtherOptionPromptBehavior() {
 }
 setTimeout(attachOtherOptionPromptBehavior, 0);
 
+// Hotel Filter Functions
+function updateFilterActive(filterId) {
+    const filterElement = document.getElementById(filterId);
+    if (!filterElement) return;
+
+    // Add blue border indicator if filter has a selected value
+    if (filterElement.value.trim()) {
+        filterElement.classList.add('filter-active');
+    } else {
+        filterElement.classList.remove('filter-active');
+    }
+}
+
+function filterHotelsByCity() {
+    filterHotels();
+}
+
+function filterHotelsByCategory() {
+    filterHotels();
+}
+
+function filterHotels() {
+    const cityFilterSelect = document.getElementById('hotel_city_filter');
+    const categoryFilterSelect = document.getElementById('hotel_category_filter');
+    const hotelSelect = document.getElementById('hotel_name');
+
+    if (!hotelSelect || !cityFilterSelect || !categoryFilterSelect) return;
+
+    const cityFilter = cityFilterSelect.value.trim().toLowerCase();
+    const categoryFilter = categoryFilterSelect.value.trim().toLowerCase();
+
+    const options = hotelSelect.querySelectorAll('option');
+    const optgroups = hotelSelect.querySelectorAll('optgroup');
+
+    options.forEach(option => {
+        // Skip the placeholder and "Add New" options
+        if (option.value === '' || option.value === '__ADD_NEW__') {
+            return;
+        }
+
+        const hotelCity = (option.dataset.city || '').toLowerCase();
+        const hotelCategory = (option.dataset.category || '').toLowerCase();
+
+        // Check if option matches both filters
+        let matches = true;
+
+        // If city filter is set (not empty), must match city
+        if (cityFilter && hotelCity !== cityFilter) {
+            matches = false;
+        }
+
+        // If category filter is set (not empty), must match category (empty category = hotel with no category)
+        if (categoryFilter) {
+            // If category filter is set, only show hotels that match this category
+            if (hotelCategory !== categoryFilter) {
+                matches = false;
+            }
+        }
+
+        // Show or hide the option
+        option.style.display = matches ? '' : 'none';
+    });
+
+    // Hide optgroups with no visible options
+    optgroups.forEach(optgroup => {
+        const hasVisibleOptions = optgroup.querySelectorAll('option:not([style*="display: none"])').length > 0;
+        optgroup.style.display = hasVisibleOptions ? '' : 'none';
+    });
+}
+
 // Add Hotel Modal Logic
 function openAddHotelModal() {
     const modal = document.getElementById('addHotelModal');
@@ -12376,11 +12473,6 @@ function saveNewHotel() {
             if (categoryFromApi) {
                 console.log('[saveNewHotel] Setting hotel_category to:', categoryFromApi);
                 document.getElementById('hotel_category').value = categoryFromApi;
-                // Also update visible category dropdown
-                const visibleDropdown = document.getElementById('hotel_category_visible');
-                if (visibleDropdown) {
-                    visibleDropdown.value = categoryFromApi;
-                }
             } else {
                 console.log('[saveNewHotel] No category returned from API');
             }
@@ -12431,11 +12523,6 @@ document.getElementById('hotel_name')?.addEventListener('change', function() {
                                     const categoryValue = notesData.category.trim();
                                     console.log('[hotelChange] Setting hotel_category from supplier notes:', categoryValue);
                                     document.getElementById('hotel_category').value = categoryValue;
-                                    // Also update the visible category dropdown
-                                    const visibleDropdown = document.getElementById('hotel_category_visible');
-                                    if (visibleDropdown) {
-                                        visibleDropdown.value = categoryValue;
-                                    }
                                 } else {
                                     console.log('[hotelChange] No category found in supplier notes');
                                 }
@@ -16151,6 +16238,12 @@ function loadExistingConfirmationFile(serviceType, record) {
 
     console.log(`[loadExistingConfirmationFile] SUCCESS - Loaded existing file for ${serviceType}: ${filename}`);
 }
+
+// Initialize filter active states when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    updateFilterActive('hotel_city_filter');
+    updateFilterActive('hotel_category_filter');
+});
 </script>
 {% include 'components/shared_transport_popup_controller.html' %}
 {% include 'components/transport_vehicle_other_controller.html' %}

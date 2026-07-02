@@ -289,7 +289,7 @@ def _get_supplier_dropdown_data(cache_ttl_seconds: int = 120):
 
     suppliers = Supplier.query.filter(
         Supplier.is_active == True,
-        Supplier.supplier_type.in_(['HOTEL', 'TRANSPORT', 'GUIDE', 'RESTAURANT', 'GROUND_HANDLER']),
+        Supplier.supplier_type.in_(['HOTEL', 'ACCOMMODATION', 'TRANSPORT', 'GUIDE', 'RESTAURANT', 'GROUND_HANDLER']),
     ).order_by(Supplier.supplier_type, Supplier.city, Supplier.name).all()
     representatives = [
         _RepresentativeOption(r['id'], r['name'])
@@ -303,7 +303,7 @@ def _get_supplier_dropdown_data(cache_ttl_seconds: int = 120):
     ground_handlers = []
     for s in suppliers:
         t = (s.supplier_type or '').upper()
-        if t == 'HOTEL':
+        if t in ('HOTEL', 'ACCOMMODATION'):
             hotels.append(s)
         elif t == 'TRANSPORT':
             transports.append(s)
@@ -324,9 +324,30 @@ def _get_supplier_dropdown_data(cache_ttl_seconds: int = 120):
         for city in city_order if city in hotels_by_city
     }
 
+    # Extract unique cities and categories from hotels
+    accommodation_cities = []
+    accommodation_categories = set()
+    for hotel in hotels:
+        city = hotel.city or 'Other'
+        if city not in accommodation_cities:
+            accommodation_cities.append(city)
+        category = hotel.accommodation_category
+        if category:
+            accommodation_categories.add(category)
+
+    # Order cities: put standard ones first, then others
+    city_order = ['Amman', 'Aqaba', 'Petra', 'Dead Sea', 'Other']
+    ordered_cities = [c for c in city_order if c in accommodation_cities]
+    ordered_cities.extend([c for c in accommodation_cities if c not in city_order])
+
+    # Sort categories alphabetically
+    ordered_categories = sorted(list(accommodation_categories))
+
     data = {
         'hotel_suppliers': hotels,
         'hotels_by_city': sorted_hotels_by_city,
+        'accommodation_cities': ordered_cities,
+        'accommodation_categories': ordered_categories,
         'transport_suppliers': transports,
         'guide_suppliers': guides,
         'representatives': representatives,
@@ -1373,6 +1394,8 @@ def view_request(id):
         dropdowns = _get_supplier_dropdown_data()
         hotel_suppliers = dropdowns['hotel_suppliers']
         sorted_hotels_by_city = dropdowns['hotels_by_city']
+        accommodation_cities = dropdowns['accommodation_cities']
+        accommodation_categories = dropdowns['accommodation_categories']
         transport_suppliers = dropdowns['transport_suppliers']
         guide_suppliers = dropdowns['guide_suppliers']
         representatives = dropdowns['representatives']
@@ -1385,6 +1408,8 @@ def view_request(id):
         traceback.print_exc()
         hotel_suppliers = []
         sorted_hotels_by_city = {}
+        accommodation_cities = []
+        accommodation_categories = []
         transport_suppliers = []
         guide_suppliers = []
         representatives = []
@@ -1404,7 +1429,7 @@ def view_request(id):
     linked_children = []
     if not request_obj.parent_request_id:
         linked_children = request_obj.linked_requests.order_by(InboundRequest.created_at.desc()).all()
-    return render_template('inbound/view_request.html', 
+    return render_template('inbound/view_request.html',
                            request=request_obj,
                            inbound_request=request_obj,  # Explicit variable to avoid Flask request confusion
                            parent_request=parent_request,
@@ -1413,6 +1438,8 @@ def view_request(id):
                            rows=sorted_itinerary_rows,
                            hotel_suppliers=hotel_suppliers,
                            hotels_by_city=sorted_hotels_by_city,
+                           accommodation_cities=accommodation_cities,
+                           accommodation_categories=accommodation_categories,
                            transport_suppliers=transport_suppliers,
                            guide_suppliers=guide_suppliers,
                            representatives=representatives,

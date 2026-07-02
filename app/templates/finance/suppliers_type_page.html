@@ -258,16 +258,7 @@ body.modal-open {
                     {% elif type_key in ('restaurant', 'transportation') %}
                     <td>{{ supplier.phone or '' }}</td>
                     {% elif type_key == 'accommodation' %}
-                    <td>
-                        {% set cat = supplier.accommodation_category %}
-                        {% if cat in ['5-Star', '4-Star', '3-Star', 'Boutique', 'Camp', 'Airbnb', 'Other'] %}
-                            {{ cat }}
-                        {% elif cat %}
-                            Other
-                        {% else %}
-                            —
-                        {% endif %}
-                    </td>
+                    <td>{{ supplier.accommodation_category or '—' }}</td>
                     {% endif %}
                     {% if type_key != 'airline' %}
                     <td>{{ supplier.city or '-' }}</td>
@@ -865,12 +856,84 @@ body.modal-open {
     const newCustomCategoryWrap = document.getElementById('newCustomCategoryWrap');
     const newCustomCategoryInput = document.getElementById('newCustomCategoryInput');
     const standardCategories = ['5-Star','4-Star','3-Star','Boutique','Camp','Airbnb','Other'];
+    const CUSTOM_CATEGORIES_KEY = 'custom_categories_accommodation';
 
     if (popupAccommodationCategory && newCustomCategoryWrap && newCustomCategoryInput) {
+        function loadCustomCategoriesFromStorage() {
+            try {
+                let customCategories = JSON.parse(localStorage.getItem(CUSTOM_CATEGORIES_KEY) || '[]');
+                customCategories = Array.isArray(customCategories) ? customCategories : [];
+                customCategories = customCategories.filter(c => String(c || '').trim().length >= 2);
+                if (customCategories.length < JSON.parse(localStorage.getItem(CUSTOM_CATEGORIES_KEY) || '[]').length) {
+                    localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(customCategories));
+                }
+                return customCategories;
+            } catch (_) {
+                return [];
+            }
+        }
+
+        function saveCustomCategoryToStorage(category) {
+            try {
+                const trimmed = String(category || '').trim();
+                if (trimmed.length < 2) return;
+                let customCategories = JSON.parse(localStorage.getItem(CUSTOM_CATEGORIES_KEY) || '[]');
+                if (!customCategories.includes(trimmed)) {
+                    customCategories.push(trimmed);
+                    localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(customCategories));
+                }
+            } catch (_) {}
+        }
+
+        function restoreCustomCategoriesInDropdown() {
+            const customCategories = loadCustomCategoriesFromStorage();
+            customCategories.forEach(function(category) {
+                const existingOption = Array.from(popupAccommodationCategory.options).find(opt => opt.value === category);
+                if (!existingOption) {
+                    const newOption = document.createElement('option');
+                    newOption.value = category;
+                    newOption.textContent = category;
+                    const otherOption = Array.from(popupAccommodationCategory.options).find(opt => opt.value === 'Other');
+                    if (otherOption) {
+                        popupAccommodationCategory.insertBefore(newOption, otherOption);
+                    } else {
+                        popupAccommodationCategory.appendChild(newOption);
+                    }
+                }
+            });
+        }
+
+        function addCustomCategoryToDropdown(category) {
+            if (!category) return;
+            const existingOption = Array.from(popupAccommodationCategory.options).find(
+                opt => opt.value === category
+            );
+            if (!existingOption) {
+                const newOption = document.createElement('option');
+                newOption.value = category;
+                newOption.textContent = category;
+                const otherOption = Array.from(popupAccommodationCategory.options).find(opt => opt.value === 'Other');
+                if (otherOption) {
+                    popupAccommodationCategory.insertBefore(newOption, otherOption);
+                } else {
+                    popupAccommodationCategory.appendChild(newOption);
+                }
+            }
+            popupAccommodationCategory.value = category;
+        }
+
         function updateNewCategoryFields() {
             var selectedValue = popupAccommodationCategory.value;
-            if (selectedValue === 'Other') {
+            var isCustom = selectedValue && !standardCategories.includes(selectedValue);
+
+            if (selectedValue === 'Other' || isCustom) {
                 newCustomCategoryWrap.style.display = '';
+                if (isCustom) {
+                    newCustomCategoryInput.value = selectedValue;
+                }
+                if (selectedValue === 'Other') {
+                    newCustomCategoryInput.focus();
+                }
             } else {
                 newCustomCategoryWrap.style.display = 'none';
                 newCustomCategoryInput.value = '';
@@ -878,6 +941,7 @@ body.modal-open {
         }
 
         popupAccommodationCategory.addEventListener('change', updateNewCategoryFields);
+        restoreCustomCategoriesInDropdown();
         updateNewCategoryFields();
     }
 
@@ -1022,6 +1086,29 @@ body.modal-open {
                 newHotelCitySelect.value = customCityValue;
             }
 
+            const selectedCategory = popupAccommodationCategory ? popupAccommodationCategory.value : '';
+            const customCategoryValue = newCustomCategoryInput ? newCustomCategoryInput.value.trim() : '';
+
+            // Add custom category to dropdown for future use, but keep category field as "Other"
+            if (selectedCategory === 'Other' && customCategoryValue && customCategoryValue.length >= 2) {
+                const existingOption = Array.from(popupAccommodationCategory.options).find(
+                    opt => opt.value === customCategoryValue
+                );
+                if (!existingOption) {
+                    const newOption = document.createElement('option');
+                    newOption.value = customCategoryValue;
+                    newOption.textContent = customCategoryValue;
+                    const otherOption = Array.from(popupAccommodationCategory.options).find(opt => opt.value === 'Other');
+                    if (otherOption) {
+                        popupAccommodationCategory.insertBefore(newOption, otherOption);
+                    } else {
+                        popupAccommodationCategory.appendChild(newOption);
+                    }
+                }
+                // Keep category field as "Other" for form submission
+                popupAccommodationCategory.value = 'Other';
+            }
+
             const formData = new FormData();
             overlay.querySelectorAll('[name]').forEach(el => {
                 if (!(el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement)) return;
@@ -1042,6 +1129,10 @@ body.modal-open {
                 if (selectedCity === 'Other' && customCityValue && customCityValue.length >= 3) {
                     console.log('Saving to localStorage:', customCityValue);
                     saveCustomCityToStorage(customCityValue);
+                }
+                if (selectedCategory === 'Other' && customCategoryValue && customCategoryValue.length >= 2) {
+                    console.log('Saving category to localStorage:', customCategoryValue);
+                    saveCustomCategoryToStorage(customCategoryValue);
                 }
                 window.location.reload();
             } catch (_) {

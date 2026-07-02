@@ -95,7 +95,7 @@ class Supplier(db.Model):
 
     @property
     def accommodation_category(self):
-        """Extract accommodation category from notes, showing only predefined values"""
+        """Extract accommodation category from notes, including custom categories"""
         import json
         VALID_CATEGORIES = ['5-Star', '4-Star', '3-Star', 'Boutique', 'Camp', 'Airbnb', 'Other']
 
@@ -116,15 +116,24 @@ class Supplier(db.Model):
             pass
 
         # Try text format (legacy format)
+        custom_category = None
+        category_value = None
         for line in self.notes.split('\n'):
-            if line.startswith('Category: '):
-                value = line[len('Category: '):].strip()
-                # Return if it's a valid predefined category
-                if value in VALID_CATEGORIES:
-                    return value
-                # If value exists but is not predefined, return "Other"
-                elif value:
-                    return 'Other'
+            if line.startswith('Custom Category: ') and not custom_category:
+                custom_category = line[len('Custom Category: '):].strip()
+            elif line.startswith('Category: ') and not category_value:
+                category_value = line[len('Category: '):].strip()
+
+        # Return custom category if it exists
+        if custom_category:
+            return custom_category
+
+        # Otherwise return the standard category
+        if category_value:
+            if category_value in VALID_CATEGORIES:
+                return category_value
+            elif category_value:
+                return 'Other'
 
         return ''
 
