@@ -2395,7 +2395,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                             <th class="text-center summary-compact-col">Type</th>
                                             <th class="text-center summary-compact-col">Size</th>
                                             <th class="text-center summary-date-col">Uploaded</th>
-                                            <th class="text-center summary-compact-col">Actions</th>
+                                            <th class="text-center summary-compact-col print-hide-actions">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="full-summary-documents">
@@ -2408,7 +2408,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                                     </a>
                                                 </td>
                                                 <td class="text-center summary-compact-col">
-                                                    <span class="px-1.5 py-0.5 rounded text-xs 
+                                                    <span class="px-1.5 py-0.5 rounded text-xs
                                                         {% if doc.document_type == 'PASSPORT' %}bg-blue-100 text-blue-700
                                                         {% elif doc.document_type == 'VISA' %}bg-green-100 text-green-700
                                                         {% elif doc.document_type == 'TICKET' %}bg-purple-100 text-purple-700
@@ -2421,7 +2421,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                                 </td>
                                                 <td class="text-center summary-compact-col">{{ ((doc.file_size or 0) / 1024)|round(1) }} KB</td>
                                                 <td class="text-center summary-date-col">{{ doc.uploaded_at.strftime('%d %b %Y') if doc.uploaded_at else '-' }}</td>
-                                                <td class="text-center summary-compact-col">
+                                                <td class="text-center summary-compact-col whitespace-nowrap print-hide-actions">
                                                     <button onclick="deleteDocument({{ doc.id }})" class="text-red-600 hover:text-red-800" title="Delete">
                                                         <i class="fas fa-trash-alt"></i>
                                                     </button>
