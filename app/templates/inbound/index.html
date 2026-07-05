@@ -1538,25 +1538,33 @@ function printInPlace(url) {
         frame.style.border = '0';
         frame.style.visibility = 'hidden';
         document.body.appendChild(frame);
+        frame._printTimeouts = [];
+        frame._printSessionId = 0;
     }
+    // Clear any pending timeouts from previous print operations
+    frame._printTimeouts.forEach(timeoutId => clearTimeout(timeoutId));
+    frame._printTimeouts = [];
+    // Increment session ID to invalidate stale operations
+    frame._printSessionId = (frame._printSessionId || 0) + 1;
+    const currentSessionId = frame._printSessionId;
     const isTourFilePrint = url.indexOf('print_tour_file=1') !== -1;
     // Tour file: call the exact same function used by the Tour File button
     // inside the request page (`printFullSummary()`).
     if (isTourFilePrint) {
         let done = false;
         frame.onload = function() {
-            if (done) return;
+            if (done || frame._printSessionId !== currentSessionId) return;
             const maxAttempts = 25;
             let attempt = 0;
             const tryPrintTourFile = function() {
-                if (done) return true;
+                if (done || frame._printSessionId !== currentSessionId) return true;
                 attempt += 1;
                 try {
                     const w = frame.contentWindow;
                     const d = w && w.document ? w.document : null;
                     if (w && typeof w.printFullSummary === 'function') {
                         const runPrint = function() {
-                            if (done) return;
+                            if (done || frame._printSessionId !== currentSessionId) return;
                             done = true;
                             w.printFullSummary(true);
                         };
@@ -1564,21 +1572,24 @@ function printInPlace(url) {
                         const needsOpen = !!(fullSummarySection && fullSummarySection.classList.contains('hidden'));
                         if (needsOpen && typeof w.toggleFullSummary === 'function') {
                             w.toggleFullSummary();
-                            setTimeout(function() {
-                                if (done) return;
+                            const tid1 = setTimeout(function() {
+                                if (done || frame._printSessionId !== currentSessionId) return;
                                 if (typeof w.refreshItinerarySummaryTable === 'function') {
                                     Promise.resolve(w.refreshItinerarySummaryTable()).finally(function() {
-                                        setTimeout(runPrint, 220);
+                                        const tid2 = setTimeout(runPrint, 220);
+                                        frame._printTimeouts.push(tid2);
                                     });
                                 } else {
-                                    setTimeout(runPrint, 220);
+                                    runPrint();
                                 }
                             }, 220);
+                            frame._printTimeouts.push(tid1);
                             return true;
                         }
                         if (typeof w.refreshItinerarySummaryTable === 'function') {
                             Promise.resolve(w.refreshItinerarySummaryTable()).finally(function() {
-                                setTimeout(runPrint, 180);
+                                const tid = setTimeout(runPrint, 180);
+                                frame._printTimeouts.push(tid);
                             });
                         } else {
                             runPrint();
@@ -1606,7 +1617,8 @@ function printInPlace(url) {
                     // Keep retrying until attempts are exhausted.
                 }
                 if (attempt < maxAttempts) {
-                    setTimeout(tryPrintTourFile, 150);
+                    const tid = setTimeout(tryPrintTourFile, 150);
+                    frame._printTimeouts.push(tid);
                 } else {
                     done = true;
                     console.error('Tour file print failed: printFullSummary/button not found in time');
@@ -1632,6 +1644,20 @@ function printInPlace(url) {
     };
     frame.src = url;
 }
+
+// Clean up pending print timeouts when page is unloaded or enters back/forward cache
+window.addEventListener('pagehide', function(event) {
+    const frame = document.getElementById('inbound-print-frame');
+    if (frame) {
+        // Clear all pending timeouts
+        if (frame._printTimeouts && frame._printTimeouts.length > 0) {
+            frame._printTimeouts.forEach(timeoutId => clearTimeout(timeoutId));
+            frame._printTimeouts = [];
+        }
+        // Invalidate the current session so any remaining operations fail their checks
+        frame._printSessionId = (frame._printSessionId || 0) + 1;
+    }
+});
 </script>
 
 {% endblock %}
