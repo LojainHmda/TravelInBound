@@ -100,15 +100,10 @@ body {
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
 }
+/* File inputs use the same bordered design as text inputs (same as the Add New popup component) */
 .field input[type="file"] {
-    border: none;
-    border-radius: 0;
-    padding: 0;
-    background: none;
-    min-height: unset;
-    box-shadow: none;
-    outline: revert;
-    width: auto;
+    padding: 5px 8px;
+    cursor: pointer;
 }
 .file-row {
     display: inline-flex;
@@ -147,7 +142,6 @@ body {
 .file-label a { color: #334155; text-decoration: none; }
 .file-label a:hover { text-decoration: underline; color: #1d4ed8; }
 .field textarea { resize: vertical; min-height: 60px; }
-.field input[type="file"] { padding: 0; min-height: auto; background: transparent; border: none; }
 .field .hint { font-size: 11px; color: #94a3b8; margin-top: 2px; }
 .required-note { font-size: 11px; color: #94a3b8; margin-top: 0.5rem; }
 .form-actions {
@@ -1471,6 +1465,13 @@ function handleSupplierEditFormSubmit(event) {
     }
 
     // ── File attachment - same behavior as Add New ─────────────
+    // Hide the native "No file chosen" text while a saved file is shown instead
+    var contractFileStyle = document.createElement('style');
+    contractFileStyle.textContent =
+        'input[type="file"][name="contract_file"].has-saved-file { color: transparent; }' +
+        'input[type="file"][name="contract_file"].has-saved-file::file-selector-button { color: #475569; }';
+    document.head.appendChild(contractFileStyle);
+
     document.querySelectorAll('input[type="file"][name="contract_file"]').forEach(function(fileInput) {
         var clearBtn = fileInput.parentElement.querySelector('.file-clear-btn');
         var originalFile = fileInput.getAttribute('data-original-file');
@@ -1479,14 +1480,47 @@ function handleSupplierEditFormSubmit(event) {
 
         if (!clearBtn) return;
 
+        // Overlay showing the saved file name in place of "No file chosen"
+        var savedNameEl = null;
+        if (originalFile) {
+            var wrap = fileInput.parentElement;
+            wrap.style.position = 'relative';
+            savedNameEl = document.createElement('span');
+            savedNameEl.textContent = originalFile;
+            savedNameEl.title = 'Click to view ' + originalFile;
+            savedNameEl.style.cssText = 'position:absolute;right:56px;top:50%;transform:translateY(-50%);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;';
+            // Match the native file-input text look and position (same font, color and filename offset)
+            var inputStyle = getComputedStyle(fileInput);
+            var btnStyle = getComputedStyle(fileInput, '::file-selector-button');
+            var nameLeft = (parseFloat(inputStyle.borderLeftWidth) || 0) +
+                           (parseFloat(inputStyle.paddingLeft) || 0) +
+                           (parseFloat(btnStyle.width) || 88) +
+                           (parseFloat(btnStyle.marginRight) || 0) + 6;
+            savedNameEl.style.left = Math.round(nameLeft) + 'px';
+            savedNameEl.style.color = inputStyle.color;
+            savedNameEl.style.fontSize = inputStyle.fontSize;
+            savedNameEl.style.fontFamily = inputStyle.fontFamily;
+            wrap.insertBefore(savedNameEl, clearBtn);
+        }
+
+        // Show the saved file name when no new file is selected; native name otherwise
+        function refreshFileDisplay() {
+            var hasNewFile = fileInput.files && fileInput.files.length > 0;
+            var showSaved = !hasNewFile && !!originalFile;
+            if (savedNameEl) savedNameEl.style.display = showSaved ? 'block' : 'none';
+            fileInput.classList.toggle('has-saved-file', showSaved);
+        }
+
         fileInput.addEventListener('change', function() {
             if (!this.files || this.files.length === 0) {
+                refreshFileDisplay();
                 return;
             }
             var file = this.files[0];
             if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
             currentBlobUrl = URL.createObjectURL(file);
             clearBtn.style.display = 'block';
+            refreshFileDisplay();
         });
 
         fileInput.addEventListener('click', function(e) {
@@ -1504,9 +1538,11 @@ function handleSupplierEditFormSubmit(event) {
             if (currentBlobUrl) URL.revokeObjectURL(currentBlobUrl);
             currentBlobUrl = null;
             clearBtn.style.display = originalFile ? 'block' : 'none';
+            refreshFileDisplay();
         });
 
         clearBtn.style.display = originalFile ? 'block' : 'none';
+        refreshFileDisplay();
     });
 })();
 </script>

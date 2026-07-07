@@ -11,7 +11,6 @@
         {% if hotel.triple_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Tpl:{{ hotel.triple_rooms }}</span>{% endif %}
     </td>
     <td class="text-center hotel-compact-col">{{ (hotel.rooms[0].confirmation if hotel.rooms else '') or '-' }}</td>
-    <td class="text-center hotel-compact-col">{{ (hotel.rooms|map(attribute='room_category')|select|list|join(', ')) if hotel.rooms and (hotel.rooms|map(attribute='room_category')|select|list) else '-' }}</td>
     <td class="text-center hotel-compact-col print-hide-status">
         <span class="px-2 py-0.5 rounded text-[10px] {% if hotel.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif hotel.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% elif hotel.status == 'WAITING_LIST' %}bg-blue-100 text-blue-700{% elif hotel.status == 'CANCELLED' %}bg-red-100 text-red-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ hotel.status or 'PENDING' }}</span>
     </td>
@@ -32,5 +31,5 @@
 </tr>
 {% endfor %}
 {% else %}
-<tr><td colspan="10" class="px-4 py-3 text-center text-gray-500">No hotels added</td></tr>
+<tr><td colspan="9" class="px-4 py-3 text-center text-gray-500">No hotels added</td></tr>
 {% endif %}

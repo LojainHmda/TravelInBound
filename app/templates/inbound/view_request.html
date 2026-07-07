@@ -2154,7 +2154,6 @@ input[type="date"]::-webkit-calendar-table-body {
                                             <th class="text-center hotel-compact-col">Nights</th>
                                             <th class="text-center hotel-compact-col">Rooms</th>
                                             <th class="text-center hotel-compact-col">Confirm #</th>
-                                            <th class="text-center hotel-compact-col">Room Cat</th>
                                             <th class="text-center hotel-compact-col print-hide-status">Status</th>
                                             <th class="text-left hotel-notes-col">Notes</th>
                                             <th class="text-center hotel-compact-col print-hide-actions">Actions</th>
@@ -2174,7 +2173,6 @@ input[type="date"]::-webkit-calendar-table-body {
                                                     {% if hotel.triple_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Tpl:{{ hotel.triple_rooms }}</span>{% endif %}
                                                 </td>
                                                 <td class="text-center hotel-compact-col">{{ (hotel.rooms[0].confirmation if hotel.rooms else '') or '-' }}</td>
-                                                <td class="text-center hotel-compact-col">{{ (hotel.rooms|map(attribute='room_category')|select|list|join(', ')) if hotel.rooms and (hotel.rooms|map(attribute='room_category')|select|list) else '-' }}</td>
                                                 <td class="text-center hotel-compact-col print-hide-status">
                                                     <span class="px-2 py-0.5 rounded text-[10px] {% if hotel.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif hotel.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ hotel.status or 'PENDING' }}</span>
                                                 </td>
@@ -2195,13 +2193,15 @@ input[type="date"]::-webkit-calendar-table-body {
                                             </tr>
                                             {% endfor %}
                                         {% else %}
-                                            <tr><td colspan="10" class="px-4 py-3 text-center text-gray-500">No hotels added</td></tr>
+                                            <tr><td colspan="9" class="px-4 py-3 text-center text-gray-500">No hotels added</td></tr>
                                         {% endif %}
                                     </tbody>
                                 </table>
                             </div>
+                            <!-- Per-hotel Rooms breakdown tables (rendered by renderHotelRoomsBreakdown) -->
+                            <div id="hotel-rooms-breakdown"></div>
                         </div>
-                        
+
                         <!-- Transport Table -->
                         <div class="mb-4">
                             <h4 class="text-sm font-bold text-gray-800 mb-2 flex items-center">
@@ -5046,7 +5046,12 @@ function updateServiceTable(serviceType, data) {
             tbody.innerHTML = data.all_entries_html;
         }
     }
-    
+
+    // Keep the per-hotel Rooms breakdown in sync with the hotels table
+    if (serviceType === 'hotel' && typeof renderHotelRoomsBreakdown === 'function') {
+        renderHotelRoomsBreakdown();
+    }
+
     // Mark summary tables as stale so they refresh when opened
     if (typeof markSummaryTablesStale === 'function') {
         markSummaryTablesStale();
@@ -5063,8 +5068,6 @@ function createServiceRowHtml(serviceType, entry) {
                                entry.status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 
                                'bg-gray-100 text-gray-700';
             const confirmation = (entry.rooms && entry.rooms[0] && entry.rooms[0].confirmation) ? entry.rooms[0].confirmation : '-';
-            const roomCats = entry.rooms ? [...new Set(entry.rooms.map(r => r.room_category).filter(Boolean))].join(', ') : '';
-            const roomCat = roomCats || '-';
             return `
                 <tr class="hover:bg-gray-50" data-hotel-name="${entry.hotel_name || ''}" data-service-type="hotel" data-record-id="${entry.id}">
                     <td class="font-medium">${entry.hotel_name || '-'}</td>
@@ -5077,7 +5080,6 @@ function createServiceRowHtml(serviceType, entry) {
                         ${entry.triple_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Tpl:${entry.triple_rooms}</span>` : ''}
                     </td>
                     <td class="text-center hotel-compact-col">${confirmation}</td>
-                    <td class="text-center hotel-compact-col">${roomCat}</td>
                     <td class="text-center hotel-compact-col print-hide-status">
                         <span class="px-2 py-0.5 rounded text-[10px] ${statusClass}">${entry.status || 'PENDING'}</span>
                     </td>
@@ -5272,6 +5274,80 @@ function updateSummaryCounts() {
 // Function to update the inline full summary tables dynamically
 // This function reads from the local service tables and updates the summary tables
 // It should be called after services are saved to ensure dates are current
+// Build the per-hotel Rooms tables shown below the Hotel Accommodations table in the Tour File
+function renderHotelRoomsBreakdown() {
+    const container = document.getElementById('hotel-rooms-breakdown');
+    if (!container) return;
+    const esc = (s) => ('' + (s || '')).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const typeBucket = (t) => t === 'Single' ? 'SGL' : t === 'Double' ? 'DBL' : t === 'Twin' ? 'TWIN' : t === 'Triple' ? 'TRPL' : 'OTHER';
+
+    const hotelRows = Array.from(document.querySelectorAll('#full-summary-hotels tr[data-record-id]'));
+    container.innerHTML = hotelRows.map(tr => {
+        const hotelId = tr.getAttribute('data-record-id');
+        const hotelName = tr.getAttribute('data-hotel-name') || '';
+        // Distribution counts from the Rooms chips (Sgl:x Dbl:y Tpl:z)
+        const chipsText = tr.cells[4] ? tr.cells[4].textContent : '';
+        const sgl = parseInt((chipsText.match(/Sgl:(\d+)/) || [])[1]) || 0;
+        const dbl = parseInt((chipsText.match(/Dbl:(\d+)/) || [])[1]) || 0;
+        const trp = parseInt((chipsText.match(/Tpl:(\d+)/) || [])[1]) || 0;
+        const distTotal = sgl + dbl + trp;
+
+        const rooms = (typeof hotelRoomsData !== 'undefined' && Array.isArray(hotelRoomsData[hotelId])) ? hotelRoomsData[hotelId] : [];
+
+        // Per-room data is only trustworthy when it agrees with the distribution counts
+        // (same bucket rules as the backend: SGL=Single, DBL=Double/Twin/King, TRPL=Triple/Suite)
+        const nOf = (types) => rooms.filter(r => types.includes(r.room_type)).length;
+        const roomsMatchDistribution = rooms.length > 0 &&
+            nOf(['Single']) === sgl && nOf(['Double', 'Twin', 'King']) === dbl && nOf(['Triple', 'Suite']) === trp;
+
+        // Per-category counts: use per-room data when consistent, else fall back to distribution totals
+        const categories = {};
+        const order = [];
+        if (roomsMatchDistribution) {
+            rooms.forEach(room => {
+                const cat = (room.room_category || '').trim() || 'Standard Room';
+                if (!categories[cat]) { categories[cat] = { SGL: 0, DBL: 0, TWIN: 0, TRPL: 0, OTHER: 0 }; order.push(cat); }
+                categories[cat][typeBucket(room.room_type)] += 1;
+            });
+        } else if (distTotal > 0) {
+            categories['Standard Room'] = { SGL: sgl, DBL: dbl, TWIN: 0, TRPL: trp, OTHER: 0 };
+            order.push('Standard Room');
+        }
+        if (order.length === 0) return '';
+
+        const tdStyle = 'border:1px solid #e2e8f0;padding:3px 12px;text-align:center;';
+        const thStyle = 'border:1px solid #e2e8f0;padding:3px 12px;background-color:#f8fafc;font-weight:600;white-space:nowrap;text-align:center;';
+        const numOrDash = (n) => n > 0 ? n : '-';
+        const bodyRows = order.map(cat => {
+            const c = categories[cat];
+            return `<tr>
+                <td style="${tdStyle}text-align:left;">${esc(cat)}</td>
+                <td style="${tdStyle}">${numOrDash(c.SGL)}</td>
+                <td style="${tdStyle}">${numOrDash(c.DBL)}</td>
+                <td style="${tdStyle}">${numOrDash(c.TWIN)}</td>
+                <td style="${tdStyle}">${numOrDash(c.TRPL)}</td>
+                <td style="${tdStyle}">${numOrDash(c.OTHER)}</td>
+            </tr>`;
+        }).join('');
+
+        const label = hotelRows.length > 1 ? `Rooms &mdash; ${esc(hotelName)}` : 'Rooms';
+        return `<div class="mt-2" style="text-align:center;">
+            <div style="font-size:11px;font-weight:bold;color:#333;margin-bottom:2px;">${label}</div>
+            <table style="display:inline-table;width:auto;border-collapse:collapse;font-size:11px;margin:0 auto 4px;">
+                <thead><tr>
+                    <th style="${thStyle}text-align:left;">Room Type</th>
+                    <th style="${thStyle}">SGL</th>
+                    <th style="${thStyle}">DBL</th>
+                    <th style="${thStyle}">TWIN</th>
+                    <th style="${thStyle}">TRPL</th>
+                    <th style="${thStyle}">OTHER</th>
+                </tr></thead>
+                <tbody>${bodyRows}</tbody>
+            </table>
+        </div>`;
+    }).join('');
+}
+
 function updateFullSummaryTables() {
     // Update Hotels Summary Table
     const hotelsSummaryBody = document.getElementById('full-summary-hotels');
@@ -5289,12 +5365,6 @@ function updateFullSummaryTables() {
                 const rooms = cells[3]?.innerHTML || '';
                 const confirmation = (cells.length >= 9 && cells[5]) ? (cells[5].textContent.trim() || '-') : '-';
                 const recordId = tr.getAttribute('data-record-id') || tr.getAttribute('data-hotel-id') || '';
-                const roomCatSelects = document.querySelectorAll('#room-list-container [data-field="room_category"]');
-                let roomCat = '-';
-                if (roomCatSelects.length > 0) {
-                    const cats = Array.from(roomCatSelects).map(s => s.value?.trim()).filter(Boolean);
-                    roomCat = [...new Set(cats)].join(', ') || '-';
-                }
                 const status = (cells.length >= 10 ? cells[7] : cells.length >= 9 ? cells[6] : cells[4])?.textContent.trim() || 'PENDING';
                 const statusClass = status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
                                    status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700';
@@ -5306,7 +5376,6 @@ function updateFullSummaryTables() {
                     <td class="text-center hotel-compact-col">${nights}</td>
                     <td class="text-center hotel-compact-col">${rooms}</td>
                     <td class="text-center hotel-compact-col">${confirmation}</td>
-                    <td class="text-center hotel-compact-col">${roomCat}</td>
                     <td class="text-center hotel-compact-col print-hide-status"><span class="px-2 py-0.5 rounded text-[10px] ${statusClass}">${status}</span></td>
                     <td class="hotel-notes-col">${notes}</td>
                     <td class="text-center hotel-compact-col whitespace-nowrap print-hide-actions">
@@ -5319,10 +5388,11 @@ function updateFullSummaryTables() {
                 </tr>`;
             }).join('');
         } else {
-            hotelsSummaryBody.innerHTML = '<tr><td colspan="10" class="px-4 py-3 text-center text-gray-500">No hotels added</td></tr>';
+            hotelsSummaryBody.innerHTML = '<tr><td colspan="9" class="px-4 py-3 text-center text-gray-500">No hotels added</td></tr>';
         }
+        renderHotelRoomsBreakdown();
     }
-    
+
     // Update Flights Summary Table
     const flightsSummaryBody = document.getElementById('full-summary-flights');
     if (flightsSummaryBody) {
@@ -5508,6 +5578,7 @@ function toggleFullSummary() {
         section.classList.remove('hidden');
         btnText.textContent = 'Hide Tour File';
         syncSummaryGroupInfo();
+        renderHotelRoomsBreakdown();
         const hotelsTbody = document.getElementById('full-summary-hotels');
         if (hotelsTbody) ensureHotelVoucherButtons(hotelsTbody);
         // Always refresh summary tables when opening to ensure dates are up-to-date
@@ -8387,7 +8458,10 @@ async function saveServiceData(serviceType) {
                                     : (data.summary_entries_html || data.service_entries_html);
                                 if (htmlToInsert && htmlToInsert.trim()) {
                                     tableBody.innerHTML = htmlToInsert;
-                                    if (serviceType === 'hotel') ensureHotelVoucherButtons(tableBody);
+                                    if (serviceType === 'hotel') {
+                                        ensureHotelVoucherButtons(tableBody);
+                                        renderHotelRoomsBreakdown();
+                                    }
                                     console.log(`[saveServiceData] Delayed update: Refreshed ${serviceType} table with updated dates`);
                                 } else if (serviceType === 'guide') {
                                     console.error(`[saveServiceData] CRITICAL: Guide summary_entries_html is missing! Cannot update table.`);
@@ -9118,6 +9192,7 @@ function updateSummaryTables(serviceType, data) {
                         if (htmlToInsert && htmlToInsert.trim()) {
                             altTableBody.innerHTML = htmlToInsert;
                             ensureHotelVoucherButtons(altTableBody);
+                            renderHotelRoomsBreakdown();
                             updateTabBadges();
                             updateTabColors();
                         }
@@ -9195,8 +9270,6 @@ function createSummaryRowHtml(serviceType, entry) {
                                      entry.status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 
                                      'bg-gray-100 text-gray-700';
             const hotelConfirmation = (entry.rooms && entry.rooms[0] && entry.rooms[0].confirmation) ? entry.rooms[0].confirmation : '-';
-            const hotelRoomCats = entry.rooms ? [...new Set(entry.rooms.map(r => r.room_category).filter(Boolean))].join(', ') : '';
-            const hotelRoomCat = hotelRoomCats || '-';
             return `
                 <tr class="hover:bg-gray-50" data-hotel-name="${entry.hotel_name || ''}" data-service-type="hotel" data-record-id="${entry.id}">
                     <td class="font-medium">${entry.hotel_name || '-'}</td>
@@ -9209,7 +9282,6 @@ function createSummaryRowHtml(serviceType, entry) {
                         ${entry.triple_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Tpl:${entry.triple_rooms}</span>` : ''}
                     </td>
                     <td class="text-center hotel-compact-col">${hotelConfirmation}</td>
-                    <td class="text-center hotel-compact-col">${hotelRoomCat}</td>
                     <td class="text-center hotel-compact-col print-hide-status">
                         <span class="px-2 py-0.5 rounded text-[10px] ${hotelStatusClass}">${entry.status || 'PENDING'}</span>
                     </td>
@@ -11496,76 +11568,80 @@ function switchRoomTab(tab) {
     }
 }
 
+// Map a room type to its distribution bucket (same grouping the backend uses)
+function roomTypeGroup(roomType) {
+    if (roomType === 'Single') return 'Single';
+    if (['Double', 'Twin', 'King'].includes(roomType)) return 'Double';
+    if (['Triple', 'Suite'].includes(roomType)) return 'Triple';
+    return 'Extra'; // e.g. manually added Free rooms
+}
+
 function generateRoomListRows() {
     const container = document.getElementById('room-list-container');
     const emptyMsg = document.getElementById('room-list-empty');
     const table = document.getElementById('room-list-table');
-    
-    // Check if we have existing room data for the current hotel being edited
-    if (currentEditingHotelId && hotelRoomsData[currentEditingHotelId] && hotelRoomsData[currentEditingHotelId].length > 0) {
-        const existingRooms = hotelRoomsData[currentEditingHotelId];
-        
-        // Check if rows already exist with same count
-        const existingRows = container.querySelectorAll('.room-list-row');
-        if (existingRows.length === existingRooms.length) {
-            return; // Don't regenerate if count matches
-        }
-        
-        container.innerHTML = '';
-        emptyMsg.classList.add('hidden');
-        if (table) table.style.display = 'table';
-        
-        // Generate rows from existing room data
-        existingRooms.forEach((room, index) => {
-            const roomType = room.room_type || 'Double';
-            const defaultAdults = roomType === 'Single' ? 1 : roomType === 'Triple' ? 3 : 2;
-            container.appendChild(createRoomListRow(index + 1, roomType, defaultAdults, room));
-        });
-        // Populate Room List dropdowns with backend categories (incl. custom ones)
-        if (hotelRoomCategoriesCache.length > 0) {
-            refreshRoomCategoryDropdowns(hotelRoomCategoriesCache);
-        }
-        return;
-    }
-    
-    // Fallback: generate from distribution counts for new hotels
+    if (!container) return;
+
+    // Room counts always come from the Distribution inputs (new and edited hotels alike)
     const sgl = parseInt(document.getElementById('hotel_single_rooms')?.value) || 0;
     const dbl = parseInt(document.getElementById('hotel_double_rooms')?.value) || 0;
     const trp = parseInt(document.getElementById('hotel_triple_rooms')?.value) || 0;
-    
     const totalRooms = sgl + dbl + trp;
-    
-    if (totalRooms === 0) {
+
+    // Rows currently in the DOM carry the latest user edits
+    const domRooms = getRoomListData();
+    const pools = { Single: [], Double: [], Triple: [], Extra: [] };
+    domRooms.forEach(r => pools[roomTypeGroup(r.room_type)].push(r));
+
+    // Don't regenerate if rendered rows already match the distribution (keeps manual per-row edits)
+    if (domRooms.length > 0 &&
+        pools.Single.length === sgl && pools.Double.length === dbl && pools.Triple.length === trp) {
+        return;
+    }
+
+    // Top up each bucket with saved room data for the hotel being edited,
+    // so already-entered details survive count changes
+    const savedRooms = (currentEditingHotelId && hotelRoomsData[currentEditingHotelId]) ? hotelRoomsData[currentEditingHotelId] : [];
+    const savedPools = { Single: [], Double: [], Triple: [], Extra: [] };
+    savedRooms.forEach(r => savedPools[roomTypeGroup(r.room_type)].push(r));
+    ['Single', 'Double', 'Triple'].forEach(group => {
+        if (pools[group].length < savedPools[group].length) {
+            pools[group] = pools[group].concat(savedPools[group].slice(pools[group].length));
+        }
+    });
+    // Extra rows (outside the distribution buckets) come from the DOM; fall back to saved data on first open
+    if (domRooms.length === 0 && pools.Extra.length === 0) {
+        pools.Extra = savedPools.Extra;
+    }
+
+    if (totalRooms === 0 && pools.Extra.length === 0) {
         container.innerHTML = '';
         emptyMsg.classList.remove('hidden');
         if (table) table.style.display = 'none';
         return;
     }
-    
+
     emptyMsg.classList.add('hidden');
     if (table) table.style.display = 'table';
-    
-    // Check if rows already exist with same count
-    const existingRows = container.querySelectorAll('.room-list-row');
-    if (existingRows.length === totalRooms) {
-        return; // Don't regenerate if count matches
-    }
-    
+
     container.innerHTML = '';
     let roomNum = 1;
-    
-    // Generate Single rooms
-    for (let i = 0; i < sgl; i++) {
-        container.appendChild(createRoomListRow(roomNum++, 'Single', 1));
-    }
-    // Generate Double rooms
-    for (let i = 0; i < dbl; i++) {
-        container.appendChild(createRoomListRow(roomNum++, 'Double', 2));
-    }
-    // Generate Triple rooms
-    for (let i = 0; i < trp; i++) {
-        container.appendChild(createRoomListRow(roomNum++, 'Triple', 3));
-    }
+
+    const buildGroup = (count, group, defaultType, defaultAdults) => {
+        for (let i = 0; i < count; i++) {
+            const roomData = pools[group][i] || {};
+            const roomType = roomData.room_type || defaultType;
+            container.appendChild(createRoomListRow(roomNum++, roomType, defaultAdults, roomData));
+        }
+    };
+    buildGroup(sgl, 'Single', 'Single', 1);
+    buildGroup(dbl, 'Double', 'Double', 2);
+    buildGroup(trp, 'Triple', 'Triple', 3);
+    // Keep rows that don't belong to any distribution bucket (e.g. Free rooms)
+    pools.Extra.forEach(roomData => {
+        container.appendChild(createRoomListRow(roomNum++, roomData.room_type || 'Free', roomData.adults || 0, roomData));
+    });
+
     // Populate Room List dropdowns with backend categories (incl. custom ones)
     if (hotelRoomCategoriesCache.length > 0) {
         refreshRoomCategoryDropdowns(hotelRoomCategoriesCache);
@@ -11853,6 +11929,19 @@ function initializeRoomWizard() {
     if (field) {
         field.addEventListener('input', calculateTotalGuests);
         field.addEventListener('change', calculateTotalGuests);
+    }
+});
+
+// Keep the Room List in sync with the Distribution counts while its tab is visible
+['hotel_single_rooms', 'hotel_double_rooms', 'hotel_triple_rooms'].forEach(id => {
+    const field = document.getElementById(id);
+    if (field) {
+        field.addEventListener('input', () => {
+            const listContent = document.getElementById('room-content-roomlist');
+            if (listContent && !listContent.classList.contains('hidden')) {
+                generateRoomListRows();
+            }
+        });
     }
 });
 
@@ -13404,8 +13493,11 @@ function syncHotelVoucherDataFromTable() {
             hotel.dateIn = cells[1]?.textContent?.trim() || '-';
             hotel.dateOut = cells[2]?.textContent?.trim() || '-';
             hotel.confirmation = cells[5]?.textContent?.trim() || '-';
-            hotel.roomCategory = cells[6]?.textContent?.trim() || '-';
-            hotel.notes = cells[8]?.textContent?.trim() || '-';
+            // Room Category column was removed from the summary table; derive from cached room data
+            const cachedRooms = (typeof hotelRoomsData !== 'undefined' && Array.isArray(hotelRoomsData[id])) ? hotelRoomsData[id] : [];
+            const cachedCats = [...new Set(cachedRooms.map(r => (r.room_category || '').trim()).filter(Boolean))].join(', ');
+            if (cachedCats) hotel.roomCategory = cachedCats;
+            hotel.notes = cells[7]?.textContent?.trim() || '-';
             const roomsHtml = cells[4]?.innerHTML || '';
             hotel.sgl = parseInt((roomsHtml.match(/Sgl:(\d+)/) || [null, '0'])[1], 10) || 0;
             hotel.dbl = parseInt((roomsHtml.match(/Dbl:(\d+)/) || [null, '0'])[1], 10) || 0;
