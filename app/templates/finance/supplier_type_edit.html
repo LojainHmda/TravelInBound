@@ -590,9 +590,8 @@ body {
                     <label>Languages <span style="color:#ef4444">*</span></label>
                     <select id="edit_guide_lang_select">
                         <option value="">Select a language...</option>
-                        {% for lang in ['Arabic','English','French','German','Spanish','Italian','Russian','Chinese','Japanese','Korean','Turkish','Hebrew','Persian','Hindi','Portuguese','Dutch','Greek','Swedish','Norwegian','Danish','Polish','Czech','Hungarian','Romanian','Bulgarian','Croatian','Serbian','Other'] %}
-                        <option value="{{ lang }}">{{ lang }}</option>
-                        {% endfor %}
+                        {% include 'components/guide_language_options.html' %}
+                        <option value="Other">Other</option>
                     </select>
                     <div class="lang-tags" id="edit_guide_lang_tags"></div>
                     <input type="hidden" name="guide_languages" id="edit_guide_lang_hidden" value="{{ supplier.languages or '' }}">
@@ -689,9 +688,8 @@ body {
                     <label>Languages <span style="color:#ef4444">*</span></label>
                     <select id="edit_guide_lang_select">
                         <option value="">Select a language...</option>
-                        {% for lang in ['Arabic','English','French','German','Spanish','Italian','Russian','Chinese','Japanese','Korean','Turkish','Hebrew','Persian','Hindi','Portuguese','Dutch','Greek','Swedish','Norwegian','Danish','Polish','Czech','Hungarian','Romanian','Bulgarian','Croatian','Serbian','Other'] %}
-                        <option value="{{ lang }}">{{ lang }}</option>
-                        {% endfor %}
+                        {% include 'components/guide_language_options.html' %}
+                        <option value="Other">Other</option>
                     </select>
                     <div class="lang-tags" id="edit_guide_lang_tags"></div>
                     <input type="hidden" name="guide_languages" id="edit_guide_lang_hidden" value="{{ supplier.languages or '' }}">
@@ -1242,6 +1240,23 @@ function handleSupplierEditFormSubmit(event) {
 
     if (langSelect && langTags && langHidden) {
         var selected = (langHidden.value || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+        // Custom languages are stored per supplier family in the global option store
+        var langOptionKey = '{{ 'meetassist_hub_languages' if type_key == 'meet-assist' else 'guide_languages' }}';
+
+        function ensureLangOption(value) {
+            var val = String(value || '').trim();
+            if (!val) return;
+            var exists = Array.from(langSelect.options).some(function(opt) {
+                return (opt.value || '').toLowerCase() === val.toLowerCase();
+            });
+            if (exists) return;
+            var option = document.createElement('option');
+            option.value = val;
+            option.textContent = val;
+            var otherOption = Array.from(langSelect.options).find(function(opt) { return opt.value === 'Other'; });
+            if (otherOption) langSelect.insertBefore(option, otherOption);
+            else langSelect.appendChild(option);
+        }
 
         function renderTags() {
             langTags.innerHTML = '';
@@ -1258,15 +1273,77 @@ function handleSupplierEditFormSubmit(event) {
             });
         }
 
-        langSelect.addEventListener('change', function() {
-            var v = this.value;
+        function addSelectedLanguage(v) {
             if (v && !selected.includes(v)) {
                 selected.push(v);
                 langHidden.value = selected.join(', ');
                 renderTags();
             }
+        }
+
+        function openCustomLanguagePrompt() {
+            var existingOverlay = document.getElementById('custom-prompt-overlay');
+            if (existingOverlay) existingOverlay.remove();
+            var overlay = document.createElement('div');
+            overlay.id = 'custom-prompt-overlay';
+            overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;';
+            var dialog = document.createElement('div');
+            dialog.style.cssText = 'background:white;border-radius:12px;padding:24px;min-width:360px;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
+            dialog.innerHTML =
+                '<div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:12px;">Enter new language:</div>' +
+                '<input type="text" id="custom-prompt-input" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;" placeholder="Type language..." autofocus>' +
+                '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">' +
+                '<button type="button" id="custom-prompt-cancel" style="padding:6px 16px;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;color:#475569;font-size:12px;cursor:pointer;">Cancel</button>' +
+                '<button type="button" id="custom-prompt-ok" style="padding:6px 16px;border:none;border-radius:6px;background:#3b82f6;color:white;font-size:12px;cursor:pointer;font-weight:500;">Add</button>' +
+                '</div>';
+            overlay.appendChild(dialog);
+            document.body.appendChild(overlay);
+            var input = document.getElementById('custom-prompt-input');
+            var submit = function() {
+                var val = (input.value || '').trim();
+                overlay.remove();
+                if (!val) return;
+                ensureLangOption(val);
+                addSelectedLanguage(val);
+                // Persist globally so the language is available everywhere
+                fetch('/inbound/api/supplier-option-values/global', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: langOptionKey, value: val })
+                }).catch(function() {});
+            };
+            var cancel = function() { overlay.remove(); };
+            document.getElementById('custom-prompt-ok').addEventListener('click', submit);
+            document.getElementById('custom-prompt-cancel').addEventListener('click', cancel);
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') submit();
+                if (e.key === 'Escape') cancel();
+            });
+            overlay.addEventListener('click', function(e) { if (e.target === overlay) cancel(); });
+            setTimeout(function() { input.focus(); }, 50);
+        }
+
+        langSelect.addEventListener('change', function() {
+            var v = this.value;
             this.value = '';
+            if (v === 'Other') {
+                openCustomLanguagePrompt();
+                return;
+            }
+            addSelectedLanguage(v);
         });
+
+        // Merge globally saved custom languages into the dropdown
+        fetch('/inbound/api/supplier-option-values/global?key=' + encodeURIComponent(langOptionKey))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data && data.success && Array.isArray(data.values)) {
+                    data.values.forEach(ensureLangOption);
+                }
+            })
+            .catch(function() {});
+        // Keep custom languages already saved on this supplier selectable
+        selected.forEach(ensureLangOption);
 
         renderTags();
     }

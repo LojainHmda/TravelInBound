@@ -890,6 +890,11 @@ class ArrivalBatch(db.Model):
     supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=True)  # FK to Supplier (Ground handler)
     needs_transport = db.Column(db.Boolean, default=True)  # If True, saving creates/keeps a linked Transport stub
 
+    # Attach Visa file (reuses the shared confirmation-email upload mechanism internally)
+    confirmation_email_filename = db.Column(db.String(255), nullable=True)  # Original uploaded filename
+    confirmation_email_filepath = db.Column(db.String(500), nullable=True)  # Relative path for serving
+    confirmation_email_uploaded_at = db.Column(db.DateTime, nullable=True)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

@@ -25,33 +25,7 @@
                         <div class="space-y-2">
                             <select id="new_guide_languages" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-teal-500 focus:border-teal-500" required>
                                 <option value="">Select a language...</option>
-                                <option value="Arabic">Arabic</option>
-                                <option value="English">English</option>
-                                <option value="French">French</option>
-                                <option value="German">German</option>
-                                <option value="Spanish">Spanish</option>
-                                <option value="Italian">Italian</option>
-                                <option value="Russian">Russian</option>
-                                <option value="Chinese">Chinese</option>
-                                <option value="Japanese">Japanese</option>
-                                <option value="Korean">Korean</option>
-                                <option value="Turkish">Turkish</option>
-                                <option value="Hebrew">Hebrew</option>
-                                <option value="Persian">Persian</option>
-                                <option value="Hindi">Hindi</option>
-                                <option value="Portuguese">Portuguese</option>
-                                <option value="Dutch">Dutch</option>
-                                <option value="Greek">Greek</option>
-                                <option value="Swedish">Swedish</option>
-                                <option value="Norwegian">Norwegian</option>
-                                <option value="Danish">Danish</option>
-                                <option value="Polish">Polish</option>
-                                <option value="Czech">Czech</option>
-                                <option value="Hungarian">Hungarian</option>
-                                <option value="Romanian">Romanian</option>
-                                <option value="Bulgarian">Bulgarian</option>
-                                <option value="Croatian">Croatian</option>
-                                <option value="Serbian">Serbian</option>
+                                {% include 'components/guide_language_options.html' %}
                                 <option value="Other">Other</option>
                             </select>
                             <div id="selected_guide_languages" class="flex flex-wrap gap-1 min-h-[24px]"></div>

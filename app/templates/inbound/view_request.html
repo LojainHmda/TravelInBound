@@ -1155,7 +1155,7 @@ input[type="date"]::-webkit-calendar-table-body {
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Visa Status</label>
-                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_visa_status" data-service="arrival">
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_visa_status" data-service="arrival" onchange="updateArrivalVisaAttachmentVisibility()">
                                         <option value="NOT_INCLUDED">Not Included</option>
                                         <option value="INCLUDED">Included</option>
                                         <option value="VISA_FREE">Visa Free</option>
@@ -1218,6 +1218,16 @@ input[type="date"]::-webkit-calendar-table-body {
                                 <div class="col-span-1">
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">System Notes</label>
                                     <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_system_notes" placeholder="Internal only" autocomplete="off">
+                                </div>
+                            </div>
+                            <!-- Attach Visa (visible unless Visa Status is Not Included) -->
+                            <div class="mb-2 mt-2 hidden" id="arrival_visa_attachment_wrap">
+                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Attach Visa</label>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <input type="file" id="arrival_confirmation_input" style="display:none;" accept=".pdf,.png,.jpg,.jpeg,.gif,.doc,.docx,.xls,.xlsx,.txt" onchange="handleConfirmationFileSelect(event, 'arrival')">
+                                    <button type="button" onclick="document.getElementById('arrival_confirmation_input').click()" class="px-3 py-1.5 border border-slate-300 bg-white text-slate-700 rounded text-xs font-medium hover:bg-slate-50">Choose File</button>
+                                    <span id="arrival_file_display" style="font-size: 0.75rem; color: #64748b;">No file chosen</span>
+                                    <button type="button" id="arrival_clear_btn" class="px-3 py-1.5 border border-slate-300 bg-white text-slate-700 rounded text-xs font-medium hidden hover:bg-slate-50" onclick="clearConfirmationFile('arrival')">Clear</button>
                                 </div>
                             </div>
                             <div class="flex justify-end gap-2 mt-2">
@@ -1610,16 +1620,12 @@ input[type="date"]::-webkit-calendar-table-body {
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Language</label>
                                     <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_language" data-service="guide">
                                         <option value="">Select...</option>
-                                        <option value="English">English</option>
-                                        <option value="Spanish">Spanish</option>
-                                        <option value="French">French</option>
-                                        <option value="German">German</option>
-                                        <option value="Arabic">Arabic</option>
-                                        <option value="Italian">Italian</option>
+                                        {% include 'components/guide_language_options.html' %}
+                                        <option value="Other">Other</option>
                                     </select>
                                 </div>
                                 <div class="w-full min-w-0 md:col-span-2">
-                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Guide Name <span class="text-red-500">*</span></label>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Guide Name</label>
                                     <div class="flex gap-2 w-full min-w-0">
                                         <select class="flex-1 min-w-0 px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_supplier_id" data-service="guide">
                                             <option value="">Select guide...</option>
@@ -7320,6 +7326,23 @@ function clearServiceFormFields(serviceType) {
         if (paxField) paxField.value = '{{ request.pax or 1 }}';
         const ant = document.getElementById('arrival_needs_transport');
         if (ant) ant.value = 'yes';
+        // Reset the Attach Visa file field and sync its visibility with Visa Status
+        pendingConfirmationFiles['arrival'] = null;
+        const visaInput = document.getElementById('arrival_confirmation_input');
+        if (visaInput) visaInput.value = '';
+        const visaDisplay = document.getElementById('arrival_file_display');
+        if (visaDisplay) {
+            visaDisplay.textContent = 'No file chosen';
+            visaDisplay.style.cursor = 'default';
+            visaDisplay.style.textDecoration = 'none';
+            visaDisplay.style.color = '#64748b';
+            visaDisplay.onclick = null;
+        }
+        const visaClearBtn = document.getElementById('arrival_clear_btn');
+        if (visaClearBtn) visaClearBtn.classList.add('hidden');
+        if (typeof updateArrivalVisaAttachmentVisibility === 'function') {
+            updateArrivalVisaAttachmentVisibility();
+        }
     } else if (serviceType === 'departure') {
         const paxField = document.getElementById('departure_pax_count');
         if (paxField) paxField.value = '{{ request.pax or 1 }}';
@@ -7775,9 +7798,14 @@ function populateServiceForm(serviceType, record) {
         }
     }
 
-    // Load confirmation email file if it exists (for hotel, transport, meal)
-    if (['hotel', 'transport', 'meal'].includes(serviceType) && record.id) {
+    // Load confirmation email file if it exists (for hotel, transport, meal, arrival)
+    if (['hotel', 'transport', 'meal', 'arrival'].includes(serviceType) && record.id) {
         loadExistingConfirmationFile(serviceType, record);
+    }
+
+    // Keep the Attach Visa field visibility in sync with the loaded Visa Status
+    if (serviceType === 'arrival') {
+        updateArrivalVisaAttachmentVisibility();
     }
 }
 
@@ -8366,7 +8394,7 @@ async function saveServiceData(serviceType) {
 
             // Upload confirmation file if one is pending
             console.log(`[saveServiceData] Checking for pending files: serviceType=${serviceType}, hasPendingFile=${!!pendingConfirmationFiles[serviceType]}`);
-            if (['hotel', 'transport', 'meal'].includes(serviceType) && pendingConfirmationFiles[serviceType]) {
+            if (['hotel', 'transport', 'meal', 'arrival'].includes(serviceType) && pendingConfirmationFiles[serviceType]) {
                 console.log(`[saveServiceData] Found pending file for ${serviceType}, response data:`, data);
 
                 // Get the record ID from the response or context
@@ -8382,6 +8410,9 @@ async function saveServiceData(serviceType) {
                 } else if (serviceType === 'meal' && data.meal_id) {
                     recordId = data.meal_id;
                     console.log(`[saveServiceData] Using meal_id from response: ${recordId}`);
+                } else if (serviceType === 'arrival' && data.arrival_id) {
+                    recordId = data.arrival_id;
+                    console.log(`[saveServiceData] Using arrival_id from response: ${recordId}`);
                 } else {
                     console.log(`[saveServiceData] No service ID in response, using wasEditRowId: ${wasEditRowId}`);
                 }
@@ -13076,7 +13107,39 @@ function saveNewGuide() {
     });
 }
 
-const GUIDE_FORM_LANGUAGE_CHOICES = ['English', 'Spanish', 'French', 'German', 'Arabic', 'Italian'];
+// Base list comes from the server-rendered dropdown (components/guide_language_options.html),
+// then globally saved custom languages are merged in below.
+// "Other" is a workflow option (add custom language), not a language itself.
+const GUIDE_FORM_LANGUAGE_CHOICES = Array.from(document.getElementById('guide_language')?.options || [])
+    .map(o => o.value)
+    .filter(v => v && v !== 'Other');
+
+(function mergeGlobalGuideLanguages() {
+    fetch('/inbound/api/supplier-option-values/global?key=guide_languages')
+        .then(r => r.json())
+        .then(data => {
+            if (!data || !data.success || !Array.isArray(data.values)) return;
+            const sel = document.getElementById('guide_language');
+            const supplierSel = document.getElementById('guide_supplier_id');
+            data.values.map(v => String(v || '').trim()).filter(Boolean).forEach(lang => {
+                if (!GUIDE_FORM_LANGUAGE_CHOICES.some(l => l.toLowerCase() === lang.toLowerCase())) {
+                    GUIDE_FORM_LANGUAGE_CHOICES.push(lang);
+                }
+                // Only touch the visible options while the dropdown still shows the base list
+                // (a selected guide narrows the list to that guide's own languages)
+                if (sel && (!supplierSel || !supplierSel.value) &&
+                    !Array.from(sel.options).some(o => o.value.toLowerCase() === lang.toLowerCase())) {
+                    const o = document.createElement('option');
+                    o.value = lang;
+                    o.textContent = lang;
+                    const otherOpt = Array.from(sel.options).find(op => op.value === 'Other');
+                    if (otherOpt) sel.insertBefore(o, otherOpt);
+                    else sel.appendChild(o);
+                }
+            });
+        })
+        .catch(() => {});
+})();
 
 /** Language dropdown: full list when no guide, or only that guide's data-languages (manual pick; never auto-filled from itinerary). */
 function rebuildGuideLanguageOptionsFromSupplier(supplierOption) {
@@ -13099,6 +13162,14 @@ function rebuildGuideLanguageOptionsFromSupplier(supplierOption) {
         o.textContent = lang;
         sel.appendChild(o);
     });
+    // "Other" (add custom language) is only offered on the full list,
+    // never when the list is narrowed to a selected guide's languages
+    if (!langs.length) {
+        const otherOpt = document.createElement('option');
+        otherOpt.value = 'Other';
+        otherOpt.textContent = 'Other';
+        sel.appendChild(otherOpt);
+    }
     sel.value = '';
 }
 
@@ -13169,6 +13240,43 @@ function filterGuideSuppliersByLanguage() {
 }
 
 document.getElementById('guide_language')?.addEventListener('change', function() {
+    if (this.value === 'Other') {
+        const sel = this;
+        // Reset immediately so a cancelled prompt leaves the field on "Select..."
+        sel.value = '';
+        filterGuideSuppliersByLanguage();
+        if (typeof window.openSharedCustomPrompt === 'function') {
+            window.openSharedCustomPrompt('Enter new language:', async function (customLanguage) {
+                const val = String(customLanguage || '').trim();
+                if (!val || val.toLowerCase() === 'other') return;
+                // Add to the shared in-page list (case-insensitive)
+                if (!GUIDE_FORM_LANGUAGE_CHOICES.some(l => l.toLowerCase() === val.toLowerCase())) {
+                    GUIDE_FORM_LANGUAGE_CHOICES.push(val);
+                }
+                // Insert into the dropdown before "Other" and select it
+                let opt = Array.from(sel.options).find(o => o.value.toLowerCase() === val.toLowerCase());
+                if (!opt) {
+                    opt = document.createElement('option');
+                    opt.value = val;
+                    opt.textContent = val;
+                    const otherOpt = Array.from(sel.options).find(o => o.value === 'Other');
+                    if (otherOpt) sel.insertBefore(opt, otherOpt);
+                    else sel.appendChild(opt);
+                }
+                sel.value = opt.value;
+                // Persist as a global language option only — this never touches any guide's profile
+                try {
+                    await fetch('/inbound/api/supplier-option-values/global', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ key: 'guide_languages', value: val })
+                    });
+                } catch (_) {}
+                filterGuideSuppliersByLanguage();
+            });
+        }
+        return;
+    }
     filterGuideSuppliersByLanguage();
 });
 
@@ -16094,8 +16202,19 @@ document.addEventListener('DOMContentLoaded', function() {
 let pendingConfirmationFiles = {
     hotel: null,
     transport: null,
-    meal: null
+    meal: null,
+    arrival: null  // Attach Visa reuses this mechanism
 };
+
+// Show/hide the arrival "Attach Visa" field based on Visa Status.
+// Visible for Included / Visa Free / Restricted; hidden for Not Included.
+function updateArrivalVisaAttachmentVisibility() {
+    const wrap = document.getElementById('arrival_visa_attachment_wrap');
+    const statusEl = document.getElementById('arrival_visa_status');
+    if (!wrap || !statusEl) return;
+    const shouldShow = statusEl.value !== 'NOT_INCLUDED';
+    wrap.classList.toggle('hidden', !shouldShow);
+}
 
 // Handle file selection from the file input
 function handleConfirmationFileSelect(event, serviceType) {

@@ -2669,12 +2669,6 @@ def api_save_service_data(request_id):
     elif service_type == 'transport':
         if not form_data.get('transport_vehicle', '').strip():
             validation_errors.append('Vehicle Type is required')
-    elif service_type == 'guide':
-        # Guide name can come from either direct input or supplier selection
-        guide_name = form_data.get('guide_name', '').strip()
-        guide_supplier_id = form_data.get('guide_supplier_id', '').strip()
-        if not guide_name and not guide_supplier_id:
-            validation_errors.append('Guide Name or Guide Supplier is required')
     elif service_type == 'meal':
         if not form_data.get('meal_restaurant', '').strip():
             validation_errors.append('Restaurant is required')
@@ -3025,9 +3019,7 @@ def api_save_service_data(request_id):
                 it_row = ItineraryRow.query.filter_by(id=source_itinerary_id, request_id=request_id).first()
                 if not it_row:
                     return jsonify({'success': False, 'error': 'Invalid itinerary row'}), 400
-                if not guide_supplier_id_val:
-                    return jsonify({'success': False, 'error': 'Guide supplier is required'}), 400
-                if itinerary_slot_supplier_id and itinerary_slot_supplier_id != guide_supplier_id_val:
+                if guide_supplier_id_val and itinerary_slot_supplier_id and itinerary_slot_supplier_id != guide_supplier_id_val:
                     return jsonify({'success': False, 'error': 'Guide supplier mismatch'}), 400
                 if not from_date_str or not to_date_str:
                     return jsonify({
@@ -3792,6 +3784,11 @@ def api_save_service_data(request_id):
         if service_type == 'transport' and 'transport' in locals():
             if transport and transport.id:
                 response_data['transport_id'] = transport.id
+
+        # For arrival: include arrival_id for Attach Visa file upload
+        if service_type == 'arrival' and 'arrival' in locals():
+            if arrival and arrival.id:
+                response_data['arrival_id'] = arrival.id
 
         # For meal: include meal_id for file upload
         print(f"[SAVE SERVICE] Building response for service_type={service_type}")
@@ -5297,6 +5294,7 @@ def api_get_service_record(request_id, service_type, record_id):
                     'notes': getattr(record, 'notes', '') or '',
                     'supplier_id': record.supplier_id,
                     'needs_transport': True if nt is None else bool(nt),
+                    'confirmation_email_filename': record.confirmation_email_filename or '',
                 }
 
         elif service_type == 'departure':
@@ -11512,7 +11510,7 @@ def api_upload_confirmation_file(service_type, record_id):
     print(f"[UPLOAD CONFIRMATION] Started - service_type={service_type}, record_id={record_id}")
 
     # Validate service type
-    if service_type not in ['hotel', 'transport', 'meal']:
+    if service_type not in ['hotel', 'transport', 'meal', 'arrival']:
         print(f"[UPLOAD CONFIRMATION] Invalid service type: {service_type}")
         return jsonify({'success': False, 'error': 'Invalid service type'}), 400
 
@@ -11522,6 +11520,8 @@ def api_upload_confirmation_file(service_type, record_id):
             service = InboundHotel.query.get_or_404(record_id)
         elif service_type == 'transport':
             service = InboundTransport.query.get_or_404(record_id)
+        elif service_type == 'arrival':
+            service = ArrivalBatch.query.get_or_404(record_id)
         else:  # meal
             service = InboundMeal.query.get_or_404(record_id)
         print(f"[UPLOAD CONFIRMATION] Found service record: {service}")
@@ -11587,6 +11587,8 @@ def api_upload_confirmation_file(service_type, record_id):
             verified_service = InboundHotel.query.get(record_id)
         elif service_type == 'transport':
             verified_service = InboundTransport.query.get(record_id)
+        elif service_type == 'arrival':
+            verified_service = ArrivalBatch.query.get(record_id)
         else:
             verified_service = InboundMeal.query.get(record_id)
 
@@ -11608,10 +11610,10 @@ def api_upload_confirmation_file(service_type, record_id):
 @inbound_bp.route('/api/<service_type>/<int:record_id>/delete-confirmation', methods=['POST'])
 @csrf.exempt
 def api_delete_confirmation_file(service_type, record_id):
-    """Delete confirmation email file for hotel, transport, or meal service"""
+    """Delete confirmation email file for hotel, transport, meal, or arrival service"""
 
     # Validate service type
-    if service_type not in ['hotel', 'transport', 'meal']:
+    if service_type not in ['hotel', 'transport', 'meal', 'arrival']:
         return jsonify({'success': False, 'error': 'Invalid service type'}), 400
 
     # Get the service record
@@ -11620,6 +11622,8 @@ def api_delete_confirmation_file(service_type, record_id):
             service = InboundHotel.query.get_or_404(record_id)
         elif service_type == 'transport':
             service = InboundTransport.query.get_or_404(record_id)
+        elif service_type == 'arrival':
+            service = ArrivalBatch.query.get_or_404(record_id)
         else:  # meal
             service = InboundMeal.query.get_or_404(record_id)
     except:
@@ -11651,7 +11655,7 @@ def get_confirmation_file(service_type, record_id):
     """Get/download confirmation email file"""
 
     # Validate service type
-    if service_type not in ['hotel', 'transport', 'meal']:
+    if service_type not in ['hotel', 'transport', 'meal', 'arrival']:
         abort(400)
 
     # Get the service record
@@ -11660,6 +11664,8 @@ def get_confirmation_file(service_type, record_id):
             service = InboundHotel.query.get_or_404(record_id)
         elif service_type == 'transport':
             service = InboundTransport.query.get_or_404(record_id)
+        elif service_type == 'arrival':
+            service = ArrivalBatch.query.get_or_404(record_id)
         else:  # meal
             service = InboundMeal.query.get_or_404(record_id)
     except:

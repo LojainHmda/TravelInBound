@@ -1,0 +1,13 @@
+{#-
+    Shared guide language list — single source of truth for the base languages.
+    Used by:
+      - Guide Details "Language" dropdown (inbound/view_request.html)
+      - Add New Guide popup (components/shared_guide_popup.html)
+      - Edit Guide / Meet-Assist "Languages" selector (finance/supplier_type_edit.html)
+    Placeholder and "Other" options stay with each consumer.
+    Custom languages added via "Other" are persisted through
+    /inbound/api/supplier-option-values/global (key: guide_languages) and merged client-side.
+-#}
+{%- for lang in ['Arabic', 'English', 'French', 'German', 'Spanish', 'Italian', 'Russian', 'Chinese', 'Japanese', 'Korean', 'Turkish', 'Hebrew', 'Persian', 'Hindi', 'Portuguese', 'Dutch', 'Greek', 'Swedish', 'Norwegian', 'Danish', 'Polish', 'Czech', 'Hungarian', 'Romanian', 'Bulgarian', 'Croatian', 'Serbian'] %}
+<option value="{{ lang }}">{{ lang }}</option>
+{%- endfor %}

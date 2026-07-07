@@ -60,6 +60,8 @@
         });
         setTimeout(() => input?.focus(), 50);
     }
+    // Shared with the Guide Details language dropdown (view_request.html)
+    window.openSharedCustomPrompt = openCustomPrompt;
 
     async function fetchGlobalOptionValues(key) {
         try {
