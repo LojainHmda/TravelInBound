@@ -863,7 +863,7 @@ button.btn-print {
                             {% endif %}
                             <button type="button"
                                class="btn-print" title="Tour File"
-                               onclick="printInPlace('{{ url_for('inbound.view_request', id=inb.id) }}?mode=view&print_tour_file=1')">
+                               onclick="printInPlace('{{ url_for('inbound.view_request', id=inb.id) }}?mode=view&print_tour_file=1', this)">
                                 <i class="fas fa-file-lines"></i>
                             </button>
                             {% if is_deleted_queue|default(false) or (all_files_view|default(false) and inb.pending_invoice_queue) %}
@@ -1523,8 +1523,12 @@ function submitInboundFilters() {
     }
 }
 
+// Guard: ignore Tour File clicks while a print is already being prepared,
+// so repeated clicks cannot restart (and endlessly postpone) the print.
+let tourFilePrintBusy = false;
+
 // Print target pages without leaving/opening a new tab.
-function printInPlace(url) {
+function printInPlace(url, sourceBtn) {
     if (!url) return;
     let frame = document.getElementById('inbound-print-frame');
     if (!frame) {
@@ -1548,87 +1552,49 @@ function printInPlace(url) {
     frame._printSessionId = (frame._printSessionId || 0) + 1;
     const currentSessionId = frame._printSessionId;
     const isTourFilePrint = url.indexOf('print_tour_file=1') !== -1;
-    // Tour file: call the exact same function used by the Tour File button
-    // inside the request page (`printFullSummary()`).
+    // Tour file: the loaded page auto-prints itself when the URL carries
+    // `print_tour_file=1` (see maybeAutoPrintTourFileFromQuery in
+    // view_request.html). Triggering the print from here as well races the
+    // page's own print and breaks it, so only load the page.
     if (isTourFilePrint) {
-        let done = false;
-        frame.onload = function() {
-            if (done || frame._printSessionId !== currentSessionId) return;
-            const maxAttempts = 25;
-            let attempt = 0;
-            const tryPrintTourFile = function() {
-                if (done || frame._printSessionId !== currentSessionId) return true;
-                attempt += 1;
-                try {
-                    const w = frame.contentWindow;
-                    const d = w && w.document ? w.document : null;
-                    if (w && typeof w.printFullSummary === 'function') {
-                        const runPrint = function() {
-                            if (done || frame._printSessionId !== currentSessionId) return;
-                            done = true;
-                            w.printFullSummary(true);
-                        };
-                        const fullSummarySection = d ? d.getElementById('fullSummarySection') : null;
-                        const needsOpen = !!(fullSummarySection && fullSummarySection.classList.contains('hidden'));
-                        if (needsOpen && typeof w.toggleFullSummary === 'function') {
-                            w.toggleFullSummary();
-                            const tid1 = setTimeout(function() {
-                                if (done || frame._printSessionId !== currentSessionId) return;
-                                if (typeof w.refreshItinerarySummaryTable === 'function') {
-                                    Promise.resolve(w.refreshItinerarySummaryTable()).finally(function() {
-                                        const tid2 = setTimeout(runPrint, 220);
-                                        frame._printTimeouts.push(tid2);
-                                    });
-                                } else {
-                                    runPrint();
-                                }
-                            }, 220);
-                            frame._printTimeouts.push(tid1);
-                            return true;
-                        }
-                        if (typeof w.refreshItinerarySummaryTable === 'function') {
-                            Promise.resolve(w.refreshItinerarySummaryTable()).finally(function() {
-                                const tid = setTimeout(runPrint, 180);
-                                frame._printTimeouts.push(tid);
-                            });
-                        } else {
-                            runPrint();
-                        }
-                        return true;
-                    }
-                    if (d) {
-                        const directBtn = d.querySelector('button[onclick="printFullSummary()"]');
-                        if (directBtn) {
-                            done = true;
-                            directBtn.click();
-                            return true;
-                        }
-                        const allButtons = d.querySelectorAll('button');
-                        for (let i = 0; i < allButtons.length; i++) {
-                            const text = (allButtons[i].textContent || '').trim().toLowerCase();
-                            if (text === 'tour file') {
-                                done = true;
-                                allButtons[i].click();
-                                return true;
-                            }
-                        }
-                    }
-                } catch (err) {
-                    // Keep retrying until attempts are exhausted.
-                }
-                if (attempt < maxAttempts) {
-                    const tid = setTimeout(tryPrintTourFile, 150);
-                    frame._printTimeouts.push(tid);
-                } else {
-                    done = true;
-                    console.error('Tour file print failed: printFullSummary/button not found in time');
-                    alert('Could not print Tour File. Please try again.');
-                }
-                return false;
-            };
-            tryPrintTourFile();
+        if (tourFilePrintBusy) return;
+        tourFilePrintBusy = true;
+        frame.onload = null;
+
+        // Immediate feedback: spin the clicked button until the print is ready.
+        const btn = sourceBtn || null;
+        const icon = btn ? btn.querySelector('i') : null;
+        const originalIconClass = icon ? icon.className : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+        }
+        if (icon) icon.className = 'fas fa-spinner fa-spin';
+
+        const restore = function() {
+            tourFilePrintBusy = false;
+            clearInterval(watchId);
+            clearTimeout(safetyId);
+            if (btn) {
+                btn.disabled = false;
+                btn.style.opacity = '';
+            }
+            if (icon) icon.className = originalIconClass;
         };
-        // Ensure onload runs each click with a fresh URL.
+        // Passively watch for the printed document being built by the page's
+        // own auto-print (it rewrites the iframe with title "Trip Tour - ...").
+        // Observation only — never triggers or duplicates the print itself.
+        const watchId = setInterval(function() {
+            try {
+                const t = frame.contentWindow && frame.contentWindow.document
+                    ? frame.contentWindow.document.title : '';
+                if (t && t.indexOf('Trip Tour') === 0) restore();
+            } catch (e) { /* keep watching */ }
+        }, 300);
+        // Safety net so the button can never get stuck disabled.
+        const safetyId = setTimeout(restore, 30000);
+
+        // Fresh URL each click so the page's auto-print runs again.
         const sep = url.indexOf('?') === -1 ? '?' : '&';
         frame.src = url + sep + '_print_ts=' + Date.now();
         return;
