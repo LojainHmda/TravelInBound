@@ -334,6 +334,17 @@ input[type="date"].tw-input[readonly]:not(:disabled) {
     cursor: pointer;
     color: #1e293b !important;
 }
+/* Cursor appearance only — scoped to the four Request Details fields (no behavior change) */
+#selectedCustomerName,
+#noOfDays {
+    cursor: default;   /* Customer & Days: normal arrow */
+}
+#fromDate,
+#toDate,
+#fromDate + input,
+#toDate + input {
+    cursor: text;      /* From/To Date (incl. flatpickr visible alt input): I-beam, typing still not possible */
+}
 
 /* Date input specific styling - override Bootstrap/Tailwind conflicts */
 input[type="date"],
@@ -879,6 +890,30 @@ input[type="date"]::-webkit-calendar-table-body {
                                         hidden.value = serialize(items);
                                     }
 
+                                    // PAX = sum of all nationality counts (single source of truth: `items`).
+                                    // When at least one entry exists the PAX field is locked (read-only) and
+                                    // kept in sync; with no entries it stays editable and is left untouched.
+                                    function recalcPax() {
+                                        const paxField = document.querySelector('form#editMode input[name="pax"]');
+                                        if (!paxField) return;
+                                        if (items.length) {
+                                            const total = items.reduce(function (sum, r) {
+                                                const n = parseInt(r.count, 10);
+                                                return sum + (isNaN(n) ? 0 : n);
+                                            }, 0);
+                                            paxField.value = total;
+                                            if (!locked) {
+                                                paxField.readOnly = true;
+                                                paxField.classList.add('bg-slate-50', 'cursor-not-allowed');
+                                                paxField.title = 'Auto-calculated from nationality entries';
+                                            }
+                                        } else if (!locked) {
+                                            paxField.readOnly = false;
+                                            paxField.classList.remove('bg-slate-50', 'cursor-not-allowed');
+                                            paxField.title = '';
+                                        }
+                                    }
+
                                     window.syncNationalityHidden = syncHidden;
 
                                     function renderChips() {
@@ -910,6 +945,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                             chipsHost.appendChild(span);
                                         });
                                         syncHidden();
+                                        recalcPax();
                                     }
 
                                     function addFromPicker() {
@@ -947,7 +983,15 @@ input[type="date"]::-webkit-calendar-table-body {
                                         if (e.key === 'Enter') { e.preventDefault(); addFromPicker(); }
                                     });
 
-                                    init();
+                                    // Defer init until the DOM is ready: the PAX field appears
+                                    // later in the markup than this inline script, so recalcPax()
+                                    // must not run until that field exists (otherwise the initial
+                                    // lock/sync on reopen is skipped).
+                                    if (document.readyState === 'loading') {
+                                        document.addEventListener('DOMContentLoaded', init);
+                                    } else {
+                                        init();
+                                    }
                                 })();
                                 </script>
                             </div>
@@ -963,9 +1007,9 @@ input[type="date"]::-webkit-calendar-table-body {
                             <!-- To Date -->
                             <div>
                                 <label class="tw-label">To Date</label>
-                                <input type="date" class="tw-input" name="to_date" id="toDate" 
-                                       value="{{ request.to_date.strftime('%Y-%m-%d') if request.is_saved and request.to_date else '' }}" 
-                                       onchange="calculateDays()" {% if view_only or mapped_status == 'CONFIRMED' %}disabled{% endif %}>
+                                <input type="date" class="tw-input" name="to_date" id="toDate"
+                                       value="{{ request.to_date.strftime('%Y-%m-%d') if request.is_saved and request.to_date else '' }}"
+                                       onchange="handleToDateChange()" {% if view_only or mapped_status == 'CONFIRMED' %}disabled{% endif %}>
                             </div>
 
                             <!-- Days & Pax -->
@@ -1129,7 +1173,7 @@ input[type="date"]::-webkit-calendar-table-body {
                             <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-2 items-start">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Date *</label>
-                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" min="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" max="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="arrival" style="background-color: #ffffff !important; color: #1e293b !important;">
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.is_saved and request.from_date else '' }}" min="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" max="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="arrival" style="background-color: #ffffff !important; color: #1e293b !important;">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Time</label>
@@ -1263,7 +1307,7 @@ input[type="date"]::-webkit-calendar-table-body {
                             <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-2 items-start">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Date *</label>
-                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="departure_date" value="" min="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" max="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="departure" style="background-color: #ffffff !important; color: #1e293b !important;">
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="departure_date" value="{{ request.to_date.strftime('%Y-%m-%d') if request.is_saved and request.to_date else '' }}" min="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" max="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="departure" style="background-color: #ffffff !important; color: #1e293b !important;">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Time</label>
@@ -1451,11 +1495,9 @@ input[type="date"]::-webkit-calendar-table-body {
                                         <button type="button" onclick="switchRoomTab('distribution')" id="room-tab-distribution" class="px-2 py-0.5 text-xs rounded-full font-medium transition-all bg-blue-100 text-blue-700">
                                             Distribution
                                         </button>
-                                        {% if request.status not in ['REQUEST', 'REQUESTED'] %}
                                         <button type="button" onclick="switchRoomTab('roomlist')" id="room-tab-roomlist" class="px-2 py-0.5 text-xs rounded-full font-medium transition-all bg-slate-100 text-slate-500 hover:bg-slate-200">
                                             Room List
                                         </button>
-                                        {% endif %}
                                     </div>
                                 </div>
                                 
@@ -1489,7 +1531,6 @@ input[type="date"]::-webkit-calendar-table-body {
                                 </div>
                                 
                                 <!-- Room List Tab Content -->
-                                {% if request.status not in ['REQUEST', 'REQUESTED'] %}
                                 <div id="room-content-roomlist" class="hidden rounded-xl p-2" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
                                     <div class="text-xs text-slate-500 mb-2 flex items-center justify-between">
                                         <span><i class="fas fa-info-circle mr-1"></i>Assign guest names to each room (optional)</span>
@@ -1503,7 +1544,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                             <tr class="bg-slate-200">
                                                 <th class="border border-slate-300 px-2 py-1.5 text-center font-semibold">#</th>
                                                 <th class="border border-slate-300 px-2 py-1.5 text-left font-semibold">Type</th>
-                                                <th class="border border-slate-300 px-2 py-1.5 text-left font-semibold room-category-col" style="display:{% if request.status == 'CONFIRMED' %}table-cell{% else %}none{% endif %};">Room Category</th>
+                                                <th class="border border-slate-300 px-2 py-1.5 text-left font-semibold room-category-col" style="display:table-cell;">Room Category</th>
                                                 <th class="border border-slate-300 px-2 py-1.5 text-left font-semibold">Room Option</th>
                                                 <th class="border border-slate-300 px-2 py-1.5 text-left font-semibold">Board</th>
                                                 <th class="border border-slate-300 px-2 py-1.5 text-left font-semibold">Dietary Req</th>
@@ -1523,7 +1564,6 @@ input[type="date"]::-webkit-calendar-table-body {
                                         <p>Set room distribution first, then click Room List tab</p>
                                     </div>
                                 </div>
-                                {% endif %}
                             </div>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
                                 <div>
@@ -4904,9 +4944,70 @@ function handleFromDateChange() {
     
     // Remove max constraint from FROM DATE (all dates should be selectable)
     fromDateEl.removeAttribute('max');
-    
+
     // Calculate days
     calculateDays();
+
+    // Live edits never fill empty movement dates; only correct out-of-range values.
+    syncMovementDatesToRange(false);
+}
+
+// Handle To Date change: keep existing day calculation, then sync movement defaults.
+function handleToDateChange() {
+    calculateDays();
+    // Live edits never fill empty movement dates; only correct out-of-range values.
+    syncMovementDatesToRange(false);
+}
+
+// Re-evaluate Arrival (default = From) and Departure (default = To) against the
+// current request date range. Only acts once BOTH request dates are available.
+// When fillEmpty is true (only at Save time), an empty field is populated with its
+// default. Out-of-range values are always corrected; in-range values are kept.
+// Records the latest default so "Add New" entries start from the latest From/To.
+function syncMovementDatesToRange(fillEmpty) {
+    const fromEl = document.getElementById('fromDate');
+    const toEl = document.getElementById('toDate');
+    const fromVal = fromEl ? fromEl.value : '';
+    const toVal = toEl ? toEl.value : '';
+    applyMovementDefaultDate('arrival_date', fromVal, fromVal, toVal, fillEmpty);
+    applyMovementDefaultDate('departure_date', toVal, fromVal, toVal, fillEmpty);
+}
+
+// Apply the movement-date rule to a single field, reusing the existing Flatpickr pattern.
+function applyMovementDefaultDate(fieldId, defaultDate, rangeFrom, rangeTo, fillEmpty) {
+    const field = document.getElementById(fieldId);
+    if (!field) return;
+
+    // Always record the latest default so "Add New" uses the newest From/To.
+    field.setAttribute('data-default-value', defaultDate || '');
+
+    // Only act once BOTH request dates exist.
+    if (!rangeFrom || !rangeTo) return;
+
+    const current = field.value;
+    const isEmpty = !current || current.trim() === '';
+
+    let isOutOfRange = false;
+    if (!isEmpty) {
+        const c = new Date(current);
+        isOutOfRange = c < new Date(rangeFrom) || c > new Date(rangeTo);
+    }
+
+    // Empty fields are only populated at Save time (fillEmpty). Out-of-range values
+    // are always corrected. In-range values are left untouched.
+    if ((isEmpty && fillEmpty) || isOutOfRange) {
+        // Treat as a fresh default (not a user selection) and set it.
+        field.removeAttribute('data-user-selected');
+        if (field._setUserSelected) field._setUserSelected(false);
+        field.value = defaultDate;
+        field.setAttribute('value', defaultDate);
+        if (field._flatpickr) {
+            field._flatpickr.setDate(defaultDate, false);
+            if (field._flatpickr.input) field._flatpickr.input.value = defaultDate;
+            field._flatpickr.redraw();
+        }
+    }
+    // In-range value: leave the user's selection untouched.
 }
 
 function calculateDays() {
@@ -7217,7 +7318,7 @@ function clearServiceForm(serviceType) {
                 dateField.getAttribute('data-default-value') ||
                 (typeof savedFromDate !== 'undefined' ? savedFromDate : '') ||
                 getFromDate() ||
-                '{{ request.from_date.strftime("%Y-%m-%d") if request.from_date else "" }}';
+                '{{ request.from_date.strftime("%Y-%m-%d") if request.is_saved and request.from_date else "" }}';
             dateField.setAttribute('data-default-value', defaultArrivalDate || '');
             dateField.value = defaultArrivalDate || '';
             if (dateField._flatpickr) {
@@ -7236,8 +7337,22 @@ function clearServiceForm(serviceType) {
     } else if (serviceType === 'departure') {
         const dateField = document.getElementById('departure_date');
         if (dateField) {
-            dateField.value = '';
-            if (dateField._flatpickr) dateField._flatpickr.clear();
+            // Departure must default to request last day unless user changes it.
+            const defaultDepartureDate =
+                dateField.getAttribute('data-default-value') ||
+                (typeof savedToDate !== 'undefined' ? savedToDate : '') ||
+                getToDate() ||
+                '{{ request.to_date.strftime("%Y-%m-%d") if request.is_saved and request.to_date else "" }}';
+            dateField.setAttribute('data-default-value', defaultDepartureDate || '');
+            dateField.value = defaultDepartureDate || '';
+            if (dateField._flatpickr) {
+                if (defaultDepartureDate) {
+                    dateField._flatpickr.setDate(defaultDepartureDate, false);
+                } else {
+                    dateField._flatpickr.clear();
+                }
+                dateField._flatpickr.redraw();
+            }
         }
         const paxField = document.getElementById('departure_pax_count');
         if (paxField) paxField.value = '{{ request.pax or 1 }}';
@@ -10763,7 +10878,10 @@ function updateAllTabsWithNewRequestData(requestData, fromDateOverride, toDateOv
     
     // Update default dates in tabs - this happens immediately and synchronously
     updateDefaultDatesInTabs(fromDate, toDate);
-    
+
+    // Save-time only: populate empty Arrival/Departure from the saved From/To.
+    syncMovementDatesToRange(true);
+
     // Force immediate visual update of all Flatpickr instances
     // This ensures date fields are visible immediately, even in hidden tabs
     requestAnimationFrame(() => {
@@ -10998,7 +11116,7 @@ function updateDefaultDatesInTabs(fromDate, toDate) {
         
         // Arrival tab - default to request first day
         { id: 'arrival_date', defaultValue: fromDate, min: fromDate, max: toDate, tab: 'arrival' },
-        { id: 'departure_date', defaultValue: '', min: fromDate, max: toDate, tab: 'departure' }
+        { id: 'departure_date', defaultValue: toDate, min: fromDate, max: toDate, tab: 'departure' }
     ];
     
     // Update each date field
@@ -11694,9 +11812,8 @@ function createRoomListRow(roomNum, roomType, defaultAdults, roomData = {}) {
     const children = roomData.children || 0;
     const guestNames = roomData.guest_names || '';
     
-    // Check if request status is Confirmed to show room category
-    const requestStatus = '{{ request.status }}';
-    const showCategory = (requestStatus === 'CONFIRMED');
+    // Room Category column is available in all statuses
+    const showCategory = true;
     
     // Build extra option for custom category if it's not one of the defaults
     const defaultCats = ['Standard Rooms', 'Junior Suites', 'Executive Suites', 'Presidential Suites'];
@@ -12233,12 +12350,9 @@ function loadRoomCategoriesForHotel(supplierId) {
 }
 
 
-// Toggle room category visibility based on request status (for both Distribution and Room List)
+// Room Category column is available in all statuses (for both Distribution and Room List)
 function toggleRoomCategoryVisibility() {
-    // Check request-level status from the header badge
-    const badgeEl = document.getElementById('headerStatusBadge');
-    const badgeText = badgeEl ? badgeEl.textContent.trim().toUpperCase().replace(/\s+/g, '_') : '';
-    const show = (badgeText === 'CONFIRMED');
+    const show = true;
     
     // Toggle Room List header column (table thead)
     document.querySelectorAll('#room-list-table thead .room-category-col').forEach(el => {

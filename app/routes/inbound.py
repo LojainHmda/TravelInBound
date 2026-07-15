@@ -7956,7 +7956,7 @@ def _parse_run_down_dates(default_to_today=True):
         return None, None
 
 
-def _run_down_row(request_obj, service_date, description, status, pax, service_type, record_id=None, meal_type=None, meal_note=None, voucher_notes=None, check_out_date=None, room_type=None, meal_plan=None, hotel_obj=None, end_date=None, language=None, guide_notes=None, transport_notes=None, pickup_location=None, dropoff_location=None, meet_assist_notes=None, supplier_obj=None):
+def _run_down_row(request_obj, service_date, description, status, pax, service_type, record_id=None, meal_type=None, meal_note=None, voucher_notes=None, check_out_date=None, room_type=None, meal_plan=None, hotel_obj=None, end_date=None, language=None, guide_notes=None, transport_notes=None, pickup_location=None, dropoff_location=None, meet_assist_notes=None, supplier_obj=None, service_time=None, flight_number=None):
     """Build a normalized run-down request row for API responses."""
     base_row = {
         'record_id': record_id,
@@ -8059,12 +8059,18 @@ def _run_down_row(request_obj, service_date, description, status, pax, service_t
         if supplier_obj and supplier_obj.languages:
             supplier_languages = supplier_obj.languages
 
+        time_display = '—'
+        if service_time and hasattr(service_time, 'strftime'):
+            time_display = service_time.strftime('%I:%M %p').lstrip('0')
+
         base_row.update({
             'group_name': group_name,
             'nationality': request_obj.nationality or '—',
             'language': supplier_languages,
             'notes': request_obj.special_note or '—',
             'ma_notes': meet_assist_notes or '—',
+            'time': time_display,
+            'flight_number': flight_number or '—',
         })
     else:
         # Original fields for other services
@@ -8219,6 +8225,8 @@ def _fetch_run_down_supplier_requests(service_key, supplier, date_from, date_to)
                 batch.id,
                 meet_assist_notes=batch.notes,
                 supplier_obj=batch.supplier_ref,
+                service_time=batch.arrival_time,
+                flight_number=batch.flight_number,
             ))
         departures = (
             DepartureBatch.query.join(InboundRequest)
@@ -8244,6 +8252,8 @@ def _fetch_run_down_supplier_requests(service_key, supplier, date_from, date_to)
                 batch.id,
                 meet_assist_notes=batch.notes,
                 supplier_obj=batch.supplier_ref,
+                service_time=batch.departure_time,
+                flight_number=batch.flight_number,
             ))
 
     elif service_key == 'OPTIONAL':

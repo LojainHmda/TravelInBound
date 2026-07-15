@@ -564,9 +564,9 @@
               <th>Group Name</th>
               <th>PAX</th>
               <th>Nationality</th>
-              <th>Language</th>
               <th>Description</th>
-              <th>Notes</th>
+              <th>Time</th>
+              <th>Flight Number</th>
               <th>M&A Notes</th>
               <th>Status</th>
               <th></th>
@@ -580,9 +580,9 @@
                 <td>${escapeHtml(r.group_name || '—')}</td>
                 <td class="num">${r.pax}</td>
                 <td>${escapeHtml(r.nationality || '—')}</td>
-                <td>${escapeHtml(r.language || '—')}</td>
                 <td>${escapeHtml(r.description || '—')}</td>
-                <td>${escapeHtml(r.notes || '—')}</td>
+                <td style="white-space:nowrap;">${escapeHtml(r.time || '—')}</td>
+                <td>${escapeHtml(r.flight_number || '—')}</td>
                 <td>${escapeHtml(r.ma_notes || '—')}</td>
                 <td>${statusBadge(r.status)}</td>
                 <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
