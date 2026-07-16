@@ -1694,7 +1694,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Telephone</label>
-                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_phone" placeholder="Phone number" data-service="guide">
+                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_phone" placeholder="Phone number" data-service="guide" readonly>
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
@@ -13259,6 +13259,9 @@ const GUIDE_FORM_LANGUAGE_CHOICES = Array.from(document.getElementById('guide_la
 function rebuildGuideLanguageOptionsFromSupplier(supplierOption) {
     const sel = document.getElementById('guide_language');
     if (!sel) return;
+    // Keep the picked language across the rebuild; a guide is only selectable
+    // when they speak it, so it survives the narrowed list.
+    const previousValue = sel.value;
     sel.innerHTML = '';
     const ph = document.createElement('option');
     ph.value = '';
@@ -13284,7 +13287,7 @@ function rebuildGuideLanguageOptionsFromSupplier(supplierOption) {
         otherOpt.textContent = 'Other';
         sel.appendChild(otherOpt);
     }
-    sel.value = '';
+    sel.value = Array.from(sel.options).some(o => o.value === previousValue) ? previousValue : '';
 }
 
 function fillGuidePhoneFromSupplierOption(supplierOption) {
