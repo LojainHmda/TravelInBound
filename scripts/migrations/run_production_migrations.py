@@ -57,6 +57,8 @@ if "inbound_request" in tables:
         ("parent_request_id", "INTEGER"),
         ("link_type", "VARCHAR(20)"),
         ("link_note", "TEXT"),
+        ("hotel_filter_city", "VARCHAR(150)"),
+        ("hotel_filter_category", "VARCHAR(100)"),
     ]
 
     added = []

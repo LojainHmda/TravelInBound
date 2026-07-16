@@ -56,6 +56,12 @@ class InboundRequest(db.Model):
     admin_invoice_data = db.Column(db.Text, nullable=True)  # JSON: editable admin invoice content
     customer_invoice_data = db.Column(db.Text, nullable=True)  # JSON: editable customer invoice content
 
+    # Hotel form filter selections (City / Category) — remembered so they are
+    # restored when the request is reopened. UI-only filters for the Hotel Name
+    # dropdown; they do not affect any stored hotel record.
+    hotel_filter_city = db.Column(db.String(150), nullable=True)
+    hotel_filter_category = db.Column(db.String(100), nullable=True)
+
     # Status and tracking
     status = db.Column(db.String(20), default=STATUS_REQUEST)
     # When True, hidden from main inbound lists; shown under Hub "Deleted" until restored or invoiced.

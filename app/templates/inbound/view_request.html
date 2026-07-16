@@ -1435,7 +1435,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                     <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs hotel-filter-dropdown" id="hotel_city_filter" onchange="updateFilterActive('hotel_city_filter'); filterHotelsByCity()">
                                         <option value="">All Cities</option>
                                         {% for city in accommodation_cities %}
-                                        <option value="{{ city }}">{{ city }}</option>
+                                        <option value="{{ city }}"{% if request.hotel_filter_city and request.hotel_filter_city == city %} selected{% endif %}>{{ city }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -1444,7 +1444,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                     <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs hotel-filter-dropdown" id="hotel_category_filter" onchange="updateFilterActive('hotel_category_filter'); filterHotelsByCategory()">
                                         <option value="">All Categories</option>
                                         {% for category in accommodation_categories %}
-                                        <option value="{{ category }}">{{ category }}</option>
+                                        <option value="{{ category }}"{% if request.hotel_filter_category and request.hotel_filter_category == category %} selected{% endif %}>{{ category }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -4948,15 +4948,16 @@ function handleFromDateChange() {
     // Calculate days
     calculateDays();
 
-    // Live edits never fill empty movement dates; only correct out-of-range values.
-    syncMovementDatesToRange(false);
+    // Pre-save: do NOT sync Request Details dates into Arrival/Departure.
+    // Movement dates stay empty/unchanged until a successful Save runs
+    // syncMovementDatesToRange(true) in updateAllTabsWithNewRequestData().
 }
 
-// Handle To Date change: keep existing day calculation, then sync movement defaults.
+// Handle To Date change: keep existing day calculation only.
 function handleToDateChange() {
     calculateDays();
-    // Live edits never fill empty movement dates; only correct out-of-range values.
-    syncMovementDatesToRange(false);
+    // Pre-save: do NOT sync Request Details dates into Arrival/Departure.
+    // Movement dates stay empty/unchanged until a successful Save.
 }
 
 // Re-evaluate Arrival (default = From) and Departure (default = To) against the
@@ -8464,6 +8465,10 @@ async function saveServiceData(serviceType) {
 
     // For hotel: include room list data if any rooms were configured
     if (serviceType === 'hotel') {
+        // Persist the City/Category filter selections so they are restored on reopen.
+        // These are the same UI filter dropdowns; the existing filtering logic is unchanged.
+        formData.hotel_city_filter = document.getElementById('hotel_city_filter')?.value || '';
+        formData.hotel_category_filter = document.getElementById('hotel_category_filter')?.value || '';
         const roomListData = getRoomListData();
         if (roomListData.length > 0) {
             payload.room_list = roomListData;
@@ -16574,6 +16579,11 @@ function loadExistingConfirmationFile(serviceType, record) {
 document.addEventListener('DOMContentLoaded', function() {
     updateFilterActive('hotel_city_filter');
     updateFilterActive('hotel_category_filter');
+    // Filters restored from the saved request (server-rendered selected options):
+    // apply the existing filtering so the Hotel Name dropdown reflects them on reopen.
+    if (typeof filterHotels === 'function') {
+        filterHotels();
+    }
 });
 </script>
 {% include 'components/shared_transport_popup_controller.html' %}

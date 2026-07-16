@@ -2683,6 +2683,12 @@ def api_save_service_data(request_id):
     try:
         guide_record_id_for_json = None
         if service_type == 'hotel':
+            # Remember the Hotel form's City/Category filter selections on the request
+            # so they are restored on reopen. UI-only filters; committed with the hotel save below.
+            if 'hotel_city_filter' in form_data:
+                request_obj.hotel_filter_city = (form_data.get('hotel_city_filter') or '').strip() or None
+            if 'hotel_category_filter' in form_data:
+                request_obj.hotel_filter_category = (form_data.get('hotel_category_filter') or '').strip() or None
             # Check if editing an existing hotel (row_id or hotel_id provided) or adding new
             # row_id is passed when editing from Trip Summary
             hotel_id = row_id or data.get('hotel_id')
