@@ -4239,7 +4239,6 @@ def api_get_itinerary_summary_html(request_id):
                     <tr class="hover:bg-gray-50" data-service-type="itinerary" data-record-id="{row.id}">
                         <td class="text-center summary-date-col">{date_str}</td>
                         <td>{description_block}</td>
-                        <td class="text-center summary-compact-col">{pax_value}</td>
                         <td class="text-center summary-compact-col whitespace-nowrap print-hide-actions">
                             <div class="flex items-center justify-center gap-1">
                                 <button onclick="handleEditServiceRow('itinerary', {row.id})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
@@ -4251,12 +4250,12 @@ def api_get_itinerary_summary_html(request_id):
             if html_rows:
                 return ''.join(html_rows)
             else:
-                return '<tr><td colspan="4" class="px-4 py-3 text-center text-gray-500">No itinerary rows added</td></tr>'
+                return '<tr><td colspan="3" class="px-4 py-3 text-center text-gray-500">No itinerary rows added</td></tr>'
         else:
-            return '<tr><td colspan="4" class="px-4 py-3 text-center text-gray-500">No itinerary rows added</td></tr>'
+            return '<tr><td colspan="3" class="px-4 py-3 text-center text-gray-500">No itinerary rows added</td></tr>'
 
     except Exception as e:
-        return f'<tr><td colspan="4" class="text-center text-red-500">Error loading itinerary: {escape(str(e))}</td></tr>', 500
+        return f'<tr><td colspan="3" class="text-center text-red-500">Error loading itinerary: {escape(str(e))}</td></tr>', 500
 
 @inbound_bp.route('/api/<int:request_id>/itinerary-rows-bulk', methods=['POST'])
 def api_save_itinerary_rows_bulk(request_id):
@@ -9908,6 +9907,16 @@ def api_delete_itinerary_row(request_id, row_id):
 
     try:
         row = ItineraryRow.query.filter_by(id=row_id, request_id=request_id).first_or_404()
+
+        # Only manually added rows (children created via the "+" button) can be deleted
+        is_manual_row = False
+        if row.comment:
+            try:
+                is_manual_row = bool(json.loads(row.comment).get('parent_row_id'))
+            except (ValueError, TypeError, AttributeError):
+                is_manual_row = False
+        if not is_manual_row:
+            return jsonify({'success': False, 'message': 'Original itinerary days cannot be deleted'}), 400
 
         # Delete the row
         db.session.delete(row)

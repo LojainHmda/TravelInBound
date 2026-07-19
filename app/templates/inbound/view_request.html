@@ -1122,7 +1122,6 @@ input[type="date"]::-webkit-calendar-table-body {
                                     <tr class="border-b border-slate-200 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                                         <th class="py-2 px-2 w-14 itinerary-day-col">Day</th>
                                         <th class="py-2 px-2 w-20 itinerary-date-col">Date</th>
-                                        <th class="py-2 px-2 w-20 text-center">Pax</th>
                                         <th class="py-2 px-2 itinerary-desc-col">Description</th>
                                         <th class="py-2 px-2 min-w-[168px] itinerary-guide-col">Guide</th>
                                     </tr>
@@ -2420,7 +2419,6 @@ input[type="date"]::-webkit-calendar-table-body {
                                         <tr>
                                             <th class="text-center summary-date-col">Date</th>
                                             <th class="text-left">Description</th>
-                                            <th class="text-center summary-compact-col">PAX</th>
                                             <th class="text-center summary-compact-col print-hide-actions">Actions</th>
                                         </tr>
                                     </thead>
@@ -3123,6 +3121,9 @@ input[type="date"]::-webkit-calendar-table-body {
                     </tr>
                 </tfoot>
             </table>
+            </div>
+            <div class="mt-2">
+                <button type="button" onclick="addAdvanceExpenseRow()" class="inline-flex items-center gap-1 px-2 py-1 text-sm text-slate-700 border border-slate-300 rounded hover:bg-slate-50"><i class="fas fa-plus"></i>Add Row</button>
             </div>
             <!-- Bottom Section -->
             <div class="mt-4 space-y-2">
@@ -6548,7 +6549,10 @@ function addDescriptionInput(button) {
             newTr.dataset.rowId = data.row_id;
             newTr.classList.add('itinerary-child-row');
             newTr.querySelector('.description-input[data-field="description"]').value = '';
-            newTr.querySelector('input[data-field="current_pax"]').value = '';
+            const clonedPaxInput = newTr.querySelector('input[data-field="current_pax"]');
+            if (clonedPaxInput) {
+                clonedPaxInput.value = '';
+            }
             const clonedNoteInput = newTr.querySelector('.itinerary-inline-note-input[data-field="note"]');
             if (clonedNoteInput) {
                 clonedNoteInput.value = '';
@@ -6563,9 +6567,15 @@ function addDescriptionInput(button) {
             }
             newTr.querySelector('.description-inputs-container').dataset.rowId = data.row_id;
             newTr.querySelector('.description-inputs-container').dataset.description = '';
-            newTr.querySelector('input[data-field="current_pax"]').dataset.rowId = data.row_id;
+            if (clonedPaxInput) {
+                clonedPaxInput.dataset.rowId = data.row_id;
+            }
             const delBtn = newTr.querySelector('.delete-row-btn');
-            if (delBtn) delBtn.setAttribute('onclick', 'deleteItineraryRow(' + data.row_id + ')');
+            if (delBtn) {
+                delBtn.setAttribute('onclick', 'deleteItineraryRow(' + data.row_id + ')');
+                // Manually added rows are deletable, even when cloned from an original day
+                delBtn.classList.remove('hidden');
+            }
             const tbody = document.getElementById('itineraryTableBody');
             if (tbody) {
                 if (row.nextElementSibling) {
@@ -14597,6 +14607,18 @@ async function openAdvanceExpenseSheet() {
                         advanceExpenseSheetData[i].amount = row.amount !== undefined ? row.amount : advanceExpenseSheetData[i].amount;
                         advanceExpenseSheetData[i].pax = row.pax !== undefined ? row.pax : advanceExpenseSheetData[i].pax;
                         advanceExpenseSheetData[i].checked = !!row.checked;
+                    } else {
+                        // Row added by the user beyond the fixed template — restore it as a fully editable row
+                        advanceExpenseSheetData.push({
+                            id: i,
+                            item: row.item !== undefined ? row.item : '',
+                            amount: row.amount !== undefined ? row.amount : '',
+                            pax: row.pax !== undefined ? row.pax : '',
+                            checked: !!row.checked,
+                            total: 0,
+                            itemLocked: false,
+                            amountLocked: false
+                        });
                     }
                 });
             }
@@ -14959,6 +14981,19 @@ function renderAdvanceExpenseSheet() {
     });
     tbody.innerHTML = html;
     updateAdvanceGrandTotal();
+}
+function addAdvanceExpenseRow() {
+    advanceExpenseSheetData.push({
+        id: advanceExpenseSheetData.length,
+        item: '',
+        amount: '',
+        pax: '',
+        checked: false,
+        total: 0,
+        itemLocked: false,
+        amountLocked: false
+    });
+    renderAdvanceExpenseSheet();
 }
 function toggleAdvanceRow(i) {
     advanceExpenseSheetData[i].checked = !advanceExpenseSheetData[i].checked;
