@@ -4588,6 +4588,92 @@ def api_add_hotel_room_category(supplier_id):
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@inbound_bp.route('/api/hotel/<int:supplier_id>/bed-types', methods=['GET'])
+@csrf.exempt
+def api_get_hotel_bed_types(supplier_id):
+    """Get bed types for a hotel supplier"""
+    from app.models.supplier import Supplier
+    import json
+    try:
+        supplier = Supplier.query.get_or_404(supplier_id)
+        default_bed_types = ['King', 'Queen', 'Twin', 'Triple']
+        custom_bed_types = []
+
+        # Extract custom bed types from supplier notes JSON
+        if supplier.notes:
+            try:
+                notes_dict = json.loads(supplier.notes)
+                # Read from bed_types (list) - added via + button
+                custom_bed_types = notes_dict.get('bed_types', [])
+            except (json.JSONDecodeError, TypeError):
+                pass
+
+        # Also scan existing hotel rooms for any bed types in use (catches values
+        # that were saved to rooms but might not be in the supplier notes)
+        try:
+            hotels = InboundHotel.query.filter_by(hotel_name=supplier.name).all()
+            for hotel in hotels:
+                for room in hotel.rooms:
+                    if room.room_option and room.room_option not in custom_bed_types and room.room_option not in default_bed_types:
+                        custom_bed_types.append(room.room_option)
+        except Exception:
+            pass  # Non-critical; don't fail the whole request
+
+        # Merge defaults + custom, preserving order and uniqueness
+        all_bed_types = list(default_bed_types)
+        for bt in custom_bed_types:
+            if bt not in all_bed_types:
+                all_bed_types.append(bt)
+
+        return jsonify({'success': True, 'bed_types': all_bed_types})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@inbound_bp.route('/api/hotel/<int:supplier_id>/bed-types', methods=['POST'])
+@csrf.exempt
+def api_add_hotel_bed_type(supplier_id):
+    """Add a custom bed type for a hotel supplier"""
+    from app.models.supplier import Supplier
+    import json
+    try:
+        supplier = Supplier.query.get_or_404(supplier_id)
+        data = request.get_json()
+        new_bed_type = data.get('bed_type', '').strip()
+
+        if not new_bed_type:
+            return jsonify({'success': False, 'error': 'Bed type name is required'}), 400
+
+        # Parse existing notes
+        notes_dict = {}
+        if supplier.notes:
+            try:
+                notes_dict = json.loads(supplier.notes)
+            except (json.JSONDecodeError, TypeError):
+                notes_dict = {'original_notes': supplier.notes}
+
+        # Add to custom bed_types list
+        bed_types = notes_dict.get('bed_types', [])
+        default_bed_types = ['King', 'Queen', 'Twin', 'Triple']
+
+        if new_bed_type in bed_types or new_bed_type in default_bed_types:
+            return jsonify({'success': False, 'error': 'Bed type already exists'}), 400
+
+        bed_types.append(new_bed_type)
+        notes_dict['bed_types'] = bed_types
+        supplier.notes = json.dumps(notes_dict)
+        db.session.commit()
+
+        # Return full list
+        all_bed_types = list(default_bed_types)
+        for bt in bed_types:
+            if bt not in all_bed_types:
+                all_bed_types.append(bt)
+
+        return jsonify({'success': True, 'bed_types': all_bed_types})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @inbound_bp.route('/api/hotel/room-categories/global', methods=['GET'])
 @csrf.exempt
 def api_get_global_hotel_room_categories():

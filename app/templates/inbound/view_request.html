@@ -1544,7 +1544,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                                 <th class="border border-slate-300 px-2 py-1.5 text-center font-semibold">#</th>
                                                 <th class="border border-slate-300 px-2 py-1.5 text-left font-semibold">Type</th>
                                                 <th class="border border-slate-300 px-2 py-1.5 text-left font-semibold room-category-col" style="display:table-cell;">Room Category</th>
-                                                <th class="border border-slate-300 px-2 py-1.5 text-left font-semibold">Room Option</th>
+                                                <th class="border border-slate-300 px-2 py-1.5 text-left font-semibold">Bed Type</th>
                                                 <th class="border border-slate-300 px-2 py-1.5 text-left font-semibold">Board</th>
                                                 <th class="border border-slate-300 px-2 py-1.5 text-left font-semibold">Dietary Req</th>
                                                 <th class="border border-slate-300 px-2 py-1.5 text-center font-semibold">Adt</th>
@@ -2897,7 +2897,7 @@ input[type="date"]::-webkit-calendar-table-body {
                         <tr class="bg-slate-100 font-bold">
                             <th class="border border-black px-2 py-1">Type</th>
                             <th class="border border-black px-2 py-1">Room Category</th>
-                            <th class="border border-black px-2 py-1">Room Option</th>
+                            <th class="border border-black px-2 py-1">Bed Type</th>
                             <th class="border border-black px-2 py-1">Board</th>
                             <th class="border border-black px-2 py-1">Dietary Req</th>
                             <th class="border border-black px-2 py-1">Adt</th>
@@ -7920,6 +7920,7 @@ function populateServiceForm(serviceType, record) {
             const supplierId = selectedOption?.getAttribute('data-supplier-id');
             if (supplierId) {
                 loadRoomCategoriesForHotel(supplierId);
+                loadBedTypesForHotel(supplierId);
             }
         }
     }
@@ -11810,6 +11811,10 @@ function generateRoomListRows() {
     if (hotelRoomCategoriesCache.length > 0) {
         refreshRoomCategoryDropdowns(hotelRoomCategoriesCache);
     }
+    // Populate Room List dropdowns with backend bed types (incl. custom ones)
+    if (hotelBedTypesCache.length > 0) {
+        refreshBedTypeDropdowns(hotelBedTypesCache);
+    }
 }
 
 function createRoomListRow(roomNum, roomType, defaultAdults, roomData = {}) {
@@ -11835,18 +11840,22 @@ function createRoomListRow(roomNum, roomType, defaultAdults, roomData = {}) {
     const customCatOption = (roomCategory && !defaultCats.includes(roomCategory))
         ? `<option value="${roomCategory}" selected>${roomCategory}</option>`
         : '';
+
+    // Build extra option for custom bed type if it's not one of the defaults
+    const defaultBedTypes = ['King', 'Queen', 'Twin', 'Triple'];
+    const customBedTypeOption = (roomOption && !defaultBedTypes.includes(roomOption))
+        ? `<option value="${roomOption}" selected>${roomOption}</option>`
+        : '';
     
     row.innerHTML = `
         <td class="border border-slate-300 px-2 py-1.5 text-center font-medium room-num-cell">${roomNum}</td>
         <td class="border border-slate-300 px-2 py-1.5">
             <select class="room-type-select w-full px-2 py-1 border border-slate-200 rounded text-xs" data-field="room_type" title="Type">
-                <option value="Free" ${roomType === 'Free' ? 'selected' : ''}>Free</option>
                 <option value="Single" ${roomType === 'Single' ? 'selected' : ''}>Single</option>
                 <option value="Double" ${roomType === 'Double' ? 'selected' : ''}>Double</option>
                 <option value="Twin" ${roomType === 'Twin' ? 'selected' : ''}>Twin</option>
                 <option value="Triple" ${roomType === 'Triple' ? 'selected' : ''}>Triple</option>
-                <option value="King" ${roomType === 'King' ? 'selected' : ''}>King</option>
-                <option value="Suite" ${roomType === 'Suite' ? 'selected' : ''}>Suite</option>
+                <option value="Quadro" ${roomType === 'Quadro' ? 'selected' : ''}>Quadro</option>
             </select>
         </td>
         <td class="border border-slate-300 px-2 py-1.5 room-category-col" style="display:${showCategory ? 'table-cell' : 'none'};">
@@ -11865,15 +11874,19 @@ function createRoomListRow(roomNum, roomType, defaultAdults, roomData = {}) {
             </div>
         </td>
         <td class="border border-slate-300 px-2 py-1.5">
-            <select class="w-full px-2 py-1 border border-slate-200 rounded text-xs" data-field="room_option" title="Room Option">
-                <option value="">Room Option</option>
-                <option value="Standard" ${roomOption === 'Standard' ? 'selected' : ''}>Standard</option>
-                <option value="Sea View" ${roomOption === 'Sea View' ? 'selected' : ''}>Sea View</option>
-                <option value="Garden View" ${roomOption === 'Garden View' ? 'selected' : ''}>Garden View</option>
-                <option value="Premium" ${roomOption === 'Premium' ? 'selected' : ''}>Premium</option>
-                <option value="Deluxe" ${roomOption === 'Deluxe' ? 'selected' : ''}>Deluxe</option>
-                <option value="Sea View, Premium" ${roomOption === 'Sea View, Premium' ? 'selected' : ''}>Sea View, Premium</option>
-            </select>
+            <div class="flex gap-1 items-center">
+                <select class="flex-1 min-w-0 px-2 py-1 border border-slate-200 rounded text-xs" data-field="room_option" data-original-bedtype="${roomOption}" title="Bed Type">
+                    <option value="">Bed Type</option>
+                    <option value="King" ${roomOption === 'King' ? 'selected' : ''}>King</option>
+                    <option value="Queen" ${roomOption === 'Queen' ? 'selected' : ''}>Queen</option>
+                    <option value="Twin" ${roomOption === 'Twin' ? 'selected' : ''}>Twin</option>
+                    <option value="Triple" ${roomOption === 'Triple' ? 'selected' : ''}>Triple</option>
+                    ${customBedTypeOption}
+                </select>
+                <button type="button" onclick="addBedTypeForHotel(this)" class="px-1 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-slate-600 flex-shrink-0" title="Add New Bed Type">
+                    <i class="fas fa-plus" style="font-size:9px;"></i>
+                </button>
+            </div>
         </td>
         <td class="border border-slate-300 px-2 py-1.5">
             <select class="w-full px-2 py-1 border border-slate-200 rounded text-xs" data-field="board_basis" title="Board Basis">
@@ -12364,6 +12377,104 @@ function loadRoomCategoriesForHotel(supplierId) {
         .catch(err => console.warn('Could not load room categories:', err));
 }
 
+// ---- Bed Type "+" (mirrors Room Category, stored per hotel) ----
+function addBedTypeForHotel(btn) {
+    showCustomPrompt('Enter new Bed Type for this hotel:', function(trimmed) {
+        _doAddBedTypeForHotel(btn, trimmed);
+    });
+}
+
+function _doAddBedTypeForHotel(btn, trimmed) {
+    if (!trimmed) return;
+
+    // Get selected hotel supplier ID
+    const hotelSelect = document.getElementById('hotel_name');
+    const selectedOption = hotelSelect?.options[hotelSelect.selectedIndex];
+    const supplierId = selectedOption?.getAttribute('data-supplier-id');
+
+    // Add to Room List dropdowns locally first
+    addBedTypeToAllRoomDropdowns(trimmed);
+
+    // Select the newly added bed type in the row where + was clicked
+    const rowSelect = btn.parentElement?.querySelector('[data-field="room_option"]');
+    if (rowSelect) rowSelect.value = trimmed;
+
+    if (supplierId) {
+        // Save to backend
+        const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+        const csrfVal = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
+        const headers = {'Content-Type': 'application/json'};
+        if (csrfVal) headers['X-CSRFToken'] = csrfVal;
+
+        fetch(`/inbound/api/hotel/${supplierId}/bed-types`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({bed_type: trimmed})
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                refreshBedTypeDropdowns(data.bed_types);
+                // Re-select the newly added bed type
+                if (rowSelect) rowSelect.value = trimmed;
+            }
+        })
+        .catch(err => console.warn('Could not save bed type to backend:', err));
+    }
+}
+
+function addBedTypeToAllRoomDropdowns(bedType) {
+    document.querySelectorAll('[data-field="room_option"]').forEach(select => {
+        const exists = Array.from(select.options).some(opt => opt.value.toLowerCase() === bedType.toLowerCase());
+        if (!exists) {
+            const option = document.createElement('option');
+            option.value = bedType;
+            option.textContent = bedType;
+            select.appendChild(option);
+        }
+    });
+}
+
+function refreshBedTypeDropdowns(bedTypes) {
+    document.querySelectorAll('[data-field="room_option"]').forEach(select => {
+        // Use current value, or fall back to original bed type from room data
+        const currentVal = select.value || select.getAttribute('data-original-bedtype') || '';
+        // Keep the first placeholder option
+        while (select.options.length > 1) select.remove(1);
+        bedTypes.forEach(bt => {
+            const option = document.createElement('option');
+            option.value = bt;
+            option.textContent = bt;
+            select.appendChild(option);
+        });
+        // If current value isn't in the bed types list, add it as a custom option
+        if (currentVal && !bedTypes.includes(currentVal)) {
+            const option = document.createElement('option');
+            option.value = currentVal;
+            option.textContent = currentVal;
+            select.appendChild(option);
+        }
+        select.value = currentVal;
+    });
+}
+
+// Cached bed types for the selected hotel (used when generating new Room List rows)
+let hotelBedTypesCache = [];
+
+// Load bed types from backend for the selected hotel and populate Room List dropdowns
+function loadBedTypesForHotel(supplierId) {
+    if (!supplierId) return;
+    fetch(`/inbound/api/hotel/${supplierId}/bed-types`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                hotelBedTypesCache = data.bed_types;
+                refreshBedTypeDropdowns(data.bed_types);
+            }
+        })
+        .catch(err => console.warn('Could not load bed types:', err));
+}
+
 
 // Room Category column is available in all statuses (for both Distribution and Room List)
 function toggleRoomCategoryVisibility() {
@@ -12386,6 +12497,7 @@ function toggleRoomCategoryVisibility() {
         const supplierId = selectedOption?.getAttribute('data-supplier-id');
         if (supplierId) {
             loadRoomCategoriesForHotel(supplierId);
+            loadBedTypesForHotel(supplierId);
         }
     }
 }
@@ -12733,6 +12845,7 @@ function saveNewHotel() {
             // Also directly load room categories for the newly created hotel
             if (data.hotel && data.hotel.id) {
                 loadRoomCategoriesForHotel(data.hotel.id);
+                loadBedTypesForHotel(data.hotel.id);
             }
             }
             closeAddHotelModal();
@@ -12761,6 +12874,7 @@ document.getElementById('hotel_name')?.addEventListener('change', function() {
         if (supplierId) {
             clearRoomCategoryDropdownsForHotelSwitch();
             loadRoomCategoriesForHotel(supplierId);
+            loadBedTypesForHotel(supplierId);
             // Fetch supplier details to get category from notes
             fetch(`/inbound/api/supplier/${supplierId}`)
                 .then(response => response.json())
@@ -13973,7 +14087,7 @@ function printHotelVoucher() {
         </div>
         <p style="margin-bottom:16px;font-size:12px">Please provide with the following.</p>
         <table><thead><tr><th style="width:14%;">Check In</th><th style="width:14%;">Check Out</th><th style="width:7%;">SGL</th><th style="width:7%;">DBL</th><th style="width:7%;">TWN</th><th style="width:7%;">TRPL</th><th style="width:8%;">OTHER</th><th style="width:36%;">Note</th></tr></thead><tbody>${rowsHtml}</tbody></table>
-        <table><thead><tr><th style="width:12%;">Type</th><th style="width:16%;">Room Category</th><th style="width:14%;">Room Option</th><th style="width:10%;">Board</th><th style="width:12%;">Dietary Req</th><th style="width:6%;">Adt</th><th style="width:6%;">Chd</th><th style="width:24%;">Note</th></tr></thead><tbody>${roomListRowsHtml}</tbody></table>
+        <table><thead><tr><th style="width:12%;">Type</th><th style="width:16%;">Room Category</th><th style="width:14%;">Bed Type</th><th style="width:10%;">Board</th><th style="width:12%;">Dietary Req</th><th style="width:6%;">Adt</th><th style="width:6%;">Chd</th><th style="width:24%;">Note</th></tr></thead><tbody>${roomListRowsHtml}</tbody></table>
         <div class="hv-meal">BB = Bed and Breakfast | HB = Half Board | FB = Full Board | RO = Room Only</div>
         <div class="hv-disclaimer">Our Company is responsible only for service listed above.<br>The presentation of this voucher must be attached to your invoice otherwise payment may be delayed.</div>
         <div class="hv-sig"><span>Authorised Signature :</span><div class="line"></div></div>
@@ -14217,6 +14331,7 @@ document.addEventListener('change', function(e) {
         const supplierId = selectedOption?.getAttribute('data-supplier-id');
         if (supplierId) {
             loadRoomCategoriesForHotel(supplierId);
+            loadBedTypesForHotel(supplierId);
         }
         // Also toggle room category visibility
         toggleRoomCategoryVisibility();
