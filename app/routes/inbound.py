@@ -2872,6 +2872,7 @@ def api_save_service_data(request_id):
                     transport.driver_phone = form_data.get('transport_phone', '')
                     transport.status = form_data.get('transport_status', STATUS_REQUEST)
                     transport.cost = float(form_data.get('transport_cost', 0) or 0)
+                    transport.currency = form_data.get('transport_cost_currency', 'USD')
                     transport.note = form_data.get('transport_notes', '')
                     supplier_id = form_data.get('transport_supplier')
                     transport.supplier_id = int(supplier_id) if supplier_id else None
@@ -2926,6 +2927,7 @@ def api_save_service_data(request_id):
                 transport.driver_phone = form_data.get('transport_phone', '')
                 transport.status = form_data.get('transport_status', 'REQUEST')
                 transport.cost = float(form_data.get('transport_cost', 0) or 0)
+                transport.currency = form_data.get('transport_cost_currency', 'USD')
                 transport.note = form_data.get('transport_notes', '')
                 transport.supplier_id = supplier_id
                 db.session.add(transport)
@@ -3004,6 +3006,7 @@ def api_save_service_data(request_id):
                 g.language = form_data.get('guide_language', '')
                 g.telephone_number = form_data.get('guide_phone', '')
                 g.cost = float(form_data.get('guide_cost', 0) or 0)
+                g.currency = form_data.get('guide_cost_currency', 'USD')
                 g.is_cancelled = form_data.get('guide_cancelled') in ['true', 'True', True, 'on', '1']
                 g.additional_comments = form_data.get('guide_notes', '')
                 g.status = form_data.get('guide_status', 'REQUESTED')
@@ -3063,6 +3066,7 @@ def api_save_service_data(request_id):
                     guide.language = form_data.get('guide_language', '')
                     guide.telephone_number = form_data.get('guide_phone', '')
                     guide.cost = float(form_data.get('guide_cost', 0) or 0)
+                    guide.currency = form_data.get('guide_cost_currency', 'USD')
                     guide.is_cancelled = form_data.get('guide_cancelled') in ['true', 'True', True, 'on', '1']
                     guide.additional_comments = form_data.get('guide_notes', '')
                     guide.status = form_data.get('guide_status', 'REQUEST')
@@ -3105,6 +3109,7 @@ def api_save_service_data(request_id):
                 guide.language = form_data.get('guide_language', '')
                 guide.telephone_number = form_data.get('guide_phone', '')
                 guide.cost = float(form_data.get('guide_cost', 0) or 0)
+                guide.currency = form_data.get('guide_cost_currency', 'USD')
                 guide.is_cancelled = form_data.get('guide_cancelled') in ['true', 'True', True, 'on', '1']
                 guide.additional_comments = form_data.get('guide_notes', '')
                 guide.status = form_data.get('guide_status', 'REQUEST')
