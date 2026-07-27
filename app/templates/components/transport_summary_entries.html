@@ -1,6 +1,6 @@
 {% if transports %}
 {% for transport in transports %}
-<tr class="hover:bg-gray-50" data-transport-key="id-{{ transport.id }}" data-service-type="transport" data-record-id="{{ transport.id }}">
+<tr class="hover:bg-gray-50" data-transport-key="id-{{ transport.id }}" data-supplier-name="{{ transport.supplier_name or (transport.supplier.name if transport.supplier else '') }}" data-service-type="transport" data-record-id="{{ transport.id }}">
     <td class="border border-gray-300 px-2 py-1.5 text-center">{% if transport.end_date and transport.end_date != transport.date %}{{ transport.date.strftime('%d %b %Y') if transport.date else '-' }} - {{ transport.end_date.strftime('%d %b %Y') if transport.end_date else '-' }}{% else %}{{ transport.service_date.strftime('%d %b %Y') if transport.service_date else '-' }}{% endif %}</td>
     <td class="border border-gray-300 px-2 py-1.5">{{ transport.supplier_name or (transport.supplier.name if transport.supplier else '-') }}</td>
     <td class="border border-gray-300 px-2 py-1.5">{{ transport.vehicle_type or '-' }}</td>

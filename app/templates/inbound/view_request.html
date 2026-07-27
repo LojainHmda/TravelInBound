@@ -4613,7 +4613,14 @@ function displayRecordTabs(serviceName) {
     if (!recordTabsContainer) return;
 
     // Count records by finding DOM elements with data-service-type and data-record-id
-    const recordElements = document.querySelectorAll(`[data-service-type="${serviceName}"][data-record-id]`);
+    const recordElements = Array.from(document.querySelectorAll(`[data-service-type="${serviceName}"][data-record-id]`));
+    // Request-page supplier tabs only: order oldest-added -> newest (by record id, i.e. creation order),
+    // so the oldest stays on the left and any new supplier is appended on the right. This reorders only
+    // these tab buttons and does NOT change the underlying summary tables / shared ordering
+    // (Trip Summary, Word tour file). Arrival/Departure are intentionally excluded.
+    if (['hotel', 'transport', 'guide', 'meal'].includes(serviceName)) {
+        recordElements.sort((a, b) => (parseInt(a.dataset.recordId, 10) || 0) - (parseInt(b.dataset.recordId, 10) || 0));
+    }
     const count = recordElements.length;
 
     const tabsDiv = recordTabsContainer.querySelector('div');
@@ -4669,6 +4676,11 @@ function switchServiceTabToRecord(serviceName, recordNumber) {
     // Get the record ID from DOM by finding the nth record for this service type
     const recordSelector = `[data-service-type="${serviceName}"][data-record-id]`;
     const records = Array.from(document.querySelectorAll(recordSelector));
+    // Match the same oldest-added -> newest ordering used by displayRecordTabs so the clicked
+    // tab index maps to the correct record. Supplier tabs only; Arrival/Departure unchanged.
+    if (['hotel', 'transport', 'guide', 'meal'].includes(serviceName)) {
+        records.sort((a, b) => (parseInt(a.dataset.recordId, 10) || 0) - (parseInt(b.dataset.recordId, 10) || 0));
+    }
 
     if (recordNumber < 1 || recordNumber > records.length) {
         console.error(`Record ${recordNumber} not found for service ${serviceName}`);

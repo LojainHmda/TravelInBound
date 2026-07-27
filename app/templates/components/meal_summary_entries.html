@@ -1,6 +1,6 @@
 {% if meals %}
 {% for meal in meals %}
-<tr class="hover:bg-gray-50" data-meal-key="{{ meal.meal_type or '' }}-{{ meal.supplier_name or meal.restaurant or '' }}" data-service-type="meal" data-record-id="{{ meal.id }}">
+<tr class="hover:bg-gray-50" data-meal-key="{{ meal.meal_type or '' }}-{{ meal.supplier_name or meal.restaurant or '' }}" data-supplier-name="{{ meal.supplier_name or meal.restaurant or '' }}" data-service-type="meal" data-record-id="{{ meal.id }}">
     <td class="text-center summary-date-col">{{ meal.date.strftime('%d %b %Y') if meal.date else '-' }}</td>
     <td class="summary-compact-col">{{ meal.meal_type or '-' }}</td>
     <td class="font-medium">{{ meal.supplier_name or meal.restaurant or '-' }}</td>
