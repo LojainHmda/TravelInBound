@@ -5897,8 +5897,10 @@ function printFullSummary(useCurrentWindowForPrint = false) {
                     .summary-date-col, .hotel-date-col { width: 1%; min-width: 95px !important; white-space: nowrap !important; overflow: hidden; }
                     .summary-notes-col, .hotel-notes-col { min-width: 120px; max-width: 35%; word-wrap: break-word; overflow-wrap: break-word; word-break: break-all; }
                     .summary-itinerary-note-divider { border-top: 1px solid #e2e8f0 !important; padding-top: 0.25rem !important; }
-                    @media print { 
-                        button { display: none; } 
+                    @media print {
+                        /* Tour File default print scale (~70%). Scoped to this print document only; Chrome's Scale still applies on top. */
+                        body { zoom: 0.70; }
+                        button { display: none; }
                         .no-print { display: none !important; }
                         /* All table labels on single line */
                         th { white-space: nowrap !important; }
@@ -14711,7 +14713,11 @@ let advanceExpenseSheetData = [];
 async function openAdvanceExpenseSheet() {
     closeTourExpenseChoiceModal();
     var reqNum = (typeof requestNumber !== 'undefined' ? requestNumber : '') || '';
-    var reqPax = (typeof requestPax !== 'undefined' ? requestPax : '') || '';
+    // Auto-fill Pax from the current Request Details Pax field (updated by Nationality + Add),
+    // falling back to the page-load snapshot only if the field is unavailable/empty.
+    var paxField = document.querySelector('form#editMode input[name="pax"]') || document.querySelector('[name="pax"]');
+    var reqPax = (paxField && paxField.value !== '') ? paxField.value
+               : ((typeof requestPax !== 'undefined' ? requestPax : '') || '');
     advanceExpenseSheetData = ADVANCE_EXPENSE_ITEMS.map((x, i) => ({ id: i, item: x.item || '', amount: x.amount === '' ? '' : x.amount, pax: '', checked: false, total: 0, itemLocked: !!(x.item && x.item.trim()), amountLocked: !(x.amount === '' || x.amount === undefined) }));
     var modal = document.getElementById('advanceExpenseSheetModal');
     var reqId = (modal && modal.getAttribute('data-request-id')) || (typeof requestId !== 'undefined' ? requestId : null);
