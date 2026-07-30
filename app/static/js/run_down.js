@@ -482,7 +482,6 @@
               <th>PAX</th>
               <th>Nationality</th>
               <th>Language</th>
-              <th>Notes</th>
               <th>Guide Notes</th>
               <th>Status</th>
               <th></th>
@@ -498,7 +497,6 @@
                 <td class="num">${r.pax}</td>
                 <td>${escapeHtml(r.nationality || '—')}</td>
                 <td>${escapeHtml(r.language || '—')}</td>
-                <td>${escapeHtml(r.notes || '—')}</td>
                 <td>${escapeHtml(r.guide_note || '—')}</td>
                 <td>${statusBadge(r.status)}</td>
                 <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
@@ -520,7 +518,6 @@
               <th>Group Name</th>
               <th>Nationality</th>
               <th>PAX</th>
-              <th>Notes</th>
               <th>Transportation Notes</th>
               <th>Status</th>
               <th></th>
@@ -536,13 +533,12 @@
                 <td>${escapeHtml(r.group_name || '—')}</td>
                 <td>${escapeHtml(r.nationality || '—')}</td>
                 <td class="num">${r.pax}</td>
-                <td>${escapeHtml(r.notes || '—')}</td>
                 <td>${escapeHtml(r.transport_note || '—')}</td>
                 <td>${statusBadge(r.status)}</td>
                 <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
               </tr>
               <tr class="rd-transport-detail-row">
-                <td colspan="11">
+                <td colspan="10">
                   <div class="rd-transport-details">
                     <div class="rd-transport-day"><strong>Day:</strong> ${escapeHtml(r.day_of_week || '—')}</div>
                     <div class="rd-transport-itinerary"><strong>Itinerary:</strong> ${escapeHtml(r.pickup_location || '—')} → ${escapeHtml(r.dropoff_location || '—')}</div>

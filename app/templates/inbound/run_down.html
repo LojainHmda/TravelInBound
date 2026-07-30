@@ -477,9 +477,26 @@ body { background: #f1f5f9; }
   body { background: white !important; }
   .sidebar, .main-nav, .rd-header-actions, .rd-date-hint,
   .rd-supplier-clear, .rd-card-actions, .rd-btn-date-apply, .modal-backdrop,
-  .rd-modal-filters, .rd-btn, .btn-close, nav, footer, .rd-wrap, .rd-print-header { display: none !important; }
+  .rd-modal-filters, .rd-btn, .btn-close, nav, footer, .rd-wrap, .rd-print-header,
+  .ai-chat-fab, .ai-chat-widget { display: none !important; }
 
-  .modal {
+  /* Only ever print the Run Down modal. base.html renders shared modals
+     (e.g. #customerSelectionModal, #quickAddCustomerModal) on every page; without
+     this guard the generic modal-display rule below would un-hide them in print and
+     spill their content onto extra blank pages. Print-only. */
+  .modal:not(#rdRequestsModal) { display: none !important; }
+
+  /* Collapse the app's full-viewport layout wrappers so pagination follows the
+     actual printed content. On screen these keep min-height:100vh / calc(100vh-70px)
+     from base.html, which in print reserves ~a full empty page each and spills the
+     output onto blank trailing pages. Print-only — screen layout is unaffected. */
+  html, body { min-height: 0 !important; height: auto !important; padding-top: 0 !important; }
+  .app-container, #content { min-height: 0 !important; height: auto !important; }
+  .modal, .modal-dialog-scrollable, .modal-dialog-scrollable .modal-content {
+    height: auto !important;
+  }
+
+  #rdRequestsModal {
     display: block !important;
     position: static !important;
     top: auto !important;
@@ -517,6 +534,10 @@ body { background: #f1f5f9; }
   }
   .modal-body {
     padding: 0 !important;
+    /* Bootstrap's .modal-dialog-scrollable sets overflow-y:auto here, which makes
+       overflow-x compute to auto too — printing a stray horizontal scrollbar once
+       the table wrap below overflows. Neutralise it so no scrollbar prints. */
+    overflow: visible !important;
   }
   .rd-modal-table-wrap {
     overflow: visible !important;

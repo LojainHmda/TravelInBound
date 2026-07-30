@@ -8384,6 +8384,126 @@ def _fetch_run_down_supplier_requests(service_key, supplier, date_from, date_to)
     return rows
 
 
+def _run_down_supplier_matches(service_key, date_from, date_to):
+    """Return (supplier_ids, supplier_names_lower) that have at least one
+    request within the date range for the given service.
+
+    Mirrors the exact date/name/id matching used by
+    _fetch_run_down_supplier_requests so the dropdown list and the displayed
+    results always agree on which suppliers fall inside the selected range.
+    """
+    from app.models.inbound import InboundOptional
+    from sqlalchemy import or_ as _or
+
+    ids = set()
+    names = set()
+
+    def _add_names(rows):
+        for (val,) in rows:
+            if val:
+                names.add(val.lower())
+
+    def _add_ids(rows):
+        for (val,) in rows:
+            if val:
+                ids.add(val)
+
+    if service_key == 'HOTEL':
+        _add_names(
+            db.session.query(InboundHotel.hotel_name)
+            .join(InboundRequest)
+            .filter(
+                InboundHotel.check_in_date >= date_from,
+                InboundHotel.check_in_date <= date_to,
+            )
+            .all()
+        )
+
+    elif service_key == 'TRANSPORT':
+        rows = (
+            db.session.query(InboundTransport.supplier_id, InboundTransport.supplier)
+            .join(InboundRequest)
+            .filter(
+                InboundTransport.date >= date_from,
+                InboundTransport.date <= date_to,
+            )
+            .all()
+        )
+        for sid, sname in rows:
+            if sid:
+                ids.add(sid)
+            if sname:
+                names.add(sname.lower())
+
+    elif service_key == 'GUIDE':
+        _add_names(
+            db.session.query(InboundGuide.guide_name)
+            .join(InboundRequest)
+            .filter(
+                InboundGuide.date >= date_from,
+                InboundGuide.date <= date_to,
+                InboundGuide.is_cancelled == False,
+            )
+            .all()
+        )
+
+    elif service_key == 'MEAL':
+        rows = (
+            db.session.query(InboundMeal.supplier_id, InboundMeal.restaurant)
+            .join(InboundRequest)
+            .filter(
+                InboundMeal.date >= date_from,
+                InboundMeal.date <= date_to,
+            )
+            .all()
+        )
+        for sid, sname in rows:
+            if sid:
+                ids.add(sid)
+            if sname:
+                names.add(sname.lower())
+
+    elif service_key == 'GROUND_HANDLER':
+        _add_ids(
+            db.session.query(ArrivalBatch.supplier_id)
+            .join(InboundRequest)
+            .filter(
+                ArrivalBatch.arrival_date >= date_from,
+                ArrivalBatch.arrival_date <= date_to,
+            )
+            .all()
+        )
+        _add_ids(
+            db.session.query(DepartureBatch.supplier_id)
+            .join(InboundRequest)
+            .filter(
+                DepartureBatch.departure_date >= date_from,
+                DepartureBatch.departure_date <= date_to,
+            )
+            .all()
+        )
+
+    elif service_key == 'OPTIONAL':
+        # Option 1: undated optionals (date IS NULL) always appear, matching the
+        # results behaviour in _fetch_run_down_supplier_requests.
+        _add_names(
+            db.session.query(InboundOptional.supplier)
+            .join(InboundRequest)
+            .filter(
+                _or(
+                    InboundOptional.date == None,
+                    db.and_(
+                        InboundOptional.date >= date_from,
+                        InboundOptional.date <= date_to,
+                    ),
+                ),
+            )
+            .all()
+        )
+
+    return ids, names
+
+
 def get_status_color(status):
     """Map booking status to color for visual coding"""
     status_colors = {
@@ -8424,7 +8544,7 @@ def run_down_plan():
 @login_required
 def run_down_suppliers():
     """JSON: searchable suppliers for a run-down service category."""
-    from sqlalchemy import or_ as _or
+    from sqlalchemy import or_ as _or, func as _func
 
     service_key = request.args.get('service', '').upper()
     query = request.args.get('q', '').strip()
@@ -8436,17 +8556,33 @@ def run_down_suppliers():
     if patterns is None and service_key != 'OPTIONAL':
         return jsonify({'error': 'Unknown service type'}), 400
 
-    q = Supplier.query.filter(Supplier.is_active == True)
-    if patterns:
-        q = q.filter(_or(*[Supplier.supplier_type.ilike(f'%{p}%') for p in patterns]))
-    if query:
-        q = q.filter(Supplier.name.ilike(f'%{query}%'))
-    q = q.order_by(Supplier.name).limit(500)
+    # Restrict to suppliers that actually have requests within the selected
+    # date range, using the same matching logic as the results modal so the
+    # dropdown and the displayed requests always agree.
+    match_ids, match_names = _run_down_supplier_matches(service_key, date_from, date_to)
 
-    suppliers = [
-        {'id': s.id, 'name': s.name, 'city': s.city or '', 'country': s.country or ''}
-        for s in q.all()
-    ]
+    if not match_ids and not match_names:
+        suppliers = []
+    else:
+        q = Supplier.query.filter(Supplier.is_active == True)
+        if patterns:
+            q = q.filter(_or(*[Supplier.supplier_type.ilike(f'%{p}%') for p in patterns]))
+        if query:
+            q = q.filter(Supplier.name.ilike(f'%{query}%'))
+
+        range_conds = []
+        if match_ids:
+            range_conds.append(Supplier.id.in_(match_ids))
+        if match_names:
+            range_conds.append(_func.lower(Supplier.name).in_(match_names))
+        q = q.filter(_or(*range_conds))
+
+        q = q.order_by(Supplier.name).limit(500)
+
+        suppliers = [
+            {'id': s.id, 'name': s.name, 'city': s.city or '', 'country': s.country or ''}
+            for s in q.all()
+        ]
     return jsonify({
         'service': service_key,
         'suppliers': suppliers,
@@ -8494,7 +8630,18 @@ def run_down_agents():
     if date_from is None or date_to is None:
         return jsonify({'error': 'Invalid date format'}), 400
 
-    q = Customer.query
+    # Only agents (customers) that have at least one request overlapping the
+    # selected range — same overlap test used by run_down_agent_requests.
+    overlap_customer_ids = (
+        db.session.query(InboundRequest.customer_id)
+        .filter(
+            InboundRequest.from_date <= date_to,
+            InboundRequest.to_date >= date_from,
+        )
+        .distinct()
+    )
+
+    q = Customer.query.filter(Customer.id.in_(overlap_customer_ids))
 
     if query:
         q = q.filter(
