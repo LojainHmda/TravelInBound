@@ -465,9 +465,13 @@ body { background: #f1f5f9; }
   transition: all .15s;
   white-space: nowrap;
 }
+.rd-modal-filters-chips { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .rd-sts-chip.on.requested { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
 .rd-sts-chip.on.confirmed { background: #dcfce7; color: #166534; border-color: #86efac; }
 .rd-sts-chip.on.invoiced  { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+.rd-sts-chip.on.waiting   { background: #e0e7ff; color: #3730a3; border-color: #a5b4fc; }
+.rd-sts-chip.on.cancelled { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+.rd-sts-chip.on.all       { background: #e2e8f0; color: #334155; border-color: #cbd5e1; }
 
 /* ── Print layout ── */
 .rd-print-header {
@@ -697,9 +701,7 @@ body { background: #f1f5f9; }
       </div>
       <div class="rd-modal-filters" id="rdModalFilters">
         <span class="rd-modal-filters-label">Filter by status</span>
-        <button type="button" class="rd-sts-chip requested on" data-rd-sts="REQUEST">Requested</button>
-        <button type="button" class="rd-sts-chip confirmed on" data-rd-sts="CONFIRMED">Confirmed</button>
-        <button type="button" class="rd-sts-chip invoiced on" data-rd-sts="INVOICED">Invoiced</button>
+        <span class="rd-modal-filters-chips" id="rdModalFilterChips"></span>
       </div>
       <div class="modal-body" id="rdModalBody" style="padding:0;"></div>
       <div class="modal-footer" style="padding:10px 20px;border-top:1px solid #f1f5f9;">

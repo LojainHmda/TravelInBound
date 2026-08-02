@@ -8062,6 +8062,7 @@ def _run_down_row(request_obj, service_date, description, status, pax, service_t
         'date_display': service_date.strftime('%d %b %Y'),
         'description': description,
         'status': status or 'REQUEST',
+        'file_status': request_obj.status or 'REQUEST',
         'pax': pax or request_obj.pax or 0,
         'service_type': service_type,
         'view_url': url_for('inbound.view_request', id=request_obj.id),
@@ -8077,7 +8078,7 @@ def _run_down_row(request_obj, service_date, description, status, pax, service_t
             'nationality': request_obj.nationality or '—',
             'meal': meal_type if meal_type else 'Meal',
             'notes': request_obj.special_note or '—',
-            'restaurant_note': request_obj.restaurant_voucher_note or voucher_notes or '—',
+            'restaurant_note': meal_note or '—',
         })
     elif service_type == 'HOTEL':
         group_name = request_obj.agent_ref or ''
@@ -8315,7 +8316,7 @@ def _fetch_run_down_supplier_requests(service_key, supplier, date_from, date_to)
                 req,
                 batch.arrival_date,
                 description,
-                'CONFIRMED' if batch.meet_assist else 'REQUEST',
+                req.status or 'REQUEST',
                 batch.pax_count or req.pax,
                 'GROUND_HANDLER',
                 batch.id,
@@ -8342,7 +8343,7 @@ def _fetch_run_down_supplier_requests(service_key, supplier, date_from, date_to)
                 req,
                 batch.departure_date,
                 description,
-                'CONFIRMED' if batch.meet_assist else 'REQUEST',
+                req.status or 'REQUEST',
                 batch.pax_count or req.pax,
                 'GROUND_HANDLER',
                 batch.id,

@@ -25,6 +25,39 @@
     COMPLETED: 'CONFIRMED',
   };
 
+  // Supplier/service tables that use the exact-match, single-select status filter
+  // (Requested / Confirmed / Waiting List / Cancelled / All). Other tables
+  // (Agent, Meet & Assist, Optional) keep the legacy bucket filter below.
+  const SERVICE_STATUS_TABLES = new Set(['MEAL', 'GUIDE', 'HOTEL', 'TRANSPORT']);
+
+  /** Single-select filter options for supplier tables. 'ALL' shows every row. */
+  const SERVICE_FILTER_OPTIONS = [
+    { key: 'REQUESTED', label: 'Requested', cls: 'requested' },
+    { key: 'CONFIRMED', label: 'Confirmed', cls: 'confirmed' },
+    { key: 'WAITING_LIST', label: 'Waiting List', cls: 'waiting' },
+    { key: 'CANCELLED', label: 'Cancelled', cls: 'cancelled' },
+    { key: 'ALL', label: 'All', cls: 'all' },
+  ];
+
+  /** Legacy multi-select filter options for the remaining tables. */
+  const LEGACY_FILTER_OPTIONS = [
+    { key: 'REQUEST', label: 'Requested', cls: 'requested' },
+    { key: 'CONFIRMED', label: 'Confirmed', cls: 'confirmed' },
+    { key: 'INVOICED', label: 'Invoiced', cls: 'invoiced' },
+  ];
+
+  /** Normalize a raw service status to one of the SERVICE_FILTER_OPTIONS keys.
+   *  Legacy 'REQUEST' is treated as 'REQUESTED'. Unknown/legacy values (e.g.
+   *  QUOTED, RESERVED) match nothing but 'All'. */
+  function normalizeServiceStatus(status) {
+    const s = String(status || 'REQUESTED').toUpperCase();
+    if (s === 'REQUEST' || s === 'REQUESTED') return 'REQUESTED';
+    if (s === 'WAITING_LIST' || s === 'WAITING') return 'WAITING_LIST';
+    if (s === 'CANCELLED' || s === 'CANCELED') return 'CANCELLED';
+    if (s === 'CONFIRMED') return 'CONFIRMED';
+    return s;
+  }
+
   const state = {
     dateFrom: '',
     dateTo: '',
@@ -40,6 +73,8 @@
     },
     modal: null,
     modalStatusFilters: new Set(['REQUEST', 'CONFIRMED', 'INVOICED']),
+    modalFilterMode: 'legacy',
+    modalServiceFilter: 'ALL',
     printTs: '',
   };
 
@@ -322,8 +357,7 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to load requests');
 
-      state.modalStatusFilters = new Set(['REQUEST', 'CONFIRMED', 'INVOICED']);
-      document.querySelectorAll('[data-rd-sts]').forEach((chip) => chip.classList.add('on'));
+      setupModalFilters('AGENT');
 
       state.modal = {
         serviceKey: 'AGENT',
@@ -393,9 +427,54 @@
   }
 
   function matchesStatusFilter(status) {
+    if (state.modalFilterMode === 'service') {
+      if (state.modalServiceFilter === 'ALL') return true;
+      return normalizeServiceStatus(status) === state.modalServiceFilter;
+    }
     if (!state.modalStatusFilters.size) return true;
     const bucket = STATUS_FILTER_MAP[(status || 'REQUEST').toUpperCase()] || 'REQUEST';
     return state.modalStatusFilters.has(bucket);
+  }
+
+  /** Render the modal's status filter chips for the current filter mode. */
+  function renderModalFilters() {
+    const wrap = $('rdModalFilterChips');
+    if (!wrap) return;
+
+    if (state.modalFilterMode === 'service') {
+      wrap.innerHTML = SERVICE_FILTER_OPTIONS.map((opt) => {
+        const on = state.modalServiceFilter === opt.key ? ' on' : '';
+        return `<button type="button" class="rd-sts-chip ${opt.cls}${on}" data-rd-sts="${opt.key}">${opt.label}</button>`;
+      }).join('');
+    } else {
+      wrap.innerHTML = LEGACY_FILTER_OPTIONS.map((opt) => {
+        const on = state.modalStatusFilters.has(opt.key) ? ' on' : '';
+        return `<button type="button" class="rd-sts-chip ${opt.cls}${on}" data-rd-sts="${opt.key}">${opt.label}</button>`;
+      }).join('');
+    }
+  }
+
+  // Tables whose "Filter by status" bar is hidden from the UI for now. The
+  // filter logic/state below is kept intact so it can be restored by simply
+  // removing keys from this set.
+  const HIDDEN_FILTER_TABLES = new Set(['AGENT', 'GROUND_HANDLER']);
+
+  /** Configure the filter mode + defaults for a modal being opened. */
+  function setupModalFilters(serviceKey) {
+    if (SERVICE_STATUS_TABLES.has(serviceKey)) {
+      state.modalFilterMode = 'service';
+      state.modalServiceFilter = 'ALL';
+    } else {
+      state.modalFilterMode = 'legacy';
+      state.modalStatusFilters = new Set(['REQUEST', 'CONFIRMED', 'INVOICED']);
+    }
+    renderModalFilters();
+
+    // UI-only: hide the whole filter bar for selected tables (logic unchanged).
+    const filtersEl = $('rdModalFilters');
+    if (filtersEl) {
+      filtersEl.style.display = HIDDEN_FILTER_TABLES.has(serviceKey) ? 'none' : '';
+    }
   }
 
   function getFilteredModalRequests() {
@@ -444,9 +523,9 @@
               <th>Nationality</th>
               <th>Meal</th>
               <th>PAX No</th>
-              <th>Notes</th>
               <th>Restaurant Note</th>
               <th>Status</th>
+              <th>File Status</th>
               <th></th>
             </tr>
           </thead>
@@ -460,9 +539,9 @@
                 <td>${escapeHtml(r.nationality || '—')}</td>
                 <td>${escapeHtml(r.meal || '—')}</td>
                 <td class="num">${r.pax}</td>
-                <td>${escapeHtml(r.notes || '—')}</td>
                 <td>${escapeHtml(r.restaurant_note || '—')}</td>
                 <td>${statusBadge(r.status)}</td>
+                <td>${statusBadge(r.file_status)}</td>
                 <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
               </tr>
             `).join('')}
@@ -484,6 +563,7 @@
               <th>Language</th>
               <th>Guide Notes</th>
               <th>Status</th>
+              <th>File Status</th>
               <th></th>
             </tr>
           </thead>
@@ -499,6 +579,7 @@
                 <td>${escapeHtml(r.language || '—')}</td>
                 <td>${escapeHtml(r.guide_note || '—')}</td>
                 <td>${statusBadge(r.status)}</td>
+                <td>${statusBadge(r.file_status)}</td>
                 <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
               </tr>
             `).join('')}
@@ -520,6 +601,7 @@
               <th>PAX</th>
               <th>Transportation Notes</th>
               <th>Status</th>
+              <th>File Status</th>
               <th></th>
             </tr>
           </thead>
@@ -535,10 +617,11 @@
                 <td class="num">${r.pax}</td>
                 <td>${escapeHtml(r.transport_note || '—')}</td>
                 <td>${statusBadge(r.status)}</td>
+                <td>${statusBadge(r.file_status)}</td>
                 <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
               </tr>
               <tr class="rd-transport-detail-row">
-                <td colspan="10">
+                <td colspan="11">
                   <div class="rd-transport-details">
                     <div class="rd-transport-day"><strong>Day:</strong> ${escapeHtml(r.day_of_week || '—')}</div>
                     <div class="rd-transport-itinerary"><strong>Itinerary:</strong> ${escapeHtml(r.pickup_location || '—')} → ${escapeHtml(r.dropoff_location || '—')}</div>
@@ -564,7 +647,7 @@
               <th>Time</th>
               <th>Flight Number</th>
               <th>M&A Notes</th>
-              <th>Status</th>
+              <th>File Status</th>
               <th></th>
             </tr>
           </thead>
@@ -607,6 +690,7 @@
               <th>TRPL</th>
               <th>Total</th>
               <th>Status</th>
+              <th>File Status</th>
               <th></th>
             </tr>
           </thead>
@@ -627,6 +711,7 @@
                 <td class="num">${r.trpl || 0}</td>
                 <td class="num">${r.total || 0}</td>
                 <td>${statusBadge(r.status)}</td>
+                <td>${statusBadge(r.file_status)}</td>
                 <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
               </tr>
             `).join('')}
@@ -646,7 +731,7 @@
               <th>Group Name</th>
               <th>PAX</th>
               <th>Nationality</th>
-              <th>Status</th>
+              <th>File Status</th>
               <th></th>
             </tr>
           </thead>
@@ -706,21 +791,20 @@
     updateModalCount();
   }
 
-  function toggleModalStatus(statusKey) {
-    if (state.modalStatusFilters.has(statusKey)) {
-      state.modalStatusFilters.delete(statusKey);
+  function onFilterChipClick(statusKey) {
+    if (state.modalFilterMode === 'service') {
+      // Single-select: chosen status (or 'ALL') becomes the only active filter.
+      state.modalServiceFilter = statusKey;
     } else {
-      state.modalStatusFilters.add(statusKey);
+      // Legacy multi-select toggle.
+      if (state.modalStatusFilters.has(statusKey)) {
+        state.modalStatusFilters.delete(statusKey);
+      } else {
+        state.modalStatusFilters.add(statusKey);
+      }
     }
 
-    document.querySelectorAll('[data-rd-sts]').forEach((chip) => {
-      const key = chip.dataset.rdSts;
-      const bucket = key;
-      const cls = key === 'REQUEST' ? 'requested' : key === 'CONFIRMED' ? 'confirmed' : 'invoiced';
-      chip.classList.toggle('on', state.modalStatusFilters.has(bucket));
-      chip.classList.toggle(cls, true);
-    });
-
+    renderModalFilters();
     refreshModalTable();
   }
 
@@ -748,8 +832,7 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to load requests');
 
-      state.modalStatusFilters = new Set(['REQUEST', 'CONFIRMED', 'INVOICED']);
-      document.querySelectorAll('[data-rd-sts]').forEach((chip) => chip.classList.add('on'));
+      setupModalFilters(serviceKey);
 
       state.modal = {
         serviceKey,
@@ -825,9 +908,13 @@
     const printBtn = $('rdPrintBtn');
     if (printBtn) printBtn.addEventListener('click', printPage);
 
-    document.querySelectorAll('[data-rd-sts]').forEach((chip) => {
-      chip.addEventListener('click', () => toggleModalStatus(chip.dataset.rdSts));
-    });
+    const filterChips = $('rdModalFilterChips');
+    if (filterChips) {
+      filterChips.addEventListener('click', (e) => {
+        const chip = e.target.closest('[data-rd-sts]');
+        if (chip) onFilterChipClick(chip.dataset.rdSts);
+      });
+    }
 
     document.querySelectorAll('[data-rd-input]').forEach((input) => {
       const serviceKey = input.dataset.rdInput;
