@@ -236,7 +236,23 @@
 .requests-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
 }
+
+/* Fixed column proportions so the list renders identically across every
+   filtered view (e.g. Requests vs Confirmed), independent of row content.
+   The trailing column(s) — Actions, or Status + Actions on the all-files
+   view — share the remaining width automatically. */
+.requests-table th:nth-child(1), .requests-table td:nth-child(1) { width: 12%; }
+.requests-table th:nth-child(2), .requests-table td:nth-child(2) { width: 12%; }
+.requests-table th:nth-child(3), .requests-table td:nth-child(3) { width: 7%; }
+.requests-table th:nth-child(4), .requests-table td:nth-child(4) { width: 14%; }
+.requests-table th:nth-child(5), .requests-table td:nth-child(5) { width: 5%; }
+.requests-table th:nth-child(6), .requests-table td:nth-child(6) { width: 14%; white-space: nowrap; }
+.requests-table th:nth-child(7), .requests-table td:nth-child(7) { width: 8%; white-space: nowrap; }
+/* Actions column: explicit width so all buttons fit on one row, regardless
+   of view (guaranteed even on the all-files view, which adds a Status column). */
+.requests-table .col-actions { width: 18%; white-space: nowrap; }
 
 .requests-table thead {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -785,7 +801,7 @@ button.btn-print {
                     {% if all_files_view|default(false) %}
                     <th>Status</th>
                     {% endif %}
-                    <th>Actions</th>
+                    <th class="col-actions">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -819,7 +835,7 @@ button.btn-print {
                         {% endif %}
                     </td>
                     {% endif %}
-                    <td>
+                    <td class="col-actions">
                         <div class="action-buttons">
                             {% set mapped_status = inb.status %}
                             {% set is_deleted_row = is_deleted_queue|default(false) or inb.pending_invoice_queue %}
