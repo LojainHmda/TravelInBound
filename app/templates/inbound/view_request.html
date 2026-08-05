@@ -775,7 +775,7 @@ input[type="date"]::-webkit-calendar-table-body {
                         <i class="fas fa-file-alt text-blue-500"></i>
                         Request Details
                     </h2>
-                    <span class="text-xs text-slate-400">ID: {{ request.request_number }}</span>
+                    <span class="text-xs text-slate-400">ID: <span id="headerRequestId">{{ request.request_number }}</span></span>
                 </div>
                 <div class="p-3">
                     <form id="editMode" autocomplete="off">
@@ -2747,7 +2747,7 @@ input[type="date"]::-webkit-calendar-table-body {
                         <p class="mb-0"><strong>Date:</strong> {{ (request.from_date.strftime('%d %b %Y') if request.from_date else '') or '-' }}</p>
                     </div>
                     <div class="flex flex-col gap-1">
-                        <div class="border border-black px-3 py-0.5" style="height:fit-content">Request No: {{ request.request_number or request.document_sequence or '-' }}</div>
+                        <div class="border border-black px-3 py-0.5" style="height:fit-content">Request No: <span id="restaurantVoucherRequestNo">{{ request.request_number or request.document_sequence or '-' }}</span></div>
                         <div class="border border-black px-3 py-0.5 text-xs" style="height:fit-content">Pax #: <span id="restaurantVoucherPaxValue">{{ request.pax or 0 }}</span></div>
                     </div>
                 </div>
@@ -2852,7 +2852,7 @@ input[type="date"]::-webkit-calendar-table-body {
                         <p class="mb-0"><strong>Date:</strong> {{ (request.from_date.strftime('%d %b %Y') if request.from_date else '') or '-' }}</p>
                     </div>
                     <div class="flex flex-col gap-1">
-                        <div class="border border-black px-3 py-0.5" style="height:fit-content">Reference Number: {{ request.request_number or request.document_sequence or '-' }}</div>
+                        <div class="border border-black px-3 py-0.5" style="height:fit-content">Reference Number: <span id="hotelVoucherReferenceNo">{{ request.request_number or request.document_sequence or '-' }}</span></div>
                         <div class="border border-black px-3 py-0.5" style="height:fit-content">Confirmation Number: <span id="hotelVoucherConfirmationNumber">-</span></div>
                         <div class="border border-black px-3 py-0.5 text-xs" style="height:fit-content">Pax: {{ request.pax or 0 }}</div>
                     </div>
@@ -3364,6 +3364,9 @@ input[type="date"]::-webkit-calendar-table-body {
 <script>
 const requestId = {{ inbound_request.id }};
 const requestNumber = "{{ (inbound_request.request_number or '') | e }}";
+// Live request number — kept in sync after AJAX save so print/export use the real
+// number instead of the temp "IN-NEW-…" placeholder baked in at render time.
+let currentRequestNumber = "{{ request.request_number }}";
 const requestPax = "{{ inbound_request.pax or '' }}";
 const REQUEST_MAPPED_STATUS = "{{ mapped_status }}";
 const isNewRequest = {% if not inbound_request.is_saved %}true{% else %}false{% endif %};
@@ -5737,7 +5740,24 @@ function markSummaryTablesStale() {
 function printFullSummary(useCurrentWindowForPrint = false) {
     const summarySection = document.getElementById('fullSummarySection');
     syncSummaryGroupInfo();
-    const requestNumber = "{{ request.request_number }}";
+    const requestNumber = (typeof currentRequestNumber !== 'undefined' && currentRequestNumber)
+        ? currentRequestNumber
+        : "{{ request.request_number }}";
+    // Current file-level status (Dashboard category) shown in the Tour File heading:
+    // Trip Tour - File Status - Request Number. Derived from request.status here (not
+    // REQUEST_MAPPED_STATUS, which is empty in this block because the server-side
+    // mapped_status variable is scoped to the content block, not this scripts block).
+    // Mapping mirrors the server's mapped_status logic.
+    const FILE_STATUS_LABELS = { REQUEST: 'Requested', CONFIRMED: 'Confirmed', INVOICED: 'Invoiced', DELETED: 'Deleted' };
+    const rawFileStatus = "{{ request.status }}";
+    let fileStatusCode = rawFileStatus;
+    if (['SUPPLIER_CONFIRMED','QUOTED','CONFIRMED','PROCESSING','BOOKED','IN_PROGRESS'].indexOf(rawFileStatus) !== -1) fileStatusCode = 'CONFIRMED';
+    else if (['INVOICE','COMPLETED','INVOICED'].indexOf(rawFileStatus) !== -1) fileStatusCode = 'INVOICED';
+    const fileStatusLabel = FILE_STATUS_LABELS[fileStatusCode]
+        || (fileStatusCode ? fileStatusCode.charAt(0) + fileStatusCode.slice(1).toLowerCase() : '');
+    const tripTourHeading = fileStatusLabel
+        ? `Trip Tour - ${fileStatusLabel} - ${requestNumber}`
+        : `Trip Tour - ${requestNumber}`;
     const customerName = document.getElementById('selectedCustomerName')?.value || "N/A";
     // Use saved dates for display - same logic as PAX
     const fromDate = getFromDate() || "";
@@ -5873,7 +5893,7 @@ function printFullSummary(useCurrentWindowForPrint = false) {
     printWindow.document.write(`
         <html>
             <head>
-                <title>Trip Tour - ${requestNumber}</title>
+                <title>${tripTourHeading}</title>
                 <style>
                     body { font-family: Arial, sans-serif; margin: 20px; font-size: 12px; }
                     .company-header { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #334155; }
@@ -5944,7 +5964,7 @@ function printFullSummary(useCurrentWindowForPrint = false) {
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
                     <div>
-                        <h1 style="margin: 0 0 5px 0;">Trip Tour - ${requestNumber}</h1>
+                        <h1 style="margin: 0 0 5px 0;">${tripTourHeading}</h1>
                         <div class="header-info" style="margin: 0;">${customerName} | ${fromDate} to ${toDate} | ${pax} PAX | ${days} Days</div>
                     </div>
                     <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
@@ -5998,7 +6018,9 @@ function maybeAutoPrintTourFileFromQuery() {
 
 // Function to generate comprehensive summary table
 function generateSummaryTable() {
-    const requestNumber = "{{ request.request_number }}";
+    const requestNumber = (typeof currentRequestNumber !== 'undefined' && currentRequestNumber)
+        ? currentRequestNumber
+        : "{{ request.request_number }}";
     const customerName = document.getElementById('selectedCustomerName')?.value || "N/A";
     // Use saved dates for display - same logic as PAX
     const fromDate = getFromDate() || "";
@@ -10833,6 +10855,18 @@ function saveRequest() {
             if (headerEl) {
                 headerEl.innerHTML = data.request_number;
             }
+            // Keep the live request number in sync so print/export (Tour File, Trip
+            // Summary, Excel, Expense Report) use the real number, not the temp id.
+            if (data.request_number) {
+                currentRequestNumber = data.request_number;
+                // Refresh on-page/label copies of the number so none keep showing IN-NEW.
+                const requestIdLabel = document.getElementById('headerRequestId');
+                if (requestIdLabel) requestIdLabel.textContent = data.request_number;
+                const restaurantVoucherNo = document.getElementById('restaurantVoucherRequestNo');
+                if (restaurantVoucherNo) restaurantVoucherNo.textContent = data.request_number;
+                const hotelVoucherNo = document.getElementById('hotelVoucherReferenceNo');
+                if (hotelVoucherNo) hotelVoucherNo.textContent = data.request_number;
+            }
             
             // Update number of days field
             const daysField = document.getElementById('noOfDays');
@@ -11490,7 +11524,9 @@ function exportToExcel() {
     // We use textContent to ensure it matches what user sees exactly
     
     // 1. Basic Info
-    const requestNumber = "{{ request.request_number }}";
+    const requestNumber = (typeof currentRequestNumber !== 'undefined' && currentRequestNumber)
+        ? currentRequestNumber
+        : "{{ request.request_number }}";
     const customerName = document.querySelector('#selectedCustomerName')?.value || "N/A";
     // Use saved dates for export - same logic as PAX
     const dates = `${getFromDate()} - ${getToDate()}`;
@@ -14712,7 +14748,8 @@ let advanceExpenseSheetData = [];
 
 async function openAdvanceExpenseSheet() {
     closeTourExpenseChoiceModal();
-    var reqNum = (typeof requestNumber !== 'undefined' ? requestNumber : '') || '';
+    var reqNum = (typeof currentRequestNumber !== 'undefined' && currentRequestNumber ? currentRequestNumber
+               : (typeof requestNumber !== 'undefined' ? requestNumber : '')) || '';
     // Auto-fill Pax from the current Request Details Pax field (updated by Nationality + Add),
     // falling back to the page-load snapshot only if the field is unavailable/empty.
     var paxField = document.querySelector('form#editMode input[name="pax"]') || document.querySelector('[name="pax"]');
@@ -14778,7 +14815,8 @@ let closingGuidePaymentSheetData = [];
 
 async function openClosingGuidePaymentSheet() {
     closeTourExpenseChoiceModal();
-    var reqNum = (typeof requestNumber !== 'undefined' ? requestNumber : '') || '';
+    var reqNum = (typeof currentRequestNumber !== 'undefined' && currentRequestNumber ? currentRequestNumber
+               : (typeof requestNumber !== 'undefined' ? requestNumber : '')) || '';
     var reqPax = (typeof requestPax !== 'undefined' ? requestPax : '') || '';
     closingGuidePaymentSheetData = CLOSING_GUIDE_ITEMS.map((x, i) => ({ id: i, item: x.item || '', amount: x.amount === '' ? '' : x.amount, pax: '', checked: false, total: 0, itemLocked: !!(x.item && x.item.trim()), amountLocked: !(x.amount === '' || x.amount === undefined) }));
     var modal = document.getElementById('closingGuidePaymentSheetModal');
@@ -15546,7 +15584,9 @@ function printTourExpenses() {
     });
     
     // Get request info for header
-    const requestNumber = '{{ request.request_number }}';
+    const requestNumber = (typeof currentRequestNumber !== 'undefined' && currentRequestNumber)
+        ? currentRequestNumber
+        : '{{ request.request_number }}';
     const contactName = '{{ request.contact_name }}';
     const fromDate = '{{ request.from_date.strftime("%d %b %Y") if request.from_date else "" }}';
     const toDate = '{{ request.to_date.strftime("%d %b %Y") if request.to_date else "" }}';
