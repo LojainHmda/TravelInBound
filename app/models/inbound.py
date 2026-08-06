@@ -708,6 +708,22 @@ class InboundMeal(db.Model):
                 return supplier.name
         return self.restaurant
 
+    @property
+    def city(self):
+        """City of the restaurant, derived from the linked supplier.
+
+        Mirrors the CITY value shown in the Restaurant Details form (which is the
+        selected restaurant supplier's city). Not a stored column."""
+        if self.supplier_ref and self.supplier_ref.city:
+            return self.supplier_ref.city
+        # Legacy data: restaurant field may hold a numeric supplier id
+        if self.restaurant and str(self.restaurant).isdigit():
+            from app.models.supplier import Supplier
+            supplier = Supplier.query.get(int(self.restaurant))
+            if supplier and supplier.city:
+                return supplier.city
+        return ''
+
     def __repr__(self):
         return f'<InboundMeal {self.meal_type} - {self.date}>'
 

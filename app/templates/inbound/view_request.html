@@ -2366,7 +2366,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                             <th class="text-left summary-compact-col">Meal Type</th>
                                             <th class="text-left">Restaurant</th>
                                             <th class="text-center summary-compact-col">Status</th>
-                                            <th class="text-left">Location</th>
+                                            <th class="text-left">City</th>
                                             <th class="text-center summary-compact-col">PAX</th>
                                             <th class="text-left summary-notes-col">Notes</th>
                                             <th class="text-center summary-compact-col print-hide-actions">Actions</th>
@@ -2382,7 +2382,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                                 <td class="text-center summary-compact-col">
                                                     <span class="px-2 py-0.5 rounded text-[10px] {% if meal.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif meal.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% elif meal.status == 'WAITING_LIST' %}bg-blue-100 text-blue-700{% elif meal.status == 'CANCELLED' %}bg-red-100 text-red-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ meal.status or 'PENDING' }}</span>
                                                 </td>
-                                                <td>{{ meal.location or '-' }}</td>
+                                                <td>{{ meal.city or '-' }}</td>
                                                 <td class="text-center summary-compact-col">{{ meal.pax_count or '-' }}</td>
                                                 <td class="summary-notes-col">{{ meal.meal_note or '-' }}</td>
                                                 <td class="text-center summary-compact-col whitespace-nowrap print-hide-actions">
@@ -5786,24 +5786,24 @@ function printFullSummary(useCurrentWindowForPrint = false) {
             <h4 style="margin: 0 0 4px 0; font-size: 12px; font-weight: bold; color: #333;">Group Information</h4>
             <table style="width: 100%; border-collapse: collapse; margin: 0; font-size: 11px; line-height: 1.2;">
                 <tr>
-                    <th style="border: 1px solid #ddd; padding: 3px 6px; text-align: left; background-color: #f2f2f2; font-weight: bold; width: 25%;">Group Name</th>
-                    <th style="border: 1px solid #ddd; padding: 3px 6px; text-align: left; background-color: #f2f2f2; font-weight: bold; width: 25%;">Nationality</th>
-                    <th style="border: 1px solid #ddd; padding: 3px 6px; text-align: left; background-color: #f2f2f2; font-weight: bold; width: 25%;">Agent Name</th>
-                    <th style="border: 1px solid #ddd; padding: 3px 6px; text-align: left; background-color: #f2f2f2; font-weight: bold; width: 25%;">Contact Name</th>
+                    <th style="border: 1px solid #94a3b8; padding: 3px 6px; text-align: left; background-color: #f2f2f2; font-weight: bold; width: 25%;">Group Name</th>
+                    <th style="border: 1px solid #94a3b8; padding: 3px 6px; text-align: left; background-color: #f2f2f2; font-weight: bold; width: 25%;">Nationality</th>
+                    <th style="border: 1px solid #94a3b8; padding: 3px 6px; text-align: left; background-color: #f2f2f2; font-weight: bold; width: 25%;">Agent Name</th>
+                    <th style="border: 1px solid #94a3b8; padding: 3px 6px; text-align: left; background-color: #f2f2f2; font-weight: bold; width: 25%;">Contact Name</th>
                 </tr>
                 <tr>
-                    <td style="border: 1px solid #ddd; padding: 3px 6px;">${groupName || '-'}</td>
-                    <td style="border: 1px solid #ddd; padding: 3px 6px;">${nationality ? nationality : '-'}</td>
-                    <td style="border: 1px solid #ddd; padding: 3px 6px;">${agentName || '-'}</td>
-                    <td style="border: 1px solid #ddd; padding: 3px 6px;">${contactName || '-'}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 3px 6px;">${groupName || '-'}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 3px 6px;">${nationality ? nationality : '-'}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 3px 6px;">${agentName || '-'}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 3px 6px;">${contactName || '-'}</td>
                 </tr>
                 <tr>
-                    <th style="border: 1px solid #ddd; padding: 3px 6px; text-align: left; background-color: #f2f2f2; font-weight: bold; width: 15%;">Pax</th>
-                    <th style="border: 1px solid #ddd; padding: 3px 6px; text-align: left; background-color: #f2f2f2; font-weight: bold; width: 85%;" colspan="3">Notes</th>
+                    <th style="border: 1px solid #94a3b8; padding: 3px 6px; text-align: left; background-color: #f2f2f2; font-weight: bold; width: 15%;">Pax</th>
+                    <th style="border: 1px solid #94a3b8; padding: 3px 6px; text-align: left; background-color: #f2f2f2; font-weight: bold; width: 85%;" colspan="3">Notes</th>
                 </tr>
                 <tr>
-                    <td style="border: 1px solid #ddd; padding: 3px 6px;">${summaryPax || '-'}</td>
-                    <td style="border: 1px solid #ddd; padding: 3px 6px; white-space: pre-wrap;" colspan="3">${notes || '-'}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 3px 6px;">${summaryPax || '-'}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 3px 6px; white-space: pre-wrap;" colspan="3">${notes || '-'}</td>
                 </tr>
             </table>
         </div>
@@ -5819,10 +5819,10 @@ function printFullSummary(useCurrentWindowForPrint = false) {
         <div id="summaryNoteBox" style="margin-top: 12px;">
             <table style="width: 100%; border-collapse: collapse; font-size: 11px; line-height: 1.2;">
                 <tr>
-                    <th style="border: 1px solid #ddd; padding: 3px 6px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Note</th>
+                    <th style="border: 1px solid #94a3b8; padding: 3px 6px; text-align: left; background-color: #f2f2f2; font-weight: bold;">Note</th>
                 </tr>
                 <tr>
-                    <td style="border: 1px solid #ddd; padding: 3px 6px; white-space: pre-wrap;">${noteValue || '-'}</td>
+                    <td style="border: 1px solid #94a3b8; padding: 3px 6px; white-space: pre-wrap;">${noteValue || '-'}</td>
                 </tr>
             </table>
         </div>
@@ -5903,7 +5903,7 @@ function printFullSummary(useCurrentWindowForPrint = false) {
                     h1 { font-size: 18px; margin-bottom: 5px; }
                     .header-info { color: #666; margin-bottom: 20px; }
                     table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-                    th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+                    th, td { border: 1px solid #94a3b8; padding: 6px 8px; text-align: left; }
                     th { background-color: #f2f2f2; font-weight: bold; white-space: nowrap; }
                     h4 { margin: 15px 0 8px; font-size: 14px; }
                     .badge { padding: 2px 6px; border-radius: 10px; font-size: 10px; }
@@ -5911,12 +5911,12 @@ function printFullSummary(useCurrentWindowForPrint = false) {
                     .departure { background: #ffedd5; color: #9a3412; }
                     /* Summary tables - professional layout */
                     .summary-table, .hotel-summary-table { table-layout: auto; width: 100%; border-collapse: collapse; }
-                    .summary-table th, .summary-table td, .hotel-summary-table th, .hotel-summary-table td { padding: 0.5rem 0.75rem; vertical-align: top; border: 1px solid #e2e8f0; }
+                    .summary-table th, .summary-table td, .hotel-summary-table th, .hotel-summary-table td { padding: 0.5rem 0.75rem; vertical-align: top; border: 1px solid #94a3b8; }
                     .summary-table thead th, .hotel-summary-table thead th { background-color: #f8fafc; font-weight: 600; white-space: nowrap; }
                     .summary-compact-col, .hotel-compact-col { width: 1%; white-space: nowrap; }
                     .summary-date-col, .hotel-date-col { width: 1%; min-width: 95px !important; white-space: nowrap !important; overflow: hidden; }
                     .summary-notes-col, .hotel-notes-col { min-width: 120px; max-width: 35%; word-wrap: break-word; overflow-wrap: break-word; word-break: break-all; }
-                    .summary-itinerary-note-divider { border-top: 1px solid #e2e8f0 !important; padding-top: 0.25rem !important; }
+                    .summary-itinerary-note-divider { border-top: 1px solid #94a3b8 !important; padding-top: 0.25rem !important; }
                     @media print {
                         /* Tour File default print scale (~70%). Scoped to this print document only; Chrome's Scale still applies on top. */
                         body { zoom: 0.70; }

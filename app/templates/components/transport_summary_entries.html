@@ -1,16 +1,17 @@
 {% if transports %}
 {% for transport in transports %}
 <tr class="hover:bg-gray-50" data-transport-key="id-{{ transport.id }}" data-supplier-name="{{ transport.supplier_name or (transport.supplier.name if transport.supplier else '') }}" data-service-type="transport" data-record-id="{{ transport.id }}">
-    <td class="border border-gray-300 px-2 py-1.5 text-center">{% if transport.end_date and transport.end_date != transport.date %}{{ transport.date.strftime('%d %b %Y') if transport.date else '-' }} - {{ transport.end_date.strftime('%d %b %Y') if transport.end_date else '-' }}{% else %}{{ transport.service_date.strftime('%d %b %Y') if transport.service_date else '-' }}{% endif %}</td>
-    <td class="border border-gray-300 px-2 py-1.5">{{ transport.supplier_name or (transport.supplier.name if transport.supplier else '-') }}</td>
-    <td class="border border-gray-300 px-2 py-1.5">{{ transport.vehicle_type or '-' }}</td>
-    <td class="border border-gray-300 px-2 py-1.5">{{ transport.pickup_point or transport.pickup_location or '-' }}</td>
-    <td class="border border-gray-300 px-2 py-1.5">{{ transport.drop_off_point or transport.dropoff_location or '-' }}</td>
-    <td class="border border-gray-300 px-2 py-1.5 text-center">
+    <td>{{ transport.supplier_name or (transport.supplier.name if transport.supplier else '-') }}</td>
+    <td class="text-center summary-date-col">{{ (transport.service_date.strftime('%d %b %Y') if transport.service_date else transport.date.strftime('%d %b %Y') if transport.date else '-') }}</td>
+    <td class="text-center summary-date-col">{{ (transport.end_date.strftime('%d %b %Y') if transport.end_date else '-') }}</td>
+    <td>{{ transport.vehicle_type or '-' }}</td>
+    <td>{{ transport.pickup_point or transport.pickup_location or '-' }}</td>
+    <td>{{ transport.drop_off_point or transport.dropoff_location or '-' }}</td>
+    <td class="text-center summary-compact-col print-hide-status">
         <span class="px-2 py-0.5 rounded text-[10px] {% if transport.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif transport.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% elif transport.status == 'WAITING_LIST' %}bg-blue-100 text-blue-700{% elif transport.status == 'CANCELLED' %}bg-red-100 text-red-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ transport.status or 'PENDING' }}</span>
     </td>
-    <td class="border border-gray-300 px-2 py-1.5">{{ transport.note or '-' }}</td>
-    <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap print-hide-actions">
+    <td class="summary-notes-col">{{ transport.note or '-' }}</td>
+    <td class="text-center summary-compact-col whitespace-nowrap print-hide-actions">
         {% if not view_only %}
         <div class="flex items-center justify-center gap-2">
             <button onclick="handleEditServiceRow('transport', {{ transport.id }})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
@@ -23,5 +24,5 @@
 </tr>
 {% endfor %}
 {% else %}
-<tr><td colspan="8" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No transport added</td></tr>
+<tr><td colspan="9" class="px-4 py-3 text-center text-gray-500">No transport added</td></tr>
 {% endif %}

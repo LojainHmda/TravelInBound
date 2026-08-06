@@ -7,7 +7,7 @@
     <td class="text-center summary-compact-col">
         <span class="px-2 py-0.5 rounded text-[10px] {% if meal.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif meal.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% elif meal.status == 'WAITING_LIST' %}bg-blue-100 text-blue-700{% elif meal.status == 'CANCELLED' %}bg-red-100 text-red-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ meal.status or 'PENDING' }}</span>
     </td>
-    <td>{{ meal.location or '-' }}</td>
+    <td>{{ meal.city or '-' }}</td>
     <td class="text-center summary-compact-col">{{ meal.pax_count or '-' }}</td>
     <td class="summary-notes-col">{{ meal.meal_note or '-' }}</td>
     <td class="text-center summary-compact-col whitespace-nowrap print-hide-actions">
