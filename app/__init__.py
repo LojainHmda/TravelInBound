@@ -223,6 +223,28 @@ def _run_schema_upgrades(app, db):
                 ]:
                     if col not in existing:
                         _add_col('inbound_request', col, typ)
+
+            for _tbl in ('inbound_hotel', 'inbound_transport', 'inbound_meal'):
+                if _tbl in tables:
+                    existing = {c['name'] for c in inspector.get_columns(_tbl)}
+                    if 'cut_off_date' not in existing:
+                        _add_col(_tbl, 'cut_off_date', 'DATE')
+
+            for _tbl in ('arrival_batch', 'departure_batch'):
+                if _tbl in tables:
+                    existing = {c['name'] for c in inspector.get_columns(_tbl)}
+                    if 'status' not in existing:
+                        _add_col(_tbl, 'status', 'VARCHAR(20)')
+
+            if 'inbound_hotel' in tables:
+                existing = {c['name'] for c in inspector.get_columns('inbound_hotel')}
+                for col, typ in [
+                    ('rooming_list_filename', 'VARCHAR(255)'),
+                    ('rooming_list_filepath', 'VARCHAR(500)'),
+                    ('rooming_list_uploaded_at', dt_type),
+                ]:
+                    if col not in existing:
+                        _add_col('inbound_hotel', col, typ)
     except Exception as e:
         app.logger.error(f'Schema upgrade failed: {e}\n{traceback.format_exc()}')
 

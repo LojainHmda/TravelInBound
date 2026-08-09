@@ -2772,6 +2772,8 @@ def api_save_service_data(request_id):
                 hotel.check_in_date = datetime.strptime(check_in_str, '%Y-%m-%d').date()
             if check_out_str:
                 hotel.check_out_date = datetime.strptime(check_out_str, '%Y-%m-%d').date()
+            cut_off_str = form_data.get('hotel_cut_off_date', '')
+            hotel.cut_off_date = datetime.strptime(cut_off_str, '%Y-%m-%d').date() if cut_off_str else None
 
             # Calculate nights
             if hotel.check_in_date and hotel.check_out_date:
@@ -2886,6 +2888,8 @@ def api_save_service_data(request_id):
                             transport.end_date = datetime.strptime(form_data['transport_to_date'], '%Y-%m-%d').date()
                         except (ValueError, TypeError, OSError):
                             pass
+                    _cut_off = form_data.get('transport_cut_off_date', '')
+                    transport.cut_off_date = datetime.strptime(_cut_off, '%Y-%m-%d').date() if _cut_off else None
                 else:
                     return jsonify({'success': False, 'error': 'Transport record not found'}), 404
             else:
@@ -2920,6 +2924,8 @@ def api_save_service_data(request_id):
                     date=from_date,  # Start date
                     end_date=to_date  # End date for multi-day service
                 )
+                _cut_off = form_data.get('transport_cut_off_date', '')
+                transport.cut_off_date = datetime.strptime(_cut_off, '%Y-%m-%d').date() if _cut_off else None
                 transport.vehicle_type = form_data.get('transport_vehicle', '')
                 transport.pickup_location = form_data.get('transport_pickup', '')
                 transport.dropoff_location = form_data.get('transport_dropoff', '')
@@ -3160,6 +3166,8 @@ def api_save_service_data(request_id):
                     if form_data.get('meal_from_date'):
                         meal.date = datetime.strptime(form_data['meal_from_date'], '%Y-%m-%d').date()
                     meal.end_date = None  # Restaurant uses single date only
+                    _cut_off = form_data.get('meal_cut_off_date', '')
+                    meal.cut_off_date = datetime.strptime(_cut_off, '%Y-%m-%d').date() if _cut_off else None
                 else:
                     return jsonify({'success': False, 'error': 'Meal record not found'}), 404
             else:
@@ -3206,6 +3214,8 @@ def api_save_service_data(request_id):
                         date=from_date,
                         end_date=None  # Restaurant uses single date only
                     )
+                    _cut_off = form_data.get('meal_cut_off_date', '')
+                    meal.cut_off_date = datetime.strptime(_cut_off, '%Y-%m-%d').date() if _cut_off else None
                     meal.restaurant = resolved_restaurant
                     meal.meal_type = form_data.get('meal_type', '')
                     meal.meal_note = form_data.get('meal_notes', '')
@@ -3304,6 +3314,7 @@ def api_save_service_data(request_id):
             meet_assist_val = form_data.get('arrival_meet_assist', 'no')
             arrival.meet_assist = meet_assist_val in ['yes', 'true', 'True', True, 1, '1', 'on']
             arrival.representative_name = form_data.get('arrival_representative_name', '')
+            arrival.status = form_data.get('arrival_status', 'REQUESTED')
             arrival.needs_transport = _parse_needs_transport(
                 form_data.get('arrival_needs_transport'), default=True
             )
@@ -3385,6 +3396,7 @@ def api_save_service_data(request_id):
             meet_assist_val = form_data.get('departure_meet_assist', 'no')
             departure.meet_assist = meet_assist_val in ['yes', 'true', 'True', True, 1, '1', 'on']
             departure.representative_name = form_data.get('departure_representative_name', '')
+            departure.status = form_data.get('departure_status', 'REQUESTED')
             departure.notes = form_data.get('departure_notes', '')
             departure.needs_transport = _parse_needs_transport(
                 form_data.get('departure_needs_transport'), default=True
@@ -5387,6 +5399,7 @@ def api_get_service_record(request_id, service_type, record_id):
                     'visa_status': record.visa_status or '',
                     'meet_assist': record.meet_assist or False,
                     'representative_name': record.representative_name or '',
+                    'status': record.status or 'REQUESTED',
                     'notes': getattr(record, 'notes', '') or '',
                     'supplier_id': record.supplier_id,
                     'needs_transport': True if nt is None else bool(nt),
@@ -5407,6 +5420,7 @@ def api_get_service_record(request_id, service_type, record_id):
                     'departure_tax': record.departure_tax or '',
                     'meet_assist': record.meet_assist or False,
                     'representative_name': record.representative_name or '',
+                    'status': record.status or 'REQUESTED',
                     'notes': getattr(record, 'notes', '') or '',
                     'supplier_id': record.supplier_id,
                     'needs_transport': True if nt is None else bool(nt),
@@ -5424,6 +5438,7 @@ def api_get_service_record(request_id, service_type, record_id):
                     'hotel_category': record.hotel_category or '',
                     'check_in_date': record.check_in_date.strftime('%Y-%m-%d') if record.check_in_date else '',
                     'check_out_date': record.check_out_date.strftime('%Y-%m-%d') if record.check_out_date else '',
+                    'cut_off_date': record.cut_off_date.strftime('%Y-%m-%d') if record.cut_off_date else '',
                     'nights': record.nights or 0,
                     'status': record.status or 'REQUESTED',
                     'meal_plan': record.meal_plan or 'BB',
@@ -5432,7 +5447,8 @@ def api_get_service_record(request_id, service_type, record_id):
                     'triple_rooms': record.triple_rooms or 0,
                     'notes': record.notes or '',
                     'hotel_confirmation_number': confirmation,
-                    'confirmation_email_filename': record.confirmation_email_filename or ''
+                    'confirmation_email_filename': record.confirmation_email_filename or '',
+                    'rooming_list_filename': record.rooming_list_filename or ''
                 }
 
         elif service_type == 'transport':
@@ -5446,6 +5462,7 @@ def api_get_service_record(request_id, service_type, record_id):
                     'service_date': record.date.strftime('%Y-%m-%d') if record.date else '',
                     'from_date': record.date.strftime('%Y-%m-%d') if record.date else '',
                     'to_date': to_date.strftime('%Y-%m-%d') if to_date else '',
+                    'cut_off_date': record.cut_off_date.strftime('%Y-%m-%d') if record.cut_off_date else '',
                     'vehicle_type': record.vehicle_type or '',
                     'pickup_point': record.pickup_location or '',
                     'drop_off_point': record.dropoff_location or '',
@@ -5490,6 +5507,7 @@ def api_get_service_record(request_id, service_type, record_id):
                     'id': record.id,
                     'service_date': record.date.strftime('%Y-%m-%d') if record.date else '',
                     'from_date': record.date.strftime('%Y-%m-%d') if record.date else '',
+                    'cut_off_date': record.cut_off_date.strftime('%Y-%m-%d') if record.cut_off_date else '',
                     'meal_type': record.meal_type or '',
                     'meal_status': record.status or 'REQUESTED',
                     'meal_cost': record.total_cost,
@@ -8158,7 +8176,7 @@ def _run_down_row(request_obj, service_date, description, status, pax, service_t
 
         time_display = '—'
         if service_time and hasattr(service_time, 'strftime'):
-            time_display = service_time.strftime('%I:%M %p').lstrip('0')
+            time_display = service_time.strftime('%H:%M')
 
         base_row.update({
             'group_name': group_name,
@@ -11943,4 +11961,132 @@ def get_confirmation_file(service_type, record_id):
         abort(404)
 
     return send_file(full_path, download_name=service.confirmation_email_filename)
+
+
+# ==================== Rooming List Attachment (hotel only) ====================
+# Mirrors the Confirmation Email attachment mechanism exactly, but stores into a
+# separate file slot (rooming_list_*) so a hotel can carry both attachments.
+
+@inbound_bp.route('/api/<service_type>/<int:record_id>/upload-rooming-list', methods=['POST'])
+@csrf.exempt
+def api_upload_rooming_list_file(service_type, record_id):
+    """Upload rooming list file for a hotel service"""
+
+    if service_type != 'hotel':
+        return jsonify({'success': False, 'error': 'Invalid service type'}), 400
+
+    try:
+        service = InboundHotel.query.get_or_404(record_id)
+    except Exception as e:
+        return jsonify({'success': False, 'error': 'Service record not found'}), 404
+
+    if 'file' not in request.files:
+        return jsonify({'success': False, 'error': 'No file provided'}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({'success': False, 'error': 'No file selected'}), 400
+
+    if not allowed_document_file(file.filename):
+        return jsonify({'success': False, 'error': 'File type not allowed'}), 400
+
+    try:
+        # Generate unique filename
+        original_filename = secure_filename(file.filename)
+        unique_filename = f"{uuid.uuid4().hex}_{original_filename}"
+
+        # Create upload directory
+        upload_folder = os.path.join('app', 'static', 'uploads', 'rooming_lists', service_type, str(record_id))
+        os.makedirs(upload_folder, exist_ok=True)
+
+        # Delete old file if it exists
+        if service.rooming_list_filepath:
+            old_path = os.path.join('app', 'static', service.rooming_list_filepath)
+            if os.path.exists(old_path):
+                try:
+                    os.remove(old_path)
+                except:
+                    pass  # Ignore errors deleting old file
+
+        # Save file
+        filepath = os.path.join(upload_folder, unique_filename)
+        file.save(filepath)
+
+        # Update service record
+        relative_filepath = f"uploads/rooming_lists/{service_type}/{record_id}/{unique_filename}"
+        service.rooming_list_filename = original_filename
+        service.rooming_list_filepath = relative_filepath
+        service.rooming_list_uploaded_at = datetime.utcnow()
+
+        db.session.flush()
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'File uploaded successfully',
+            'filename': original_filename,
+            'filepath': relative_filepath,
+            'uploaded_at': service.rooming_list_uploaded_at.strftime('%Y-%m-%d %H:%M') if service.rooming_list_uploaded_at else ''
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@inbound_bp.route('/api/<service_type>/<int:record_id>/delete-rooming-list', methods=['POST'])
+@csrf.exempt
+def api_delete_rooming_list_file(service_type, record_id):
+    """Delete rooming list file for a hotel service"""
+
+    if service_type != 'hotel':
+        return jsonify({'success': False, 'error': 'Invalid service type'}), 400
+
+    try:
+        service = InboundHotel.query.get_or_404(record_id)
+    except:
+        return jsonify({'success': False, 'error': 'Service record not found'}), 404
+
+    try:
+        # Delete file from filesystem
+        if service.rooming_list_filepath:
+            full_path = os.path.join('app', 'static', service.rooming_list_filepath)
+            if os.path.exists(full_path):
+                os.remove(full_path)
+
+        # Update service record
+        service.rooming_list_filename = None
+        service.rooming_list_filepath = None
+        service.rooming_list_uploaded_at = None
+
+        db.session.commit()
+
+        return jsonify({'success': True, 'message': 'File deleted successfully'})
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@inbound_bp.route('/api/<service_type>/<int:record_id>/rooming-list-file')
+def get_rooming_list_file(service_type, record_id):
+    """Get/download rooming list file"""
+
+    if service_type != 'hotel':
+        abort(400)
+
+    try:
+        service = InboundHotel.query.get_or_404(record_id)
+    except:
+        abort(404)
+
+    if not service.rooming_list_filepath:
+        abort(404)
+
+    full_path = os.path.join(current_app.static_folder, service.rooming_list_filepath)
+    if not os.path.exists(full_path):
+        abort(404)
+
+    return send_file(full_path, download_name=service.rooming_list_filename)
 

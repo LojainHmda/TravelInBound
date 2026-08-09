@@ -462,6 +462,7 @@ class InboundHotel(db.Model):
     hotel_category = db.Column(db.String(100), nullable=True)  # Custom admin-defined category
     check_in_date = db.Column(db.Date, nullable=False)
     check_out_date = db.Column(db.Date, nullable=False)
+    cut_off_date = db.Column(db.Date, nullable=True)  # Optional supplier cut-off/cancellation deadline
     nights = db.Column(db.Integer, nullable=False, default=1)
     room_type = db.Column(db.String(100), nullable=True)
     meal_plan = db.Column(db.String(50), nullable=True, default='BB')  # BB, HB, FB, AI
@@ -489,6 +490,11 @@ class InboundHotel(db.Model):
     confirmation_email_filename = db.Column(db.String(255), nullable=True)  # Original uploaded filename
     confirmation_email_filepath = db.Column(db.String(500), nullable=True)  # Relative path for serving
     confirmation_email_uploaded_at = db.Column(db.DateTime, nullable=True)
+
+    # Rooming List Attachment (same mechanism as Confirmation Email; separate file slot)
+    rooming_list_filename = db.Column(db.String(255), nullable=True)  # Original uploaded filename
+    rooming_list_filepath = db.Column(db.String(500), nullable=True)  # Relative path for serving
+    rooming_list_uploaded_at = db.Column(db.DateTime, nullable=True)
 
     # Relationships
     rooms = db.relationship('HotelRoom', backref='hotel', lazy=True, cascade='all, delete-orphan')
@@ -585,6 +591,7 @@ class InboundTransport(db.Model):
     # Transport details
     date = db.Column(db.Date, nullable=False)  # From Date
     end_date = db.Column(db.Date, nullable=True)  # To Date (for multi-day transport services)
+    cut_off_date = db.Column(db.Date, nullable=True)  # Optional supplier cut-off/cancellation deadline
     pax = db.Column(db.Integer, default=0)  # Passenger count
     vehicle_type = db.Column(db.String(100), nullable=True)
     supplier = db.Column(db.String(200), nullable=True)  # Legacy text field
@@ -665,6 +672,7 @@ class InboundMeal(db.Model):
     # Meal details
     date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=True)  # For multi-day meal packages
+    cut_off_date = db.Column(db.Date, nullable=True)  # Optional supplier cut-off/cancellation deadline
     meal_type = db.Column(db.String(50), nullable=True)  # Breakfast, Lunch, Dinner
     restaurant = db.Column(db.String(200), nullable=True)  # Legacy text field
     supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=True)  # FK to Supplier (Restaurant)
@@ -908,6 +916,7 @@ class ArrivalBatch(db.Model):
     visa_status = db.Column(db.String(50), default='NOT_INCLUDED')  # VISA_FREE, RESTRICTED, INCLUDED, NOT_INCLUDED
     meet_assist = db.Column(db.Boolean, default=False)  # Meet & Assist Yes/No
     representative_name = db.Column(db.String(200), nullable=True)  # Representative Name for Meet & Assist
+    status = db.Column(db.String(20), default='REQUESTED')  # Meet & Assist status: REQUESTED/CONFIRMED/WAITING_LIST/CANCELLED
     notes = db.Column(db.Text, nullable=True)  # Notes field
     supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=True)  # FK to Supplier (Ground handler)
     needs_transport = db.Column(db.Boolean, default=True)  # If True, saving creates/keeps a linked Transport stub
@@ -954,6 +963,7 @@ class DepartureBatch(db.Model):
     # NEW FIELDS for ARD 1
     meet_assist = db.Column(db.Boolean, default=False)  # Meet & Assist Yes/No
     representative_name = db.Column(db.String(200), nullable=True)  # Representative Name for Meet & Assist
+    status = db.Column(db.String(20), default='REQUESTED')  # Meet & Assist status: REQUESTED/CONFIRMED/WAITING_LIST/CANCELLED
     departure_tax = db.Column(db.String(50), default='NOT_INCLUDED')  # INCLUDED, NOT_INCLUDED, NONE
     notes = db.Column(db.Text, nullable=True)  # Notes field
     supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=True)  # FK to Supplier (Ground handler)

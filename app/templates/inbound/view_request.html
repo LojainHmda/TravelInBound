@@ -1176,7 +1176,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Time</label>
-                                    <input type="time" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_time" data-service="arrival">
+                                    <input type="text" placeholder="HH:MM" data-flatpickr class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_time" data-service="arrival">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Arrival Point *</label>
@@ -1225,6 +1225,15 @@ input[type="date"]::-webkit-calendar-table-body {
                                             <i class="fas fa-plus"></i>
                                         </button>
                                     </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Status</label>
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_status" data-service="arrival">
+                                        <option value="REQUESTED">Requested</option>
+                                        <option value="CONFIRMED">Confirmed</option>
+                                        <option value="WAITING_LIST">Waiting List</option>
+                                        <option value="CANCELLED">Cancelled</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mt-2">
@@ -1310,7 +1319,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Time</label>
-                                    <input type="time" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="departure_time" data-service="departure">
+                                    <input type="text" placeholder="HH:MM" data-flatpickr class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="departure_time" data-service="departure">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Departure Point *</label>
@@ -1358,6 +1367,15 @@ input[type="date"]::-webkit-calendar-table-body {
                                             <i class="fas fa-plus"></i>
                                         </button>
                                     </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Status</label>
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="departure_status" data-service="departure">
+                                        <option value="REQUESTED">Requested</option>
+                                        <option value="CONFIRMED">Confirmed</option>
+                                        <option value="WAITING_LIST">Waiting List</option>
+                                        <option value="CANCELLED">Cancelled</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mt-2">
@@ -1485,6 +1503,10 @@ input[type="date"]::-webkit-calendar-table-body {
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Check-out Date <span class="text-red-500">*</span></label>
                                     <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="hotel_check_out" value="" min="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" max="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="hotel" style="background-color: #ffffff !important; color: #1e293b !important;">
                                 </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Cut Off Date</label>
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="hotel_cut_off_date" value="" data-service="hotel" style="background-color: #ffffff !important; color: #1e293b !important;">
+                                </div>
                             </div>
                             <!-- Room Distribution with Tabs -->
                             <div class="mb-2">
@@ -1604,6 +1626,16 @@ input[type="date"]::-webkit-calendar-table-body {
                                     <button type="button" onclick="document.getElementById('hotel_confirmation_input').click()" class="px-3 py-1.5 border border-slate-300 bg-white text-slate-700 rounded text-xs font-medium hover:bg-slate-50">Choose File</button>
                                     <span id="hotel_file_display" style="font-size: 0.75rem; color: #64748b;">No file chosen</span>
                                     <button type="button" id="hotel_clear_btn" class="px-3 py-1.5 border border-slate-300 bg-white text-slate-700 rounded text-xs font-medium hidden hover:bg-slate-50" onclick="clearConfirmationFile('hotel')">Clear</button>
+                                </div>
+                            </div>
+                            <!-- Attach Rooming List -->
+                            <div class="mb-2">
+                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Attach Rooming List</label>
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <input type="file" id="hotel_rooming_input" style="display:none;" accept=".pdf,.png,.jpg,.jpeg,.gif,.doc,.docx,.xls,.xlsx,.txt" onchange="handleRoomingFileSelect(event, 'hotel')">
+                                    <button type="button" onclick="document.getElementById('hotel_rooming_input').click()" class="px-3 py-1.5 border border-slate-300 bg-white text-slate-700 rounded text-xs font-medium hover:bg-slate-50">Choose File</button>
+                                    <span id="hotel_rooming_display" style="font-size: 0.75rem; color: #64748b;">No file chosen</span>
+                                    <button type="button" id="hotel_rooming_clear_btn" class="px-3 py-1.5 border border-slate-300 bg-white text-slate-700 rounded text-xs font-medium hidden hover:bg-slate-50" onclick="clearRoomingFile('hotel')">Clear</button>
                                 </div>
                             </div>
                             <!-- Add/Save/Cancel Buttons -->
@@ -1783,6 +1815,10 @@ input[type="date"]::-webkit-calendar-table-body {
                                         <label class="block text-xs font-medium text-slate-600 mb-1">To Date <span class="text-red-500">*</span></label>
                                         <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_to_date" value="" min="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" max="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="transport" style="background-color: #ffffff !important; color: #1e293b !important;">
                                     </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-600 mb-1">Cut Off Date</label>
+                                        <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_cut_off_date" value="" data-service="transport" style="background-color: #ffffff !important; color: #1e293b !important;">
+                                    </div>
                                     <div class="col-span-6 lg:col-span-3 field-wrapper" data-field="transport_supplier">
                                         <label class="block text-xs font-medium text-slate-600 mb-1">
                                             Supplier <span class="text-red-500">*</span>
@@ -1931,6 +1967,10 @@ input[type="date"]::-webkit-calendar-table-body {
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Date <span class="text-red-500">*</span></label>
                                     <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 focus:border-amber-500" id="meal_from_date" value="" min="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" max="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="meal" style="background-color: #ffffff !important; color: #1e293b !important;">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Cut Off Date</label>
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 focus:border-amber-500" id="meal_cut_off_date" value="" data-service="meal" style="background-color: #ffffff !important; color: #1e293b !important;">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Meal Type</label>
@@ -5221,7 +5261,7 @@ function createServiceRowHtml(serviceType, entry) {
             return `
                 <tr class="hover:bg-slate-50" data-service-type="arrival" data-record-id="${entry.id}">
                     <td class="px-2 py-1.5 text-slate-700">${entry.arrival_date ? new Date(entry.arrival_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}</td>
-                    <td class="px-2 py-1.5 text-slate-500">${entry.arrival_time ? new Date('1970-01-01T' + entry.arrival_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+                    <td class="px-2 py-1.5 text-slate-500">${entry.arrival_time ? new Date('1970-01-01T' + entry.arrival_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-'}</td>
                     <td class="px-2 py-1.5 text-slate-700">${entry.arrival_point || '-'}</td>
                     <td class="px-2 py-1.5 text-slate-500">${entry.flight_number || '-'}</td>
                     <td class="px-2 py-1.5 text-slate-700 text-center">${entry.pax_count || 0}</td>
@@ -5242,7 +5282,7 @@ function createServiceRowHtml(serviceType, entry) {
             return `
                 <tr class="hover:bg-slate-50" data-service-type="departure" data-record-id="${entry.id}" data-departure-tax="${entry.departure_tax || 'NOT_INCLUDED'}">
                     <td class="px-2 py-1.5 text-slate-700">${entry.departure_date ? new Date(entry.departure_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}</td>
-                    <td class="px-2 py-1.5 text-slate-500">${entry.departure_time ? new Date('1970-01-01T' + entry.departure_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+                    <td class="px-2 py-1.5 text-slate-500">${entry.departure_time ? new Date('1970-01-01T' + entry.departure_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }) : '-'}</td>
                     <td class="px-2 py-1.5 text-slate-700">${entry.departure_point || '-'}</td>
                     <td class="px-2 py-1.5 text-slate-500">${entry.flight_number || '-'}</td>
                     <td class="px-2 py-1.5 text-slate-700 text-center">${entry.pax_count || 0}</td>
@@ -7746,6 +7786,7 @@ function populateServiceForm(serviceType, record) {
             'arrival_visa_status': record.visa_status,
             'arrival_meet_assist': record.meet_assist ? 'yes' : 'no',
             'arrival_representative_name': record.representative_name,
+            'arrival_status': record.status || 'REQUESTED',
             'arrival_notes': record.notes,
             'arrival_supplier': record.supplier_id,
             'arrival_needs_transport': (record.needs_transport === false || record.needs_transport === 'no') ? 'no' : 'yes'
@@ -7759,6 +7800,7 @@ function populateServiceForm(serviceType, record) {
             'departure_tax': record.departure_tax,
             'departure_meet_assist': record.meet_assist ? 'yes' : 'no',
             'departure_representative_name': record.representative_name,
+            'departure_status': record.status || 'REQUESTED',
             'departure_notes': record.notes,
             'departure_supplier': record.supplier_id,
             'departure_needs_transport': (record.needs_transport === false || record.needs_transport === 'no') ? 'no' : 'yes'
@@ -7847,8 +7889,8 @@ function populateServiceForm(serviceType, record) {
                 }
             } else {
                 field.value = value;
-                // Keep date picker UI in sync when loading existing records for edit.
-                if (field.type === 'date' && field._flatpickr) {
+                // Keep date/time picker UI in sync when loading existing records for edit.
+                if (field._flatpickr) {
                     field._flatpickr.setDate(value, false);
                     field._flatpickr.redraw();
                 }
@@ -7876,6 +7918,7 @@ function populateServiceForm(serviceType, record) {
     if (serviceType === 'hotel') {
         syncDateField('hotel_check_in', record.check_in_date);
         syncDateField('hotel_check_out', record.check_out_date);
+        syncDateField('hotel_cut_off_date', record.cut_off_date);
     }
 
     // Departure date inputs
@@ -7887,6 +7930,7 @@ function populateServiceForm(serviceType, record) {
     if (serviceType === 'transport') {
         syncDateField('transport_from_date', record.from_date || record.service_date);
         syncDateField('transport_to_date', record.to_date || record.service_date);
+        syncDateField('transport_cut_off_date', record.cut_off_date);
     }
 
     // Guide date inputs
@@ -7898,6 +7942,7 @@ function populateServiceForm(serviceType, record) {
     // Meal/Restaurant date inputs
     if (serviceType === 'meal') {
         syncDateField('meal_from_date', record.from_date || record.date || record.service_date);
+        syncDateField('meal_cut_off_date', record.cut_off_date);
 
         // When loading a meal for editing, populate the City dropdown based on the restaurant
         const restaurantNameOrId = record.restaurant_name || record.supplier_id;
@@ -7964,6 +8009,11 @@ function populateServiceForm(serviceType, record) {
     // Load confirmation email file if it exists (for hotel, transport, meal, arrival)
     if (['hotel', 'transport', 'meal', 'arrival'].includes(serviceType) && record.id) {
         loadExistingConfirmationFile(serviceType, record);
+    }
+
+    // Load rooming list file if it exists (hotel only)
+    if (serviceType === 'hotel' && record.id) {
+        loadExistingRoomingFile(serviceType, record);
     }
 
     // Keep the Attach Visa field visibility in sync with the loaded Visa Status
@@ -8598,6 +8648,19 @@ async function saveServiceData(serviceType) {
                 }
             } else {
                 console.log(`[saveServiceData] No pending file to upload for ${serviceType}`);
+            }
+
+            // Upload rooming list file if one is pending (hotel only)
+            if (serviceType === 'hotel' && pendingRoomingFiles[serviceType]) {
+                let roomingRecordId = data.hotel_id || data[`${serviceType}_id`] || data.id || wasEditRowId;
+                if (roomingRecordId) {
+                    const roomingUploadSuccess = await uploadRoomingFile(serviceType, roomingRecordId);
+                    if (!roomingUploadSuccess) {
+                        console.warn(`[saveServiceData] Rooming list upload failed for ${serviceType}`);
+                    }
+                } else {
+                    console.error(`[saveServiceData] Cannot upload rooming list - no recordId found!`);
+                }
             }
 
             // Hide floating cancel button and reset context immediately so it stays hidden
@@ -11903,7 +11966,7 @@ function createRoomListRow(roomNum, roomType, defaultAdults, roomData = {}) {
             <select class="room-type-select w-full px-2 py-1 border border-slate-200 rounded text-xs" data-field="room_type" title="Type">
                 <option value="Single" ${roomType === 'Single' ? 'selected' : ''}>Single</option>
                 <option value="Double" ${roomType === 'Double' ? 'selected' : ''}>Double</option>
-                <option value="Twin" ${roomType === 'Twin' ? 'selected' : ''}>Twin</option>
+                ${roomType === 'Twin' ? '<option value="Twin" selected>Twin</option>' : ''}
                 <option value="Triple" ${roomType === 'Triple' ? 'selected' : ''}>Triple</option>
                 <option value="Quadro" ${roomType === 'Quadro' ? 'selected' : ''}>Quadro</option>
             </select>
@@ -16006,6 +16069,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const arrivalDateInput = document.getElementById('arrival_date');
     const arrivalMeetAssistInput = document.getElementById('arrival_meet_assist');
     const arrivalRepresentativeNameInput = document.getElementById('arrival_representative_name');
+    const arrivalStatusInput = document.getElementById('arrival_status');
     const arrivalPaxCountInput = document.getElementById('arrival_pax_count');
     
     {% if request.arrival_batches and request.arrival_batches|length > 0 %}
@@ -16016,6 +16080,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (arrivalRepresentativeNameInput) {
         arrivalRepresentativeNameInput.value = '{{ first_arrival.representative_name or "" }}';
+    }
+    if (arrivalStatusInput) {
+        arrivalStatusInput.value = '{{ first_arrival.status or "REQUESTED" }}';
     }
     if (arrivalPaxCountInput) {
         // Use actual pax_count from database, not request.pax
@@ -16028,6 +16095,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const departureDateInput = document.getElementById('departure_date');
     const departureMeetAssistInput = document.getElementById('departure_meet_assist');
     const departureRepresentativeNameInput = document.getElementById('departure_representative_name');
+    const departureStatusInput = document.getElementById('departure_status');
     const departurePaxCountInput = document.getElementById('departure_pax_count');
     
     {% if request.departure_batches and request.departure_batches|length > 0 %}
@@ -16038,6 +16106,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (departureRepresentativeNameInput) {
         departureRepresentativeNameInput.value = '{{ first_departure.representative_name or "" }}';
+    }
+    if (departureStatusInput) {
+        departureStatusInput.value = '{{ first_departure.status or "REQUESTED" }}';
     }
     if (departurePaxCountInput) {
         // Use actual pax_count from database, not request.pax
@@ -16202,10 +16273,21 @@ function updateRequestStatus(status) {
 <script>
 // Initialize Flatpickr on all date inputs for consistent styling
 document.addEventListener('DOMContentLoaded', function() {
+    // Arrival/Departure flight time: use Flatpickr 24-hour time picker (native
+    // <input type="time"> renders AM/PM based on browser locale and can't be forced to 24h).
+    // dateFormat 'H:i' keeps the input value as 24h "HH:MM" — unchanged for read/save code.
+    ['arrival_time', 'departure_time'].forEach(function(id) {
+        const el = document.getElementById(id);
+        if (el && !el._flatpickr) {
+            flatpickr(el, { enableTime: true, noCalendar: true, dateFormat: 'H:i',
+                            time_24hr: true, allowInput: true, minuteIncrement: 1 });
+        }
+    });
+
     // Get all date inputs on the page
     const dateInputs = document.querySelectorAll('input[type="date"]');
     dateInputs.forEach(applyDateInputNoAutofill);
-    
+
     // Get the request date range from Request Details
     const fromDateInput = document.getElementById('fromDate');
     const toDateInput = document.getElementById('toDate');
@@ -16779,6 +16861,158 @@ function loadExistingConfirmationFile(serviceType, record) {
     }
 
     console.log(`[loadExistingConfirmationFile] SUCCESS - Loaded existing file for ${serviceType}: ${filename}`);
+}
+
+// ============ Rooming List File Upload Handlers (hotel) ============
+// Mirrors the Confirmation Email handlers exactly, but targets the separate
+// rooming_list_* slot via the /upload-rooming-list, /delete-rooming-list and
+// /rooming-list-file endpoints and the hotel_rooming_* DOM ids.
+
+let pendingRoomingFiles = { hotel: null };
+
+function handleRoomingFileSelect(event, serviceType) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    pendingRoomingFiles[serviceType] = file;
+
+    const displaySpan = document.getElementById(`${serviceType}_rooming_display`);
+    const clearBtn = document.getElementById(`${serviceType}_rooming_clear_btn`);
+
+    if (displaySpan) {
+        displaySpan.textContent = file.name;
+        displaySpan.style.cursor = 'pointer';
+        displaySpan.onclick = () => {
+            const url = URL.createObjectURL(file);
+            window.open(url, '_blank');
+        };
+    }
+    if (clearBtn) clearBtn.classList.remove('hidden');
+}
+
+async function clearRoomingFile(serviceType) {
+    const displaySpan = document.getElementById(`${serviceType}_rooming_display`);
+    const hasExistingFile = displaySpan && displaySpan.textContent !== 'No file chosen' && displaySpan.textContent.trim() !== '';
+
+    if (hasExistingFile && currentServiceContext.rowId) {
+        const deleted = await deleteRoomingFile(serviceType, currentServiceContext.rowId);
+        if (!deleted) return;  // Don't clear UI if delete failed
+    }
+
+    pendingRoomingFiles[serviceType] = null;
+
+    const fileInput = document.getElementById(`${serviceType}_rooming_input`);
+    if (fileInput) fileInput.value = '';
+
+    const clearBtn = document.getElementById(`${serviceType}_rooming_clear_btn`);
+    if (displaySpan) {
+        displaySpan.textContent = 'No file chosen';
+        displaySpan.style.cursor = 'default';
+        displaySpan.style.textDecoration = 'none';
+        displaySpan.style.color = '#64748b';
+        displaySpan.onclick = null;
+    }
+    if (clearBtn) clearBtn.classList.add('hidden');
+}
+
+async function uploadRoomingFile(serviceType, recordId) {
+    const file = pendingRoomingFiles[serviceType];
+    if (!file) return true;
+    if (!recordId) {
+        showNotification(`Error: Cannot upload file - record not found`, 'error');
+        return false;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const url = `/inbound/api/${serviceType}/${recordId}/upload-rooming-list`;
+        const response = await fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': window.csrfToken || '' }
+        });
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            pendingRoomingFiles[serviceType] = null;
+            const displaySpan = document.getElementById(`${serviceType}_rooming_display`);
+            const clearBtn = document.getElementById(`${serviceType}_rooming_clear_btn`);
+            if (displaySpan) {
+                displaySpan.textContent = file.name;
+                displaySpan.style.cursor = 'pointer';
+            }
+            if (clearBtn) clearBtn.style.display = 'block';
+            showNotification('Rooming list uploaded successfully', 'success');
+            return true;
+        } else {
+            const errorMsg = data?.error || `HTTP ${response.status}`;
+            showNotification(`Failed to upload rooming list: ${errorMsg}`, 'error');
+            return false;
+        }
+    } catch (error) {
+        showNotification(`Error uploading rooming list: ${error.message}`, 'error');
+        return false;
+    }
+}
+
+async function deleteRoomingFile(serviceType, recordId) {
+    try {
+        const response = await fetch(`/inbound/api/${serviceType}/${recordId}/delete-rooming-list`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': window.csrfToken || '',
+                'Content-Type': 'application/json'
+            }
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            const displaySpan = document.getElementById(`${serviceType}_rooming_display`);
+            const clearBtn = document.getElementById(`${serviceType}_rooming_clear_btn`);
+            if (displaySpan) {
+                displaySpan.textContent = 'No file chosen';
+                displaySpan.style.cursor = 'default';
+                displaySpan.style.textDecoration = 'none';
+                displaySpan.style.color = '#64748b';
+                displaySpan.onclick = null;
+            }
+            if (clearBtn) clearBtn.classList.add('hidden');
+            return true;
+        } else {
+            showNotification(`Failed to delete rooming list: ${data.error}`, 'error');
+            return false;
+        }
+    } catch (error) {
+        showNotification('Error deleting rooming list: ' + error.message, 'error');
+        return false;
+    }
+}
+
+function loadExistingRoomingFile(serviceType, record) {
+    const filename = record.rooming_list_filename;
+    if (!filename) return;
+
+    const displaySpan = document.getElementById(`${serviceType}_rooming_display`);
+    const clearBtn = document.getElementById(`${serviceType}_rooming_clear_btn`);
+
+    if (displaySpan) {
+        displaySpan.textContent = filename;
+        displaySpan.style.cursor = 'pointer';
+        displaySpan.onclick = async () => {
+            try {
+                const response = await fetch(`/inbound/api/${serviceType}/${record.id}/rooming-list-file`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                window.open(url, '_blank');
+            } catch (error) {
+                showNotification('Error opening file', 'error');
+            }
+        };
+    }
+    if (clearBtn) clearBtn.classList.remove('hidden');
 }
 
 // Initialize filter active states when page loads
