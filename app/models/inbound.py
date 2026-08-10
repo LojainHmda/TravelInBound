@@ -598,6 +598,7 @@ class InboundTransport(db.Model):
     supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=True)  # FK to Supplier
     driver_name = db.Column(db.String(200), nullable=True)  # Driver assigned to this transport
     driver_phone = db.Column(db.String(50), nullable=True)  # Driver phone number
+    license_number = db.Column(db.String(100), nullable=True)  # Vehicle / license plate number
     pickup_location = db.Column(db.String(200), nullable=True)  # Pickup point
     dropoff_location = db.Column(db.String(200), nullable=True)  # Drop-off point
     pickup_time = db.Column(db.Time, nullable=True)

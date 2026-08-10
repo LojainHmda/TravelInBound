@@ -230,6 +230,11 @@ def _run_schema_upgrades(app, db):
                     if 'cut_off_date' not in existing:
                         _add_col(_tbl, 'cut_off_date', 'DATE')
 
+            if 'inbound_transport' in tables:
+                existing = {c['name'] for c in inspector.get_columns('inbound_transport')}
+                if 'license_number' not in existing:
+                    _add_col('inbound_transport', 'license_number', 'VARCHAR(100)')
+
             for _tbl in ('arrival_batch', 'departure_batch'):
                 if _tbl in tables:
                     existing = {c['name'] for c in inspector.get_columns(_tbl)}

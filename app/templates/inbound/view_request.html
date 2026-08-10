@@ -1821,7 +1821,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                     </div>
                                     <div class="col-span-6 lg:col-span-3 field-wrapper" data-field="transport_supplier">
                                         <label class="block text-xs font-medium text-slate-600 mb-1">
-                                            Supplier <span class="text-red-500">*</span>
+                                            Supplier
                                         </label>
                                         <div class="flex gap-2">
                                             <select class="flex-1 px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_supplier" data-service="transport">
@@ -1881,8 +1881,8 @@ input[type="date"]::-webkit-calendar-table-body {
                             
                             <!-- Cost Section -->
                             <div class="mb-2">
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
-                                    <div class="col-span-2">
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-10 gap-3">
+                                    <div class="col-span-2 lg:col-span-4">
                                         <label class="block text-xs font-medium text-slate-600 mb-1">Cost</label>
                                         <div class="flex gap-2">
                                             <input type="number" class="flex-1 px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_cost" step="0.01" min="0" placeholder="0.00" data-service="transport">
@@ -1896,6 +1896,18 @@ input[type="date"]::-webkit-calendar-table-body {
                                                 <option value="EGP">EGP</option>
                                             </select>
                                         </div>
+                                    </div>
+                                    <div class="col-span-2">
+                                        <label class="block text-xs font-medium text-slate-600 mb-1">Driver Name</label>
+                                        <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_driver_name" placeholder="Driver name" data-service="transport">
+                                    </div>
+                                    <div class="col-span-2">
+                                        <label class="block text-xs font-medium text-slate-600 mb-1">Driver Phone</label>
+                                        <input type="tel" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_driver_phone" placeholder="e.g., +962 7 1234 5678" data-service="transport">
+                                    </div>
+                                    <div class="col-span-2">
+                                        <label class="block text-xs font-medium text-slate-600 mb-1">License Number</label>
+                                        <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_license_number" placeholder="Vehicle / license no." data-service="transport">
                                     </div>
                                 </div>
                             </div>
@@ -7826,6 +7838,7 @@ function populateServiceForm(serviceType, record) {
             'transport_dropoff': record.drop_off_point || record.dropoff_location,
             'transport_driver_name': record.driver_name,
             'transport_driver_phone': record.driver_phone,
+            'transport_license_number': record.license_number,
             'transport_notes': record.transport_notes || record.note || '',
             'transport_status': record.status,
             'transport_supplier': record.supplier_id,
@@ -14818,7 +14831,7 @@ async function openAdvanceExpenseSheet() {
     var paxField = document.querySelector('form#editMode input[name="pax"]') || document.querySelector('[name="pax"]');
     var reqPax = (paxField && paxField.value !== '') ? paxField.value
                : ((typeof requestPax !== 'undefined' ? requestPax : '') || '');
-    advanceExpenseSheetData = ADVANCE_EXPENSE_ITEMS.map((x, i) => ({ id: i, item: x.item || '', amount: x.amount === '' ? '' : x.amount, pax: '', checked: false, total: 0, itemLocked: !!(x.item && x.item.trim()), amountLocked: !(x.amount === '' || x.amount === undefined) }));
+    advanceExpenseSheetData = ADVANCE_EXPENSE_ITEMS.map((x, i) => ({ id: i, item: x.item || '', amount: x.amount === '' ? '' : x.amount, pax: '', checked: false, total: 0, itemLocked: !!(x.item && x.item.trim()), amountLocked: false }));
     var modal = document.getElementById('advanceExpenseSheetModal');
     var reqId = (modal && modal.getAttribute('data-request-id')) || (typeof requestId !== 'undefined' ? requestId : null);
     var fileEl = document.getElementById('advance_file');
@@ -14881,7 +14894,7 @@ async function openClosingGuidePaymentSheet() {
     var reqNum = (typeof currentRequestNumber !== 'undefined' && currentRequestNumber ? currentRequestNumber
                : (typeof requestNumber !== 'undefined' ? requestNumber : '')) || '';
     var reqPax = (typeof requestPax !== 'undefined' ? requestPax : '') || '';
-    closingGuidePaymentSheetData = CLOSING_GUIDE_ITEMS.map((x, i) => ({ id: i, item: x.item || '', amount: x.amount === '' ? '' : x.amount, pax: '', checked: false, total: 0, itemLocked: !!(x.item && x.item.trim()), amountLocked: !(x.amount === '' || x.amount === undefined) }));
+    closingGuidePaymentSheetData = CLOSING_GUIDE_ITEMS.map((x, i) => ({ id: i, item: x.item || '', amount: x.amount === '' ? '' : x.amount, pax: '', checked: false, total: 0, itemLocked: !!(x.item && x.item.trim()), amountLocked: false }));
     var modal = document.getElementById('closingGuidePaymentSheetModal');
     var reqId = (modal && modal.getAttribute('data-request-id')) || (typeof requestId !== 'undefined' ? requestId : null);
     var fileEl = document.getElementById('closing_file');
@@ -16288,6 +16301,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const dateInputs = document.querySelectorAll('input[type="date"]');
     dateInputs.forEach(applyDateInputNoAutofill);
 
+    // Cut Off Date fields are intentionally NOT bound to the trip date range —
+    // they may hold any date (before/after/outside the trip). Excluded from the
+    // generic service-date range restrictions below.
+    const CUTOFF_DATE_IDS = ['hotel_cut_off_date', 'transport_cut_off_date', 'meal_cut_off_date'];
+
     // Get the request date range from Request Details
     const fromDateInput = document.getElementById('fromDate');
     const toDateInput = document.getElementById('toDate');
@@ -16378,7 +16396,8 @@ document.addEventListener('DOMContentLoaded', function() {
         let maxDate = input.getAttribute('max') || null;
         
         // For service tab dates, use request date range if min/max not set
-        if (!isRequestDetailsDate && (!minDate || !maxDate)) {
+        // (Cut Off Date fields are excluded so they accept any date)
+        if (!isRequestDetailsDate && !CUTOFF_DATE_IDS.includes(input.id) && (!minDate || !maxDate)) {
             const range = getRequestDateRange();
             if (range.fromDate) minDate = range.fromDate;
             if (range.toDate) maxDate = range.toDate;
@@ -16439,6 +16458,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 prevArrow: '<i class="fas fa-chevron-left"></i>',
                 nextArrow: '<i class="fas fa-chevron-right"></i>',
                 onDayCreate: function(dObj, dStr, fp, dayElem) {
+                    // Cut Off Date pickers accept any date — never grey out / disable days
+                    if (CUTOFF_DATE_IDS.includes(input.id)) return;
                     // Get current request range
                     const range = getRequestDateRange();
                     const fromDate = range.fromDate ? new Date(range.fromDate) : null;
@@ -16551,6 +16572,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateServiceTabDatePickers() {
         const range = getRequestDateRange();
         dateInputs.forEach(function(input) {
+            // Cut Off Date fields are not range-bound — never re-apply min/max or reset them
+            if (CUTOFF_DATE_IDS.includes(input.id)) return;
             if (input.id !== 'fromDate' && input.id !== 'toDate' && input._flatpickr) {
                 // Check if this field has been user-selected - if so, don't override the value
                 const isUserSelected = input.getAttribute('data-user-selected') === 'true' || 

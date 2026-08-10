@@ -2858,7 +2858,7 @@ def api_save_service_data(request_id):
                 db.session.add(room)
 
         elif service_type == 'transport':
-            drv_phone = form_data.get('transport_phone', '').strip()
+            drv_phone = form_data.get('transport_driver_phone', '').strip()
             if drv_phone and not is_valid_phone(drv_phone):
                 return jsonify({'success': False, 'error': f'Driver phone: {PHONE_ERROR}'}), 400
             # Check if editing an existing transport record via row_id
@@ -2870,8 +2870,9 @@ def api_save_service_data(request_id):
                     transport.vehicle_type = form_data.get('transport_vehicle', '')
                     transport.pickup_location = form_data.get('transport_pickup', '')
                     transport.dropoff_location = form_data.get('transport_dropoff', '')
-                    transport.driver_name = form_data.get('transport_driver', '')
-                    transport.driver_phone = form_data.get('transport_phone', '')
+                    transport.driver_name = form_data.get('transport_driver_name', '')
+                    transport.driver_phone = form_data.get('transport_driver_phone', '')
+                    transport.license_number = form_data.get('transport_license_number', '')
                     transport.status = form_data.get('transport_status', STATUS_REQUEST)
                     transport.cost = float(form_data.get('transport_cost', 0) or 0)
                     transport.currency = form_data.get('transport_cost_currency', 'USD')
@@ -2929,8 +2930,9 @@ def api_save_service_data(request_id):
                 transport.vehicle_type = form_data.get('transport_vehicle', '')
                 transport.pickup_location = form_data.get('transport_pickup', '')
                 transport.dropoff_location = form_data.get('transport_dropoff', '')
-                transport.driver_name = form_data.get('transport_driver', '')
-                transport.driver_phone = form_data.get('transport_phone', '')
+                transport.driver_name = form_data.get('transport_driver_name', '')
+                transport.driver_phone = form_data.get('transport_driver_phone', '')
+                transport.license_number = form_data.get('transport_license_number', '')
                 transport.status = form_data.get('transport_status', 'REQUEST')
                 transport.cost = float(form_data.get('transport_cost', 0) or 0)
                 transport.currency = form_data.get('transport_cost_currency', 'USD')
@@ -5468,6 +5470,7 @@ def api_get_service_record(request_id, service_type, record_id):
                     'drop_off_point': record.dropoff_location or '',
                     'driver_name': record.driver_name or '',
                     'driver_phone': record.driver_phone or '',
+                    'license_number': record.license_number or '',
                     'transport_notes': record.note or '',
                     'status': record.status or 'REQUESTED',
                     'supplier_id': record.supplier_id,
