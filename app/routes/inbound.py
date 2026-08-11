@@ -2818,7 +2818,10 @@ def api_save_service_data(request_id):
                 hotel.double_rooms = sum(1 for r in room_list_data if r.get('room_type') in ['Double', 'Twin'])
                 hotel.triple_rooms = sum(1 for r in room_list_data if r.get('room_type') in ['Triple', 'Suite'])
             else:
-                # Use distribution counts to create rooms (without guest names)
+                # No explicit room_list was sent (e.g. the Room List tab was not
+                # opened before saving). Reconcile the existing rooms to match the
+                # distribution counts WITHOUT discarding already-entered detail
+                # (Room Category, Bed Type, Dietary Req, Note/Guest Names).
                 # Get room categories from distribution if provided
                 room_categories = data.get('room_categories', {})
                 sgl_category = room_categories.get('single', '')
@@ -2827,26 +2830,48 @@ def api_save_service_data(request_id):
 
                 total_rooms = hotel.single_rooms + hotel.double_rooms + hotel.triple_rooms
                 if total_rooms > 0:
-                    # Check if existing rooms match new distribution or categories changed
-                    existing_rooms = HotelRoom.query.filter_by(hotel_id=hotel.id).all()
-                    existing_count = len(existing_rooms)
+                    board_basis = form_data.get('hotel_board', 'BB')
 
-                    # Recreate if distribution changed OR if room categories were provided
-                    needs_recreate = existing_count != total_rooms or (sgl_category or dbl_category or trp_category)
-                    if needs_recreate:
-                        HotelRoom.query.filter_by(hotel_id=hotel.id).delete()
+                    def _room_bucket(room_type):
+                        if room_type == 'Single':
+                            return 'single'
+                        if room_type in ('Double', 'Twin', 'King'):
+                            return 'double'
+                        if room_type in ('Triple', 'Suite'):
+                            return 'triple'
+                        return 'other'
 
-                        # Create individual room records based on distribution
-                        board_basis = form_data.get('hotel_board', 'BB')
-                        for i in range(hotel.single_rooms):
-                            room = HotelRoom(hotel_id=hotel.id, room_type='Single', room_count=1, board_basis=board_basis, adults=1, room_category=sgl_category)
-                            db.session.add(room)
-                        for i in range(hotel.double_rooms):
-                            room = HotelRoom(hotel_id=hotel.id, room_type='Double', room_count=1, board_basis=board_basis, adults=2, room_category=dbl_category)
-                            db.session.add(room)
-                        for i in range(hotel.triple_rooms):
-                            room = HotelRoom(hotel_id=hotel.id, room_type='Triple', room_count=1, board_basis=board_basis, adults=3, room_category=trp_category)
-                            db.session.add(room)
+                    # Group existing rooms by distribution bucket, keeping the
+                    # earliest-created rooms first (they carry the entered detail).
+                    existing_rooms = HotelRoom.query.filter_by(hotel_id=hotel.id).order_by(HotelRoom.id).all()
+                    buckets = {'single': [], 'double': [], 'triple': [], 'other': []}
+                    for r in existing_rooms:
+                        buckets[_room_bucket(r.room_type)].append(r)
+
+                    # (bucket key, target count, default type, default adults, distribution category)
+                    reconcile_targets = [
+                        ('single', hotel.single_rooms, 'Single', 1, sgl_category),
+                        ('double', hotel.double_rooms, 'Double', 2, dbl_category),
+                        ('triple', hotel.triple_rooms, 'Triple', 3, trp_category),
+                    ]
+                    for bucket_key, target_count, default_type, default_adults, dist_category in reconcile_targets:
+                        rooms = buckets[bucket_key]
+                        # Remove only the surplus rooms beyond the new count
+                        for surplus in rooms[target_count:]:
+                            db.session.delete(surplus)
+                        # Apply a distribution-level category only when explicitly provided
+                        if dist_category:
+                            for room in rooms[:target_count]:
+                                room.room_category = dist_category
+                        # Add blank rooms only for the shortfall
+                        for _ in range(target_count - len(rooms)):
+                            db.session.add(HotelRoom(
+                                hotel_id=hotel.id, room_type=default_type, room_count=1,
+                                board_basis=board_basis, adults=default_adults,
+                                room_category=dist_category
+                            ))
+                    # Rooms in the 'other' bucket (e.g. manually added types) are
+                    # intentionally left untouched so their detail is preserved.
 
             # Save confirmation number to first room (hotel-level field in UI)
             confirmation = form_data.get('hotel_confirmation_number', '').strip()

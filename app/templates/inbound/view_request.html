@@ -1207,7 +1207,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Meet & Assist</label>
-                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_meet_assist" data-service="arrival">
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_meet_assist" data-service="arrival" onchange="updateMeetAssistStatusVisibility('arrival')">
                                         <option value="no">No</option>
                                         <option value="yes">Yes</option>
                                     </select>
@@ -1226,7 +1226,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                         </button>
                                     </div>
                                 </div>
-                                <div>
+                                <div id="arrival_status_wrapper">
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Status</label>
                                     <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_status" data-service="arrival">
                                         <option value="REQUESTED">Requested</option>
@@ -1349,7 +1349,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Meet & Assist</label>
-                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="departure_meet_assist" data-service="departure">
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="departure_meet_assist" data-service="departure" onchange="updateMeetAssistStatusVisibility('departure')">
                                         <option value="no">No</option>
                                         <option value="yes">Yes</option>
                                     </select>
@@ -1368,7 +1368,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                         </button>
                                     </div>
                                 </div>
-                                <div>
+                                <div id="departure_status_wrapper">
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Status</label>
                                     <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="departure_status" data-service="departure">
                                         <option value="REQUESTED">Requested</option>
@@ -1807,36 +1807,40 @@ input[type="date"]::-webkit-calendar-table-body {
                                     <span class="text-[10px] font-semibold text-slate-600 uppercase tracking-wide">Transport Details</span>
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
-                                    <div>
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">From Date <span class="text-red-500">*</span></label>
-                                        <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_from_date" value="" min="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" max="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="transport" style="background-color: #ffffff !important; color: #1e293b !important;">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">To Date <span class="text-red-500">*</span></label>
-                                        <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_to_date" value="" min="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" max="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="transport" style="background-color: #ffffff !important; color: #1e293b !important;">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Cut Off Date</label>
-                                        <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_cut_off_date" value="" data-service="transport" style="background-color: #ffffff !important; color: #1e293b !important;">
-                                    </div>
-                                    <div class="col-span-6 lg:col-span-3 field-wrapper" data-field="transport_supplier">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">
-                                            Supplier
-                                        </label>
-                                        <div class="flex gap-2">
-                                            <select class="flex-1 px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_supplier" data-service="transport">
-                                                <option value="">Select supplier...</option>
-                                                {% for supplier in transport_suppliers %}
-                                                <option value="{{ supplier.id }}">{{ supplier.name }}</option>
-                                                {% endfor %}
-                                                <optgroup label="──────────">
-                                                    <option value="__ADD_NEW__">+ Add New Transport...</option>
-                                                </optgroup>
-                                            </select>
-                                            <button type="button" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg text-slate-600" onclick="openAddTransportModal()" title="Add New Transport Supplier">
-                                                <i class="fas fa-plus"></i>
-                                            </button>
+                                    <div class="col-span-6">
+                                      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(3,minmax(0,1fr))_2fr] gap-3">
+                                        <div>
+                                            <label class="block text-xs font-medium text-slate-600 mb-1">From Date <span class="text-red-500">*</span></label>
+                                            <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_from_date" value="" min="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" max="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="transport" style="background-color: #ffffff !important; color: #1e293b !important;">
                                         </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-slate-600 mb-1">To Date <span class="text-red-500">*</span></label>
+                                            <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_to_date" value="" min="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" max="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="transport" style="background-color: #ffffff !important; color: #1e293b !important;">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-slate-600 mb-1">Cut Off Date</label>
+                                            <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_cut_off_date" value="" data-service="transport" style="background-color: #ffffff !important; color: #1e293b !important;">
+                                        </div>
+                                        <div class="field-wrapper" data-field="transport_supplier">
+                                            <label class="block text-xs font-medium text-slate-600 mb-1">
+                                                Supplier
+                                            </label>
+                                            <div class="flex gap-2">
+                                                <select class="flex-1 px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_supplier" data-service="transport">
+                                                    <option value="">Select supplier...</option>
+                                                    {% for supplier in transport_suppliers %}
+                                                    <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                                                    {% endfor %}
+                                                    <optgroup label="──────────">
+                                                        <option value="__ADD_NEW__">+ Add New Transport...</option>
+                                                    </optgroup>
+                                                </select>
+                                                <button type="button" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg text-slate-600" onclick="openAddTransportModal()" title="Add New Transport Supplier">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                      </div>
                                     </div>
                                     <div class="col-span-6 lg:col-span-3 field-wrapper" data-field="transport_vehicle">
                                         <label class="block text-xs font-medium text-slate-600 mb-1">
@@ -8032,6 +8036,11 @@ function populateServiceForm(serviceType, record) {
     // Keep the Attach Visa field visibility in sync with the loaded Visa Status
     if (serviceType === 'arrival') {
         updateArrivalVisaAttachmentVisibility();
+    }
+
+    // Keep the Status field visibility in sync with the loaded Meet & Assist value
+    if (serviceType === 'arrival' || serviceType === 'departure') {
+        updateMeetAssistStatusVisibility(serviceType);
     }
 }
 
@@ -16161,6 +16170,12 @@ document.addEventListener('DOMContentLoaded', function() {
         departurePaxCountInput.addEventListener('input', updateDeparturePaxInSummary);
         departurePaxCountInput.addEventListener('change', updateDeparturePaxInSummary);
     }
+
+    // Initialize Status field visibility based on the loaded Meet & Assist value
+    if (typeof updateMeetAssistStatusVisibility === 'function') {
+        updateMeetAssistStatusVisibility('arrival');
+        updateMeetAssistStatusVisibility('departure');
+    }
     
     const tableBody = document.getElementById('itineraryTableBody');
     const hasRows = tableBody && tableBody.querySelectorAll('tr[data-row-id]').length > 0;
@@ -16647,6 +16662,15 @@ function updateArrivalVisaAttachmentVisibility() {
     if (!wrap || !statusEl) return;
     const shouldShow = statusEl.value !== 'NOT_INCLUDED';
     wrap.classList.toggle('hidden', !shouldShow);
+}
+
+// Show the Status field only when Meet & Assist = Yes (Arrival & Departure)
+function updateMeetAssistStatusVisibility(service) {
+    const meetAssistEl = document.getElementById(`${service}_meet_assist`);
+    const statusWrapper = document.getElementById(`${service}_status_wrapper`);
+    if (!meetAssistEl || !statusWrapper) return;
+    const showStatus = meetAssistEl.value === 'yes';
+    statusWrapper.classList.toggle('hidden', !showStatus);
 }
 
 // Handle file selection from the file input
