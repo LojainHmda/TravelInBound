@@ -9,6 +9,7 @@
         {% if hotel.single_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Sgl:{{ hotel.single_rooms }}</span>{% endif %}
         {% if hotel.double_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Dbl:{{ hotel.double_rooms }}</span>{% endif %}
         {% if hotel.triple_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Tpl:{{ hotel.triple_rooms }}</span>{% endif %}
+        {% if hotel.quadro_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Qdr:{{ hotel.quadro_rooms }}</span>{% endif %}
     </td>
     <td class="text-center hotel-compact-col">{{ (hotel.rooms[0].confirmation if hotel.rooms else '') or '-' }}</td>
     <td class="text-center hotel-compact-col print-hide-status">

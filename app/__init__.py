@@ -247,6 +247,7 @@ def _run_schema_upgrades(app, db):
                     ('rooming_list_filename', 'VARCHAR(255)'),
                     ('rooming_list_filepath', 'VARCHAR(500)'),
                     ('rooming_list_uploaded_at', dt_type),
+                    ('quadro_rooms', 'INTEGER'),
                 ]:
                     if col not in existing:
                         _add_col('inbound_hotel', col, typ)

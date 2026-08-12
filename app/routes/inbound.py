@@ -2785,6 +2785,7 @@ def api_save_service_data(request_id):
             hotel.single_rooms = int(form_data.get('hotel_single_rooms', 0) or 0)
             hotel.double_rooms = int(form_data.get('hotel_double_rooms', 0) or 0)
             hotel.triple_rooms = int(form_data.get('hotel_triple_rooms', 0) or 0)
+            hotel.quadro_rooms = int(form_data.get('hotel_quadro_rooms', 0) or 0)
             hotel.notes = form_data.get('hotel_notes', '')
 
             # Flush to get hotel ID before creating rooms
@@ -2817,6 +2818,7 @@ def api_save_service_data(request_id):
                 hotel.single_rooms = sum(1 for r in room_list_data if r.get('room_type') == 'Single')
                 hotel.double_rooms = sum(1 for r in room_list_data if r.get('room_type') in ['Double', 'Twin'])
                 hotel.triple_rooms = sum(1 for r in room_list_data if r.get('room_type') in ['Triple', 'Suite'])
+                hotel.quadro_rooms = sum(1 for r in room_list_data if r.get('room_type') == 'Quadro')
             else:
                 # No explicit room_list was sent (e.g. the Room List tab was not
                 # opened before saving). Reconcile the existing rooms to match the
@@ -2828,7 +2830,7 @@ def api_save_service_data(request_id):
                 dbl_category = room_categories.get('double', '')
                 trp_category = room_categories.get('triple', '')
 
-                total_rooms = hotel.single_rooms + hotel.double_rooms + hotel.triple_rooms
+                total_rooms = hotel.single_rooms + hotel.double_rooms + hotel.triple_rooms + hotel.quadro_rooms
                 if total_rooms > 0:
                     board_basis = form_data.get('hotel_board', 'BB')
 
@@ -2839,12 +2841,14 @@ def api_save_service_data(request_id):
                             return 'double'
                         if room_type in ('Triple', 'Suite'):
                             return 'triple'
+                        if room_type == 'Quadro':
+                            return 'quadro'
                         return 'other'
 
                     # Group existing rooms by distribution bucket, keeping the
                     # earliest-created rooms first (they carry the entered detail).
                     existing_rooms = HotelRoom.query.filter_by(hotel_id=hotel.id).order_by(HotelRoom.id).all()
-                    buckets = {'single': [], 'double': [], 'triple': [], 'other': []}
+                    buckets = {'single': [], 'double': [], 'triple': [], 'quadro': [], 'other': []}
                     for r in existing_rooms:
                         buckets[_room_bucket(r.room_type)].append(r)
 
@@ -2853,6 +2857,7 @@ def api_save_service_data(request_id):
                         ('single', hotel.single_rooms, 'Single', 1, sgl_category),
                         ('double', hotel.double_rooms, 'Double', 2, dbl_category),
                         ('triple', hotel.triple_rooms, 'Triple', 3, trp_category),
+                        ('quadro', hotel.quadro_rooms, 'Quadro', 4, ''),
                     ]
                     for bucket_key, target_count, default_type, default_adults, dist_category in reconcile_targets:
                         rooms = buckets[bucket_key]
@@ -5472,6 +5477,7 @@ def api_get_service_record(request_id, service_type, record_id):
                     'single_rooms': record.single_rooms or 0,
                     'double_rooms': record.double_rooms or 0,
                     'triple_rooms': record.triple_rooms or 0,
+                    'quadro_rooms': record.quadro_rooms or 0,
                     'notes': record.notes or '',
                     'hotel_confirmation_number': confirmation,
                     'confirmation_email_filename': record.confirmation_email_filename or '',

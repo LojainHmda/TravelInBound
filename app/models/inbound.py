@@ -471,6 +471,7 @@ class InboundHotel(db.Model):
     single_rooms = db.Column(db.Integer, default=0)
     double_rooms = db.Column(db.Integer, default=0)
     triple_rooms = db.Column(db.Integer, default=0)
+    quadro_rooms = db.Column(db.Integer, default=0)
     notes = db.Column(db.Text, nullable=True)
     voucher_notes = db.Column(db.Text, nullable=True)  # Notes specific to voucher (separate from hotel notes)
 

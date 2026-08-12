@@ -1539,6 +1539,10 @@ input[type="date"]::-webkit-calendar-table-body {
                                                 <span class="text-xs text-slate-500">TRP</span>
                                                 <input type="number" class="w-10 px-1 py-0.5 border border-slate-300 rounded text-xs text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_triple_rooms" min="0" value="0" data-service="hotel" oninput="updateRoomCapacity()">
                                             </div>
+                                            <div class="flex items-center gap-1">
+                                                <span class="text-xs text-slate-500">Quadro</span>
+                                                <input type="number" class="w-10 px-1 py-0.5 border border-slate-300 rounded text-xs text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_quadro_rooms" min="0" value="0" data-service="hotel" oninput="updateRoomCapacity()">
+                                            </div>
                                         </div>
                                         <!-- PAX + Capacity Display -->
                                         <div class="flex items-center gap-3">
@@ -2272,6 +2276,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                                     {% if hotel.single_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Sgl:{{ hotel.single_rooms }}</span>{% endif %}
                                                     {% if hotel.double_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Dbl:{{ hotel.double_rooms }}</span>{% endif %}
                                                     {% if hotel.triple_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Tpl:{{ hotel.triple_rooms }}</span>{% endif %}
+                                                    {% if hotel.quadro_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Qdr:{{ hotel.quadro_rooms }}</span>{% endif %}
                                                 </td>
                                                 <td class="text-center hotel-compact-col">{{ (hotel.rooms[0].confirmation if hotel.rooms else '') or '-' }}</td>
                                                 <td class="text-center hotel-compact-col print-hide-status">
@@ -2921,8 +2926,8 @@ input[type="date"]::-webkit-calendar-table-body {
                             <th class="border border-black px-2 py-1">Check Out</th>
                             <th class="border border-black px-2 py-1">SGL</th>
                             <th class="border border-black px-2 py-1">DBL</th>
-                            <th class="border border-black px-2 py-1">TWN</th>
                             <th class="border border-black px-2 py-1">TRPL</th>
+                            <th class="border border-black px-2 py-1">Quadro</th>
                             <th class="border border-black px-2 py-1">OTHER</th>
                             <th class="border border-black px-2 py-1" style="width: 18%;">Note</th>
                         </tr>
@@ -2935,8 +2940,8 @@ input[type="date"]::-webkit-calendar-table-body {
                             <td class="border border-black px-2 py-1">{{ hotel.check_out_date.strftime('%d %b %Y') if hotel.check_out_date else '-' }}</td>
                             <td class="border border-black px-2 py-1">{{ hotel.single_rooms or 0 }}</td>
                             <td class="border border-black px-2 py-1">{{ hotel.double_rooms or 0 }}</td>
-                            <td class="border border-black px-2 py-1">0</td>
                             <td class="border border-black px-2 py-1">{{ hotel.triple_rooms or 0 }}</td>
+                            <td class="border border-black px-2 py-1">{{ hotel.quadro_rooms or 0 }}</td>
                             <td class="border border-black px-2 py-1">0</td>
                             <td class="border border-black px-2 py-1" style="white-space: normal; overflow-wrap: anywhere; word-break: break-word;">{{ hotel.notes or '&nbsp;'|safe }}</td>
                         </tr>
@@ -3011,6 +3016,7 @@ input[type="date"]::-webkit-calendar-table-body {
                 sgl: {{ hotel.single_rooms or 0 }},
                 dbl: {{ hotel.double_rooms or 0 }},
                 trpl: {{ hotel.triple_rooms or 0 }},
+                quadro: {{ hotel.quadro_rooms or 0 }},
                 notes: "{{ (hotel.notes or '-') | e }}",
                 voucherNotes: "{{ (hotel.voucher_notes or '-') | e }}",
                 roomList: [
@@ -3023,7 +3029,7 @@ input[type="date"]::-webkit-calendar-table-body {
                         dietaryRequirements: "{{ (room.dietary_requirements or '-') | e }}",
                         adults: {{ room.adults or 0 }},
                         children: {{ room.children or 0 }},
-                        roomNote: "{{ (room.guest_names or '-') | e }}"
+                        roomNote: {{ (room.guest_names or '') | tojson }}
                     }{% if not loop.last %},{% endif %}
                     {% endfor %}
                 ]
@@ -3048,6 +3054,26 @@ input[type="date"]::-webkit-calendar-table-body {
 {% set title_text = 'Add New Guide' %}
 {% set submit_label = 'Add Guide' %}
 {% include 'components/shared_guide_popup.html' %}
+
+<!-- Guest Names Modal (Room List Note column) -->
+<div id="guestNamesModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+        <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+            <h3 class="font-semibold text-sm flex items-center gap-2">
+                <i class="fas fa-user-friends text-slate-400"></i>
+                Guest Names <span class="text-slate-400">&mdash;</span> <span id="guestNamesModalType">Room</span>
+            </h3>
+            <button type="button" onclick="closeGuestNamesModal()" class="text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="guestNamesModalBody" class="p-4 space-y-2 max-h-80 overflow-y-auto"></div>
+        <div class="px-4 py-3 border-t border-slate-200 flex justify-end gap-2">
+            <button type="button" onclick="closeGuestNamesModal()" class="px-3 py-1.5 text-xs rounded border border-slate-300 text-slate-600 hover:bg-slate-100">Cancel</button>
+            <button type="button" onclick="saveGuestNamesModal()" class="px-3 py-1.5 text-xs rounded bg-blue-600 text-white hover:bg-blue-700">Done</button>
+        </div>
+    </div>
+</div>
 
 <!-- Room Distribution Details Modal -->
 <div id="roomDistributionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center">
@@ -3899,7 +3925,7 @@ const hotelRoomsData = {
             dietary_requirements: "{{ room.dietary_requirements or '' }}",
             adults: {{ room.adults or 1 }},
             children: {{ room.children or 0 }},
-            guest_names: "{{ room.guest_names or '' }}"
+            guest_names: {{ (room.guest_names or '') | tojson }}
         }{% if not loop.last %},{% endif %}
         {% endfor %}
     ]{% if not loop.last %},{% endif %}
@@ -5258,6 +5284,7 @@ function createServiceRowHtml(serviceType, entry) {
                         ${entry.single_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Sgl:${entry.single_rooms}</span>` : ''}
                         ${entry.double_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Dbl:${entry.double_rooms}</span>` : ''}
                         ${entry.triple_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Tpl:${entry.triple_rooms}</span>` : ''}
+                        ${entry.quadro_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Qdr:${entry.quadro_rooms}</span>` : ''}
                     </td>
                     <td class="text-center hotel-compact-col">${confirmation}</td>
                     <td class="text-center hotel-compact-col print-hide-status">
@@ -7594,9 +7621,11 @@ function clearServiceFormFields(serviceType) {
         const sglField = document.getElementById('hotel_single_rooms');
         const dblField = document.getElementById('hotel_double_rooms');
         const trpField = document.getElementById('hotel_triple_rooms');
+        const qdrField = document.getElementById('hotel_quadro_rooms');
         if (sglField) sglField.value = 0;
         if (dblField) dblField.value = 0;
         if (trpField) trpField.value = 0;
+        if (qdrField) qdrField.value = 0;
         // Update capacity display
         if (typeof calculateTotalGuests === 'function') {
             calculateTotalGuests();
@@ -7830,6 +7859,7 @@ function populateServiceForm(serviceType, record) {
             'hotel_single_rooms': record.single_rooms,
             'hotel_double_rooms': record.double_rooms,
             'hotel_triple_rooms': record.triple_rooms,
+            'hotel_quadro_rooms': record.quadro_rooms,
             'hotel_status': record.status,
             'hotel_notes': record.notes,
             'hotel_confirmation_number': record.hotel_confirmation_number || (record.rooms && record.rooms[0] && record.rooms[0].confirmation) || ''
@@ -8833,9 +8863,11 @@ async function saveServiceData(serviceType) {
                     const sglField = document.getElementById('hotel_single_rooms');
                     const dblField = document.getElementById('hotel_double_rooms');
                     const trpField = document.getElementById('hotel_triple_rooms');
+                    const qdrField = document.getElementById('hotel_quadro_rooms');
                     if (sglField) sglField.value = 0;
                     if (dblField) dblField.value = 0;
                     if (trpField) trpField.value = 0;
+                    if (qdrField) qdrField.value = 0;
                     // Update capacity display
                     calculateTotalGuests();
                     // Reset room list tab
@@ -9563,6 +9595,7 @@ function createSummaryRowHtml(serviceType, entry) {
                         ${entry.single_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Sgl:${entry.single_rooms}</span>` : ''}
                         ${entry.double_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Dbl:${entry.double_rooms}</span>` : ''}
                         ${entry.triple_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Tpl:${entry.triple_rooms}</span>` : ''}
+                        ${entry.quadro_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">Qdr:${entry.quadro_rooms}</span>` : ''}
                     </td>
                     <td class="text-center hotel-compact-col">${hotelConfirmation}</td>
                     <td class="text-center hotel-compact-col print-hide-status">
@@ -11873,6 +11906,7 @@ function roomTypeGroup(roomType) {
     if (roomType === 'Single') return 'Single';
     if (['Double', 'Twin', 'King'].includes(roomType)) return 'Double';
     if (['Triple', 'Suite'].includes(roomType)) return 'Triple';
+    if (roomType === 'Quadro') return 'Quadro';
     return 'Extra'; // e.g. manually added Free rooms
 }
 
@@ -11886,25 +11920,26 @@ function generateRoomListRows() {
     const sgl = parseInt(document.getElementById('hotel_single_rooms')?.value) || 0;
     const dbl = parseInt(document.getElementById('hotel_double_rooms')?.value) || 0;
     const trp = parseInt(document.getElementById('hotel_triple_rooms')?.value) || 0;
-    const totalRooms = sgl + dbl + trp;
+    const qdr = parseInt(document.getElementById('hotel_quadro_rooms')?.value) || 0;
+    const totalRooms = sgl + dbl + trp + qdr;
 
     // Rows currently in the DOM carry the latest user edits
     const domRooms = getRoomListData();
-    const pools = { Single: [], Double: [], Triple: [], Extra: [] };
+    const pools = { Single: [], Double: [], Triple: [], Quadro: [], Extra: [] };
     domRooms.forEach(r => pools[roomTypeGroup(r.room_type)].push(r));
 
     // Don't regenerate if rendered rows already match the distribution (keeps manual per-row edits)
     if (domRooms.length > 0 &&
-        pools.Single.length === sgl && pools.Double.length === dbl && pools.Triple.length === trp) {
+        pools.Single.length === sgl && pools.Double.length === dbl && pools.Triple.length === trp && pools.Quadro.length === qdr) {
         return;
     }
 
     // Top up each bucket with saved room data for the hotel being edited,
     // so already-entered details survive count changes
     const savedRooms = (currentEditingHotelId && hotelRoomsData[currentEditingHotelId]) ? hotelRoomsData[currentEditingHotelId] : [];
-    const savedPools = { Single: [], Double: [], Triple: [], Extra: [] };
+    const savedPools = { Single: [], Double: [], Triple: [], Quadro: [], Extra: [] };
     savedRooms.forEach(r => savedPools[roomTypeGroup(r.room_type)].push(r));
-    ['Single', 'Double', 'Triple'].forEach(group => {
+    ['Single', 'Double', 'Triple', 'Quadro'].forEach(group => {
         if (pools[group].length < savedPools[group].length) {
             pools[group] = pools[group].concat(savedPools[group].slice(pools[group].length));
         }
@@ -11937,6 +11972,7 @@ function generateRoomListRows() {
     buildGroup(sgl, 'Single', 'Single', 1);
     buildGroup(dbl, 'Double', 'Double', 2);
     buildGroup(trp, 'Triple', 'Triple', 3);
+    buildGroup(qdr, 'Quadro', 'Quadro', 4);
     // Keep rows that don't belong to any distribution bucket (e.g. Free rooms)
     pools.Extra.forEach(roomData => {
         container.appendChild(createRoomListRow(roomNum++, roomData.room_type || 'Free', roomData.adults || 0, roomData));
@@ -11985,7 +12021,7 @@ function createRoomListRow(roomNum, roomType, defaultAdults, roomData = {}) {
     row.innerHTML = `
         <td class="border border-slate-300 px-2 py-1.5 text-center font-medium room-num-cell">${roomNum}</td>
         <td class="border border-slate-300 px-2 py-1.5">
-            <select class="room-type-select w-full px-2 py-1 border border-slate-200 rounded text-xs" data-field="room_type" title="Type">
+            <select class="room-type-select w-full px-2 py-1 border border-slate-200 rounded text-xs" data-field="room_type" title="Type" onchange="onRoomTypeChanged(this)">
                 <option value="Single" ${roomType === 'Single' ? 'selected' : ''}>Single</option>
                 <option value="Double" ${roomType === 'Double' ? 'selected' : ''}>Double</option>
                 ${roomType === 'Twin' ? '<option value="Twin" selected>Twin</option>' : ''}
@@ -12050,9 +12086,13 @@ function createRoomListRow(roomNum, roomType, defaultAdults, roomData = {}) {
             <input type="number" class="w-12 px-1 py-1 border border-slate-200 rounded text-xs text-center" 
                    data-field="children" value="${children}" min="0" max="6" title="Children">
         </td>
-        <td class="border border-slate-300 px-2 py-1.5">
-            <input type="text" class="w-full px-2 py-1 border border-slate-200 rounded text-xs" 
-                   data-field="guest_names" value="${guestNames}" placeholder="Lead passenger" title="Lead Passenger">
+        <td class="border border-slate-300 px-2 py-1.5 text-center">
+            <input type="hidden" data-field="guest_names">
+            <button type="button" onclick="openGuestNamesModal(this)"
+                    class="guest-names-control inline-flex items-center gap-1 px-2 py-1 border border-slate-200 rounded text-xs hover:bg-slate-50" title="Guest names">
+                <i class="fas fa-user-friends text-slate-400"></i>
+                <span class="guest-names-count">0/0</span>
+            </button>
         </td>
         <td class="border border-slate-300 px-2 py-1.5 text-center">
             <button type="button" onclick="removeRoomListRow(this)" class="w-6 h-6 rounded hover:bg-red-100 text-slate-400 hover:text-red-500 inline-flex items-center justify-center">
@@ -12060,7 +12100,13 @@ function createRoomListRow(roomNum, roomType, defaultAdults, roomData = {}) {
             </button>
         </td>
     `;
-    
+
+    // Set guest names on the hidden input as a JS property (handles quotes/newlines
+    // safely) and initialize the Note-column "filled/total" count.
+    const gnInput = row.querySelector('[data-field="guest_names"]');
+    if (gnInput) gnInput.value = guestNames;
+    updateGuestNamesCount(row);
+
     return row;
 }
 
@@ -12073,6 +12119,87 @@ function getGuestCountForRoomType(roomType) {
         case 'Suite': return 2;
         default: return 2;
     }
+}
+
+// ---- Room List guest-names (Note column) --------------------------------
+// Capacity is strictly by room type. Anything other/unknown/legacy (incl. old
+// saved Twin rows or manually added rows) falls back to 2 — never 0.
+function guestCapacityForType(roomType) {
+    switch (roomType) {
+        case 'Single': return 1;
+        case 'Double': return 2;
+        case 'Triple': return 3;
+        case 'Quadro': return 4;
+        default: return 2;
+    }
+}
+function parseGuestNames(raw) { return String(raw || '').split('\n'); }
+function guestFilledCount(raw) { return parseGuestNames(raw).filter(n => n.trim() !== '').length; }
+function updateGuestNamesCount(row) {
+    if (!row) return;
+    const hidden = row.querySelector('[data-field="guest_names"]');
+    const type = row.querySelector('[data-field="room_type"]')?.value || row.dataset.roomType || 'Double';
+    const span = row.querySelector('.guest-names-count');
+    if (span) span.textContent = `${guestFilledCount(hidden ? hidden.value : '')}/${guestCapacityForType(type)}`;
+}
+function onRoomTypeChanged(sel) {
+    const row = sel.closest('.room-list-row');
+    if (row) { row.dataset.roomType = sel.value; updateGuestNamesCount(row); }
+}
+// Voucher rendering: names stacked one per line, NO numbering, empty -> '' (empty cell)
+function renderGuestNameLines(raw, escapeHtml) {
+    return parseGuestNames(raw).map(n => n.trim()).filter(Boolean).map(escapeHtml).join('<br>');
+}
+
+// ---- Guest Names popup (Room List Note column) --------------------------
+let activeGuestNamesRow = null;
+function openGuestNamesModal(btn) {
+    const row = btn.closest('.room-list-row');
+    if (!row) return;
+    activeGuestNamesRow = row;
+    const type = row.querySelector('[data-field="room_type"]')?.value || row.dataset.roomType || 'Double';
+    const capacity = guestCapacityForType(type);
+    const hidden = row.querySelector('[data-field="guest_names"]');
+    const names = parseGuestNames(hidden ? hidden.value : '');
+    const escapeAttr = (s) => String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    const typeEl = document.getElementById('guestNamesModalType');
+    if (typeEl) typeEl.textContent = type;
+
+    let fieldsHtml = '';
+    for (let i = 1; i <= capacity; i++) {
+        const val = escapeAttr(names[i - 1] || '');
+        fieldsHtml += `
+            <div class="flex items-center gap-2">
+                <label class="w-16 text-xs text-slate-500 flex-shrink-0">Guest ${i}</label>
+                <input type="text" class="guest-name-field flex-1 min-w-0 px-2 py-1 border border-slate-200 rounded text-xs"
+                       data-guest-index="${i}" value="${val}" placeholder="Guest ${i} name">
+            </div>`;
+    }
+    const body = document.getElementById('guestNamesModalBody');
+    if (body) body.innerHTML = fieldsHtml;
+
+    const modal = document.getElementById('guestNamesModal');
+    if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+    const first = document.querySelector('#guestNamesModalBody .guest-name-field');
+    if (first) first.focus();
+}
+function saveGuestNamesModal() {
+    if (activeGuestNamesRow) {
+        const fields = document.querySelectorAll('#guestNamesModalBody .guest-name-field');
+        const names = Array.from(fields).map(f => f.value.trim());
+        // Positional join; drop trailing blank lines so all-empty stores as ''
+        const value = names.join('\n').replace(/\n+$/, '');
+        const hidden = activeGuestNamesRow.querySelector('[data-field="guest_names"]');
+        if (hidden) hidden.value = value;
+        updateGuestNamesCount(activeGuestNamesRow);
+    }
+    closeGuestNamesModal();
+}
+function closeGuestNamesModal() {
+    const modal = document.getElementById('guestNamesModal');
+    if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+    activeGuestNamesRow = null;
 }
 
 function updateGuestFields(selectEl) {
@@ -12186,10 +12313,11 @@ function calculateTotalGuests() {
     const singleRooms = parseInt(document.getElementById('hotel_single_rooms')?.value) || 0;
     const doubleRooms = parseInt(document.getElementById('hotel_double_rooms')?.value) || 0;
     const tripleRooms = parseInt(document.getElementById('hotel_triple_rooms')?.value) || 0;
+    const quadroRooms = parseInt(document.getElementById('hotel_quadro_rooms')?.value) || 0;
     const otherRooms = parseInt(document.getElementById('hotel_other_rooms')?.value) || 0;
     const otherCapacity = parseInt(document.getElementById('hotel_other_capacity')?.value) || 1;
-    
-    const totalGuests = (singleRooms * 1) + (doubleRooms * 2) + (tripleRooms * 3) + (otherRooms * otherCapacity);
+
+    const totalGuests = (singleRooms * 1) + (doubleRooms * 2) + (tripleRooms * 3) + (quadroRooms * 4) + (otherRooms * otherCapacity);
     
     const totalGuestsEl = document.getElementById('hotel_total_guests');
     const capacityNote = document.getElementById('room-capacity-note');
@@ -12235,7 +12363,7 @@ function initializeRoomWizard() {
     calculateTotalGuests();
 }
 
-['hotel_single_rooms', 'hotel_double_rooms', 'hotel_triple_rooms', 'hotel_other_rooms', 'hotel_other_capacity'].forEach(id => {
+['hotel_single_rooms', 'hotel_double_rooms', 'hotel_triple_rooms', 'hotel_quadro_rooms', 'hotel_other_rooms', 'hotel_other_capacity'].forEach(id => {
     const field = document.getElementById(id);
     if (field) {
         field.addEventListener('input', calculateTotalGuests);
@@ -12244,7 +12372,7 @@ function initializeRoomWizard() {
 });
 
 // Keep the Room List in sync with the Distribution counts while its tab is visible
-['hotel_single_rooms', 'hotel_double_rooms', 'hotel_triple_rooms'].forEach(id => {
+['hotel_single_rooms', 'hotel_double_rooms', 'hotel_triple_rooms', 'hotel_quadro_rooms'].forEach(id => {
     const field = document.getElementById(id);
     if (field) {
         field.addEventListener('input', () => {
@@ -13991,6 +14119,7 @@ function syncHotelVoucherDataFromTable() {
             hotel.sgl = parseInt((roomsHtml.match(/Sgl:(\d+)/) || [null, '0'])[1], 10) || 0;
             hotel.dbl = parseInt((roomsHtml.match(/Dbl:(\d+)/) || [null, '0'])[1], 10) || 0;
             hotel.trpl = parseInt((roomsHtml.match(/Tpl:(\d+)/) || [null, '0'])[1], 10) || 0;
+            hotel.quadro = parseInt((roomsHtml.match(/Qdr:(\d+)/) || [null, '0'])[1], 10) || 0;
         }
     });
 }
@@ -14003,10 +14132,27 @@ function getHotelVoucherRoomListForHotel(hotel) {
     return Array.isArray(hotel.roomList) ? hotel.roomList : [];
 }
 
+// Display-only sort for the voucher's Room List (Type) table:
+// Single, Double, Triple, Quadro, then any other type. Stable within each
+// group (keeps current order) and returns a NEW array — never mutates the
+// stored room data.
+function sortHotelVoucherRoomList(rooms) {
+    if (!Array.isArray(rooms)) return [];
+    const typeOrder = { 'Single': 0, 'Double': 1, 'Triple': 2, 'Quadro': 3 };
+    const rankOf = (r) => {
+        const t = (r.room_type || r.roomType || '').trim();
+        return (typeOrder[t] !== undefined) ? typeOrder[t] : 4;
+    };
+    return rooms
+        .map((room, i) => [room, i])                       // decorate with original index
+        .sort((a, b) => (rankOf(a[0]) - rankOf(b[0])) || (a[1] - b[1]))  // group, then keep order
+        .map(pair => pair[0]);
+}
+
 function renderHotelVoucherRoomListPreview(targetHotel) {
     const tbody = document.getElementById('hotelVoucherRoomListTbody');
     if (!tbody) return;
-    const roomList = getHotelVoucherRoomListForHotel(targetHotel);
+    const roomList = sortHotelVoucherRoomList(getHotelVoucherRoomListForHotel(targetHotel));
     const escapeHtml = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     if (!roomList.length) {
         tbody.innerHTML = '<tr><td colspan="8" class="border border-black px-2 py-2 text-center">No room list details</td></tr>';
@@ -14020,7 +14166,7 @@ function renderHotelVoucherRoomListPreview(targetHotel) {
         <td class="border border-black px-2 py-1">${escapeHtml(room.dietary_requirements || room.dietaryRequirements || '-')}</td>
         <td class="border border-black px-2 py-1">${room.adults || 0}</td>
         <td class="border border-black px-2 py-1">${room.children || 0}</td>
-        <td class="border border-black px-2 py-1" style="white-space: normal; overflow-wrap: anywhere; word-break: break-word;">${escapeHtml(room.guest_names || room.roomNote || '-')}</td>
+        <td class="border border-black px-2 py-1" style="line-height:1.25;vertical-align:top;white-space: normal; overflow-wrap: anywhere; word-break: break-word;">${renderGuestNameLines(room.guest_names ?? room.roomNote, escapeHtml)}</td>
     </tr>`).join('');
 }
 
@@ -14054,7 +14200,8 @@ function openHotelVoucherModal(hotelId) {
                 r.cells[1].textContent = targetHotel.dateOut || '-';
                 r.cells[2].textContent = targetHotel.sgl || 0;
                 r.cells[3].textContent = targetHotel.dbl || 0;
-                r.cells[5].textContent = targetHotel.trpl || 0;
+                r.cells[4].textContent = targetHotel.trpl || 0;
+                r.cells[5].textContent = targetHotel.quadro || 0;
                 r.cells[7].textContent = targetHotel.notes || '-';
             }
         });
@@ -14142,8 +14289,8 @@ function printHotelVoucher() {
             <td style="border:1px solid #000;padding:6px 4px;text-align:center">${escapeHtml(h.dateOut)}</td>
             <td style="border:1px solid #000;padding:6px 2px;text-align:center">${h.sgl || 0}</td>
             <td style="border:1px solid #000;padding:6px 2px;text-align:center">${h.dbl || 0}</td>
-            <td style="border:1px solid #000;padding:6px 2px;text-align:center">0</td>
             <td style="border:1px solid #000;padding:6px 2px;text-align:center">${h.trpl || 0}</td>
+            <td style="border:1px solid #000;padding:6px 2px;text-align:center">${h.quadro || 0}</td>
             <td style="border:1px solid #000;padding:6px 2px;text-align:center">0</td>
             <td style="border:1px solid #000;padding:6px 4px;text-align:center;white-space:normal;overflow-wrap:anywhere;word-break:break-word">${escapeHtml(h.notes) || '\u00A0'}</td>
         </tr>`).join('');
@@ -14158,8 +14305,9 @@ function printHotelVoucher() {
     const roomList = cachedRoomList.length > 0
         ? cachedRoomList
         : ((selHotel && Array.isArray(selHotel.roomList)) ? selHotel.roomList : []);
+    const sortedRoomList = sortHotelVoucherRoomList(roomList);
     if (roomList.length > 0) {
-        roomListRowsHtml = roomList.map((room) => `<tr>
+        roomListRowsHtml = sortedRoomList.map((room) => `<tr>
             <td style="border:1px solid #000;padding:4px;text-align:center">${escapeHtml(room.roomType || room.room_type || '-')}</td>
             <td style="border:1px solid #000;padding:4px;text-align:center">${escapeHtml(room.roomCategory || room.room_category || '-')}</td>
             <td style="border:1px solid #000;padding:4px;text-align:center">${escapeHtml(room.roomOption || room.room_option || '-')}</td>
@@ -14167,7 +14315,7 @@ function printHotelVoucher() {
             <td style="border:1px solid #000;padding:4px;text-align:center">${escapeHtml(room.dietaryRequirements || room.dietary_requirements || '-')}</td>
             <td style="border:1px solid #000;padding:4px 2px;text-align:center">${room.adults || 0}</td>
             <td style="border:1px solid #000;padding:4px 2px;text-align:center">${room.children || 0}</td>
-            <td style="border:1px solid #000;padding:4px;text-align:center;white-space:normal;overflow-wrap:anywhere;word-break:break-word">${escapeHtml(room.roomNote || room.guest_names || '-')}</td>
+            <td style="border:1px solid #000;padding:4px;text-align:center;line-height:1.25;vertical-align:top;white-space:normal;overflow-wrap:anywhere;word-break:break-word">${renderGuestNameLines(room.roomNote ?? room.guest_names, escapeHtml)}</td>
         </tr>`).join('');
     } else {
         roomListRowsHtml = '<tr><td colspan="8" style="border:1px solid #000;padding:8px;text-align:center">No room list details</td></tr>';
@@ -14220,7 +14368,7 @@ function printHotelVoucher() {
             </div>
         </div>
         <p style="margin-bottom:16px;font-size:12px">Please provide with the following.</p>
-        <table><thead><tr><th style="width:14%;">Check In</th><th style="width:14%;">Check Out</th><th style="width:7%;">SGL</th><th style="width:7%;">DBL</th><th style="width:7%;">TWN</th><th style="width:7%;">TRPL</th><th style="width:8%;">OTHER</th><th style="width:36%;">Note</th></tr></thead><tbody>${rowsHtml}</tbody></table>
+        <table><thead><tr><th style="width:14%;">Check In</th><th style="width:14%;">Check Out</th><th style="width:7%;">SGL</th><th style="width:7%;">DBL</th><th style="width:7%;">TRPL</th><th style="width:7%;">Quadro</th><th style="width:8%;">OTHER</th><th style="width:36%;">Note</th></tr></thead><tbody>${rowsHtml}</tbody></table>
         <table><thead><tr><th style="width:12%;">Type</th><th style="width:16%;">Room Category</th><th style="width:14%;">Bed Type</th><th style="width:10%;">Board</th><th style="width:12%;">Dietary Req</th><th style="width:6%;">Adt</th><th style="width:6%;">Chd</th><th style="width:24%;">Note</th></tr></thead><tbody>${roomListRowsHtml}</tbody></table>
         <div class="hv-meal">BB = Bed and Breakfast | HB = Half Board | FB = Full Board | RO = Room Only</div>
         <div class="hv-disclaimer">Our Company is responsible only for service listed above.<br>The presentation of this voucher must be attached to your invoice otherwise payment may be delayed.</div>
