@@ -4,8 +4,9 @@
     {
       "name": "flask-dev-server",
       "runtimeExecutable": "C:\\Users\\user\\TravelInBound-main\\.venv\\Scripts\\python.exe",
-      "runtimeArgs": ["start_server.py"],
-      "port": 5000
+      "runtimeArgs": ["scripts/run_dev.py"],
+      "port": 5000,
+      "autoPort": true
     }
   ]
 }

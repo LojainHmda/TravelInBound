@@ -276,6 +276,11 @@ class ItineraryRow(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     request_id = db.Column(db.Integer, db.ForeignKey('inbound_request.id'), nullable=False)
 
+    # Link back to the arrival/departure batch this movement row was generated from
+    # (nullable: normal day rows and legacy rows have no batch link)
+    source_arrival_batch_id = db.Column(db.Integer, db.ForeignKey('arrival_batch.id'), nullable=True)
+    source_departure_batch_id = db.Column(db.Integer, db.ForeignKey('departure_batch.id'), nullable=True)
+
     # Date and description
     date = db.Column(db.Date, nullable=False)
     description = db.Column(db.Text, nullable=False)

@@ -5935,6 +5935,39 @@ function printFullSummary(useCurrentWindowForPrint = false) {
     stripLastColumnForPrint('full-summary-transports');
     stripLastColumnForPrint('full-summary-guides');
 
+    // Hide fully-empty service sections in the Tour File print output only.
+    // Operates on the detached clone (tempContainer), so the on-page Trip Summary
+    // is untouched. A section is "empty" when its tbody has no real data rows:
+    // real data rows use per-column <td> cells, while an empty service renders a
+    // single "No X added" placeholder row (<td colspan=...>). Detect a real row by
+    // the presence of a non-colspan <td> — this is robust even after the Transport
+    // and Guide placeholder rows are gutted by stripLastColumnForPrint above (which
+    // removes the last cell, i.e. the colspan cell itself, leaving a bare <tr>).
+    // Arrival & Departure share #full-summary-flights, so that single table is
+    // removed only when neither an arrival nor a departure row exists (both empty);
+    // if either has data the shared table is kept intact. Removing the enclosing
+    // block also drops its heading (and, for hotels, the per-hotel rooms breakdown
+    // nested in the same block).
+    const removeEmptyServiceSection = (tbodyId) => {
+        const tbody = tempContainer.querySelector(`#${tbodyId}`);
+        if (!tbody) return;
+        const hasData = Array.from(tbody.children).some(
+            (tr) => tr.tagName === 'TR' && tr.querySelector('td:not([colspan])')
+        );
+        if (hasData) return;
+        // Service blocks wrap in div.mb-4; the Itinerary block wraps in div.mb-2.
+        const section = tbody.closest('div.mb-4, div.mb-2');
+        if (section) section.remove();
+    };
+    [
+        'full-summary-flights',    // Arrival & Departure (shared table)
+        'full-summary-hotels',
+        'full-summary-transports',
+        'full-summary-guides',
+        'full-summary-meals',      // Restaurants
+        'full-summary-itinerary',
+    ].forEach(removeEmptyServiceSection);
+
     let printContent = tempContainer.innerHTML;
 
     // Extract all visa status values from all arrival rows in the summary table
@@ -7966,6 +7999,8 @@ function populateServiceForm(serviceType, record) {
         syncDateField('hotel_check_in', record.check_in_date);
         syncDateField('hotel_check_out', record.check_out_date);
         syncDateField('hotel_cut_off_date', record.cut_off_date);
+        // Recalculate room capacity badge now that room fields are populated
+        calculateTotalGuests();
     }
 
     // Departure date inputs
@@ -8113,6 +8148,12 @@ function handleRemoveServiceRow(serviceType, recordId, confirmMessage = null) {
                 });
                 refreshItineraryTable();
             }
+            // Deleting an arrival/departure removes/clears its linked itinerary
+            // movement row on the server, so refresh the itinerary to reflect it.
+            if (serviceType === 'arrival' || serviceType === 'departure') {
+                refreshItineraryTable();
+                refreshItinerarySummaryTable();
+            }
             
             // Clear context if we were editing this record
             if (currentServiceContext.rowId == recordId) {
@@ -8191,7 +8232,7 @@ function addNewServiceData(serviceType) {
     }
 }
 
-async function createMovementItineraryRow(serviceType) {
+async function createMovementItineraryRow(serviceType, batchId = null) {
     if (!['arrival', 'departure'].includes(serviceType)) {
         return false;
     }
@@ -8199,6 +8240,17 @@ async function createMovementItineraryRow(serviceType) {
     const dateFieldId = serviceType === 'arrival' ? 'arrival_date' : 'departure_date';
     const paxFieldId = serviceType === 'arrival' ? 'arrival_pax_count' : 'departure_pax_count';
     const movementLabel = serviceType === 'arrival' ? 'Arrival' : 'Departure';
+
+    // Link the movement row back to its arrival/departure batch so deleting the
+    // batch keeps the Itinerary in sync.
+    const batchLink = {};
+    if (batchId) {
+        if (serviceType === 'arrival') {
+            batchLink.source_arrival_batch_id = batchId;
+        } else {
+            batchLink.source_departure_batch_id = batchId;
+        }
+    }
 
     const movementDate = document.getElementById(dateFieldId)?.value?.trim() || '';
     const paxValue = parseInt(document.getElementById(paxFieldId)?.value || '0', 10);
@@ -8232,7 +8284,8 @@ async function createMovementItineraryRow(serviceType) {
             description: movementText,
             current_pax: paxValue,
             status: statusSelect ? statusSelect.value : 'REQUEST',
-            note: noteInput ? (noteInput.value || '') : ''
+            note: noteInput ? (noteInput.value || '') : '',
+            ...batchLink
         };
 
         const updateResponse = await fetch(`/inbound/api/${requestId}/itinerary-row`, {
@@ -8252,7 +8305,8 @@ async function createMovementItineraryRow(serviceType) {
         const createPayload = {
             itinerary_date: movementDate,
             description: movementText,
-            current_pax: paxValue
+            current_pax: paxValue,
+            ...batchLink
         };
 
         if (parentRowId) {
@@ -8833,7 +8887,8 @@ async function saveServiceData(serviceType) {
 
             if (!wasEditMode && (serviceType === 'arrival' || serviceType === 'departure')) {
                 try {
-                    await createMovementItineraryRow(serviceType);
+                    const savedBatchId = data[`${serviceType}_id`] || data.id || null;
+                    await createMovementItineraryRow(serviceType, savedBatchId);
                 } catch (movementError) {
                     console.error('[saveServiceData] Failed to auto-create movement itinerary row:', movementError);
                     showNotification('Saved service, but failed to add itinerary movement row automatically.', 'error');
@@ -12326,17 +12381,25 @@ function calculateTotalGuests() {
     if (totalGuestsEl) {
         totalGuestsEl.textContent = totalGuests;
         
-        if (totalGuests === pax && totalGuests > 0) {
-            totalGuestsEl.style.backgroundColor = '#22c55e';
-            totalGuestsEl.classList.add('text-white');
-            if (capacityNote) capacityNote.textContent = '';
-        } else if (totalGuests !== pax && pax > 0) {
-            totalGuestsEl.style.backgroundColor = '#ef5350';
-            totalGuestsEl.classList.add('text-white');
-            if (capacityNote) {
-                const diff = totalGuests - pax;
-                capacityNote.textContent = diff > 0 ? `${diff} EXTRA` : `${Math.abs(diff)} SHORT`;
-                capacityNote.style.color = '#ef5350';
+        if (pax > 0) {
+            if (totalGuests === pax) {
+                totalGuestsEl.style.backgroundColor = '#22c55e';
+                totalGuestsEl.classList.add('text-white');
+                totalGuestsEl.classList.remove('text-slate-700');
+                if (capacityNote) {
+                    capacityNote.textContent = 'OK';
+                    capacityNote.style.color = '#22c55e';
+                }
+            } else {
+                totalGuestsEl.style.backgroundColor = '#ef5350';
+                totalGuestsEl.classList.add('text-white');
+                totalGuestsEl.classList.remove('text-slate-700');
+                if (capacityNote) {
+                    capacityNote.textContent = totalGuests < pax
+                        ? `${pax - totalGuests} SHORT`
+                        : `${totalGuests - pax} OVER`;
+                    capacityNote.style.color = '#ef5350';
+                }
             }
         } else {
             totalGuestsEl.style.backgroundColor = '#e2e8f0';

@@ -3845,6 +3845,11 @@ def api_save_service_data(request_id):
             if arrival and arrival.id:
                 response_data['arrival_id'] = arrival.id
 
+        # For departure: include departure_id so the client can link the itinerary movement row
+        if service_type == 'departure' and 'departure' in locals():
+            if departure and departure.id:
+                response_data['departure_id'] = departure.id
+
         # For meal: include meal_id for file upload
         print(f"[SAVE SERVICE] Building response for service_type={service_type}")
         print(f"[SAVE SERVICE] 'meal' in locals(): {'meal' in locals()}")
@@ -3975,6 +3980,15 @@ def api_save_itinerary_row(request_id):
         parent_row_id = data.get('parent_row_id')  # For child rows
         note = data.get('note').strip() if isinstance(data.get('note'), str) else ''
 
+        # Optional link back to the arrival/departure batch that generated this movement row
+        def _as_int_or_none(value):
+            try:
+                return int(value) if value not in (None, '') else None
+            except (TypeError, ValueError):
+                return None
+        source_arrival_batch_id = _as_int_or_none(data.get('source_arrival_batch_id'))
+        source_departure_batch_id = _as_int_or_none(data.get('source_departure_batch_id'))
+
         # Parse date (use from_date as default for new rows)
         date_obj = None
         if itinerary_date:
@@ -4003,7 +4017,14 @@ def api_save_itinerary_row(request_id):
             row.description = description
             row.meal_type = meal_type
             row.restaurant_supplier_id = restaurant_supplier_id
-            
+
+            # Only touch the batch link when the caller supplies it (movement rows),
+            # so ordinary itinerary edits never clear an existing link.
+            if 'source_arrival_batch_id' in data:
+                row.source_arrival_batch_id = source_arrival_batch_id
+            if 'source_departure_batch_id' in data:
+                row.source_departure_batch_id = source_departure_batch_id
+
             # Handle current_pax and note - store in comment field as JSON (keep each row isolated)
             import json
             comment_data = {}
@@ -4032,7 +4053,9 @@ def api_save_itinerary_row(request_id):
                 date=date_obj,
                 description=description if description is not None else default_description,
                 meal_type=meal_type,
-                restaurant_supplier_id=restaurant_supplier_id
+                restaurant_supplier_id=restaurant_supplier_id,
+                source_arrival_batch_id=source_arrival_batch_id,
+                source_departure_batch_id=source_departure_batch_id
             )
             
             # Handle current_pax and parent_row_id for new row - store in comment as JSON
@@ -5578,6 +5601,42 @@ def api_get_service_record(request_id, service_type, record_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+def _unlink_movement_itinerary_rows(request_id, *, arrival_batch_id=None, departure_batch_id=None):
+    """Keep the Itinerary in sync when an arrival/departure batch is deleted.
+
+    Movement rows created purely for the batch (child rows, identified by a
+    parent_row_id stored in their comment JSON) are removed outright. Base day
+    rows that were merely filled with the movement text are kept: their movement
+    text and batch link are cleared so the day slot itself is not lost.
+    """
+    import json as _json
+
+    if arrival_batch_id is not None:
+        rows = ItineraryRow.query.filter_by(
+            request_id=request_id, source_arrival_batch_id=arrival_batch_id
+        ).all()
+    elif departure_batch_id is not None:
+        rows = ItineraryRow.query.filter_by(
+            request_id=request_id, source_departure_batch_id=departure_batch_id
+        ).all()
+    else:
+        return
+
+    for row in rows:
+        is_child = False
+        if row.comment:
+            try:
+                is_child = 'parent_row_id' in _json.loads(row.comment)
+            except (ValueError, TypeError):
+                is_child = False
+        if is_child:
+            db.session.delete(row)
+        else:
+            row.description = ''
+            row.source_arrival_batch_id = None
+            row.source_departure_batch_id = None
+
+
 @inbound_bp.route('/api/<int:request_id>/service/<service_type>/<int:record_id>', methods=['DELETE'])
 @csrf.exempt
 def api_delete_service_record(request_id, service_type, record_id):
@@ -5594,11 +5653,13 @@ def api_delete_service_record(request_id, service_type, record_id):
             InboundTransport.query.filter_by(
                 request_id=request_id, source_arrival_batch_id=record_id
             ).delete(synchronize_session=False)
+            _unlink_movement_itinerary_rows(request_id, arrival_batch_id=record_id)
             service = ArrivalBatch.query.filter_by(id=record_id, request_id=request_id).first()
         elif service_type == 'departure':
             InboundTransport.query.filter_by(
                 request_id=request_id, source_departure_batch_id=record_id
             ).delete(synchronize_session=False)
+            _unlink_movement_itinerary_rows(request_id, departure_batch_id=record_id)
             service = DepartureBatch.query.filter_by(id=record_id, request_id=request_id).first()
         elif service_type == 'hotel':
             service = InboundHotel.query.filter_by(id=record_id, request_id=request_id).first()
@@ -6552,6 +6613,7 @@ def api_delete_arrival(request_id, arrival_id):
             InboundTransport.query.filter_by(
                 request_id=request_id, source_arrival_batch_id=arrival_id
             ).delete(synchronize_session=False)
+            _unlink_movement_itinerary_rows(request_id, arrival_batch_id=arrival_id)
             db.session.delete(arrival)
             db.session.commit()
 
@@ -6596,6 +6658,7 @@ def api_delete_departure(request_id, departure_id):
             InboundTransport.query.filter_by(
                 request_id=request_id, source_departure_batch_id=departure_id
             ).delete(synchronize_session=False)
+            _unlink_movement_itinerary_rows(request_id, departure_batch_id=departure_id)
             db.session.delete(departure)
             db.session.commit()
 
