@@ -8633,6 +8633,133 @@ def get_status_color(status):
     }
     return status_colors.get(status, '#94a3b8')
 
+@inbound_bp.route('/run-down/accommodation-data')
+@login_required
+def run_down_accommodation_data():
+    """JSON: all accommodation rows + cascading filter options for the inline table."""
+    from sqlalchemy import func as _func
+
+    date_from, date_to = _parse_run_down_dates()
+    if date_from is None or date_to is None:
+        return jsonify({'error': 'Invalid date format'}), 400
+
+    city_filter = request.args.get('city', '').strip()
+    category_filter = request.args.get('category', '').strip()
+    hotel_filter = request.args.get('hotel_name', '').strip()
+    statuses_param = request.args.get('statuses', '').strip()
+    status_filters = [s.strip().upper() for s in statuses_param.split(',') if s.strip()] if statuses_param else []
+
+    base_q = (
+        InboundHotel.query.join(InboundRequest)
+        .filter(
+            InboundHotel.check_in_date >= date_from,
+            InboundHotel.check_in_date <= date_to,
+        )
+    )
+
+    all_hotels_in_range = base_q.all()
+
+    # Build hotel-name → city lookup for hotels without supplier_id FK
+    _hotel_names = {(h.hotel_name or '').strip() for h in all_hotels_in_range if not h.supplier_id and (h.hotel_name or '').strip()}
+    _name_city_map = {}
+    if _hotel_names:
+        _suppliers = Supplier.query.filter(
+            Supplier.supplier_type == 'HOTEL',
+            Supplier.name.in_(_hotel_names),
+        ).all()
+        for s in _suppliers:
+            _name_city_map[s.name.strip()] = (s.city or '').strip()
+
+    def _hotel_city(h):
+        if h.supplier_id and h.supplier_ref:
+            return (h.supplier_ref.city or '').strip()
+        name = (h.hotel_name or '').strip()
+        return _name_city_map.get(name, '')
+
+    # Case-insensitive dedup: keep the first-seen casing as the display value
+    def _dedup_cities(hotels):
+        seen = {}
+        for h in hotels:
+            c = _hotel_city(h)
+            if not c:
+                continue
+            key = c.lower()
+            if key not in seen:
+                seen[key] = c.title()
+        return sorted(seen.values(), key=str.lower)
+
+    categories = sorted({(h.hotel_category or '').strip() for h in all_hotels_in_range if (h.hotel_category or '').strip()}, key=str.lower)
+
+    cities_source = all_hotels_in_range
+    if category_filter:
+        cities_source = [h for h in all_hotels_in_range if (h.hotel_category or '').strip().lower() == category_filter.lower()]
+    cities = _dedup_cities(cities_source)
+
+    names_source = cities_source
+    if city_filter:
+        names_source = [h for h in names_source if _hotel_city(h).lower() == city_filter.lower()]
+    hotel_names = sorted({(h.hotel_name or '').strip() for h in names_source if (h.hotel_name or '').strip()}, key=str.lower)
+
+    filtered = all_hotels_in_range
+    if city_filter:
+        filtered = [h for h in filtered if _hotel_city(h).lower() == city_filter.lower()]
+    if category_filter:
+        filtered = [h for h in filtered if (h.hotel_category or '').strip().lower() == category_filter.lower()]
+    if hotel_filter:
+        filtered = [h for h in filtered if (h.hotel_name or '').strip().lower() == hotel_filter.lower()]
+
+    rows = []
+    for hotel in filtered:
+        req = hotel.request
+        city_display = _hotel_city(hotel) or ''
+        row = _run_down_row(
+            req,
+            hotel.check_in_date,
+            f"{hotel.hotel_name or ''} – {city_display} ({hotel.nights}n)".strip(' –'),
+            hotel.status,
+            req.pax,
+            'HOTEL',
+            hotel.id,
+            check_out_date=hotel.check_out_date,
+            room_type=hotel.room_type,
+            meal_plan=hotel.meal_plan,
+            hotel_obj=hotel,
+        )
+        row['city'] = city_display
+        rows.append(row)
+
+    if status_filters and 'ALL' not in status_filters:
+        rows = [r for r in rows if normalizeServiceStatus(r.get('status', '')) in status_filters]
+
+    rows.sort(key=lambda r: ((r.get('city') or '').lower(), r['date'], r['request_number']))
+
+    return jsonify({
+        'hotels': rows,
+        'total': len(all_hotels_in_range),
+        'filtered': len(rows),
+        'filters': {
+            'cities': cities,
+            'categories': categories,
+            'hotel_names': hotel_names,
+        },
+        'date_from': date_from.strftime('%Y-%m-%d'),
+        'date_to': date_to.strftime('%Y-%m-%d'),
+    })
+
+
+def normalizeServiceStatus(status):
+    s = (status or 'REQUESTED').upper()
+    if s in ('REQUEST', 'REQUESTED'):
+        return 'REQUESTED'
+    if s in ('WAITING_LIST', 'WAITING'):
+        return 'WAITING_LIST'
+    if s in ('CANCELLED', 'CANCELED'):
+        return 'CANCELLED'
+    if s == 'CONFIRMED':
+        return 'CONFIRMED'
+    return s
+
+
 @inbound_bp.route('/run-down')
 @login_required
 def run_down_plan():

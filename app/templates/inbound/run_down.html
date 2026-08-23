@@ -58,66 +58,155 @@ body { background: #f1f5f9; }
 }
 .rd-btn-print:hover { background: #0f172a; color: white; }
 
-/* ── Date filter bar ── */
+/* ── Date filter bar (two-row layout) ── */
 .rd-date-bar {
   background: white;
   border-radius: 12px;
-  padding: 14px 18px;
+  padding: 16px 18px;
   box-shadow: 0 1px 4px rgba(0,0,0,.05);
   border: 1px solid #f1f5f9;
   margin-bottom: 18px;
+}
+.rd-date-row {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
+  justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
 }
-.rd-date-bar-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: .5px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.rd-date-row-bottom { align-items: center; }
+.rd-date-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 14px 0;
 }
-.rd-date-inputs {
+
+/* Date fields */
+.rd-date-fields {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 10px;
   flex-wrap: wrap;
 }
 .rd-date-group {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
-.rd-date-group label {
+.rd-date-group > label {
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   color: #94a3b8;
   text-transform: uppercase;
+  letter-spacing: .4px;
 }
-.rd-date-group input[type=date] {
-  padding: 7px 10px;
+.rd-date-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 150px;
+  min-width: 150px;
+  padding: 8px 10px;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  font-size: 13px;
-  color: #1e293b;
   background: #f8fafc;
-  min-width: 148px;
+  cursor: pointer;
 }
-.rd-date-group input[type=date]:focus {
+.rd-date-field:focus-within {
   outline: none;
   border-color: #3b82f6;
   background: white;
   box-shadow: 0 0 0 3px rgba(59,130,246,.12);
 }
-.rd-date-sep { color: #cbd5e1; font-size: 18px; padding-top: 14px; }
+.rd-date-field .rd-date-cal { color: #94a3b8; font-size: 12px; flex-shrink: 0; }
+.rd-date-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+}
+.rd-date-weekday {
+  margin-left: auto;
+  font-size: 11px;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+/* Native input overlays the styled field: invisible, but is the real focus/
+   click/keyboard target. JS opens the picker on click and mirrors the value. */
+.rd-date-native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  opacity: 0;
+  cursor: pointer;
+}
+.rd-date-sep {
+  color: #94a3b8;
+  font-size: 18px;
+  padding-bottom: 8px;
+  align-self: flex-end;
+}
+
+/* Applied-period text (right of row 1) */
+.rd-date-period {
+  font-size: 13px;
+  color: #475569;
+  font-weight: 500;
+  margin-left: auto;
+  text-align: right;
+}
+
+/* Preset buttons (left of row 2) */
+.rd-date-presets {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.rd-preset {
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #475569;
+  cursor: pointer;
+  transition: all .15s;
+}
+.rd-preset:hover { background: #f8fafc; }
+.rd-preset.active {
+  background: #E4ECF6;
+  color: #0C447C;
+  border-color: #8FB3D9;
+}
+/* button-theme.css flattens every <button> via an 8×:not() rule with
+   !important (specificity ~0,8,1). Scope under #runDownApp (id → 1,x,x) so
+   these win regardless of that global override. */
+#runDownApp .rd-preset {
+  background: #fff !important;
+  color: #475569 !important;
+}
+#runDownApp .rd-preset:hover { background: #f8fafc !important; }
+#runDownApp .rd-preset.active {
+  background: #E4ECF6 !important;
+  color: #0C447C !important;
+  border-color: #8FB3D9 !important;
+}
+
+/* Apply button + success check (right of row 2). !important beats any global
+   button reset that would otherwise flatten the background. */
+.rd-date-apply-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 .rd-btn-date-apply {
-  background: #2563eb;
-  color: white;
-  padding: 8px 16px;
+  padding: 9px 18px;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
@@ -126,29 +215,57 @@ body { background: #f1f5f9; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 14px;
   transition: background .15s;
 }
-.rd-btn-date-apply:hover { background: #1d4ed8; }
+/* Same #runDownApp scoping as the presets — beats button-theme.css so the
+   Apply button stays blue with white text/icon at all times. */
+#runDownApp .rd-btn-date-apply {
+  background: #2563EB !important;
+  color: #fff !important;
+}
+#runDownApp .rd-btn-date-apply i { color: #fff !important; }
+#runDownApp .rd-btn-date-apply:hover { background: #1D4ED8 !important; }
 .rd-date-apply-success {
   display: none;
-  color: #10b981;
-  font-size: 16px;
-  margin-left: 10px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #16A34A;
+  color: #fff;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
   animation: rdFadeIn 0.3s ease-in;
 }
-.rd-date-apply-success.show {
-  display: inline-flex;
-  align-items: center;
-}
+.rd-date-apply-success.show { display: inline-flex; }
 @keyframes rdFadeIn {
   from { opacity: 0; transform: scale(0.8); }
   to { opacity: 1; transform: scale(1); }
 }
-.rd-date-hint {
+
+/* Modal auto-refresh: loading overlay + inline error (Option A) */
+.rd-modal-loading {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  color: #2563eb;
+  font-size: 22px;
+}
+.rd-modal-refresh-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-bottom: 1px solid #fecaca;
+  padding: 9px 16px;
   font-size: 12px;
-  color: #64748b;
-  margin-left: auto;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 7px;
 }
 
 /* ── Services grid ── */
@@ -162,12 +279,9 @@ body { background: #f1f5f9; }
 }
 .rd-services-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr;
   gap: 14px;
   padding-top: 8px;
-}
-@media (max-width: 768px) {
-  .rd-services-grid { grid-template-columns: 1fr; }
 }
 
 /* ── Service card ── */
@@ -473,16 +587,261 @@ body { background: #f1f5f9; }
 .rd-sts-chip.on.cancelled { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
 .rd-sts-chip.on.all       { background: #e2e8f0; color: #334155; border-color: #cbd5e1; }
 
+/* ── Accommodation section ── */
+.rd-accom-section {
+  background: white;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  overflow: visible;
+  transition: box-shadow .2s, border-color .2s;
+}
+.rd-accom-section:hover {
+  box-shadow: 0 4px 14px rgba(0,0,0,.06);
+}
+.rd-accom-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fafbfc;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 12px 12px 0 0;
+}
+.rd-accom-header:hover { background: #f1f5f9; }
+.rd-accom-chevron {
+  font-size: 12px;
+  color: #64748b;
+  transition: transform .2s;
+  width: 16px;
+  text-align: center;
+}
+.rd-accom-chevron.open { transform: rotate(90deg); }
+.rd-accom-total-badge {
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: 4px;
+}
+.rd-accom-showing {
+  margin-left: auto;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+.rd-accom-body {
+  padding: 14px;
+}
+.rd-accom-body.collapsed { display: none; }
+.rd-accom-filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.rd-accom-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 160px;
+}
+.rd-accom-filter-group > label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+.rd-accom-select-wrap {
+  position: relative;
+}
+.rd-accom-select {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 13px;
+  color: #1e293b;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 32px;
+}
+.rd-accom-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+}
+.rd-accom-select-arrow {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #94a3b8;
+  font-size: 10px;
+}
+/* Searchable hotel dropdown */
+.rd-accom-hotel-wrap {
+  position: relative;
+}
+.rd-accom-hotel-input {
+  width: 100%;
+  padding: 9px 32px 9px 12px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 13px;
+  color: #1e293b;
+}
+.rd-accom-hotel-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+}
+.rd-accom-hotel-input::placeholder { color: #94a3b8; }
+.rd-accom-hotel-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 4px;
+  line-height: 1;
+}
+.rd-accom-hotel-clear:hover { color: #ef4444; }
+.rd-accom-hotel-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 300;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.1);
+  max-height: 240px;
+  overflow-y: auto;
+}
+.rd-accom-hotel-dropdown.open { display: block; }
+.rd-accom-hotel-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 7px 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1e293b;
+  border-bottom: 1px solid #f8fafc;
+}
+.rd-accom-hotel-option:last-child { border-bottom: none; }
+.rd-accom-hotel-option:hover { background: #eff6ff; }
+.rd-accom-hotel-option.active { background: #dbeafe; font-weight: 600; }
+/* Status row */
+.rd-accom-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.rd-accom-status-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  margin-right: 4px;
+}
+.rd-accom-status-pills {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.rd-accom-pill {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #e5e7eb;
+  background: white;
+  color: #374151;
+  transition: all .15s;
+  white-space: nowrap;
+}
+#runDownApp .rd-accom-pill {
+  background: white !important;
+  color: #374151 !important;
+}
+#runDownApp .rd-accom-pill:hover { background: #f8fafc !important; }
+#runDownApp .rd-accom-pill.on.requested { background: #dbeafe !important; color: #1e40af !important; border-color: #93c5fd !important; }
+#runDownApp .rd-accom-pill.on.confirmed { background: #dcfce7 !important; color: #166534 !important; border-color: #86efac !important; }
+#runDownApp .rd-accom-pill.on.waiting   { background: #e0e7ff !important; color: #3730a3 !important; border-color: #a5b4fc !important; }
+#runDownApp .rd-accom-pill.on.cancelled { background: #fee2e2 !important; color: #991b1b !important; border-color: #fca5a5 !important; }
+#runDownApp .rd-accom-pill.on.all       { background: #e2e8f0 !important; color: #334155 !important; border-color: #cbd5e1 !important; }
+.rd-accom-apply-wrap {
+  margin-left: auto;
+}
+#runDownApp .rd-accom-apply {
+  background: #2563EB !important;
+  color: #fff !important;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background .15s;
+}
+#runDownApp .rd-accom-apply i { color: #fff !important; }
+#runDownApp .rd-accom-apply:hover { background: #1D4ED8 !important; }
+#runDownApp .rd-accom-apply:disabled { opacity: .6; cursor: not-allowed; }
+/* Inline results table area */
+.rd-accom-results { margin-top: 14px; }
+.rd-accom-city-header {
+  background: #f1f5f9;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+  border-top: 2px solid #e2e8f0;
+}
+.rd-accom-city-header:first-child { border-top: none; }
+
 /* ── Print layout ── */
 .rd-print-header {
   display: none;
 }
 @media print {
   body { background: white !important; }
-  .sidebar, .main-nav, .rd-header-actions, .rd-date-hint,
+  .sidebar, .main-nav, .rd-header-actions, .rd-date-period, .rd-date-presets,
   .rd-supplier-clear, .rd-card-actions, .rd-btn-date-apply, .modal-backdrop,
   .rd-modal-filters, .rd-btn, .btn-close, nav, footer, .rd-wrap, .rd-print-header,
-  .ai-chat-fab, .ai-chat-widget { display: none !important; }
+  .ai-chat-fab, .ai-chat-widget,
+  .rd-accom-filters, .rd-accom-status-row, .rd-accom-apply-wrap { display: none !important; }
 
   /* Only ever print the Run Down modal. base.html renders shared modals
      (e.g. #customerSelectionModal, #quickAddCustomerModal) on every page; without
@@ -591,27 +950,55 @@ body { background: #f1f5f9; }
 
   {# Date range filter #}
   <div class="rd-date-bar">
-    <div class="rd-date-bar-label">
-      <i class="fas fa-calendar-alt"></i> Date Range
-    </div>
-    <div class="rd-date-inputs">
-      <div class="rd-date-group">
-        <label for="rdDateFrom">From</label>
-        <input type="date" id="rdDateFrom" value="{{ date_from.strftime('%Y-%m-%d') }}">
+    {# Row 1: From / To fields (left) + applied period (right) #}
+    <div class="rd-date-row rd-date-row-top">
+      <div class="rd-date-fields">
+        <div class="rd-date-group">
+          <label id="rdDateFromLabel">From</label>
+          <div class="rd-date-field" data-rd-field="from">
+            <i class="fas fa-calendar-alt rd-date-cal"></i>
+            <span class="rd-date-value" id="rdDateFromDisplay">—</span>
+            <span class="rd-date-weekday" id="rdDateFromDow"></span>
+            <input type="date" class="rd-date-native" id="rdDateFrom"
+                   aria-labelledby="rdDateFromLabel"
+                   value="{{ date_from.strftime('%Y-%m-%d') }}">
+          </div>
+        </div>
+        <span class="rd-date-sep">—</span>
+        <div class="rd-date-group">
+          <label id="rdDateToLabel">To</label>
+          <div class="rd-date-field" data-rd-field="to">
+            <i class="fas fa-calendar-alt rd-date-cal"></i>
+            <span class="rd-date-value" id="rdDateToDisplay">—</span>
+            <span class="rd-date-weekday" id="rdDateToDow"></span>
+            <input type="date" class="rd-date-native" id="rdDateTo"
+                   aria-labelledby="rdDateToLabel"
+                   value="{{ date_to.strftime('%Y-%m-%d') }}">
+          </div>
+        </div>
       </div>
-      <span class="rd-date-sep">–</span>
-      <div class="rd-date-group">
-        <label for="rdDateTo">To</label>
-        <input type="date" id="rdDateTo" value="{{ date_to.strftime('%Y-%m-%d') }}">
-      </div>
-      <button type="button" class="rd-btn-date-apply" id="rdDateApply">
-        <i class="fas fa-check"></i> Apply
-      </button>
-      <span class="rd-date-apply-success" id="rdDateApplySuccess" title="Date filter applied">
-        <i class="fas fa-check-circle"></i>
-      </span>
+      <div class="rd-date-period" id="rdPrintMeta"></div>
     </div>
-    <div class="rd-date-hint" id="rdPrintMeta"></div>
+
+    <div class="rd-date-divider"></div>
+
+    {# Row 2: presets (left) + Apply (right) #}
+    <div class="rd-date-row rd-date-row-bottom">
+      <div class="rd-date-presets">
+        <button type="button" class="rd-preset" data-rd-preset="today">Today</button>
+        <button type="button" class="rd-preset" data-rd-preset="tomorrow">Tomorrow</button>
+        <button type="button" class="rd-preset" data-rd-preset="week">This week</button>
+        <button type="button" class="rd-preset" data-rd-preset="month">This month</button>
+      </div>
+      <div class="rd-date-apply-wrap">
+        <button type="button" class="rd-btn-date-apply" id="rdDateApply">
+          <i class="fas fa-check"></i> Apply
+        </button>
+        <span class="rd-date-apply-success" id="rdDateApplySuccess" title="Date filter applied">
+          <i class="fas fa-check"></i>
+        </span>
+      </div>
+    </div>
   </div>
 
   {# Service cards #}
@@ -684,6 +1071,67 @@ body { background: #f1f5f9; }
     {% endfor %}
   </div>
 </div>
+
+{# ── Accommodation inline section (rendered outside the grid, injected by JS) ── #}
+<template id="rdAccomTemplate">
+  <div class="rd-accom-section" id="rdAccomSection">
+    <div class="rd-accom-header" id="rdAccomToggle">
+      <i class="fas fa-chevron-right rd-accom-chevron open" id="rdAccomChevron"></i>
+      <div class="rd-card-icon" style="background: #1d4ed818; color: #1d4ed8;">
+        <i class="fas fa-hotel"></i>
+      </div>
+      <h3 class="rd-card-title">Accommodation</h3>
+      <span class="rd-accom-total-badge" id="rdAccomTotal">0</span>
+      <span class="rd-accom-showing" id="rdAccomShowing"></span>
+    </div>
+    <div class="rd-accom-body" id="rdAccomBody">
+      <div class="rd-accom-filters">
+        <div class="rd-accom-filter-group">
+          <label>Category</label>
+          <div class="rd-accom-select-wrap">
+            <select class="rd-accom-select" id="rdAccomCategory">
+              <option value="">All categories</option>
+            </select>
+            <span class="rd-accom-select-arrow"><i class="fas fa-chevron-down"></i></span>
+          </div>
+        </div>
+        <div class="rd-accom-filter-group">
+          <label>City</label>
+          <div class="rd-accom-select-wrap">
+            <select class="rd-accom-select" id="rdAccomCity">
+              <option value="">All cities</option>
+            </select>
+            <span class="rd-accom-select-arrow"><i class="fas fa-chevron-down"></i></span>
+          </div>
+        </div>
+        <div class="rd-accom-filter-group">
+          <label>Hotel Name</label>
+          <div class="rd-accom-hotel-wrap" id="rdAccomHotelWrap">
+            <input type="text"
+                   class="rd-accom-hotel-input"
+                   id="rdAccomHotelInput"
+                   placeholder="All hotels"
+                   autocomplete="off">
+            <button type="button" class="rd-accom-hotel-clear" id="rdAccomHotelClear" title="Clear">
+              <i class="fas fa-times"></i>
+            </button>
+            <div class="rd-accom-hotel-dropdown" id="rdAccomHotelDropdown"></div>
+          </div>
+        </div>
+      </div>
+      <div class="rd-accom-status-row">
+        <span class="rd-accom-status-label">Status</span>
+        <span class="rd-accom-status-pills" id="rdAccomPills"></span>
+        <span class="rd-accom-apply-wrap">
+          <button type="button" class="rd-accom-apply" id="rdAccomApply">
+            <i class="fas fa-check"></i> Apply
+          </button>
+        </span>
+      </div>
+      <div class="rd-accom-results" id="rdAccomResults"></div>
+    </div>
+  </div>
+</template>
 
 {# Requests modal #}
 <div class="modal fade" id="rdRequestsModal" tabindex="-1" aria-labelledby="rdModalTitle" aria-hidden="true">
