@@ -6,12 +6,14 @@
 
   const STATUS_CLASS = {
     REQUEST: 'sts-request',
+    REQUESTED: 'sts-request',
     QUOTED: 'sts-quoted',
     RESERVED: 'sts-reserved',
     CONFIRMED: 'sts-confirmed',
     INVOICED: 'sts-invoiced',
     COMPLETED: 'sts-completed',
     CANCELLED: 'sts-cancelled',
+    DELETED: 'sts-cancelled',
   };
 
   /** Map service statuses to modal filter buckets. */
@@ -64,13 +66,6 @@
     appliedDateFrom: '',
     appliedDateTo: '',
     services: {},
-    agent: {
-      agentName: '',
-      query: '',
-      results: [],
-      open: false,
-      loading: false,
-    },
     modal: null,
     modalOpen: false,
     modalStatusFilters: new Set(['REQUEST', 'CONFIRMED', 'INVOICED']),
@@ -192,10 +187,6 @@
         renderDropdown(key);
       }
     });
-    if (exceptKey !== 'agent') {
-      state.agent.open = false;
-      renderAgentDropdown();
-    }
   }
 
   function renderDropdown(serviceKey) {
@@ -301,136 +292,6 @@
     if (card) card.classList.remove('has-supplier');
   }
 
-  function renderAgentDropdown() {
-    const list = document.querySelector('[data-rd-agent-dropdown]');
-    if (!list) return;
-
-    if (!state.agent.open) {
-      list.classList.remove('open');
-      list.innerHTML = '';
-      return;
-    }
-
-    list.classList.add('open');
-    if (state.agent.loading) {
-      list.innerHTML = '<div class="rd-dd-item rd-dd-muted"><i class="fas fa-spinner fa-spin"></i> Searching…</div>';
-      return;
-    }
-    if (!state.agent.results.length) {
-      list.innerHTML = '<div class="rd-dd-item rd-dd-muted">No agents found</div>';
-      return;
-    }
-
-    list.innerHTML = state.agent.results.map((a) => {
-      return `<button type="button" class="rd-dd-item" data-rd-pick-agent data-name="${escapeAttr(a.name)}">
-        <span class="rd-dd-name">${escapeHtml(a.name)}</span>
-      </button>`;
-    }).join('');
-  }
-
-  async function fetchAgents(query) {
-    state.agent.loading = true;
-    state.agent.open = true;
-    renderAgentDropdown();
-
-    const url = `/inbound/run-down/agents?`
-      + `date_from=${encodeURIComponent(state.appliedDateFrom)}`
-      + `&date_to=${encodeURIComponent(state.appliedDateTo)}`
-      + (query ? `&q=${encodeURIComponent(query)}` : '');
-
-    try {
-      const res = await fetch(url);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Search failed');
-      state.agent.results = data.agents || [];
-    } catch (err) {
-      console.error('Agent search error', err);
-      state.agent.results = [];
-    } finally {
-      state.agent.loading = false;
-      renderAgentDropdown();
-    }
-  }
-
-  function debouncedAgentSearch(query) {
-    clearTimeout(searchTimers['agent']);
-    searchTimers['agent'] = setTimeout(() => fetchAgents(query), 220);
-  }
-
-  function selectAgent(name) {
-    state.agent.agentName = name;
-    state.agent.query = name;
-    state.agent.open = false;
-    renderAgentDropdown();
-
-    const input = document.querySelector('[data-rd-agent-input]');
-    if (input) input.value = name;
-
-    const card = document.querySelector('[data-rd-agent-card]');
-    if (card) card.classList.toggle('has-supplier', Boolean(name));
-  }
-
-  function clearAgent() {
-    state.agent.agentName = '';
-    state.agent.query = '';
-    state.agent.results = [];
-    state.agent.open = false;
-    renderAgentDropdown();
-
-    const input = document.querySelector('[data-rd-agent-input]');
-    if (input) input.value = '';
-
-    const card = document.querySelector('[data-rd-agent-card]');
-    if (card) card.classList.remove('has-supplier');
-  }
-
-  async function applyAgent() {
-    if (!state.agent.agentName) {
-      const input = document.querySelector('[data-rd-agent-input]');
-      if (input) input.focus();
-      return;
-    }
-
-    const applyBtn = document.querySelector('[data-rd-agent-apply]');
-    if (applyBtn) {
-      applyBtn.disabled = true;
-      applyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading…';
-    }
-
-    const url = `/inbound/run-down/agent-requests?agent=${encodeURIComponent(state.agent.agentName)}`
-      + `&date_from=${encodeURIComponent(state.appliedDateFrom)}`
-      + `&date_to=${encodeURIComponent(state.appliedDateTo)}`;
-
-    try {
-      const res = await fetch(url);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to load requests');
-
-      setupModalFilters('AGENT');
-
-      state.modal = {
-        serviceKey: 'AGENT',
-        serviceLabel: 'Agents',
-        agentName: data.agent,
-        agentType: data.agent_type || 'Direct',
-        dateLabel: data.date_from === data.date_to
-          ? data.date_from_display
-          : `${data.date_from_display} – ${data.date_to_display}`,
-        requests: data.requests || [],
-        total: data.total || 0,
-      };
-      openModal();
-    } catch (err) {
-      console.error('Apply error', err);
-      alert('Could not load agent requests. Please try again.');
-    } finally {
-      if (applyBtn) {
-        applyBtn.disabled = false;
-        applyBtn.innerHTML = '<i class="fas fa-check"></i> Apply';
-      }
-    }
-  }
-
   function applyDateRange() {
     const fromEl = $('rdDateFrom');
     const toEl = $('rdDateTo');
@@ -459,16 +320,24 @@
       }
     });
 
-    if (state.agent.query || state.agent.open) {
-      debouncedAgentSearch(state.agent.query);
-    }
-
     // Option A: an already-open modal auto-refreshes to the new range,
-    // reusing the same supplier/agent it was opened for.
+    // reusing the same supplier it was opened for.
     refreshOpenModal();
+
+    // Refresh agent inline section for new date range
+    refreshAgentOnDateChange();
 
     // Refresh accommodation inline section for new date range
     refreshAccomOnDateChange();
+
+    // Refresh transportation inline section for new date range
+    refreshTransportOnDateChange();
+
+    // Refresh guide inline section for new date range
+    refreshGuideOnDateChange();
+
+    // Refresh restaurant inline section for new date range
+    refreshRestaurantOnDateChange();
   }
 
   /* ── Preset date ranges (fill only — never load data) ── */
@@ -566,27 +435,19 @@
   }
 
   /** Re-fetch the open modal's data for the newly-applied range, keeping the
-   *  same supplier/agent and the current status-filter selection. Shows a
+   *  same supplier and the current status-filter selection. Shows a
    *  loading overlay; on failure keeps the previous rows and shows an inline
    *  error instead of blanking the modal. */
   async function refreshOpenModal() {
     if (!state.modalOpen || !state.modal) return;
     const m = state.modal;
 
-    let url;
-    if (m.serviceKey === 'AGENT') {
-      if (!state.agent.agentName) return;
-      url = `/inbound/run-down/agent-requests?agent=${encodeURIComponent(state.agent.agentName)}`
-        + `&date_from=${encodeURIComponent(state.appliedDateFrom)}`
-        + `&date_to=${encodeURIComponent(state.appliedDateTo)}`;
-    } else {
-      const svc = state.services[m.serviceKey];
-      if (!svc || !svc.supplierId) return;
-      url = `/inbound/run-down/supplier-requests?service=${encodeURIComponent(m.serviceKey)}`
-        + `&supplier_id=${svc.supplierId}`
-        + `&date_from=${encodeURIComponent(state.appliedDateFrom)}`
-        + `&date_to=${encodeURIComponent(state.appliedDateTo)}`;
-    }
+    const svc = state.services[m.serviceKey];
+    if (!svc || !svc.supplierId) return;
+    const url = `/inbound/run-down/supplier-requests?service=${encodeURIComponent(m.serviceKey)}`
+      + `&supplier_id=${svc.supplierId}`
+      + `&date_from=${encodeURIComponent(state.appliedDateFrom)}`
+      + `&date_to=${encodeURIComponent(state.appliedDateTo)}`;
 
     showModalLoading(true);
     try {
@@ -657,7 +518,7 @@
   // Tables whose "Filter by status" bar is hidden from the UI for now. The
   // filter logic/state below is kept intact so it can be restored by simply
   // removing keys from this set.
-  const HIDDEN_FILTER_TABLES = new Set(['AGENT', 'GROUND_HANDLER']);
+  const HIDDEN_FILTER_TABLES = new Set(['GROUND_HANDLER']);
 
   /** Configure the filter mode + defaults for a modal being opened. */
   function setupModalFilters(serviceKey) {
@@ -918,40 +779,6 @@
           </tbody>
         </table>
       </div>`;
-    } else if (state.modal && state.modal.serviceKey === 'AGENT') {
-      // Agent table with request details
-      return `<div class="rd-modal-table-wrap">
-        <table class="rd-modal-table">
-          <thead>
-            <tr>
-              <th>From Date</th>
-              <th>To Date</th>
-              <th>Request ID</th>
-              <th>Contact Name</th>
-              <th>Group Name</th>
-              <th>PAX</th>
-              <th>Nationality</th>
-              <th>File Status</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            ${requests.map((r) => `
-              <tr>
-                <td>${escapeHtml(r.from_date || '—')}</td>
-                <td>${escapeHtml(r.to_date || '—')}</td>
-                <td><strong>${escapeHtml(r.request_number)}</strong></td>
-                <td>${escapeHtml(r.contact_name || '—')}</td>
-                <td>${escapeHtml(r.group_name || '—')}</td>
-                <td class="num">${r.pax}</td>
-                <td>${escapeHtml(r.nationality || '—')}</td>
-                <td>${statusBadge(r.status)}</td>
-                <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>`;
     } else {
       // Original table for other services
       return `<div class="rd-modal-table-wrap">
@@ -1063,11 +890,7 @@
     const title = $('rdModalTitle');
     const subtitle = $('rdModalSubtitle');
 
-    if (m.serviceKey === 'AGENT') {
-      if (title) title.textContent = `${m.serviceLabel} — ${m.agentName} — ${m.agentType}`;
-    } else {
-      if (title) title.textContent = `${m.serviceLabel} — ${m.supplierName}`;
-    }
+    if (title) title.textContent = `${m.serviceLabel} — ${m.supplierName}`;
     if (subtitle) subtitle.textContent = `Requests for ${m.dateLabel}`;
 
     refreshModalTable();
@@ -1158,46 +981,10 @@
         selectSupplier(pick.dataset.rdPick, Number(pick.dataset.id), pick.dataset.name);
         return;
       }
-      const pickAgent = e.target.closest('[data-rd-pick-agent]');
-      if (pickAgent) {
-        selectAgent(pickAgent.dataset.name);
-        return;
-      }
-      if (!e.target.closest('.rd-supplier-wrap') && !e.target.closest('[data-rd-agent-wrap]')) {
+      if (!e.target.closest('.rd-supplier-wrap')) {
         closeAllDropdowns(null);
       }
     });
-
-    const agentInput = document.querySelector('[data-rd-agent-input]');
-    if (agentInput) {
-      agentInput.addEventListener('focus', () => {
-        state.agent.open = true;
-        debouncedAgentSearch(state.agent.query || agentInput.value);
-      });
-
-      agentInput.addEventListener('input', () => {
-        state.agent.query = agentInput.value;
-        state.agent.agentName = '';
-        debouncedAgentSearch(state.agent.query);
-      });
-
-      agentInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-          state.agent.open = false;
-          renderAgentDropdown();
-        }
-      });
-    }
-
-    const agentClearBtn = document.querySelector('[data-rd-agent-clear]');
-    if (agentClearBtn) {
-      agentClearBtn.addEventListener('click', clearAgent);
-    }
-
-    const agentApplyBtn = document.querySelector('[data-rd-agent-apply]');
-    if (agentApplyBtn) {
-      agentApplyBtn.addEventListener('click', applyAgent);
-    }
 
     // Preset buttons — fill fields only, never load data.
     document.querySelectorAll('[data-rd-preset]').forEach((btn) => {
@@ -1572,6 +1359,1244 @@
     }
   }
 
+  /* ═══════════════════════════════════════════════════════════════════
+     Transportation inline section
+
+     Mirrors the Accommodation section (same layout / status pills / inline
+     results) but the Vehicle, Company and Assignment filters are INDEPENDENT
+     — selecting one never changes the options offered by another. All filters
+     combine with the applied date range. When "All Vehicles" is selected the
+     results are grouped by vehicle; otherwise a single table is shown.
+     ═══════════════════════════════════════════════════════════════════ */
+
+  const transportState = {
+    vehicle: '',
+    company: '',
+    assignment: '',          // '' = All, 'ASSIGNED', 'NOT_ASSIGNED'
+    statuses: new Set(['ALL']),
+    collapsed: false,
+    tableVisible: false,
+    total: 0,
+    filtered: 0,
+    filterOptions: { vehicles: [], companies: [] },
+  };
+
+  function initTransportSection() {
+    const transportCard = document.querySelector('[data-rd-card="TRANSPORT"]');
+    const template = $('rdTransportTemplate');
+    if (!transportCard || !template) return;
+
+    const clone = template.content.cloneNode(true);
+    transportCard.parentNode.insertBefore(clone, transportCard);
+    transportCard.remove();
+
+    renderTransportPills();
+    bindTransportEvents();
+    syncTransportCompanyDisabled();
+    fetchTransportFilters();
+  }
+
+  function renderTransportPills() {
+    const wrap = $('rdTransportPills');
+    if (!wrap) return;
+    // Reuse the shared Accommodation status options for identical look & behaviour.
+    wrap.innerHTML = ACCOM_STATUS_OPTIONS.map((opt) => {
+      const on = transportState.statuses.has(opt.key) ? ' on' : '';
+      return `<button type="button" class="rd-accom-pill ${opt.cls}${on}" data-transport-sts="${opt.key}">${opt.label}</button>`;
+    }).join('');
+  }
+
+  function onTransportPillClick(key) {
+    if (key === 'ALL') {
+      transportState.statuses.clear();
+      transportState.statuses.add('ALL');
+    } else {
+      transportState.statuses.delete('ALL');
+      if (transportState.statuses.has(key)) {
+        transportState.statuses.delete(key);
+      } else {
+        transportState.statuses.add(key);
+      }
+      if (transportState.statuses.size === 0) {
+        transportState.statuses.add('ALL');
+      }
+    }
+    renderTransportPills();
+  }
+
+  /** Company can't be combined with "Not Assigned" — disable & reset it. */
+  function syncTransportCompanyDisabled() {
+    const companySel = $('rdTransportCompany');
+    if (!companySel) return;
+    const notAssigned = transportState.assignment === 'NOT_ASSIGNED';
+    companySel.disabled = notAssigned;
+    if (notAssigned) {
+      companySel.value = '';
+      transportState.company = '';
+    }
+  }
+
+  function buildTransportUrl(includeStatuses) {
+    let url = `/inbound/run-down/transportation-data?date_from=${encodeURIComponent(state.appliedDateFrom)}&date_to=${encodeURIComponent(state.appliedDateTo)}`;
+    if (transportState.vehicle) url += `&vehicle=${encodeURIComponent(transportState.vehicle)}`;
+    if (transportState.company) url += `&company=${encodeURIComponent(transportState.company)}`;
+    if (transportState.assignment) url += `&assignment=${encodeURIComponent(transportState.assignment)}`;
+    if (includeStatuses && !transportState.statuses.has('ALL')) {
+      url += `&statuses=${encodeURIComponent([...transportState.statuses].join(','))}`;
+    }
+    return url;
+  }
+
+  async function fetchTransportFilters() {
+    const url = buildTransportUrl(false);
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) return;
+      transportState.total = data.total || 0;
+      transportState.filterOptions = data.filters || { vehicles: [], companies: [] };
+      updateTransportDropdowns();
+      updateTransportCounts();
+    } catch (err) {
+      console.error('Transport filter fetch error', err);
+    }
+  }
+
+  function updateTransportDropdowns() {
+    const vehicleSel = $('rdTransportVehicle');
+    const companySel = $('rdTransportCompany');
+
+    if (vehicleSel) {
+      const prev = vehicleSel.value;
+      vehicleSel.innerHTML = '<option value="">All Vehicles</option>' +
+        transportState.filterOptions.vehicles.map(v => `<option value="${escapeAttr(v)}">${escapeHtml(v)}</option>`).join('');
+      if (transportState.filterOptions.vehicles.map(v => v.toLowerCase()).includes(prev.toLowerCase())) {
+        vehicleSel.value = prev;
+      } else {
+        vehicleSel.value = '';
+        transportState.vehicle = '';
+      }
+    }
+
+    if (companySel) {
+      const prev = companySel.value;
+      companySel.innerHTML = '<option value="">All Companies</option>' +
+        transportState.filterOptions.companies.map(c => `<option value="${escapeAttr(c)}">${escapeHtml(c)}</option>`).join('');
+      if (transportState.filterOptions.companies.map(c => c.toLowerCase()).includes(prev.toLowerCase())) {
+        companySel.value = prev;
+      } else {
+        companySel.value = '';
+        transportState.company = '';
+      }
+    }
+
+    syncTransportCompanyDisabled();
+  }
+
+  function updateTransportCounts() {
+    const totalEl = $('rdTransportTotal');
+    const showingEl = $('rdTransportShowing');
+    if (totalEl) totalEl.textContent = transportState.total;
+    if (showingEl) {
+      showingEl.textContent = transportState.tableVisible ? `Showing ${transportState.filtered}` : '';
+    }
+  }
+
+  async function applyTransport() {
+    const applyBtn = $('rdTransportApply');
+    if (applyBtn) {
+      applyBtn.disabled = true;
+      applyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading…';
+    }
+
+    const url = buildTransportUrl(true);
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load');
+
+      transportState.total = data.total || 0;
+      transportState.filtered = data.filtered || 0;
+      transportState.tableVisible = true;
+      renderTransportTable(data.transports || []);
+      updateTransportCounts();
+    } catch (err) {
+      console.error('Transport apply error', err);
+      const results = $('rdTransportResults');
+      if (results) {
+        results.innerHTML = `<div class="rd-modal-empty"><i class="fas fa-exclamation-triangle"></i><p>Could not load transportation data. Please try again.</p></div>`;
+      }
+      transportState.tableVisible = true;
+    } finally {
+      if (applyBtn) {
+        applyBtn.disabled = false;
+        applyBtn.innerHTML = '<i class="fas fa-check"></i> Apply';
+      }
+    }
+  }
+
+  /** Render one Transportation record as its main row + detail sub-row.
+   *  Markup/columns are identical to the existing popup table. */
+  function transportRowPair(r, num) {
+    return `<tr>
+        <td class="num">${num}</td>
+        <td>${escapeHtml(r.date_from || '—')}</td>
+        <td>${escapeHtml(r.date_to || '—')}</td>
+        <td><strong>${escapeHtml(r.request_number)}</strong></td>
+        <td>${escapeHtml(r.group_name || '—')}</td>
+        <td>${escapeHtml(r.nationality || '—')}</td>
+        <td class="num">${r.pax}</td>
+        <td>${escapeHtml(r.transport_note || '—')}</td>
+        <td>${statusBadge(r.status)}</td>
+        <td>${statusBadge(r.file_status)}</td>
+        <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+      </tr>
+      <tr class="rd-transport-detail-row">
+        <td colspan="11">
+          <div class="rd-transport-details">
+            <div class="rd-transport-day"><strong>Day:</strong> ${escapeHtml(r.day_of_week || '—')}</div>
+            <div class="rd-transport-itinerary"><strong>Itinerary:</strong> ${escapeHtml(r.pickup_location || '—')} → ${escapeHtml(r.dropoff_location || '—')}</div>
+          </div>
+        </td>
+      </tr>`;
+  }
+
+  function renderTransportTable(rows) {
+    const results = $('rdTransportResults');
+    if (!results) return;
+
+    if (!rows.length) {
+      results.innerHTML = `<div class="rd-modal-empty"><i class="fas fa-inbox"></i><p>No transportation records match the selected filters for this period.</p></div>`;
+      return;
+    }
+
+    const thead = '<thead><tr>' +
+      '<th>Num</th><th>Date From</th><th>Date To</th><th>Request</th>' +
+      '<th>Group Name</th><th>Nationality</th><th>PAX</th>' +
+      '<th>Transportation Notes</th><th>Status</th><th>File Status</th><th></th>' +
+      '</tr></thead>';
+
+    let body = '';
+    // Group by vehicle only when "All Vehicles" is selected; otherwise one table.
+    if (!transportState.vehicle) {
+      const groups = {};
+      const order = [];
+      rows.forEach(r => {
+        const v = r.vehicle || 'Unspecified';
+        if (!groups[v]) { groups[v] = []; order.push(v); }
+        groups[v].push(r);
+      });
+      order.forEach(v => {
+        body += `<tr><td colspan="11" class="rd-accom-city-header">${escapeHtml(v)}</td></tr>`;
+        groups[v].forEach((r, idx) => { body += transportRowPair(r, idx + 1); });
+      });
+    } else {
+      rows.forEach((r, idx) => { body += transportRowPair(r, idx + 1); });
+    }
+
+    results.innerHTML = `<div class="rd-modal-table-wrap"><table class="rd-modal-table">${thead}<tbody>${body}</tbody></table></div>`;
+  }
+
+  function bindTransportEvents() {
+    const toggle = $('rdTransportToggle');
+    if (toggle) {
+      toggle.addEventListener('click', () => {
+        transportState.collapsed = !transportState.collapsed;
+        const body = $('rdTransportBody');
+        const chevron = $('rdTransportChevron');
+        if (body) body.classList.toggle('collapsed', transportState.collapsed);
+        if (chevron) chevron.classList.toggle('open', !transportState.collapsed);
+      });
+    }
+
+    // Vehicle / Company / Assignment are INDEPENDENT — a change never refetches
+    // the other dropdowns' options (no cascade). Assignment only toggles the
+    // Company enabled state.
+    const vehicleSel = $('rdTransportVehicle');
+    if (vehicleSel) {
+      vehicleSel.addEventListener('change', () => { transportState.vehicle = vehicleSel.value; });
+    }
+
+    const companySel = $('rdTransportCompany');
+    if (companySel) {
+      companySel.addEventListener('change', () => { transportState.company = companySel.value; });
+    }
+
+    const assignmentSel = $('rdTransportAssignment');
+    if (assignmentSel) {
+      assignmentSel.addEventListener('change', () => {
+        transportState.assignment = assignmentSel.value;
+        syncTransportCompanyDisabled();
+      });
+    }
+
+    const pillsWrap = $('rdTransportPills');
+    if (pillsWrap) {
+      pillsWrap.addEventListener('click', (e) => {
+        const pill = e.target.closest('[data-transport-sts]');
+        if (pill) onTransportPillClick(pill.dataset.transportSts);
+      });
+    }
+
+    const applyBtn = $('rdTransportApply');
+    if (applyBtn) {
+      applyBtn.addEventListener('click', applyTransport);
+    }
+  }
+
+  function refreshTransportOnDateChange() {
+    fetchTransportFilters();
+    if (transportState.tableVisible) {
+      applyTransport();
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     Guide inline section
+
+     Mirrors the Transportation section (same layout / status pills / inline
+     results). Language, Guide Name and Assignment are INDEPENDENT filters —
+     selecting one never changes the options offered by another, and all
+     combine with the applied date range.
+
+     • Language and Guide Name are searchable dropdowns (reusing the
+       Accommodation searchable-dropdown component).
+     • Assignment is decided solely by Guide Name presence (server-side); when
+       "Not Assigned" is selected the Guide Name filter is disabled & reset.
+     • Results are grouped by Language whenever "All Languages" is selected;
+       otherwise a single flat table is shown.
+     ═══════════════════════════════════════════════════════════════════ */
+
+  const guideState = {
+    language: '',
+    guideName: '',
+    assignment: '',          // '' = All, 'ASSIGNED', 'NOT_ASSIGNED'
+    statuses: new Set(['ALL']),
+    collapsed: false,
+    tableVisible: false,
+    total: 0,
+    filtered: 0,
+    filterOptions: { languages: [], guides: [] },
+  };
+
+  let guideLangCtl = null;
+  let guideNameCtl = null;
+
+  function initGuideSection() {
+    const guideCard = document.querySelector('[data-rd-card="GUIDE"]');
+    const template = $('rdGuideTemplate');
+    if (!guideCard || !template) return;
+
+    const clone = template.content.cloneNode(true);
+    guideCard.parentNode.insertBefore(clone, guideCard);
+    guideCard.remove();
+
+    renderGuidePills();
+    bindGuideEvents();
+    syncGuideNameDisabled();
+    fetchGuideFilters();
+  }
+
+  function renderGuidePills() {
+    const wrap = $('rdGuidePills');
+    if (!wrap) return;
+    // Reuse the shared Accommodation status options for identical look & behaviour.
+    wrap.innerHTML = ACCOM_STATUS_OPTIONS.map((opt) => {
+      const on = guideState.statuses.has(opt.key) ? ' on' : '';
+      return `<button type="button" class="rd-accom-pill ${opt.cls}${on}" data-guide-sts="${opt.key}">${opt.label}</button>`;
+    }).join('');
+  }
+
+  function onGuidePillClick(key) {
+    if (key === 'ALL') {
+      guideState.statuses.clear();
+      guideState.statuses.add('ALL');
+    } else {
+      guideState.statuses.delete('ALL');
+      if (guideState.statuses.has(key)) {
+        guideState.statuses.delete(key);
+      } else {
+        guideState.statuses.add(key);
+      }
+      if (guideState.statuses.size === 0) {
+        guideState.statuses.add('ALL');
+      }
+    }
+    renderGuidePills();
+  }
+
+  /** Guide Name can't be combined with "Not Assigned" — disable & reset it. */
+  function syncGuideNameDisabled() {
+    const input = $('rdGuideNameInput');
+    const clear = $('rdGuideNameClear');
+    const notAssigned = guideState.assignment === 'NOT_ASSIGNED';
+    if (input) {
+      input.disabled = notAssigned;
+      if (notAssigned) {
+        input.value = '';
+        input.placeholder = 'All Guides';
+      }
+    }
+    if (clear) clear.disabled = notAssigned;
+    if (notAssigned) {
+      guideState.guideName = '';
+      const dropdown = $('rdGuideNameDropdown');
+      if (dropdown) dropdown.classList.remove('open');
+    }
+  }
+
+  /** Build a searchable dropdown bound to a guideState key. Returns { render }. */
+  function makeGuideSearchable(cfg) {
+    const input = $(cfg.inputId);
+    const dropdown = $(cfg.dropdownId);
+    const clear = $(cfg.clearId);
+    if (!input || !dropdown) return { render() {} };
+
+    function render() {
+      const query = input.value.toLowerCase();
+      const opts = cfg.getOptions() || [];
+      const filtered = query ? opts.filter((o) => o.toLowerCase().includes(query)) : opts;
+      const selected = guideState[cfg.stateKey] || '';
+      let html = `<button type="button" class="rd-accom-hotel-option${!selected ? ' active' : ''}" data-guide-opt="">${cfg.allLabel}</button>`;
+      html += filtered.map((o) => {
+        const active = o.toLowerCase() === selected.toLowerCase() ? ' active' : '';
+        return `<button type="button" class="rd-accom-hotel-option${active}" data-guide-opt="${escapeAttr(o)}">${escapeHtml(o)}</button>`;
+      }).join('');
+      dropdown.innerHTML = html;
+    }
+
+    input.addEventListener('focus', () => {
+      if (input.disabled) return;
+      dropdown.classList.add('open');
+      render();
+    });
+    input.addEventListener('input', () => {
+      dropdown.classList.add('open');
+      render();
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') dropdown.classList.remove('open');
+    });
+    dropdown.addEventListener('click', (e) => {
+      const opt = e.target.closest('[data-guide-opt]');
+      if (!opt) return;
+      const val = opt.dataset.guideOpt;
+      guideState[cfg.stateKey] = val;
+      input.value = val || '';
+      input.placeholder = val || cfg.allLabel;
+      dropdown.classList.remove('open');
+    });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest(cfg.wrapSel)) dropdown.classList.remove('open');
+    });
+    if (clear) {
+      clear.addEventListener('click', () => {
+        if (clear.disabled) return;
+        guideState[cfg.stateKey] = '';
+        input.value = '';
+        input.placeholder = cfg.allLabel;
+        render();
+      });
+    }
+    return { render };
+  }
+
+  function buildGuideUrl(includeStatuses) {
+    let url = `/inbound/run-down/guide-data?date_from=${encodeURIComponent(state.appliedDateFrom)}&date_to=${encodeURIComponent(state.appliedDateTo)}`;
+    if (guideState.language) url += `&language=${encodeURIComponent(guideState.language)}`;
+    if (guideState.guideName) url += `&guide_name=${encodeURIComponent(guideState.guideName)}`;
+    if (guideState.assignment) url += `&assignment=${encodeURIComponent(guideState.assignment)}`;
+    if (includeStatuses && !guideState.statuses.has('ALL')) {
+      url += `&statuses=${encodeURIComponent([...guideState.statuses].join(','))}`;
+    }
+    return url;
+  }
+
+  async function fetchGuideFilters() {
+    const url = buildGuideUrl(false);
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) return;
+      guideState.total = data.total || 0;
+      guideState.filterOptions = data.filters || { languages: [], guides: [] };
+      updateGuideDropdowns();
+      updateGuideCounts();
+    } catch (err) {
+      console.error('Guide filter fetch error', err);
+    }
+  }
+
+  function updateGuideDropdowns() {
+    // Drop a stale selection that is no longer offered for the current range.
+    const langs = guideState.filterOptions.languages || [];
+    if (guideState.language && !langs.map((l) => l.toLowerCase()).includes(guideState.language.toLowerCase())) {
+      guideState.language = '';
+      const input = $('rdGuideLanguageInput');
+      if (input) input.value = '';
+    }
+    const names = guideState.filterOptions.guides || [];
+    if (guideState.guideName && !names.map((n) => n.toLowerCase()).includes(guideState.guideName.toLowerCase())) {
+      guideState.guideName = '';
+      const input = $('rdGuideNameInput');
+      if (input) input.value = '';
+    }
+    if (guideLangCtl) guideLangCtl.render();
+    if (guideNameCtl) guideNameCtl.render();
+  }
+
+  function updateGuideCounts() {
+    const totalEl = $('rdGuideTotal');
+    const showingEl = $('rdGuideShowing');
+    if (totalEl) totalEl.textContent = guideState.total;
+    if (showingEl) {
+      showingEl.textContent = guideState.tableVisible ? `Showing ${guideState.filtered}` : '';
+    }
+  }
+
+  async function applyGuide() {
+    const applyBtn = $('rdGuideApply');
+    if (applyBtn) {
+      applyBtn.disabled = true;
+      applyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading…';
+    }
+
+    const url = buildGuideUrl(true);
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load');
+
+      guideState.total = data.total || 0;
+      guideState.filtered = data.filtered || 0;
+      guideState.tableVisible = true;
+      renderGuideTable(data.guides || []);
+      updateGuideCounts();
+    } catch (err) {
+      console.error('Guide apply error', err);
+      const results = $('rdGuideResults');
+      if (results) {
+        results.innerHTML = `<div class="rd-modal-empty"><i class="fas fa-exclamation-triangle"></i><p>Could not load guide data. Please try again.</p></div>`;
+      }
+      guideState.tableVisible = true;
+    } finally {
+      if (applyBtn) {
+        applyBtn.disabled = false;
+        applyBtn.innerHTML = '<i class="fas fa-check"></i> Apply';
+      }
+    }
+  }
+
+  /** Render one Guide record — columns identical to the existing popup table. */
+  function guideRow(r) {
+    return `<tr>
+        <td>${escapeHtml(r.date_from || '—')}</td>
+        <td>${escapeHtml(r.date_to || '—')}</td>
+        <td><strong>${escapeHtml(r.request_number)}</strong></td>
+        <td>${escapeHtml(r.group_name || '—')}</td>
+        <td class="num">${r.pax}</td>
+        <td>${escapeHtml(r.nationality || '—')}</td>
+        <td>${escapeHtml(r.language || '—')}</td>
+        <td>${escapeHtml(r.guide_note || '—')}</td>
+        <td>${statusBadge(r.status)}</td>
+        <td>${statusBadge(r.file_status)}</td>
+        <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+      </tr>`;
+  }
+
+  function renderGuideTable(rows) {
+    const results = $('rdGuideResults');
+    if (!results) return;
+
+    if (!rows.length) {
+      results.innerHTML = `<div class="rd-modal-empty"><i class="fas fa-inbox"></i><p>No guide records match the selected filters for this period.</p></div>`;
+      return;
+    }
+
+    const thead = '<thead><tr>' +
+      '<th>Date From</th><th>Date To</th><th>Request</th><th>Group Name</th>' +
+      '<th>PAX</th><th>Nationality</th><th>Language</th><th>Guide Notes</th>' +
+      '<th>Status</th><th>File Status</th><th></th>' +
+      '</tr></thead>';
+
+    let body = '';
+    // Group by language only when "All Languages" is selected; otherwise one table.
+    if (!guideState.language) {
+      const groups = {};
+      const order = [];
+      rows.forEach((r) => {
+        const l = r.language || '—';
+        if (!groups[l]) { groups[l] = []; order.push(l); }
+        groups[l].push(r);
+      });
+      order.forEach((l) => {
+        body += `<tr><td colspan="11" class="rd-accom-city-header">${escapeHtml(l)}</td></tr>`;
+        groups[l].forEach((r) => { body += guideRow(r); });
+      });
+    } else {
+      rows.forEach((r) => { body += guideRow(r); });
+    }
+
+    results.innerHTML = `<div class="rd-modal-table-wrap"><table class="rd-modal-table">${thead}<tbody>${body}</tbody></table></div>`;
+  }
+
+  function bindGuideEvents() {
+    const toggle = $('rdGuideToggle');
+    if (toggle) {
+      toggle.addEventListener('click', () => {
+        guideState.collapsed = !guideState.collapsed;
+        const body = $('rdGuideBody');
+        const chevron = $('rdGuideChevron');
+        if (body) body.classList.toggle('collapsed', guideState.collapsed);
+        if (chevron) chevron.classList.toggle('open', !guideState.collapsed);
+      });
+    }
+
+    // Language / Guide Name are INDEPENDENT searchable dropdowns (no cascade).
+    guideLangCtl = makeGuideSearchable({
+      inputId: 'rdGuideLanguageInput',
+      dropdownId: 'rdGuideLanguageDropdown',
+      clearId: 'rdGuideLanguageClear',
+      wrapSel: '#rdGuideLanguageWrap',
+      stateKey: 'language',
+      allLabel: 'All Languages',
+      getOptions: () => guideState.filterOptions.languages || [],
+    });
+    guideNameCtl = makeGuideSearchable({
+      inputId: 'rdGuideNameInput',
+      dropdownId: 'rdGuideNameDropdown',
+      clearId: 'rdGuideNameClear',
+      wrapSel: '#rdGuideNameWrap',
+      stateKey: 'guideName',
+      allLabel: 'All Guides',
+      getOptions: () => guideState.filterOptions.guides || [],
+    });
+
+    const assignmentSel = $('rdGuideAssignment');
+    if (assignmentSel) {
+      assignmentSel.addEventListener('change', () => {
+        guideState.assignment = assignmentSel.value;
+        syncGuideNameDisabled();
+      });
+    }
+
+    const pillsWrap = $('rdGuidePills');
+    if (pillsWrap) {
+      pillsWrap.addEventListener('click', (e) => {
+        const pill = e.target.closest('[data-guide-sts]');
+        if (pill) onGuidePillClick(pill.dataset.guideSts);
+      });
+    }
+
+    const applyBtn = $('rdGuideApply');
+    if (applyBtn) {
+      applyBtn.addEventListener('click', applyGuide);
+    }
+  }
+
+  function refreshGuideOnDateChange() {
+    fetchGuideFilters();
+    if (guideState.tableVisible) {
+      applyGuide();
+    }
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════════
+     Restaurant inline section
+
+     Mirrors the Accommodation section: City → Restaurant Name CASCADES (a
+     chosen City narrows the Restaurant dropdown), while Assignment and Status
+     stay independent. All filters combine with the applied date range.
+
+     • City is a plain select; Restaurant Name is a searchable dropdown
+       (reusing the Accommodation searchable-dropdown component/styles).
+     • Assignment is decided server-side by Restaurant Name presence; when
+       "Not Assigned" is selected the Restaurant Name filter is disabled & reset.
+     • Results are grouped by City → Restaurant. Each group shows a single
+       "City — Restaurant" heading above the existing (unchanged) table columns.
+     ═══════════════════════════════════════════════════════════════════ */
+
+  const restaurantState = {
+    city: '',
+    restaurantName: '',
+    assignment: '',          // '' = All, 'ASSIGNED', 'NOT_ASSIGNED'
+    statuses: new Set(['ALL']),
+    collapsed: false,
+    tableVisible: false,
+    total: 0,
+    filtered: 0,
+    filterOptions: { cities: [], restaurant_names: [] },
+  };
+
+  function initRestaurantSection() {
+    const mealCard = document.querySelector('[data-rd-card="MEAL"]');
+    const template = $('rdRestaurantTemplate');
+    if (!mealCard || !template) return;
+
+    const clone = template.content.cloneNode(true);
+    mealCard.parentNode.insertBefore(clone, mealCard);
+    mealCard.remove();
+
+    renderRestaurantPills();
+    bindRestaurantEvents();
+    syncRestaurantNameDisabled();
+    fetchRestaurantFilters();
+  }
+
+  function renderRestaurantPills() {
+    const wrap = $('rdRestaurantPills');
+    if (!wrap) return;
+    // Reuse the shared Accommodation status options for identical look & behaviour.
+    wrap.innerHTML = ACCOM_STATUS_OPTIONS.map((opt) => {
+      const on = restaurantState.statuses.has(opt.key) ? ' on' : '';
+      return `<button type="button" class="rd-accom-pill ${opt.cls}${on}" data-restaurant-sts="${opt.key}">${opt.label}</button>`;
+    }).join('');
+  }
+
+  function onRestaurantPillClick(key) {
+    if (key === 'ALL') {
+      restaurantState.statuses.clear();
+      restaurantState.statuses.add('ALL');
+    } else {
+      restaurantState.statuses.delete('ALL');
+      if (restaurantState.statuses.has(key)) {
+        restaurantState.statuses.delete(key);
+      } else {
+        restaurantState.statuses.add(key);
+      }
+      if (restaurantState.statuses.size === 0) {
+        restaurantState.statuses.add('ALL');
+      }
+    }
+    renderRestaurantPills();
+  }
+
+  /** Restaurant Name can't be combined with "Not Assigned" — disable & reset it. */
+  function syncRestaurantNameDisabled() {
+    const input = $('rdRestaurantNameInput');
+    const clear = $('rdRestaurantNameClear');
+    const notAssigned = restaurantState.assignment === 'NOT_ASSIGNED';
+    if (input) {
+      input.disabled = notAssigned;
+      if (notAssigned) {
+        input.value = '';
+        input.placeholder = 'All Restaurants';
+      }
+    }
+    if (clear) clear.disabled = notAssigned;
+    if (notAssigned) {
+      restaurantState.restaurantName = '';
+      const dropdown = $('rdRestaurantNameDropdown');
+      if (dropdown) dropdown.classList.remove('open');
+    }
+  }
+
+  function buildRestaurantUrl(includeStatuses) {
+    let url = `/inbound/run-down/restaurant-data?date_from=${encodeURIComponent(state.appliedDateFrom)}&date_to=${encodeURIComponent(state.appliedDateTo)}`;
+    if (restaurantState.city) url += `&city=${encodeURIComponent(restaurantState.city)}`;
+    if (restaurantState.restaurantName) url += `&restaurant_name=${encodeURIComponent(restaurantState.restaurantName)}`;
+    if (restaurantState.assignment) url += `&assignment=${encodeURIComponent(restaurantState.assignment)}`;
+    if (includeStatuses && !restaurantState.statuses.has('ALL')) {
+      url += `&statuses=${encodeURIComponent([...restaurantState.statuses].join(','))}`;
+    }
+    return url;
+  }
+
+  async function fetchRestaurantFilters() {
+    const url = buildRestaurantUrl(false);
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) return;
+      restaurantState.total = data.total || 0;
+      restaurantState.filterOptions = data.filters || { cities: [], restaurant_names: [] };
+      updateRestaurantDropdowns();
+      updateRestaurantCounts();
+    } catch (err) {
+      console.error('Restaurant filter fetch error', err);
+    }
+  }
+
+  function updateRestaurantDropdowns() {
+    const citySel = $('rdRestaurantCity');
+    if (citySel) {
+      const prev = citySel.value;
+      citySel.innerHTML = '<option value="">All Cities</option>' +
+        restaurantState.filterOptions.cities.map((c) => `<option value="${escapeAttr(c)}">${escapeHtml(c)}</option>`).join('');
+      if (restaurantState.filterOptions.cities.map((c) => c.toLowerCase()).includes(prev.toLowerCase())) {
+        citySel.value = prev;
+      } else {
+        citySel.value = '';
+        restaurantState.city = '';
+      }
+    }
+
+    // Drop a stale restaurant selection no longer offered for the current city/range.
+    const names = restaurantState.filterOptions.restaurant_names || [];
+    if (restaurantState.restaurantName && !names.map((n) => n.toLowerCase()).includes(restaurantState.restaurantName.toLowerCase())) {
+      restaurantState.restaurantName = '';
+      const input = $('rdRestaurantNameInput');
+      if (input) input.value = '';
+    }
+    updateRestaurantNameDropdown();
+  }
+
+  function updateRestaurantNameDropdown() {
+    const dropdown = $('rdRestaurantNameDropdown');
+    if (!dropdown) return;
+    const input = $('rdRestaurantNameInput');
+    const query = (input ? input.value : '').toLowerCase();
+    const names = restaurantState.filterOptions.restaurant_names || [];
+    const filtered = query ? names.filter((n) => n.toLowerCase().includes(query)) : names;
+
+    let html = `<button type="button" class="rd-accom-hotel-option${!restaurantState.restaurantName ? ' active' : ''}" data-restaurant-name="">All Restaurants</button>`;
+    html += filtered.map((n) => {
+      const active = n.toLowerCase() === (restaurantState.restaurantName || '').toLowerCase() ? ' active' : '';
+      return `<button type="button" class="rd-accom-hotel-option${active}" data-restaurant-name="${escapeAttr(n)}">${escapeHtml(n)}</button>`;
+    }).join('');
+    dropdown.innerHTML = html;
+  }
+
+  function updateRestaurantCounts() {
+    const totalEl = $('rdRestaurantTotal');
+    const showingEl = $('rdRestaurantShowing');
+    if (totalEl) totalEl.textContent = restaurantState.total;
+    if (showingEl) {
+      showingEl.textContent = restaurantState.tableVisible ? `Showing ${restaurantState.filtered}` : '';
+    }
+  }
+
+  async function applyRestaurant() {
+    const applyBtn = $('rdRestaurantApply');
+    if (applyBtn) {
+      applyBtn.disabled = true;
+      applyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading…';
+    }
+
+    const url = buildRestaurantUrl(true);
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load');
+
+      restaurantState.total = data.total || 0;
+      restaurantState.filtered = data.filtered || 0;
+      restaurantState.tableVisible = true;
+      renderRestaurantTable(data.restaurants || []);
+      updateRestaurantCounts();
+    } catch (err) {
+      console.error('Restaurant apply error', err);
+      const results = $('rdRestaurantResults');
+      if (results) {
+        results.innerHTML = `<div class="rd-modal-empty"><i class="fas fa-exclamation-triangle"></i><p>Could not load restaurant data. Please try again.</p></div>`;
+      }
+      restaurantState.tableVisible = true;
+    } finally {
+      if (applyBtn) {
+        applyBtn.disabled = false;
+        applyBtn.innerHTML = '<i class="fas fa-check"></i> Apply';
+      }
+    }
+  }
+
+  /** Render one Restaurant/meal record — columns identical to the existing popup. */
+  function restaurantRow(r) {
+    return `<tr>
+        <td>${escapeHtml(r.day_of_week || '—')}</td>
+        <td>${escapeHtml(r.date_display)}</td>
+        <td><strong>${escapeHtml(r.request_number)}</strong></td>
+        <td>${escapeHtml(r.group_name || '—')}</td>
+        <td>${escapeHtml(r.nationality || '—')}</td>
+        <td>${escapeHtml(r.meal || '—')}</td>
+        <td class="num">${r.pax}</td>
+        <td>${escapeHtml(r.restaurant_note || '—')}</td>
+        <td>${statusBadge(r.status)}</td>
+        <td>${statusBadge(r.file_status)}</td>
+        <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+      </tr>`;
+  }
+
+  function renderRestaurantTable(rows) {
+    const results = $('rdRestaurantResults');
+    if (!results) return;
+
+    if (!rows.length) {
+      results.innerHTML = `<div class="rd-modal-empty"><i class="fas fa-inbox"></i><p>No restaurant records match the selected filters for this period.</p></div>`;
+      return;
+    }
+
+    const thead = '<thead><tr>' +
+      '<th>Day</th><th>Date</th><th>Request</th><th>Group Name</th>' +
+      '<th>Nationality</th><th>Meal</th><th>PAX No</th><th>Restaurant Note</th>' +
+      '<th>Status</th><th>File Status</th><th></th>' +
+      '</tr></thead>';
+
+    // Group by City → Restaurant, preserving the server-sorted order. Each group
+    // gets a single "City — Restaurant" heading; the table columns are unchanged.
+    const groups = {};
+    const order = [];
+    rows.forEach((r) => {
+      const city = r.city || 'Unspecified City';
+      const name = r.restaurant_name || 'Not Assigned';
+      const key = `${city} ${name}`;
+      if (!groups[key]) { groups[key] = { label: `${city} — ${name}`, rows: [] }; order.push(key); }
+      groups[key].rows.push(r);
+    });
+
+    let body = '';
+    order.forEach((key) => {
+      body += `<tr><td colspan="11" class="rd-accom-city-header">${escapeHtml(groups[key].label)}</td></tr>`;
+      groups[key].rows.forEach((r) => { body += restaurantRow(r); });
+    });
+
+    results.innerHTML = `<div class="rd-modal-table-wrap"><table class="rd-modal-table">${thead}<tbody>${body}</tbody></table></div>`;
+  }
+
+  function bindRestaurantEvents() {
+    const toggle = $('rdRestaurantToggle');
+    if (toggle) {
+      toggle.addEventListener('click', () => {
+        restaurantState.collapsed = !restaurantState.collapsed;
+        const body = $('rdRestaurantBody');
+        const chevron = $('rdRestaurantChevron');
+        if (body) body.classList.toggle('collapsed', restaurantState.collapsed);
+        if (chevron) chevron.classList.toggle('open', !restaurantState.collapsed);
+      });
+    }
+
+    // City CASCADES into Restaurant Name — changing City re-fetches the narrowed
+    // restaurant option list and resets any prior restaurant selection.
+    const citySel = $('rdRestaurantCity');
+    if (citySel) {
+      citySel.addEventListener('change', () => {
+        restaurantState.city = citySel.value;
+        restaurantState.restaurantName = '';
+        const input = $('rdRestaurantNameInput');
+        if (input) input.value = '';
+        fetchRestaurantFilters();
+      });
+    }
+
+    // Searchable Restaurant Name dropdown.
+    const nameInput = $('rdRestaurantNameInput');
+    const nameDropdown = $('rdRestaurantNameDropdown');
+    const nameClear = $('rdRestaurantNameClear');
+
+    if (nameInput && nameDropdown) {
+      nameInput.addEventListener('focus', () => {
+        if (nameInput.disabled) return;
+        nameDropdown.classList.add('open');
+        updateRestaurantNameDropdown();
+      });
+      nameInput.addEventListener('input', () => {
+        nameDropdown.classList.add('open');
+        updateRestaurantNameDropdown();
+      });
+      nameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') nameDropdown.classList.remove('open');
+      });
+      nameDropdown.addEventListener('click', (e) => {
+        const opt = e.target.closest('[data-restaurant-name]');
+        if (!opt) return;
+        const name = opt.dataset.restaurantName;
+        restaurantState.restaurantName = name;
+        nameInput.value = name || '';
+        nameInput.placeholder = name || 'All Restaurants';
+        nameDropdown.classList.remove('open');
+      });
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#rdRestaurantNameWrap')) nameDropdown.classList.remove('open');
+      });
+    }
+
+    if (nameClear) {
+      nameClear.addEventListener('click', () => {
+        if (nameClear.disabled) return;
+        restaurantState.restaurantName = '';
+        if (nameInput) {
+          nameInput.value = '';
+          nameInput.placeholder = 'All Restaurants';
+        }
+        updateRestaurantNameDropdown();
+      });
+    }
+
+    const assignmentSel = $('rdRestaurantAssignment');
+    if (assignmentSel) {
+      assignmentSel.addEventListener('change', () => {
+        restaurantState.assignment = assignmentSel.value;
+        syncRestaurantNameDisabled();
+      });
+    }
+
+    const pillsWrap = $('rdRestaurantPills');
+    if (pillsWrap) {
+      pillsWrap.addEventListener('click', (e) => {
+        const pill = e.target.closest('[data-restaurant-sts]');
+        if (pill) onRestaurantPillClick(pill.dataset.restaurantSts);
+      });
+    }
+
+    const applyBtn = $('rdRestaurantApply');
+    if (applyBtn) {
+      applyBtn.addEventListener('click', applyRestaurant);
+    }
+  }
+
+  function refreshRestaurantOnDateChange() {
+    fetchRestaurantFilters();
+    if (restaurantState.tableVisible) {
+      applyRestaurant();
+    }
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════════
+     Agent inline section
+
+     Mirrors the Restaurant section (same section chrome, filter row, status
+     pills and grouped inline table). Two filters:
+       • Agent Name — a plain dropdown; "ALL AGENTS" (value '') keeps every
+         agent, each rendered under its own heading.
+       • File Status — MULTI-SELECT over Requested / Confirmed / Invoiced /
+         Deleted, combining as OR, with "All" as the reset.
+     Both combine with the applied date range. Rows are ALWAYS grouped by agent
+     — exactly as Restaurant always groups by "City — Restaurant" — so the agent
+     name sits above its table instead of becoming a column, and an agent with
+     no matching rows produces no group at all.
+     ═══════════════════════════════════════════════════════════════════ */
+
+  const agentState = {
+    agentName: '',            // '' = ALL AGENTS
+    statuses: new Set(['ALL']),
+    collapsed: false,
+    tableVisible: false,
+    total: 0,
+    filtered: 0,
+    filterOptions: { agent_names: [] },
+  };
+
+  /** File Status buckets for the Agent section. These are NOT service statuses:
+   *  they come from the server's _file_status_bucket, where 'Deleted' is derived
+   *  from the request's deleted-queue flag rather than a stored status value. */
+  const AGENT_FILE_STATUS_OPTIONS = [
+    { key: 'REQUESTED', label: 'Requested', cls: 'requested' },
+    { key: 'CONFIRMED', label: 'Confirmed', cls: 'confirmed' },
+    { key: 'INVOICED', label: 'Invoiced', cls: 'invoiced' },
+    { key: 'DELETED', label: 'Deleted', cls: 'deleted' },
+    { key: 'ALL', label: 'All', cls: 'all' },
+  ];
+
+  function initAgentSection() {
+    const anchor = document.querySelector('[data-rd-agent-anchor]');
+    const template = $('rdAgentTemplate');
+    if (!anchor || !template) return;
+
+    const clone = template.content.cloneNode(true);
+    anchor.parentNode.insertBefore(clone, anchor);
+    anchor.remove();
+
+    renderAgentPills();
+    bindAgentEvents();
+    fetchAgentFilters();
+  }
+
+  function renderAgentPills() {
+    const wrap = $('rdAgentPills');
+    if (!wrap) return;
+    wrap.innerHTML = AGENT_FILE_STATUS_OPTIONS.map((opt) => {
+      const on = agentState.statuses.has(opt.key) ? ' on' : '';
+      return `<button type="button" class="rd-accom-pill ${opt.cls}${on}" data-agent-sts="${opt.key}">${opt.label}</button>`;
+    }).join('');
+  }
+
+  function onAgentPillClick(key) {
+    if (key === 'ALL') {
+      agentState.statuses.clear();
+      agentState.statuses.add('ALL');
+    } else {
+      agentState.statuses.delete('ALL');
+      if (agentState.statuses.has(key)) {
+        agentState.statuses.delete(key);
+      } else {
+        agentState.statuses.add(key);
+      }
+      if (agentState.statuses.size === 0) {
+        agentState.statuses.add('ALL');
+      }
+    }
+    renderAgentPills();
+  }
+
+  function buildAgentUrl(includeStatuses) {
+    let url = `/inbound/run-down/agent-data?date_from=${encodeURIComponent(state.appliedDateFrom)}&date_to=${encodeURIComponent(state.appliedDateTo)}`;
+    if (agentState.agentName) url += `&agent=${encodeURIComponent(agentState.agentName)}`;
+    if (includeStatuses && !agentState.statuses.has('ALL')) {
+      url += `&statuses=${encodeURIComponent([...agentState.statuses].join(','))}`;
+    }
+    return url;
+  }
+
+  async function fetchAgentFilters() {
+    const url = buildAgentUrl(false);
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) return;
+      agentState.total = data.total || 0;
+      agentState.filterOptions = data.filters || { agent_names: [] };
+      updateAgentDropdown();
+      updateAgentCounts();
+    } catch (err) {
+      console.error('Agent filter fetch error', err);
+    }
+  }
+
+  function updateAgentDropdown() {
+    const sel = $('rdAgentName');
+    if (!sel) return;
+    const prev = sel.value;
+    const names = agentState.filterOptions.agent_names || [];
+    sel.innerHTML = '<option value="">ALL AGENTS</option>' +
+      names.map((n) => `<option value="${escapeAttr(n)}">${escapeHtml(n)}</option>`).join('');
+    // Drop a selection that is no longer offered for the current range.
+    if (prev && names.map((n) => n.toLowerCase()).includes(prev.toLowerCase())) {
+      sel.value = prev;
+    } else {
+      sel.value = '';
+      agentState.agentName = '';
+    }
+  }
+
+  function updateAgentCounts() {
+    const totalEl = $('rdAgentTotal');
+    const showingEl = $('rdAgentShowing');
+    if (totalEl) totalEl.textContent = agentState.total;
+    if (showingEl) {
+      showingEl.textContent = agentState.tableVisible ? `Showing ${agentState.filtered}` : '';
+    }
+  }
+
+  async function applyAgent() {
+    const applyBtn = $('rdAgentApply');
+    if (applyBtn) {
+      applyBtn.disabled = true;
+      applyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading…';
+    }
+
+    const url = buildAgentUrl(true);
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load');
+
+      agentState.total = data.total || 0;
+      agentState.filtered = data.filtered || 0;
+      agentState.tableVisible = true;
+      renderAgentTable(data.agents || []);
+      updateAgentCounts();
+    } catch (err) {
+      console.error('Agent apply error', err);
+      const results = $('rdAgentResults');
+      if (results) {
+        results.innerHTML = `<div class="rd-modal-empty"><i class="fas fa-exclamation-triangle"></i><p>Could not load agent data. Please try again.</p></div>`;
+      }
+      agentState.tableVisible = true;
+    } finally {
+      if (applyBtn) {
+        applyBtn.disabled = false;
+        applyBtn.innerHTML = '<i class="fas fa-check"></i> Apply';
+      }
+    }
+  }
+
+  /** Render one Agent record — columns identical to the previous popup table. */
+  function agentRow(r) {
+    return `<tr>
+        <td>${escapeHtml(r.from_date || '—')}</td>
+        <td>${escapeHtml(r.to_date || '—')}</td>
+        <td><strong>${escapeHtml(r.request_number)}</strong></td>
+        <td>${escapeHtml(r.contact_name || '—')}</td>
+        <td>${escapeHtml(r.group_name || '—')}</td>
+        <td class="num">${r.pax}</td>
+        <td>${escapeHtml(r.nationality || '—')}</td>
+        <td>${statusBadge(r.file_status)}</td>
+        <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+      </tr>`;
+  }
+
+  function renderAgentTable(rows) {
+    const results = $('rdAgentResults');
+    if (!results) return;
+
+    if (!rows.length) {
+      results.innerHTML = `<div class="rd-modal-empty"><i class="fas fa-inbox"></i><p>No agent records match the selected filters for this period.</p></div>`;
+      return;
+    }
+
+    const thead = '<thead><tr>' +
+      '<th>From Date</th><th>To Date</th><th>Request ID</th><th>Contact Name</th>' +
+      '<th>Group Name</th><th>PAX</th><th>Nationality</th><th>File Status</th><th></th>' +
+      '</tr></thead>';
+
+    // Group by Agent, preserving the server-sorted order. Each agent gets a
+    // single heading above its rows; the table columns are unchanged.
+    const groups = {};
+    const order = [];
+    rows.forEach((r) => {
+      const name = r.agent_name || 'Unassigned Agent';
+      if (!groups[name]) { groups[name] = []; order.push(name); }
+      groups[name].push(r);
+    });
+
+    let body = '';
+    order.forEach((name) => {
+      body += `<tr><td colspan="9" class="rd-accom-city-header">${escapeHtml(name)}</td></tr>`;
+      groups[name].forEach((r) => { body += agentRow(r); });
+    });
+
+    results.innerHTML = `<div class="rd-modal-table-wrap"><table class="rd-modal-table">${thead}<tbody>${body}</tbody></table></div>`;
+  }
+
+  function bindAgentEvents() {
+    const toggle = $('rdAgentToggle');
+    if (toggle) {
+      toggle.addEventListener('click', () => {
+        agentState.collapsed = !agentState.collapsed;
+        const body = $('rdAgentBody');
+        const chevron = $('rdAgentChevron');
+        if (body) body.classList.toggle('collapsed', agentState.collapsed);
+        if (chevron) chevron.classList.toggle('open', !agentState.collapsed);
+      });
+    }
+
+    const nameSel = $('rdAgentName');
+    if (nameSel) {
+      nameSel.addEventListener('change', () => { agentState.agentName = nameSel.value; });
+    }
+
+    const pillsWrap = $('rdAgentPills');
+    if (pillsWrap) {
+      pillsWrap.addEventListener('click', (e) => {
+        const pill = e.target.closest('[data-agent-sts]');
+        if (pill) onAgentPillClick(pill.dataset.agentSts);
+      });
+    }
+
+    const applyBtn = $('rdAgentApply');
+    if (applyBtn) {
+      applyBtn.addEventListener('click', applyAgent);
+    }
+  }
+
+  function refreshAgentOnDateChange() {
+    fetchAgentFilters();
+    if (agentState.tableVisible) {
+      applyAgent();
+    }
+  }
+
 
   function init() {
     const root = $('runDownApp');
@@ -1595,8 +2620,20 @@
       modalEl.addEventListener('hidden.bs.modal', () => { state.modalOpen = false; });
     }
 
+    // Initialize agent inline section
+    initAgentSection();
+
     // Initialize accommodation inline section
     initAccomSection();
+
+    // Initialize transportation inline section
+    initTransportSection();
+
+    // Initialize guide inline section
+    initGuideSection();
+
+    // Initialize restaurant inline section
+    initRestaurantSection();
   }
 
   if (document.readyState === 'loading') {

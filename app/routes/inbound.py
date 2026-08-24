@@ -537,17 +537,41 @@ def _inbound_list_filter_summary():
     return parts
 
 
-def _inbound_row_status_label(inb, queue):
+def _file_status_bucket(inb, queue=None):
+    """Bucket an inbound request into one canonical File Status value.
+
+    Returns one of REQUESTED / CONFIRMED / INVOICED / DELETED, or the raw
+    uppercase status for legacy values that fit none of them (those match no
+    File Status filter). Note that DELETED is not a stored status — it is
+    derived from the pending_invoice_queue flag (or an explicit Deleted queue
+    view), which is why callers must never compare a raw status string to it.
+
+    Single source of truth for both the inbound list's status label and the
+    Run Down Agent section's File Status filter, so the two cannot drift.
+    """
     if queue == 'deleted' or getattr(inb, 'pending_invoice_queue', False):
-        return 'Deleted'
+        return 'DELETED'
     status_val = str(inb.status or '').upper()
-    if status_val == 'REQUEST':
-        return 'Request'
+    if status_val in ['REQUEST', 'REQUESTED']:
+        return 'REQUESTED'
     if status_val in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS']:
-        return 'Confirmed'
+        return 'CONFIRMED'
     if status_val in ['INVOICE', 'COMPLETED', 'INVOICED']:
+        return 'INVOICED'
+    return status_val
+
+
+def _inbound_row_status_label(inb, queue):
+    bucket = _file_status_bucket(inb, queue)
+    if bucket == 'DELETED':
+        return 'Deleted'
+    if bucket == 'REQUESTED':
+        return 'Request'
+    if bucket == 'CONFIRMED':
+        return 'Confirmed'
+    if bucket == 'INVOICED':
         return 'Invoiced'
-    return status_val.title() if status_val else ''
+    return bucket.title() if bucket else ''
 
 
 def _inbound_list_context():
@@ -8747,6 +8771,396 @@ def run_down_accommodation_data():
     })
 
 
+@inbound_bp.route('/run-down/transportation-data')
+@login_required
+def run_down_transportation_data():
+    """JSON: all transportation rows + independent filter options for the inline table.
+
+    Filters (Vehicle, Company, Assignment, Status) are applied independently and
+    combined with the existing date range — mirroring the Accommodation inline
+    section but WITHOUT cascading between Vehicle and Company.
+    """
+    date_from, date_to = _parse_run_down_dates()
+    if date_from is None or date_to is None:
+        return jsonify({'error': 'Invalid date format'}), 400
+
+    vehicle_filter = request.args.get('vehicle', '').strip()
+    company_filter = request.args.get('company', '').strip()
+    assignment_filter = request.args.get('assignment', '').strip().upper()  # '', ASSIGNED, NOT_ASSIGNED
+    statuses_param = request.args.get('statuses', '').strip()
+    status_filters = [s.strip().upper() for s in statuses_param.split(',') if s.strip()] if statuses_param else []
+
+    UNSPECIFIED_VEHICLE = 'Unspecified'
+
+    all_transports = (
+        InboundTransport.query.join(InboundRequest)
+        .filter(
+            InboundTransport.date >= date_from,
+            InboundTransport.date <= date_to,
+        )
+        .all()
+    )
+
+    # Show only the records that belong to the request's Transportation section —
+    # i.e. exclude incomplete arrival/departure airport-transfer stubs, exactly as
+    # _trip_summary_transports does. Those stubs live under Arrival/Departure until a
+    # supplier + vehicle is assigned; surfacing them here made supplier-less stubs
+    # appear (wrongly) as "Not Assigned" transportation records.
+    all_transports = [t for t in all_transports if _include_transport_in_trip_summary(t)]
+
+    def _vehicle_of(t):
+        return (t.vehicle_type or '').strip() or UNSPECIFIED_VEHICLE
+
+    def _company_of(t):
+        return (t.supplier_name or '').strip()
+
+    def _is_assigned(t):
+        return bool(_company_of(t))
+
+    # ── Independent filter option lists (never cascade between Vehicle/Company) ──
+    vehicles = sorted({_vehicle_of(t) for t in all_transports}, key=str.lower)
+
+    # Case-insensitive dedup of company names, keeping first-seen casing.
+    _seen_companies = {}
+    for t in all_transports:
+        c = _company_of(t)
+        if not c:
+            continue
+        key = c.lower()
+        if key not in _seen_companies:
+            _seen_companies[key] = c
+    companies = sorted(_seen_companies.values(), key=str.lower)
+
+    # ── Apply filters independently ──
+    filtered = all_transports
+    if vehicle_filter:
+        filtered = [t for t in filtered if _vehicle_of(t).lower() == vehicle_filter.lower()]
+    # A specific company only makes sense for assigned records; Not Assigned wins.
+    if company_filter and assignment_filter != 'NOT_ASSIGNED':
+        filtered = [t for t in filtered if _company_of(t).lower() == company_filter.lower()]
+    if assignment_filter == 'ASSIGNED':
+        filtered = [t for t in filtered if _is_assigned(t)]
+    elif assignment_filter == 'NOT_ASSIGNED':
+        filtered = [t for t in filtered if not _is_assigned(t)]
+
+    rows = []
+    for transport in filtered:
+        req = transport.request
+        pickup = transport.pickup_location or transport.pickup_point or ''
+        dropoff = transport.dropoff_location or transport.drop_off_point or ''
+        row = _run_down_row(
+            req,
+            transport.date,
+            f"{transport.vehicle_type or 'Transport'} – {pickup or 'TBA'} → {dropoff or 'TBA'}",
+            transport.status,
+            transport.pax or req.pax,
+            'TRANSPORT',
+            transport.id,
+            end_date=transport.end_date,
+            transport_notes=transport.note,
+            pickup_location=pickup,
+            dropoff_location=dropoff,
+        )
+        row['vehicle'] = _vehicle_of(transport)
+        row['company'] = _company_of(transport)
+        rows.append(row)
+
+    if status_filters and 'ALL' not in status_filters:
+        rows = [r for r in rows if normalizeServiceStatus(r.get('status', '')) in status_filters]
+
+    rows.sort(key=lambda r: ((r.get('vehicle') or '').lower(), r['date'], r['request_number']))
+
+    return jsonify({
+        'transports': rows,
+        'total': len(all_transports),
+        'filtered': len(rows),
+        'filters': {
+            'vehicles': vehicles,
+            'companies': companies,
+        },
+        'date_from': date_from.strftime('%Y-%m-%d'),
+        'date_to': date_to.strftime('%Y-%m-%d'),
+    })
+
+
+@inbound_bp.route('/run-down/guide-data')
+@login_required
+def run_down_guide_data():
+    """JSON: all guide rows + independent filter options for the inline table.
+
+    Filters (Language, Guide Name, Assignment, Status) are applied independently
+    and combined with the date range — mirroring the Transportation inline section
+    but keyed to the Guide data model.
+
+    Assignment is decided solely by whether Guide Name is populated (the guide
+    company / supplier never affects it), and remains fully independent of Status.
+    Effective status folds the legacy ``is_cancelled`` flag into ``CANCELLED`` so
+    cancelled guides never leak into the Requested/Confirmed views.
+    """
+    date_from, date_to = _parse_run_down_dates()
+    if date_from is None or date_to is None:
+        return jsonify({'error': 'Invalid date format'}), 400
+
+    language_filter = request.args.get('language', '').strip()
+    guide_filter = request.args.get('guide_name', '').strip()
+    assignment_filter = request.args.get('assignment', '').strip().upper()  # '', ASSIGNED, NOT_ASSIGNED
+    statuses_param = request.args.get('statuses', '').strip()
+    status_filters = [s.strip().upper() for s in statuses_param.split(',') if s.strip()] if statuses_param else []
+
+    all_guides = (
+        InboundGuide.query.join(InboundRequest)
+        .filter(
+            InboundGuide.date >= date_from,
+            InboundGuide.date <= date_to,
+        )
+        .all()
+    )
+
+    def _language_of(g):
+        return (g.language or '').strip()
+
+    def _guide_of(g):
+        return (g.guide_name or '').strip()
+
+    def _is_assigned(g):
+        # Assignment depends ONLY on Guide Name — never on the supplier/company.
+        return bool(_guide_of(g))
+
+    def _effective_status(g):
+        if g.is_cancelled:
+            return 'CANCELLED'
+        return normalizeServiceStatus(g.status)
+
+    # ── Independent filter option lists (never cascade between Language/Guide) ──
+    # Case-insensitive dedup, keeping first-seen casing as the display value.
+    def _dedup(values):
+        seen = {}
+        for v in values:
+            if not v:
+                continue
+            key = v.lower()
+            if key not in seen:
+                seen[key] = v
+        return sorted(seen.values(), key=str.lower)
+
+    # Language is a system-wide filter sourced from the Guide creation/edit form's
+    # predefined list (GUIDE_LANGUAGES — the same constant reused elsewhere as the
+    # "languages from the creation form"), independent of the selected date range.
+    # The 'Other' placeholder is dropped, and any custom languages actually entered
+    # on a guide record via the form's "Other" option are appended after the
+    # predefined ones so no booking is ever unreachable through this filter.
+    # Guide Name stays date-scoped (built from all_guides below).
+    predefined_langs = [l for l in GUIDE_LANGUAGES if l != 'Other']
+    _predef_lower = {l.lower() for l in predefined_langs}
+    used_langs = _dedup((v[0] or '').strip() for v in db.session.query(InboundGuide.language).distinct().all())
+    custom_langs = [l for l in used_langs if l.lower() not in _predef_lower]
+    languages = predefined_langs + custom_langs
+    guides = _dedup(_guide_of(g) for g in all_guides)
+
+    # ── Apply filters independently ──
+    filtered = all_guides
+    if language_filter:
+        filtered = [g for g in filtered if _language_of(g).lower() == language_filter.lower()]
+    # A specific guide only makes sense for assigned records; Not Assigned wins.
+    if guide_filter and assignment_filter != 'NOT_ASSIGNED':
+        filtered = [g for g in filtered if _guide_of(g).lower() == guide_filter.lower()]
+    if assignment_filter == 'ASSIGNED':
+        filtered = [g for g in filtered if _is_assigned(g)]
+    elif assignment_filter == 'NOT_ASSIGNED':
+        filtered = [g for g in filtered if not _is_assigned(g)]
+
+    rows = []
+    for guide in filtered:
+        req = guide.request
+        eff_status = _effective_status(guide)
+        row = _run_down_row(
+            req,
+            guide.date,
+            f"{guide.guide_name or 'Guide'} – {guide.language or 'N/A'}",
+            eff_status,
+            req.pax,
+            'GUIDE',
+            guide.id,
+            end_date=guide.end_date,
+            language=guide.language,
+            guide_notes=guide.additional_comments,
+        )
+        row['language'] = _language_of(guide) or '—'
+        rows.append(row)
+
+    if status_filters and 'ALL' not in status_filters:
+        rows = [r for r in rows if normalizeServiceStatus(r.get('status', '')) in status_filters]
+
+    rows.sort(key=lambda r: ((r.get('language') or '').lower(), r['date'], r['request_number']))
+
+    return jsonify({
+        'guides': rows,
+        'total': len(all_guides),
+        'filtered': len(rows),
+        'filters': {
+            'languages': languages,
+            'guides': guides,
+        },
+        'date_from': date_from.strftime('%Y-%m-%d'),
+        'date_to': date_to.strftime('%Y-%m-%d'),
+    })
+
+
+@inbound_bp.route('/run-down/restaurant-data')
+@login_required
+def run_down_restaurant_data():
+    """JSON: all restaurant/meal rows + filter options for the inline table.
+
+    Filters: City, Restaurant Name, Assignment, Status.
+      • City → Restaurant CASCADES — choosing a City narrows the Restaurant list,
+        mirroring the Accommodation City → Hotel cascade. City + All Restaurants
+        shows every restaurant in that city; All Cities + All Restaurants shows
+        everything, grouped by City then Restaurant.
+      • Assignment is decided solely by whether a Restaurant Name is populated
+        (supplier FK or legacy text), fully independent of Status. A specific
+        Restaurant Name only applies to assigned records, so "Not Assigned" wins.
+      • City is sourced from the linked Restaurant Supplier's manually-entered
+        city (Supplier.city). Legacy text-name meals with no FK are matched to a
+        Supplier by name — exactly as the Accommodation section resolves city.
+        Cities are deduped case-insensitively and displayed Title-Cased.
+      • Grouping keys travel in each row as ``city`` and ``restaurant_name``; the
+        client renders one ``City — Restaurant`` heading per group and leaves the
+        existing table columns untouched.
+    """
+    date_from, date_to = _parse_run_down_dates()
+    if date_from is None or date_to is None:
+        return jsonify({'error': 'Invalid date format'}), 400
+
+    city_filter = request.args.get('city', '').strip()
+    restaurant_filter = request.args.get('restaurant_name', '').strip()
+    assignment_filter = request.args.get('assignment', '').strip().upper()  # '', ASSIGNED, NOT_ASSIGNED
+    statuses_param = request.args.get('statuses', '').strip()
+    status_filters = [s.strip().upper() for s in statuses_param.split(',') if s.strip()] if statuses_param else []
+
+    all_meals = (
+        InboundMeal.query.join(InboundRequest)
+        .filter(
+            InboundMeal.date >= date_from,
+            InboundMeal.date <= date_to,
+        )
+        .all()
+    )
+
+    # Restaurant name: FK supplier wins, else legacy free-text. An unresolved
+    # numeric-id-in-text value is treated as no name (i.e. Not Assigned).
+    def _restaurant_of(m):
+        if m.supplier_ref:
+            return (m.supplier_ref.name or '').strip()
+        r = (m.restaurant or '').strip()
+        return '' if r.isdigit() else r
+
+    # Build a name → city lookup for legacy text-name meals lacking an FK
+    # supplier, so their city still resolves from the Restaurant Supplier record.
+    _text_names = {_restaurant_of(m) for m in all_meals if not m.supplier_ref and _restaurant_of(m)}
+    _name_city_map = {}
+    if _text_names:
+        _suppliers = Supplier.query.filter(
+            Supplier.supplier_type == 'RESTAURANT',
+            Supplier.name.in_(_text_names),
+        ).all()
+        for s in _suppliers:
+            _name_city_map[(s.name or '').strip().lower()] = (s.city or '').strip()
+
+    def _city_of(m):
+        if m.supplier_ref and (m.supplier_ref.city or '').strip():
+            return (m.supplier_ref.city or '').strip()
+        name = _restaurant_of(m)
+        return _name_city_map.get(name.lower(), '') if name else ''
+
+    def _is_assigned(m):
+        # Assignment depends ONLY on Restaurant Name — never on Status.
+        return bool(_restaurant_of(m))
+
+    # ── City options: case-insensitive dedup, Title-Case display ──
+    def _dedup_cities(meals):
+        seen = {}
+        for m in meals:
+            c = _city_of(m)
+            if not c:
+                continue
+            key = c.lower()
+            if key not in seen:
+                seen[key] = c.title()
+        return sorted(seen.values(), key=str.lower)
+
+    cities = _dedup_cities(all_meals)
+
+    # ── Restaurant options CASCADE from the selected City ──
+    names_source = all_meals
+    if city_filter:
+        names_source = [m for m in names_source if _city_of(m).lower() == city_filter.lower()]
+    _seen_names = {}
+    for m in names_source:
+        n = _restaurant_of(m)
+        if not n:
+            continue
+        key = n.lower()
+        if key not in _seen_names:
+            _seen_names[key] = n
+    restaurant_names = sorted(_seen_names.values(), key=str.lower)
+
+    # ── Apply filters ──
+    filtered = all_meals
+    if city_filter:
+        filtered = [m for m in filtered if _city_of(m).lower() == city_filter.lower()]
+    # A specific restaurant only makes sense for assigned records; Not Assigned wins.
+    if restaurant_filter and assignment_filter != 'NOT_ASSIGNED':
+        filtered = [m for m in filtered if _restaurant_of(m).lower() == restaurant_filter.lower()]
+    if assignment_filter == 'ASSIGNED':
+        filtered = [m for m in filtered if _is_assigned(m)]
+    elif assignment_filter == 'NOT_ASSIGNED':
+        filtered = [m for m in filtered if not _is_assigned(m)]
+
+    rows = []
+    for meal in filtered:
+        req = meal.request
+        rname = _restaurant_of(meal)
+        city_disp = _city_of(meal)
+        row = _run_down_row(
+            req,
+            meal.date,
+            f"{meal.meal_type or 'Meal'} at {rname or 'Restaurant'}",
+            meal.status,
+            req.pax,
+            'MEAL',
+            meal.id,
+            meal_type=meal.meal_type,
+            meal_note=meal.meal_note,
+            voucher_notes=meal.voucher_notes,
+        )
+        row['city'] = city_disp.title() if city_disp else ''
+        row['restaurant_name'] = rname
+        rows.append(row)
+
+    if status_filters and 'ALL' not in status_filters:
+        rows = [r for r in rows if normalizeServiceStatus(r.get('status', '')) in status_filters]
+
+    # Sort by City then Restaurant (unknowns last), then date/request within a group.
+    rows.sort(key=lambda r: (
+        (r.get('city') or '~').lower(),
+        (r.get('restaurant_name') or '~').lower(),
+        r['date'],
+        r['request_number'],
+    ))
+
+    return jsonify({
+        'restaurants': rows,
+        'total': len(all_meals),
+        'filtered': len(rows),
+        'filters': {
+            'cities': cities,
+            'restaurant_names': restaurant_names,
+        },
+        'date_from': date_from.strftime('%Y-%m-%d'),
+        'date_to': date_to.strftime('%Y-%m-%d'),
+    })
+
+
 def normalizeServiceStatus(status):
     s = (status or 'REQUESTED').upper()
     if s in ('REQUEST', 'REQUESTED'):
@@ -8864,98 +9278,80 @@ def run_down_supplier_requests():
         'total': len(rows),
     })
 
-@inbound_bp.route('/run-down/agents')
+@inbound_bp.route('/run-down/agent-data')
 @login_required
-def run_down_agents():
-    """JSON: searchable agents (customers) for the Agent Run Down."""
-    query = request.args.get('q', '').strip()
+def run_down_agent_data():
+    """JSON: all Agent (customer) request rows + filter options for the inline table.
+
+    Filters: Agent Name, File Status.
+      • Agent Name is a plain dropdown. Empty (= "ALL AGENTS") keeps every agent
+        with a request overlapping the range; the client renders one heading per
+        agent, so an agent with no matching rows simply produces no group.
+      • File Status is MULTI-SELECT over the four canonical buckets
+        (Requested / Confirmed / Invoiced / Deleted) and combines as OR. Buckets
+        come from _file_status_bucket — "Deleted" is derived from
+        pending_invoice_queue, never from a stored status string. No selection
+        (or "All") applies no status restriction, preserving this section's
+        pre-existing behaviour of listing Deleted files too.
+      • The grouping key travels in each row as ``agent_name``; the client
+        renders one heading per agent and leaves the table columns untouched.
+    """
     date_from, date_to = _parse_run_down_dates()
     if date_from is None or date_to is None:
         return jsonify({'error': 'Invalid date format'}), 400
 
-    # Only agents (customers) that have at least one request overlapping the
-    # selected range — same overlap test used by run_down_agent_requests.
-    overlap_customer_ids = (
-        db.session.query(InboundRequest.customer_id)
+    agent_filter = request.args.get('agent', '').strip()
+    statuses_param = request.args.get('statuses', '').strip()
+    status_filters = [s.strip().upper() for s in statuses_param.split(',') if s.strip()] if statuses_param else []
+
+    all_requests = (
+        InboundRequest.query
         .filter(
             InboundRequest.from_date <= date_to,
             InboundRequest.to_date >= date_from,
         )
-        .distinct()
-    )
-
-    q = Customer.query.filter(Customer.id.in_(overlap_customer_ids))
-
-    if query:
-        q = q.filter(
-            (Customer.first_name.ilike(f'%{query}%')) |
-            (Customer.last_name.ilike(f'%{query}%')) |
-            (Customer.company_name.ilike(f'%{query}%'))
-        )
-
-    q = q.order_by(Customer.first_name, Customer.last_name).limit(500)
-    customers = q.all()
-
-    agents = []
-    for c in customers:
-        name = c.name if c.name else (c.company_name or 'Unknown')
-        agents.append({'name': name})
-
-    return jsonify({
-        'agents': agents,
-        'date_from': date_from.strftime('%Y-%m-%d'),
-        'date_to': date_to.strftime('%Y-%m-%d'),
-    })
-
-
-@inbound_bp.route('/run-down/agent-requests')
-@login_required
-def run_down_agent_requests():
-    """JSON: inbound requests for a customer (agent) within a date range."""
-    from sqlalchemy import and_
-
-    agent_name = request.args.get('agent', '').strip()
-    date_from, date_to = _parse_run_down_dates()
-    if date_from is None or date_to is None:
-        return jsonify({'error': 'Invalid date format'}), 400
-    if not agent_name:
-        return jsonify({'error': 'agent is required'}), 400
-
-    customer = None
-    customers = Customer.query.all()
-    for c in customers:
-        customer_full_name = c.name if c.name else (c.company_name or '')
-        if customer_full_name.lower() == agent_name.lower():
-            customer = c
-            break
-
-    if not customer:
-        return jsonify({
-            'agent': agent_name,
-            'date_from': date_from.strftime('%Y-%m-%d'),
-            'date_to': date_to.strftime('%Y-%m-%d'),
-            'date_from_display': date_from.strftime('%d %b %Y'),
-            'date_to_display': date_to.strftime('%d %b %Y'),
-            'requests': [],
-            'total': 0,
-        })
-
-    requests_query = (
-        InboundRequest.query
-        .filter(
-            InboundRequest.customer_id == customer.id,
-            and_(
-                InboundRequest.from_date <= date_to,
-                InboundRequest.to_date >= date_from,
-            ),
-        )
         .all()
     )
 
-    rows = []
-    for req in requests_query:
-        customer_type = customer.customer_type or 'Direct'
+    # Resolve agent names up front so the row loop never lazy-loads per request.
+    customer_ids = {r.customer_id for r in all_requests if r.customer_id}
+    customer_map = {}
+    if customer_ids:
+        customer_map = {
+            c.id: c for c in Customer.query.filter(Customer.id.in_(customer_ids)).all()
+        }
 
+    def _agent_of(req):
+        c = customer_map.get(req.customer_id)
+        if not c:
+            return ''
+        return ((c.name if c.name else c.company_name) or '').strip()
+
+    # ── Agent options: case-insensitive dedup, first-seen casing is displayed ──
+    _seen_agents = {}
+    for req in all_requests:
+        n = _agent_of(req)
+        if not n:
+            continue
+        key = n.lower()
+        if key not in _seen_agents:
+            _seen_agents[key] = n
+    agent_names = sorted(_seen_agents.values(), key=str.lower)
+
+    # ── Apply filters ──
+    filtered = all_requests
+    if agent_filter:
+        filtered = [r for r in filtered if _agent_of(r).lower() == agent_filter.lower()]
+
+    # Sort by Agent (unknowns last), then start date / request number in a group.
+    filtered = sorted(filtered, key=lambda r: (
+        (_agent_of(r) or '~').lower(),
+        r.from_date.toordinal() if r.from_date else 0,
+        r.request_number or '',
+    ))
+
+    rows = []
+    for req in filtered:
         rows.append({
             'request_id': req.id,
             'request_number': req.request_number,
@@ -8965,20 +9361,23 @@ def run_down_agent_requests():
             'nationality': req.nationality or '—',
             'from_date': req.from_date.strftime('%d %b %Y') if req.from_date else '—',
             'to_date': req.to_date.strftime('%d %b %Y') if req.to_date else '—',
-            'type': customer_type,
-            'status': req.status or 'REQUEST',
+            'file_status': _file_status_bucket(req),
+            'agent_name': _agent_of(req),
             'view_url': url_for('inbound.view_request', id=req.id),
         })
 
+    if status_filters and 'ALL' not in status_filters:
+        rows = [r for r in rows if r['file_status'] in status_filters]
+
     return jsonify({
-        'agent': agent_name,
-        'agent_type': customer.customer_type or 'Direct',
+        'agents': rows,
+        'total': len(all_requests),
+        'filtered': len(rows),
+        'filters': {
+            'agent_names': agent_names,
+        },
         'date_from': date_from.strftime('%Y-%m-%d'),
         'date_to': date_to.strftime('%Y-%m-%d'),
-        'date_from_display': date_from.strftime('%d %b %Y'),
-        'date_to_display': date_to.strftime('%d %b %Y'),
-        'requests': rows,
-        'total': len(rows),
     })
 
 @inbound_bp.route('/api/run-down-data')

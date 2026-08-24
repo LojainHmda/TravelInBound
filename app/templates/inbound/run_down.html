@@ -680,6 +680,12 @@ body { background: #f1f5f9; }
   background: white;
   box-shadow: 0 0 0 3px rgba(59,130,246,.12);
 }
+.rd-accom-select:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+  opacity: .7;
+}
 .rd-accom-select-arrow {
   position: absolute;
   right: 10px;
@@ -796,7 +802,13 @@ body { background: #f1f5f9; }
 #runDownApp .rd-accom-pill.on.confirmed { background: #dcfce7 !important; color: #166534 !important; border-color: #86efac !important; }
 #runDownApp .rd-accom-pill.on.waiting   { background: #e0e7ff !important; color: #3730a3 !important; border-color: #a5b4fc !important; }
 #runDownApp .rd-accom-pill.on.cancelled { background: #fee2e2 !important; color: #991b1b !important; border-color: #fca5a5 !important; }
+/* File Status pills used only by the Agent section (Invoiced / Deleted). */
+#runDownApp .rd-accom-pill.on.invoiced  { background: #fef3c7 !important; color: #92400e !important; border-color: #fcd34d !important; }
+#runDownApp .rd-accom-pill.on.deleted   { background: #fee2e2 !important; color: #991b1b !important; border-color: #fca5a5 !important; }
 #runDownApp .rd-accom-pill.on.all       { background: #e2e8f0 !important; color: #334155 !important; border-color: #cbd5e1 !important; }
+/* The Agent section has a single filter — stop it stretching the whole row.
+   Scoped to #rdAgentSection so the other sections' filter rows are unaffected. */
+#rdAgentSection .rd-accom-filter-group { flex: 0 1 320px; }
 .rd-accom-apply-wrap {
   margin-left: auto;
 }
@@ -1006,37 +1018,9 @@ body { background: #f1f5f9; }
   <div class="rd-services-grid">
     {% for svc in services %}
     {% if svc.key == 'OPTIONAL' %}
-    {# Agent card (renders before Optional) #}
-    <div class="rd-service-card" data-rd-agent-card>
-      <div class="rd-card-head">
-        <div class="rd-card-icon" style="background: #8b5cf618; color: #8b5cf6;">
-          <i class="fas fa-user"></i>
-        </div>
-        <h3 class="rd-card-title">Agents</h3>
-      </div>
-      <div class="rd-card-body">
-        <div class="rd-field-label">Agent</div>
-        <div class="rd-supplier-wrap" data-rd-agent-wrap>
-          <div class="rd-dropdown" data-rd-agent-dropdown role="listbox"></div>
-          <div class="rd-supplier-field">
-            <input type="text"
-                   class="rd-supplier-input"
-                   data-rd-agent-input
-                   placeholder="Search agent…"
-                   autocomplete="off"
-                   aria-label="Agent">
-            <button type="button" class="rd-supplier-clear" data-rd-agent-clear title="Clear" aria-label="Clear agent">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-        </div>
-        <div class="rd-card-actions">
-          <button type="button" class="rd-btn-apply" data-rd-agent-apply>
-            <i class="fas fa-check"></i> Apply
-          </button>
-        </div>
-      </div>
-    </div>
+    {# Anchor marking where the Agent inline section is injected (before Optional).
+       JS inserts #rdAgentSection here and removes this placeholder. #}
+    <div data-rd-agent-anchor hidden></div>
     {% endif %}
     <div class="rd-service-card" data-rd-card="{{ svc.key }}">
       <div class="rd-card-head">
@@ -1129,6 +1113,237 @@ body { background: #f1f5f9; }
         </span>
       </div>
       <div class="rd-accom-results" id="rdAccomResults"></div>
+    </div>
+  </div>
+</template>
+
+{# ── Transportation inline section (rendered outside the grid, injected by JS) ── #}
+{# Reuses the Accommodation (.rd-accom-*) layout/styles for visual consistency. #}
+<template id="rdTransportTemplate">
+  <div class="rd-accom-section" id="rdTransportSection">
+    <div class="rd-accom-header" id="rdTransportToggle">
+      <i class="fas fa-chevron-right rd-accom-chevron open" id="rdTransportChevron"></i>
+      <div class="rd-card-icon" style="background: #c2410c18; color: #c2410c;">
+        <i class="fas fa-bus"></i>
+      </div>
+      <h3 class="rd-card-title">Transportation</h3>
+      <span class="rd-accom-total-badge" id="rdTransportTotal">0</span>
+      <span class="rd-accom-showing" id="rdTransportShowing"></span>
+    </div>
+    <div class="rd-accom-body" id="rdTransportBody">
+      <div class="rd-accom-filters">
+        <div class="rd-accom-filter-group">
+          <label>Vehicle</label>
+          <div class="rd-accom-select-wrap">
+            <select class="rd-accom-select" id="rdTransportVehicle">
+              <option value="">All Vehicles</option>
+            </select>
+            <span class="rd-accom-select-arrow"><i class="fas fa-chevron-down"></i></span>
+          </div>
+        </div>
+        <div class="rd-accom-filter-group">
+          <label>Company</label>
+          <div class="rd-accom-select-wrap">
+            <select class="rd-accom-select" id="rdTransportCompany">
+              <option value="">All Companies</option>
+            </select>
+            <span class="rd-accom-select-arrow"><i class="fas fa-chevron-down"></i></span>
+          </div>
+        </div>
+        <div class="rd-accom-filter-group">
+          <label>Assignment</label>
+          <div class="rd-accom-select-wrap">
+            <select class="rd-accom-select" id="rdTransportAssignment">
+              <option value="">All</option>
+              <option value="ASSIGNED">Assigned</option>
+              <option value="NOT_ASSIGNED">Not Assigned</option>
+            </select>
+            <span class="rd-accom-select-arrow"><i class="fas fa-chevron-down"></i></span>
+          </div>
+        </div>
+      </div>
+      <div class="rd-accom-status-row">
+        <span class="rd-accom-status-label">Status</span>
+        <span class="rd-accom-status-pills" id="rdTransportPills"></span>
+        <span class="rd-accom-apply-wrap">
+          <button type="button" class="rd-accom-apply" id="rdTransportApply">
+            <i class="fas fa-check"></i> Apply
+          </button>
+        </span>
+      </div>
+      <div class="rd-accom-results" id="rdTransportResults"></div>
+    </div>
+  </div>
+</template>
+
+{# ── Guide inline section (rendered outside the grid, injected by JS) ── #}
+{# Reuses the Accommodation (.rd-accom-*) layout/styles for visual consistency. #}
+<template id="rdGuideTemplate">
+  <div class="rd-accom-section" id="rdGuideSection">
+    <div class="rd-accom-header" id="rdGuideToggle">
+      <i class="fas fa-chevron-right rd-accom-chevron open" id="rdGuideChevron"></i>
+      <div class="rd-card-icon" style="background: #6d28d918; color: #6d28d9;">
+        <i class="fas fa-user-tie"></i>
+      </div>
+      <h3 class="rd-card-title">Guides</h3>
+      <span class="rd-accom-total-badge" id="rdGuideTotal">0</span>
+      <span class="rd-accom-showing" id="rdGuideShowing"></span>
+    </div>
+    <div class="rd-accom-body" id="rdGuideBody">
+      <div class="rd-accom-filters">
+        <div class="rd-accom-filter-group">
+          <label>Language</label>
+          <div class="rd-accom-hotel-wrap" id="rdGuideLanguageWrap">
+            <input type="text"
+                   class="rd-accom-hotel-input"
+                   id="rdGuideLanguageInput"
+                   placeholder="All Languages"
+                   autocomplete="off">
+            <button type="button" class="rd-accom-hotel-clear" id="rdGuideLanguageClear" title="Clear">
+              <i class="fas fa-times"></i>
+            </button>
+            <div class="rd-accom-hotel-dropdown" id="rdGuideLanguageDropdown"></div>
+          </div>
+        </div>
+        <div class="rd-accom-filter-group">
+          <label>Guide Name</label>
+          <div class="rd-accom-hotel-wrap" id="rdGuideNameWrap">
+            <input type="text"
+                   class="rd-accom-hotel-input"
+                   id="rdGuideNameInput"
+                   placeholder="All Guides"
+                   autocomplete="off">
+            <button type="button" class="rd-accom-hotel-clear" id="rdGuideNameClear" title="Clear">
+              <i class="fas fa-times"></i>
+            </button>
+            <div class="rd-accom-hotel-dropdown" id="rdGuideNameDropdown"></div>
+          </div>
+        </div>
+        <div class="rd-accom-filter-group">
+          <label>Assignment</label>
+          <div class="rd-accom-select-wrap">
+            <select class="rd-accom-select" id="rdGuideAssignment">
+              <option value="">All</option>
+              <option value="ASSIGNED">Assigned</option>
+              <option value="NOT_ASSIGNED">Not Assigned</option>
+            </select>
+            <span class="rd-accom-select-arrow"><i class="fas fa-chevron-down"></i></span>
+          </div>
+        </div>
+      </div>
+      <div class="rd-accom-status-row">
+        <span class="rd-accom-status-label">Status</span>
+        <span class="rd-accom-status-pills" id="rdGuidePills"></span>
+        <span class="rd-accom-apply-wrap">
+          <button type="button" class="rd-accom-apply" id="rdGuideApply">
+            <i class="fas fa-check"></i> Apply
+          </button>
+        </span>
+      </div>
+      <div class="rd-accom-results" id="rdGuideResults"></div>
+    </div>
+  </div>
+</template>
+
+{# ── Restaurant inline section (rendered outside the grid, injected by JS) ── #}
+{# Reuses the Accommodation (.rd-accom-*) layout/styles for visual consistency. #}
+<template id="rdRestaurantTemplate">
+  <div class="rd-accom-section" id="rdRestaurantSection">
+    <div class="rd-accom-header" id="rdRestaurantToggle">
+      <i class="fas fa-chevron-right rd-accom-chevron open" id="rdRestaurantChevron"></i>
+      <div class="rd-card-icon" style="background: #9333ea18; color: #9333ea;">
+        <i class="fas fa-utensils"></i>
+      </div>
+      <h3 class="rd-card-title">Restaurant</h3>
+      <span class="rd-accom-total-badge" id="rdRestaurantTotal">0</span>
+      <span class="rd-accom-showing" id="rdRestaurantShowing"></span>
+    </div>
+    <div class="rd-accom-body" id="rdRestaurantBody">
+      <div class="rd-accom-filters">
+        <div class="rd-accom-filter-group">
+          <label>City</label>
+          <div class="rd-accom-select-wrap">
+            <select class="rd-accom-select" id="rdRestaurantCity">
+              <option value="">All Cities</option>
+            </select>
+            <span class="rd-accom-select-arrow"><i class="fas fa-chevron-down"></i></span>
+          </div>
+        </div>
+        <div class="rd-accom-filter-group">
+          <label>Restaurant Name</label>
+          <div class="rd-accom-hotel-wrap" id="rdRestaurantNameWrap">
+            <input type="text"
+                   class="rd-accom-hotel-input"
+                   id="rdRestaurantNameInput"
+                   placeholder="All Restaurants"
+                   autocomplete="off">
+            <button type="button" class="rd-accom-hotel-clear" id="rdRestaurantNameClear" title="Clear">
+              <i class="fas fa-times"></i>
+            </button>
+            <div class="rd-accom-hotel-dropdown" id="rdRestaurantNameDropdown"></div>
+          </div>
+        </div>
+        <div class="rd-accom-filter-group">
+          <label>Assignment</label>
+          <div class="rd-accom-select-wrap">
+            <select class="rd-accom-select" id="rdRestaurantAssignment">
+              <option value="">All</option>
+              <option value="ASSIGNED">Assigned</option>
+              <option value="NOT_ASSIGNED">Not Assigned</option>
+            </select>
+            <span class="rd-accom-select-arrow"><i class="fas fa-chevron-down"></i></span>
+          </div>
+        </div>
+      </div>
+      <div class="rd-accom-status-row">
+        <span class="rd-accom-status-label">Status</span>
+        <span class="rd-accom-status-pills" id="rdRestaurantPills"></span>
+        <span class="rd-accom-apply-wrap">
+          <button type="button" class="rd-accom-apply" id="rdRestaurantApply">
+            <i class="fas fa-check"></i> Apply
+          </button>
+        </span>
+      </div>
+      <div class="rd-accom-results" id="rdRestaurantResults"></div>
+    </div>
+  </div>
+</template>
+
+{# ── Agent inline section (rendered outside the grid, injected by JS) ── #}
+{# Reuses the Accommodation (.rd-accom-*) layout/styles for visual consistency. #}
+<template id="rdAgentTemplate">
+  <div class="rd-accom-section" id="rdAgentSection">
+    <div class="rd-accom-header" id="rdAgentToggle">
+      <i class="fas fa-chevron-right rd-accom-chevron open" id="rdAgentChevron"></i>
+      <div class="rd-card-icon" style="background: #8b5cf618; color: #8b5cf6;">
+        <i class="fas fa-user"></i>
+      </div>
+      <h3 class="rd-card-title">Agents</h3>
+      <span class="rd-accom-total-badge" id="rdAgentTotal">0</span>
+      <span class="rd-accom-showing" id="rdAgentShowing"></span>
+    </div>
+    <div class="rd-accom-body" id="rdAgentBody">
+      <div class="rd-accom-filters">
+        <div class="rd-accom-filter-group">
+          <label>Agent Name</label>
+          <div class="rd-accom-select-wrap">
+            <select class="rd-accom-select" id="rdAgentName">
+              <option value="">ALL AGENTS</option>
+            </select>
+            <span class="rd-accom-select-arrow"><i class="fas fa-chevron-down"></i></span>
+          </div>
+        </div>
+      </div>
+      <div class="rd-accom-status-row">
+        <span class="rd-accom-status-label">File Status</span>
+        <span class="rd-accom-status-pills" id="rdAgentPills"></span>
+        <span class="rd-accom-apply-wrap">
+          <button type="button" class="rd-accom-apply" id="rdAgentApply">
+            <i class="fas fa-check"></i> Apply
+          </button>
+        </span>
+      </div>
+      <div class="rd-accom-results" id="rdAgentResults"></div>
     </div>
   </div>
 </template>
