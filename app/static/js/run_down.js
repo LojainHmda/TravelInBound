@@ -231,6 +231,81 @@
     return escapeHtml(str).replace(/'/g, '&#39;');
   }
 
+  /* ════════════════════════════════════════════════════════════════
+     Client-side pagination for the inline results tables.
+
+     Purely a display concern: the server still returns the complete filtered
+     + sorted row list, and every section keeps showing its full `filtered`
+     count. Each renderXxxTable() slices the already-filtered, already-sorted
+     array before its existing grouping walk, so the table columns, grouping
+     and row order are untouched.
+     ════════════════════════════════════════════════════════════════ */
+
+  const RD_PAGE_SIZE = 20;
+
+  /** Clamp `page` into range and return that page's slice of `rows`. */
+  function paginate(rows, page) {
+    const totalPages = Math.max(1, Math.ceil(rows.length / RD_PAGE_SIZE));
+    const current = Math.min(Math.max(parseInt(page, 10) || 1, 1), totalPages);
+    const start = (current - 1) * RD_PAGE_SIZE;
+    return {
+      pageRows: rows.slice(start, start + RD_PAGE_SIZE),
+      page: current,
+      totalPages: totalPages,
+      start: start,
+    };
+  }
+
+  /** Page-number window: always first + last, current ±1, '…' for the gaps. */
+  function paginationPages(current, totalPages) {
+    const out = [];
+    for (let p = 1; p <= totalPages; p++) {
+      if (p !== 1 && p !== totalPages && Math.abs(p - current) > 1) continue;
+      const prev = out[out.length - 1];
+      if (typeof prev === 'number' && p - prev > 1) out.push('…');
+      out.push(p);
+    }
+    return out;
+  }
+
+  /** Controls strip rendered below a results table. '' when there is 1 page. */
+  function paginationHtml(pg, totalRows) {
+    if (pg.totalPages <= 1) return '';
+    const first = pg.start + 1;
+    const last = pg.start + pg.pageRows.length;
+    const btn = (label, page, opts) => {
+      const o = opts || {};
+      const cls = 'rd-page-btn' + (o.active ? ' active' : '') + (o.disabled ? ' disabled' : '');
+      const attr = o.disabled ? ' disabled' : ` data-rd-page="${page}"`;
+      return `<button type="button" class="${cls}"${attr}>${label}</button>`;
+    };
+    let btns = btn('<i class="fas fa-chevron-left"></i> Prev', pg.page - 1, { disabled: pg.page <= 1 });
+    paginationPages(pg.page, pg.totalPages).forEach((p) => {
+      btns += (p === '…')
+        ? '<span class="rd-page-gap">…</span>'
+        : btn(String(p), p, { active: p === pg.page });
+    });
+    btns += btn('Next <i class="fas fa-chevron-right"></i>', pg.page + 1, { disabled: pg.page >= pg.totalPages });
+    return `<div class="rd-pagination">
+        <span class="rd-page-info">${first}–${last} of ${totalRows}</span>
+        <div class="rd-page-btns">${btns}</div>
+      </div>`;
+  }
+
+  /** One delegated listener per results container; bound once at section init. */
+  function bindPagination(container, sectionState, rerender) {
+    if (!container) return;
+    container.addEventListener('click', (e) => {
+      const btn = e.target.closest('.rd-page-btn[data-rd-page]');
+      if (!btn || !container.contains(btn)) return;
+      e.preventDefault();
+      const page = parseInt(btn.getAttribute('data-rd-page'), 10);
+      if (!page || page === sectionState.page) return;
+      sectionState.page = page;
+      rerender();
+    });
+  }
+
   async function fetchSuppliers(serviceKey, query) {
     const svc = initServiceState(serviceKey);
     svc.loading = true;
@@ -338,6 +413,9 @@
 
     // Refresh restaurant inline section for new date range
     refreshRestaurantOnDateChange();
+
+    // Refresh Meet & Assist inline section for new date range
+    refreshMeetAssistOnDateChange();
   }
 
   /* ── Preset date ranges (fill only — never load data) ── */
@@ -1025,6 +1103,8 @@
     total: 0,
     filtered: 0,
     filterOptions: { cities: [], categories: [], hotel_names: [] },
+    page: 1,
+    allRows: [],
     hotelDropdownOpen: false,
   };
 
@@ -1095,6 +1175,7 @@
       const data = await res.json();
       if (!res.ok) return;
       accomState.total = data.total || 0;
+      updateStatCard('HOTEL', data.stats);
       accomState.filterOptions = data.filters || { cities: [], categories: [], hotel_names: [] };
       updateAccomDropdowns();
       updateAccomCounts();
@@ -1175,6 +1256,7 @@
       accomState.total = data.total || 0;
       accomState.filtered = data.filtered || 0;
       accomState.tableVisible = true;
+      accomState.page = 1;
       renderAccomTable(data.hotels || []);
       updateAccomCounts();
     } catch (err) {
@@ -1195,6 +1277,11 @@
   function renderAccomTable(rows) {
     const results = $('rdAccomResults');
     if (!results) return;
+
+    accomState.allRows = rows;
+    const pg = paginate(rows, accomState.page);
+    accomState.page = pg.page;
+    rows = pg.pageRows;
 
     if (!rows.length) {
       results.innerHTML = `<div class="rd-modal-empty"><i class="fas fa-inbox"></i><p>No accommodation records match the selected filters for this period.</p></div>`;
@@ -1244,10 +1331,11 @@
     });
 
     html += '</tbody></table></div>';
-    results.innerHTML = html;
+    results.innerHTML = html + paginationHtml(pg, accomState.allRows.length);
   }
 
   function bindAccomEvents() {
+    bindPagination($('rdAccomResults'), accomState, () => renderAccomTable(accomState.allRows));
     const toggle = $('rdAccomToggle');
     if (toggle) {
       toggle.addEventListener('click', () => {
@@ -1379,6 +1467,8 @@
     total: 0,
     filtered: 0,
     filterOptions: { vehicles: [], companies: [] },
+    page: 1,
+    allRows: [],
   };
 
   function initTransportSection() {
@@ -1454,6 +1544,7 @@
       const data = await res.json();
       if (!res.ok) return;
       transportState.total = data.total || 0;
+      updateStatCard('TRANSPORT', data.stats);
       transportState.filterOptions = data.filters || { vehicles: [], companies: [] };
       updateTransportDropdowns();
       updateTransportCounts();
@@ -1518,6 +1609,7 @@
       transportState.total = data.total || 0;
       transportState.filtered = data.filtered || 0;
       transportState.tableVisible = true;
+      transportState.page = 1;
       renderTransportTable(data.transports || []);
       updateTransportCounts();
     } catch (err) {
@@ -1565,6 +1657,12 @@
     const results = $('rdTransportResults');
     if (!results) return;
 
+    transportState.allRows = rows;
+    const pg = paginate(rows, transportState.page);
+    transportState.page = pg.page;
+    rows = pg.pageRows;
+    let rowNum = pg.start;
+
     if (!rows.length) {
       results.innerHTML = `<div class="rd-modal-empty"><i class="fas fa-inbox"></i><p>No transportation records match the selected filters for this period.</p></div>`;
       return;
@@ -1588,16 +1686,17 @@
       });
       order.forEach(v => {
         body += `<tr><td colspan="11" class="rd-accom-city-header">${escapeHtml(v)}</td></tr>`;
-        groups[v].forEach((r, idx) => { body += transportRowPair(r, idx + 1); });
+        groups[v].forEach((r) => { body += transportRowPair(r, ++rowNum); });
       });
     } else {
-      rows.forEach((r, idx) => { body += transportRowPair(r, idx + 1); });
+      rows.forEach((r) => { body += transportRowPair(r, ++rowNum); });
     }
 
-    results.innerHTML = `<div class="rd-modal-table-wrap"><table class="rd-modal-table">${thead}<tbody>${body}</tbody></table></div>`;
+    results.innerHTML = `<div class="rd-modal-table-wrap"><table class="rd-modal-table">${thead}<tbody>${body}</tbody></table></div>` + paginationHtml(pg, transportState.allRows.length);
   }
 
   function bindTransportEvents() {
+    bindPagination($('rdTransportResults'), transportState, () => renderTransportTable(transportState.allRows));
     const toggle = $('rdTransportToggle');
     if (toggle) {
       toggle.addEventListener('click', () => {
@@ -1677,6 +1776,8 @@
     total: 0,
     filtered: 0,
     filterOptions: { languages: [], guides: [] },
+    page: 1,
+    allRows: [],
   };
 
   let guideLangCtl = null;
@@ -1819,6 +1920,7 @@
       const data = await res.json();
       if (!res.ok) return;
       guideState.total = data.total || 0;
+      updateStatCard('GUIDE', data.stats);
       guideState.filterOptions = data.filters || { languages: [], guides: [] };
       updateGuideDropdowns();
       updateGuideCounts();
@@ -1870,6 +1972,7 @@
       guideState.total = data.total || 0;
       guideState.filtered = data.filtered || 0;
       guideState.tableVisible = true;
+      guideState.page = 1;
       renderGuideTable(data.guides || []);
       updateGuideCounts();
     } catch (err) {
@@ -1895,7 +1998,6 @@
         <td><strong>${escapeHtml(r.request_number)}</strong></td>
         <td>${escapeHtml(r.group_name || '—')}</td>
         <td class="num">${r.pax}</td>
-        <td>${escapeHtml(r.nationality || '—')}</td>
         <td>${escapeHtml(r.language || '—')}</td>
         <td>${escapeHtml(r.guide_note || '—')}</td>
         <td>${statusBadge(r.status)}</td>
@@ -1908,6 +2010,11 @@
     const results = $('rdGuideResults');
     if (!results) return;
 
+    guideState.allRows = rows;
+    const pg = paginate(rows, guideState.page);
+    guideState.page = pg.page;
+    rows = pg.pageRows;
+
     if (!rows.length) {
       results.innerHTML = `<div class="rd-modal-empty"><i class="fas fa-inbox"></i><p>No guide records match the selected filters for this period.</p></div>`;
       return;
@@ -1915,7 +2022,7 @@
 
     const thead = '<thead><tr>' +
       '<th>Date From</th><th>Date To</th><th>Request</th><th>Group Name</th>' +
-      '<th>PAX</th><th>Nationality</th><th>Language</th><th>Guide Notes</th>' +
+      '<th>PAX</th><th>Language</th><th>Guide Notes</th>' +
       '<th>Status</th><th>File Status</th><th></th>' +
       '</tr></thead>';
 
@@ -1930,17 +2037,18 @@
         groups[l].push(r);
       });
       order.forEach((l) => {
-        body += `<tr><td colspan="11" class="rd-accom-city-header">${escapeHtml(l)}</td></tr>`;
+        body += `<tr><td colspan="10" class="rd-accom-city-header">${escapeHtml(l)}</td></tr>`;
         groups[l].forEach((r) => { body += guideRow(r); });
       });
     } else {
       rows.forEach((r) => { body += guideRow(r); });
     }
 
-    results.innerHTML = `<div class="rd-modal-table-wrap"><table class="rd-modal-table">${thead}<tbody>${body}</tbody></table></div>`;
+    results.innerHTML = `<div class="rd-modal-table-wrap"><table class="rd-modal-table">${thead}<tbody>${body}</tbody></table></div>` + paginationHtml(pg, guideState.allRows.length);
   }
 
   function bindGuideEvents() {
+    bindPagination($('rdGuideResults'), guideState, () => renderGuideTable(guideState.allRows));
     const toggle = $('rdGuideToggle');
     if (toggle) {
       toggle.addEventListener('click', () => {
@@ -2027,6 +2135,8 @@
     total: 0,
     filtered: 0,
     filterOptions: { cities: [], restaurant_names: [] },
+    page: 1,
+    allRows: [],
   };
 
   function initRestaurantSection() {
@@ -2110,6 +2220,7 @@
       const data = await res.json();
       if (!res.ok) return;
       restaurantState.total = data.total || 0;
+      updateStatCard('MEAL', data.stats);
       restaurantState.filterOptions = data.filters || { cities: [], restaurant_names: [] };
       updateRestaurantDropdowns();
       updateRestaurantCounts();
@@ -2183,6 +2294,7 @@
       restaurantState.total = data.total || 0;
       restaurantState.filtered = data.filtered || 0;
       restaurantState.tableVisible = true;
+      restaurantState.page = 1;
       renderRestaurantTable(data.restaurants || []);
       updateRestaurantCounts();
     } catch (err) {
@@ -2207,7 +2319,6 @@
         <td>${escapeHtml(r.date_display)}</td>
         <td><strong>${escapeHtml(r.request_number)}</strong></td>
         <td>${escapeHtml(r.group_name || '—')}</td>
-        <td>${escapeHtml(r.nationality || '—')}</td>
         <td>${escapeHtml(r.meal || '—')}</td>
         <td class="num">${r.pax}</td>
         <td>${escapeHtml(r.restaurant_note || '—')}</td>
@@ -2221,6 +2332,11 @@
     const results = $('rdRestaurantResults');
     if (!results) return;
 
+    restaurantState.allRows = rows;
+    const pg = paginate(rows, restaurantState.page);
+    restaurantState.page = pg.page;
+    rows = pg.pageRows;
+
     if (!rows.length) {
       results.innerHTML = `<div class="rd-modal-empty"><i class="fas fa-inbox"></i><p>No restaurant records match the selected filters for this period.</p></div>`;
       return;
@@ -2228,7 +2344,7 @@
 
     const thead = '<thead><tr>' +
       '<th>Day</th><th>Date</th><th>Request</th><th>Group Name</th>' +
-      '<th>Nationality</th><th>Meal</th><th>PAX No</th><th>Restaurant Note</th>' +
+      '<th>Meal</th><th>PAX No</th><th>Restaurant Note</th>' +
       '<th>Status</th><th>File Status</th><th></th>' +
       '</tr></thead>';
 
@@ -2246,14 +2362,15 @@
 
     let body = '';
     order.forEach((key) => {
-      body += `<tr><td colspan="11" class="rd-accom-city-header">${escapeHtml(groups[key].label)}</td></tr>`;
+      body += `<tr><td colspan="10" class="rd-accom-city-header">${escapeHtml(groups[key].label)}</td></tr>`;
       groups[key].rows.forEach((r) => { body += restaurantRow(r); });
     });
 
-    results.innerHTML = `<div class="rd-modal-table-wrap"><table class="rd-modal-table">${thead}<tbody>${body}</tbody></table></div>`;
+    results.innerHTML = `<div class="rd-modal-table-wrap"><table class="rd-modal-table">${thead}<tbody>${body}</tbody></table></div>` + paginationHtml(pg, restaurantState.allRows.length);
   }
 
   function bindRestaurantEvents() {
+    bindPagination($('rdRestaurantResults'), restaurantState, () => renderRestaurantTable(restaurantState.allRows));
     const toggle = $('rdRestaurantToggle');
     if (toggle) {
       toggle.addEventListener('click', () => {
@@ -2353,6 +2470,375 @@
 
 
   /* ═══════════════════════════════════════════════════════════════════
+     Meet & Assist inline section
+
+     Replaces the old GROUND_HANDLER supplier popup with the shared inline
+     pattern. Three filters plus Status, all independent (no cascade) and
+     combined with the applied date range:
+       • Meet & Assist Name — searchable dropdown over the representative
+         names actually used in range. Disabled and reset to "All Names"
+         whenever Assignment is "Not Assigned", so the two can never conflict.
+       • Meet & Assist — Arrival / Departure / Arrival & Departure (default).
+         "Arrival & Departure" is a UNION, not an intersection.
+       • Assignment — All / Assigned / Not Assigned, decided purely by whether
+         the Meet & Assist Name is populated.
+       • Status — the record's own Meet & Assist status (never File Status).
+
+     Rendering: Arrival and Departure NEVER share a table. Each type gets its
+     own heading + table, and inside a table rows are grouped by name with a
+     "Type — Name" heading row, unnamed records last under "Not Assigned".
+     The server pre-sorts the rows so grouping is a single ordered walk.
+     ═══════════════════════════════════════════════════════════════════ */
+
+  const meetAssistState = {
+    maName: '',
+    maType: 'BOTH',          // 'BOTH' = Arrival & Departure (default)
+    assignment: '',          // '' = All, 'ASSIGNED', 'NOT_ASSIGNED'
+    statuses: new Set(['ALL']),
+    collapsed: false,
+    tableVisible: false,
+    total: 0,
+    filtered: 0,
+    filterOptions: { ma_names: [] },
+    page: 1,
+    allRows: [],
+  };
+
+  let meetAssistNameCtl = null;
+
+  function initMeetAssistSection() {
+    const maCard = document.querySelector('[data-rd-card="GROUND_HANDLER"]');
+    const template = $('rdMeetAssistTemplate');
+    if (!maCard || !template) return;
+
+    const clone = template.content.cloneNode(true);
+    maCard.parentNode.insertBefore(clone, maCard);
+    maCard.remove();
+
+    renderMeetAssistPills();
+    bindMeetAssistEvents();
+    syncMeetAssistNameDisabled();
+    fetchMeetAssistFilters();
+  }
+
+  function renderMeetAssistPills() {
+    const wrap = $('rdMeetAssistPills');
+    if (!wrap) return;
+    // Reuse the shared Accommodation status options for identical look & behaviour.
+    wrap.innerHTML = ACCOM_STATUS_OPTIONS.map((opt) => {
+      const on = meetAssistState.statuses.has(opt.key) ? ' on' : '';
+      return `<button type="button" class="rd-accom-pill ${opt.cls}${on}" data-ma-sts="${opt.key}">${opt.label}</button>`;
+    }).join('');
+  }
+
+  function onMeetAssistPillClick(key) {
+    if (key === 'ALL') {
+      meetAssistState.statuses.clear();
+      meetAssistState.statuses.add('ALL');
+    } else {
+      meetAssistState.statuses.delete('ALL');
+      if (meetAssistState.statuses.has(key)) {
+        meetAssistState.statuses.delete(key);
+      } else {
+        meetAssistState.statuses.add(key);
+      }
+      if (meetAssistState.statuses.size === 0) {
+        meetAssistState.statuses.add('ALL');
+      }
+    }
+    renderMeetAssistPills();
+  }
+
+  /** Name can't be combined with "Not Assigned" — disable & reset it. */
+  function syncMeetAssistNameDisabled() {
+    const input = $('rdMeetAssistNameInput');
+    const clear = $('rdMeetAssistNameClear');
+    const notAssigned = meetAssistState.assignment === 'NOT_ASSIGNED';
+    if (input) {
+      input.disabled = notAssigned;
+      if (notAssigned) {
+        input.value = '';
+        input.placeholder = 'All Names';
+      }
+    }
+    if (clear) clear.disabled = notAssigned;
+    if (notAssigned) {
+      meetAssistState.maName = '';
+      const dropdown = $('rdMeetAssistNameDropdown');
+      if (dropdown) dropdown.classList.remove('open');
+    }
+  }
+
+  /** Searchable Meet & Assist Name dropdown. Returns { render }. */
+  function makeMeetAssistSearchable(cfg) {
+    const input = $(cfg.inputId);
+    const dropdown = $(cfg.dropdownId);
+    const clear = $(cfg.clearId);
+    if (!input || !dropdown) return { render() {} };
+
+    function render() {
+      const query = input.value.toLowerCase();
+      const opts = cfg.getOptions() || [];
+      const filtered = query ? opts.filter((o) => o.toLowerCase().includes(query)) : opts;
+      const selected = meetAssistState[cfg.stateKey] || '';
+      let html = `<button type="button" class="rd-accom-hotel-option${!selected ? ' active' : ''}" data-ma-opt="">${cfg.allLabel}</button>`;
+      html += filtered.map((o) => {
+        const active = o.toLowerCase() === selected.toLowerCase() ? ' active' : '';
+        return `<button type="button" class="rd-accom-hotel-option${active}" data-ma-opt="${escapeAttr(o)}">${escapeHtml(o)}</button>`;
+      }).join('');
+      dropdown.innerHTML = html;
+    }
+
+    input.addEventListener('focus', () => {
+      if (input.disabled) return;
+      dropdown.classList.add('open');
+      render();
+    });
+    input.addEventListener('input', () => {
+      dropdown.classList.add('open');
+      render();
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') dropdown.classList.remove('open');
+    });
+    dropdown.addEventListener('click', (e) => {
+      const opt = e.target.closest('[data-ma-opt]');
+      if (!opt) return;
+      const val = opt.dataset.maOpt;
+      meetAssistState[cfg.stateKey] = val;
+      input.value = val || '';
+      input.placeholder = val || cfg.allLabel;
+      dropdown.classList.remove('open');
+    });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest(cfg.wrapSel)) dropdown.classList.remove('open');
+    });
+    if (clear) {
+      clear.addEventListener('click', () => {
+        if (clear.disabled) return;
+        meetAssistState[cfg.stateKey] = '';
+        input.value = '';
+        input.placeholder = cfg.allLabel;
+        render();
+      });
+    }
+    return { render };
+  }
+
+  function buildMeetAssistUrl(includeStatuses) {
+    let url = `/inbound/run-down/meet-assist-data?date_from=${encodeURIComponent(state.appliedDateFrom)}&date_to=${encodeURIComponent(state.appliedDateTo)}`;
+    if (meetAssistState.maName) url += `&ma_name=${encodeURIComponent(meetAssistState.maName)}`;
+    if (meetAssistState.maType) url += `&ma_type=${encodeURIComponent(meetAssistState.maType)}`;
+    if (meetAssistState.assignment) url += `&assignment=${encodeURIComponent(meetAssistState.assignment)}`;
+    if (includeStatuses && !meetAssistState.statuses.has('ALL')) {
+      url += `&statuses=${encodeURIComponent([...meetAssistState.statuses].join(','))}`;
+    }
+    return url;
+  }
+
+  async function fetchMeetAssistFilters() {
+    const url = buildMeetAssistUrl(false);
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) return;
+      meetAssistState.total = data.total || 0;
+      updateStatCard('GROUND_HANDLER', data.stats);
+      meetAssistState.filterOptions = data.filters || { ma_names: [] };
+      updateMeetAssistDropdowns();
+      updateMeetAssistCounts();
+    } catch (err) {
+      console.error('Meet & Assist filter fetch error', err);
+    }
+  }
+
+  function updateMeetAssistDropdowns() {
+    // Drop a stale selection that is no longer offered for the current range.
+    const names = meetAssistState.filterOptions.ma_names || [];
+    if (meetAssistState.maName && !names.map((n) => n.toLowerCase()).includes(meetAssistState.maName.toLowerCase())) {
+      meetAssistState.maName = '';
+      const input = $('rdMeetAssistNameInput');
+      if (input) input.value = '';
+    }
+    if (meetAssistNameCtl) meetAssistNameCtl.render();
+  }
+
+  function updateMeetAssistCounts() {
+    const totalEl = $('rdMeetAssistTotal');
+    const showingEl = $('rdMeetAssistShowing');
+    if (totalEl) totalEl.textContent = meetAssistState.total;
+    if (showingEl) {
+      showingEl.textContent = meetAssistState.tableVisible ? `Showing ${meetAssistState.filtered}` : '';
+    }
+  }
+
+  async function applyMeetAssist() {
+    const applyBtn = $('rdMeetAssistApply');
+    if (applyBtn) {
+      applyBtn.disabled = true;
+      applyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading…';
+    }
+
+    const url = buildMeetAssistUrl(true);
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load');
+
+      meetAssistState.total = data.total || 0;
+      meetAssistState.filtered = data.filtered || 0;
+      meetAssistState.tableVisible = true;
+      meetAssistState.page = 1;
+      renderMeetAssistTable(data.meet_assists || []);
+      updateMeetAssistCounts();
+    } catch (err) {
+      console.error('Meet & Assist apply error', err);
+      const results = $('rdMeetAssistResults');
+      if (results) {
+        results.innerHTML = `<div class="rd-modal-empty"><i class="fas fa-exclamation-triangle"></i><p>Could not load Meet &amp; Assist data. Please try again.</p></div>`;
+      }
+      meetAssistState.tableVisible = true;
+    } finally {
+      if (applyBtn) {
+        applyBtn.disabled = false;
+        applyBtn.innerHTML = '<i class="fas fa-check"></i> Apply';
+      }
+    }
+  }
+
+  /** Render one Meet & Assist record — columns identical to the previous popup
+   *  table, plus the Status column (M&A status) beside the untouched File Status. */
+  function meetAssistRow(r) {
+    return `<tr>
+        <td>${escapeHtml(r.date_display)}</td>
+        <td><strong>${escapeHtml(r.request_number)}</strong></td>
+        <td>${escapeHtml(r.group_name || '—')}</td>
+        <td class="num">${r.pax}</td>
+        <td>${escapeHtml(r.nationality || '—')}</td>
+        <td>${escapeHtml(r.description || '—')}</td>
+        <td style="white-space:nowrap;">${escapeHtml(r.time || '—')}</td>
+        <td>${escapeHtml(r.flight_number || '—')}</td>
+        <td>${escapeHtml(r.ma_notes || '—')}</td>
+        <td>${statusBadge(r.status)}</td>
+        <td>${statusBadge(r.file_status)}</td>
+        <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+      </tr>`;
+  }
+
+  /** One Arrival or Departure block: heading + its own table, grouped by name. */
+  function meetAssistTypeBlock(typeLabel, icon, rows) {
+    const thead = '<thead><tr>' +
+      '<th>Date</th><th>Request</th><th>Group Name</th><th>PAX</th>' +
+      '<th>Nationality</th><th>Description</th><th>Time</th><th>Flight Number</th>' +
+      '<th>M&A Notes</th><th>Status</th><th>File Status</th><th></th>' +
+      '</tr></thead>';
+
+    // Group by name, preserving the server order (named first, unnamed last).
+    const groups = {};
+    const order = [];
+    rows.forEach((r) => {
+      const name = r.ma_name || 'Not Assigned';
+      if (!groups[name]) { groups[name] = []; order.push(name); }
+      groups[name].push(r);
+    });
+
+    let body = '';
+    order.forEach((name) => {
+      body += `<tr><td colspan="12" class="rd-accom-city-header">${escapeHtml(`${typeLabel} — ${name}`)}</td></tr>`;
+      groups[name].forEach((r) => { body += meetAssistRow(r); });
+    });
+
+    return `<div class="rd-ma-type-block">
+        <div class="rd-ma-type-heading"><i class="fas ${icon}"></i>${escapeHtml(typeLabel)}</div>
+        <div class="rd-modal-table-wrap"><table class="rd-modal-table">${thead}<tbody>${body}</tbody></table></div>
+      </div>`;
+  }
+
+  function renderMeetAssistTable(rows) {
+    const results = $('rdMeetAssistResults');
+    if (!results) return;
+
+    meetAssistState.allRows = rows;
+    const pg = paginate(rows, meetAssistState.page);
+    meetAssistState.page = pg.page;
+    rows = pg.pageRows;
+
+    if (!rows.length) {
+      results.innerHTML = `<div class="rd-modal-empty"><i class="fas fa-inbox"></i><p>No Meet &amp; Assist records match the selected filters for this period.</p></div>`;
+      return;
+    }
+
+    // Arrival and Departure never share a table, even when both are shown.
+    const arrivals = rows.filter((r) => r.ma_type === 'ARRIVAL');
+    const departures = rows.filter((r) => r.ma_type === 'DEPARTURE');
+
+    let html = '';
+    if (arrivals.length) html += meetAssistTypeBlock('Arrival', 'fa-plane-arrival', arrivals);
+    if (departures.length) html += meetAssistTypeBlock('Departure', 'fa-plane-departure', departures);
+    results.innerHTML = html + paginationHtml(pg, meetAssistState.allRows.length);
+  }
+
+  function bindMeetAssistEvents() {
+    bindPagination($('rdMeetAssistResults'), meetAssistState, () => renderMeetAssistTable(meetAssistState.allRows));
+    const toggle = $('rdMeetAssistToggle');
+    if (toggle) {
+      toggle.addEventListener('click', () => {
+        meetAssistState.collapsed = !meetAssistState.collapsed;
+        const body = $('rdMeetAssistBody');
+        const chevron = $('rdMeetAssistChevron');
+        if (body) body.classList.toggle('collapsed', meetAssistState.collapsed);
+        if (chevron) chevron.classList.toggle('open', !meetAssistState.collapsed);
+      });
+    }
+
+    meetAssistNameCtl = makeMeetAssistSearchable({
+      inputId: 'rdMeetAssistNameInput',
+      dropdownId: 'rdMeetAssistNameDropdown',
+      clearId: 'rdMeetAssistNameClear',
+      wrapSel: '#rdMeetAssistNameWrap',
+      stateKey: 'maName',
+      allLabel: 'All Names',
+      getOptions: () => meetAssistState.filterOptions.ma_names || [],
+    });
+
+    const typeSel = $('rdMeetAssistType');
+    if (typeSel) {
+      typeSel.addEventListener('change', () => {
+        meetAssistState.maType = typeSel.value || 'BOTH';
+      });
+    }
+
+    const assignmentSel = $('rdMeetAssistAssignment');
+    if (assignmentSel) {
+      assignmentSel.addEventListener('change', () => {
+        meetAssistState.assignment = assignmentSel.value;
+        syncMeetAssistNameDisabled();
+      });
+    }
+
+    const pillsWrap = $('rdMeetAssistPills');
+    if (pillsWrap) {
+      pillsWrap.addEventListener('click', (e) => {
+        const pill = e.target.closest('[data-ma-sts]');
+        if (pill) onMeetAssistPillClick(pill.dataset.maSts);
+      });
+    }
+
+    const applyBtn = $('rdMeetAssistApply');
+    if (applyBtn) {
+      applyBtn.addEventListener('click', applyMeetAssist);
+    }
+  }
+
+  function refreshMeetAssistOnDateChange() {
+    fetchMeetAssistFilters();
+    if (meetAssistState.tableVisible) {
+      applyMeetAssist();
+    }
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════════
      Agent inline section
 
      Mirrors the Restaurant section (same section chrome, filter row, status
@@ -2375,6 +2861,8 @@
     total: 0,
     filtered: 0,
     filterOptions: { agent_names: [] },
+    page: 1,
+    allRows: [],
   };
 
   /** File Status buckets for the Agent section. These are NOT service statuses:
@@ -2494,6 +2982,7 @@
       agentState.total = data.total || 0;
       agentState.filtered = data.filtered || 0;
       agentState.tableVisible = true;
+      agentState.page = 1;
       renderAgentTable(data.agents || []);
       updateAgentCounts();
     } catch (err) {
@@ -2530,6 +3019,11 @@
     const results = $('rdAgentResults');
     if (!results) return;
 
+    agentState.allRows = rows;
+    const pg = paginate(rows, agentState.page);
+    agentState.page = pg.page;
+    rows = pg.pageRows;
+
     if (!rows.length) {
       results.innerHTML = `<div class="rd-modal-empty"><i class="fas fa-inbox"></i><p>No agent records match the selected filters for this period.</p></div>`;
       return;
@@ -2556,10 +3050,11 @@
       groups[name].forEach((r) => { body += agentRow(r); });
     });
 
-    results.innerHTML = `<div class="rd-modal-table-wrap"><table class="rd-modal-table">${thead}<tbody>${body}</tbody></table></div>`;
+    results.innerHTML = `<div class="rd-modal-table-wrap"><table class="rd-modal-table">${thead}<tbody>${body}</tbody></table></div>` + paginationHtml(pg, agentState.allRows.length);
   }
 
   function bindAgentEvents() {
+    bindPagination($('rdAgentResults'), agentState, () => renderAgentTable(agentState.allRows));
     const toggle = $('rdAgentToggle');
     if (toggle) {
       toggle.addEventListener('click', () => {
@@ -2598,6 +3093,227 @@
   }
 
 
+  /* ═══════════════════════════════════════════════════════════════════
+     Summary stat cards
+
+     One card per service section, sitting above the sections themselves.
+     The numbers are NOT computed here: each section's own data endpoint
+     returns a `stats` block counted from the same in-range dataset that
+     feeds that section's table, so a card can never disagree with the
+     table below it. Cards therefore refresh for free whenever the global
+     date range is applied — every fetchXFilters call repaints its card.
+
+     Clicking a number reuses the section's existing filter state + Apply:
+     it resets that section's other filters to All, sets Status to the
+     clicked value, re-applies, and scrolls there. Only the clicked
+     section is ever touched.
+     ═══════════════════════════════════════════════════════════════════ */
+
+  // Card stat key → the status value the section's pills/endpoint already use.
+  const STAT_STATUS_KEY = { requested: 'REQUESTED', waiting: 'WAITING_LIST' };
+
+  // The single applied stat across all cards: { card, stat } or null.
+  let activeStat = null;
+
+  function expandSection(sectionState, bodyId, chevronId) {
+    sectionState.collapsed = false;
+    const body = $(bodyId);
+    if (body) body.classList.remove('collapsed');
+    const chevron = $(chevronId);
+    if (chevron) chevron.classList.add('open');
+  }
+
+  const STAT_CARDS = {
+    HOTEL: {
+      state: accomState,
+      sectionId: 'rdAccomSection',
+      expand: () => expandSection(accomState, 'rdAccomBody', 'rdAccomChevron'),
+      renderPills: renderAccomPills,
+      refreshFilters: fetchAccomFilters,
+      apply: applyAccom,
+      resetFilters() {
+        accomState.city = '';
+        accomState.category = '';
+        accomState.hotelName = '';
+        const cat = $('rdAccomCategory');
+        if (cat) cat.value = '';
+        const city = $('rdAccomCity');
+        if (city) city.value = '';
+        const hotel = $('rdAccomHotelInput');
+        if (hotel) {
+          hotel.value = '';
+          hotel.placeholder = 'All hotels';
+        }
+      },
+    },
+    TRANSPORT: {
+      state: transportState,
+      sectionId: 'rdTransportSection',
+      expand: () => expandSection(transportState, 'rdTransportBody', 'rdTransportChevron'),
+      renderPills: renderTransportPills,
+      refreshFilters: fetchTransportFilters,
+      apply: applyTransport,
+      resetFilters() {
+        transportState.vehicle = '';
+        transportState.company = '';
+        transportState.assignment = '';
+        const vehicle = $('rdTransportVehicle');
+        if (vehicle) vehicle.value = '';
+        const company = $('rdTransportCompany');
+        if (company) company.value = '';
+        const assignment = $('rdTransportAssignment');
+        if (assignment) assignment.value = '';
+        syncTransportCompanyDisabled();
+      },
+    },
+    GUIDE: {
+      state: guideState,
+      sectionId: 'rdGuideSection',
+      expand: () => expandSection(guideState, 'rdGuideBody', 'rdGuideChevron'),
+      renderPills: renderGuidePills,
+      refreshFilters: fetchGuideFilters,
+      apply: applyGuide,
+      resetFilters() {
+        guideState.language = '';
+        guideState.guideName = '';
+        guideState.assignment = '';
+        const assignment = $('rdGuideAssignment');
+        if (assignment) assignment.value = '';
+        const lang = $('rdGuideLanguageInput');
+        if (lang) {
+          lang.value = '';
+          lang.placeholder = 'All Languages';
+        }
+        const name = $('rdGuideNameInput');
+        if (name) {
+          name.value = '';
+          name.placeholder = 'All Guides';
+        }
+        syncGuideNameDisabled();
+        if (guideLangCtl) guideLangCtl.render();
+        if (guideNameCtl) guideNameCtl.render();
+      },
+    },
+    MEAL: {
+      state: restaurantState,
+      sectionId: 'rdRestaurantSection',
+      expand: () => expandSection(restaurantState, 'rdRestaurantBody', 'rdRestaurantChevron'),
+      renderPills: renderRestaurantPills,
+      refreshFilters: fetchRestaurantFilters,
+      apply: applyRestaurant,
+      resetFilters() {
+        restaurantState.city = '';
+        restaurantState.restaurantName = '';
+        restaurantState.assignment = '';
+        const city = $('rdRestaurantCity');
+        if (city) city.value = '';
+        const assignment = $('rdRestaurantAssignment');
+        if (assignment) assignment.value = '';
+        const name = $('rdRestaurantNameInput');
+        if (name) {
+          name.value = '';
+          name.placeholder = 'All Restaurants';
+        }
+        syncRestaurantNameDisabled();
+        updateRestaurantNameDropdown();
+      },
+    },
+    GROUND_HANDLER: {
+      state: meetAssistState,
+      sectionId: 'rdMeetAssistSection',
+      expand: () => expandSection(meetAssistState, 'rdMeetAssistBody', 'rdMeetAssistChevron'),
+      renderPills: renderMeetAssistPills,
+      refreshFilters: fetchMeetAssistFilters,
+      apply: applyMeetAssist,
+      resetFilters() {
+        meetAssistState.maName = '';
+        meetAssistState.maType = 'BOTH';   // 'Arrival & Departure' is this filter's All
+        meetAssistState.assignment = '';
+        const type = $('rdMeetAssistType');
+        if (type) type.value = 'BOTH';
+        const assignment = $('rdMeetAssistAssignment');
+        if (assignment) assignment.value = '';
+        const name = $('rdMeetAssistNameInput');
+        if (name) {
+          name.value = '';
+          name.placeholder = 'All Names';
+        }
+        syncMeetAssistNameDisabled();
+        if (meetAssistNameCtl) meetAssistNameCtl.render();
+      },
+    },
+  };
+
+  function renderStatActive() {
+    document.querySelectorAll('[data-rd-stat-card]').forEach((card) => {
+      const isActiveCard = !!activeStat && card.dataset.rdStatCard === activeStat.card;
+      card.classList.toggle('active', isActiveCard);
+      card.querySelectorAll('[data-rd-stat]').forEach((item) => {
+        const isActiveStat = isActiveCard && item.dataset.rdStat === activeStat.stat;
+        item.classList.toggle('active', isActiveStat);
+        // A zero stays unclickable — unless it is the applied one, which must
+        // remain clickable so the user can always switch it back off.
+        item.disabled = Number(item.dataset.rdStatValue || 0) === 0 && !isActiveStat;
+      });
+    });
+  }
+
+  function updateStatCard(cardKey, stats) {
+    const card = document.querySelector('[data-rd-stat-card="' + cardKey + '"]');
+    if (!card) return;
+    const values = stats || {};
+    card.querySelectorAll('[data-rd-stat]').forEach((item) => {
+      const value = Number(values[item.dataset.rdStat]) || 0;
+      item.dataset.rdStatValue = value;
+      const numEl = item.querySelector('.rd-stat-num');
+      if (numEl) numEl.textContent = value;
+    });
+    renderStatActive();
+  }
+
+  async function onStatClick(cardKey, statKey) {
+    const cfg = STAT_CARDS[cardKey];
+    const statusKey = STAT_STATUS_KEY[statKey];
+    if (!cfg || !statusKey) return;
+
+    const isSame = !!activeStat && activeStat.card === cardKey && activeStat.stat === statKey;
+
+    // Every other filter in THIS section goes back to All; the global date
+    // range and every other section are left exactly as they are.
+    cfg.resetFilters();
+    if (isSame) {
+      cfg.state.statuses = new Set(['ALL']);
+      activeStat = null;
+    } else {
+      cfg.state.statuses = new Set([statusKey]);
+      activeStat = { card: cardKey, stat: statKey };
+    }
+    cfg.renderPills();
+    renderStatActive();
+
+    cfg.expand();
+    const section = $(cfg.sectionId);
+    if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Refresh the option lists first: a previous cascade may have left this
+    // section's dropdowns holding a narrowed set of options.
+    await cfg.refreshFilters();
+    await cfg.apply();
+  }
+
+  function bindStatCards() {
+    const wrap = $('rdStatCards');
+    if (!wrap) return;
+    wrap.addEventListener('click', (e) => {
+      const item = e.target.closest('[data-rd-stat]');
+      if (!item || item.disabled) return;
+      const card = item.closest('[data-rd-stat-card]');
+      if (!card) return;
+      onStatClick(card.dataset.rdStatCard, item.dataset.rdStat);
+    });
+  }
+
+
   function init() {
     const root = $('runDownApp');
     if (!root) return;
@@ -2610,6 +3326,7 @@
     (root.dataset.services || '').split(',').filter(Boolean).forEach(initServiceState);
 
     bindEvents();
+    bindStatCards();
     updateFieldDisplay('from');
     updateFieldDisplay('to');
     updatePrintMeta();
@@ -2634,6 +3351,9 @@
 
     // Initialize restaurant inline section
     initRestaurantSection();
+
+    // Initialize Meet & Assist inline section
+    initMeetAssistSection();
   }
 
   if (document.readyState === 'loading') {
