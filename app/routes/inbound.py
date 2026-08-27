@@ -7,7 +7,7 @@ from typing import cast, Any
 import json
 import os
 import sys
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import contains_eager, selectinload
 
 from app.extensions import db, csrf
 from app.models.inbound import (
@@ -8695,8 +8695,20 @@ def run_down_accommodation_data():
     statuses_param = request.args.get('statuses', '').strip()
     status_filters = [s.strip().upper() for s in statuses_param.split(',') if s.strip()] if statuses_param else []
 
+    # The join to InboundRequest is what scopes this to real requests; keep it
+    # INNER and harvest it with contains_eager rather than re-fetching each
+    # hotel.request through the lazy backref (that was one round trip per row).
+    # Do NOT swap this for selectinload without keeping the join: dropping it
+    # would let hotels with a null/dangling request_id into the result set.
+    # rooms is one-to-many with up to ~39 rows per hotel, so it gets
+    # selectinload (one extra IN query) — joinedload would multiply the hotel
+    # row by its room count. Same pattern as the request-detail load path.
     base_q = (
-        InboundHotel.query.join(InboundRequest)
+        InboundHotel.query.join(InboundHotel.request)
+        .options(
+            contains_eager(InboundHotel.request),
+            selectinload(InboundHotel.rooms),
+        )
         .filter(
             InboundHotel.check_in_date >= date_from,
             InboundHotel.check_in_date <= date_to,
