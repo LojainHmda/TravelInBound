@@ -269,6 +269,104 @@ body { background: #f1f5f9; }
 }
 
 /* ── Services grid ── */
+/* ── Summary stat cards (one per service section) ── */
+.rd-stat-cards {
+  display: grid;
+  /* 3 per row on desktop; a partial row stays left-aligned and the cards keep
+     their width instead of stretching to fill the leftover track. */
+  grid-template-columns: repeat(3, minmax(0, 320px));
+  justify-content: start;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.rd-stat-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 16px 12px;
+  transition: border-color .15s, box-shadow .15s;
+}
+/* Active card: 2px blue edge drawn as an inset ring on top of the 1px border,
+   so switching the active card never shifts the layout by a pixel. */
+.rd-stat-card.active {
+  border-color: #2563EB;
+  box-shadow: inset 0 0 0 1px #2563EB;
+}
+.rd-stat-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.rd-stat-card-head .rd-card-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+.rd-stat-card-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+  margin: 0;
+}
+.rd-stat-items {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-left: -10px;
+}
+/* These stats are <button>s, so the app-wide button theme (button-theme.css)
+   otherwise paints them as grey form buttons: it forces a #f8f9fa fill, a
+   border, 10px 20px padding and a shadow with !important, behind a selector
+   whose eight :not() clauses outrank any plain class here. The #rdStatCards ID
+   prefix outranks THAT, so the numbers read as numbers. Keep the prefix on
+   every rule below that has to win one of those declarations. */
+#rdStatCards .rd-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 74px;
+  padding: 4px 10px !important;
+  border: none !important;
+  border-radius: 8px;
+  background: transparent !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  font-weight: 400 !important;
+  transform: none !important;
+  text-align: left;
+  transition: background .15s;
+}
+#rdStatCards .rd-stat-item:not(:disabled) { cursor: pointer !important; }
+#rdStatCards .rd-stat-item:not(:disabled):hover { background: #f1f5f9 !important; }
+/* Beats button:disabled, which would grey the fill and show a not-allowed cursor. */
+#rdStatCards .rd-stat-item:disabled { cursor: default !important; }
+/* Beats button:focus, which would ring every clicked stat with a 3px shadow. */
+#rdStatCards .rd-stat-item:focus { box-shadow: none !important; outline: none !important; }
+#rdStatCards .rd-stat-item:focus-visible { outline: 2px solid #2563EB; outline-offset: 2px; }
+.rd-stat-num {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.1;
+  color: #0f172a;
+}
+.rd-stat-label {
+  font-size: 11px;
+  color: #64748b;
+}
+/* The single applied stat, so it is obvious WHICH number produced the table. */
+.rd-stat-item.active .rd-stat-num,
+.rd-stat-item.active .rd-stat-label { color: #2563EB; }
+
+@media (max-width: 900px) {
+  .rd-stat-cards { grid-template-columns: repeat(2, minmax(0, 320px)); }
+}
+@media (max-width: 640px) {
+  .rd-stat-cards { grid-template-columns: 1fr; }
+}
+
 .rd-services-title {
   font-size: 12px;
   font-weight: 700;
@@ -842,6 +940,59 @@ body { background: #f1f5f9; }
   border-top: 2px solid #e2e8f0;
 }
 .rd-accom-city-header:first-child { border-top: none; }
+/* Pagination controls under each inline results table (client-side, 20 rows/page).
+   Hidden entirely when the filtered result fits on one page. */
+.rd-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+  padding: 12px 4px 2px;
+  border-top: 1px solid #e2e8f0;
+}
+.rd-page-info { font-size: 12px; color: #64748b; }
+.rd-page-btns { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.rd-page-btn {
+  min-width: 32px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.rd-page-btn:hover:not(.active):not(.disabled) { background: #f1f5f9; }
+.rd-page-btn.active {
+  background: #2563EB;
+  border-color: #2563EB;
+  color: #fff;
+  cursor: default;
+}
+.rd-page-btn.disabled { opacity: .45; cursor: not-allowed; }
+.rd-page-btn i { font-size: 10px; }
+.rd-page-gap { padding: 0 2px; font-size: 12px; color: #94a3b8; }
+/* Arrival / Departure separator heading above each Meet & Assist table.
+   Scoped to #rdMeetAssistSection so no other section is affected. */
+#rdMeetAssistSection .rd-ma-type-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding-bottom: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #b45309;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  border-bottom: 2px solid #fde68a;
+}
+#rdMeetAssistSection .rd-ma-type-heading i { font-size: 12px; }
+#rdMeetAssistSection .rd-ma-type-block + .rd-ma-type-block { margin-top: 22px; }
 
 /* ── Print layout ── */
 .rd-print-header {
@@ -853,7 +1004,8 @@ body { background: #f1f5f9; }
   .rd-supplier-clear, .rd-card-actions, .rd-btn-date-apply, .modal-backdrop,
   .rd-modal-filters, .rd-btn, .btn-close, nav, footer, .rd-wrap, .rd-print-header,
   .ai-chat-fab, .ai-chat-widget,
-  .rd-accom-filters, .rd-accom-status-row, .rd-accom-apply-wrap { display: none !important; }
+  .rd-accom-filters, .rd-accom-status-row, .rd-accom-apply-wrap,
+  .rd-pagination { display: none !important; }
 
   /* Only ever print the Run Down modal. base.html renders shared modals
      (e.g. #customerSelectionModal, #quickAddCustomerModal) on every page; without
@@ -1011,6 +1163,30 @@ body { background: #f1f5f9; }
         </span>
       </div>
     </div>
+  </div>
+
+  {# Summary stat cards — counts come from each section's own data endpoint #}
+  <div class="rd-stat-cards" id="rdStatCards">
+    {% for svc in services if svc.key != 'OPTIONAL' %}
+    <div class="rd-stat-card" data-rd-stat-card="{{ svc.key }}">
+      <div class="rd-stat-card-head">
+        <div class="rd-card-icon" style="background: {{ svc.accent }}18; color: {{ svc.accent }};">
+          <i class="fas {{ svc.icon }}"></i>
+        </div>
+        <h3 class="rd-stat-card-title">{{ svc.label }}</h3>
+      </div>
+      <div class="rd-stat-items">
+        <button type="button" class="rd-stat-item" data-rd-stat="requested" disabled>
+          <span class="rd-stat-num">0</span>
+          <span class="rd-stat-label">requested</span>
+        </button>
+        <button type="button" class="rd-stat-item" data-rd-stat="waiting" disabled>
+          <span class="rd-stat-num">0</span>
+          <span class="rd-stat-label">waiting</span>
+        </button>
+      </div>
+    </div>
+    {% endfor %}
   </div>
 
   {# Service cards #}
@@ -1305,6 +1481,72 @@ body { background: #f1f5f9; }
         </span>
       </div>
       <div class="rd-accom-results" id="rdRestaurantResults"></div>
+    </div>
+  </div>
+</template>
+
+{# ── Meet & Assist inline section (rendered outside the grid, injected by JS) ── #}
+{# Reuses the Accommodation (.rd-accom-*) layout/styles for visual consistency. #}
+<template id="rdMeetAssistTemplate">
+  <div class="rd-accom-section" id="rdMeetAssistSection">
+    <div class="rd-accom-header" id="rdMeetAssistToggle">
+      <i class="fas fa-chevron-right rd-accom-chevron open" id="rdMeetAssistChevron"></i>
+      <div class="rd-card-icon" style="background: #b4530918; color: #b45309;">
+        <i class="fas fa-handshake"></i>
+      </div>
+      <h3 class="rd-card-title">Meet &amp; Assist</h3>
+      <span class="rd-accom-total-badge" id="rdMeetAssistTotal">0</span>
+      <span class="rd-accom-showing" id="rdMeetAssistShowing"></span>
+    </div>
+    <div class="rd-accom-body" id="rdMeetAssistBody">
+      <div class="rd-accom-filters">
+        <div class="rd-accom-filter-group">
+          <label>Meet &amp; Assist Name</label>
+          <div class="rd-accom-hotel-wrap" id="rdMeetAssistNameWrap">
+            <input type="text"
+                   class="rd-accom-hotel-input"
+                   id="rdMeetAssistNameInput"
+                   placeholder="All Names"
+                   autocomplete="off">
+            <button type="button" class="rd-accom-hotel-clear" id="rdMeetAssistNameClear" title="Clear">
+              <i class="fas fa-times"></i>
+            </button>
+            <div class="rd-accom-hotel-dropdown" id="rdMeetAssistNameDropdown"></div>
+          </div>
+        </div>
+        <div class="rd-accom-filter-group">
+          <label>Meet &amp; Assist</label>
+          <div class="rd-accom-select-wrap">
+            <select class="rd-accom-select" id="rdMeetAssistType">
+              <option value="BOTH" selected>Arrival &amp; Departure</option>
+              <option value="ARRIVAL">Arrival</option>
+              <option value="DEPARTURE">Departure</option>
+            </select>
+            <span class="rd-accom-select-arrow"><i class="fas fa-chevron-down"></i></span>
+          </div>
+        </div>
+        <div class="rd-accom-filter-group">
+          <label>Assignment</label>
+          <div class="rd-accom-select-wrap">
+            <select class="rd-accom-select" id="rdMeetAssistAssignment">
+              <option value="">All</option>
+              <option value="ASSIGNED">Assigned</option>
+              <option value="NOT_ASSIGNED">Not Assigned</option>
+            </select>
+            <span class="rd-accom-select-arrow"><i class="fas fa-chevron-down"></i></span>
+          </div>
+        </div>
+      </div>
+      <div class="rd-accom-status-row">
+        <span class="rd-accom-status-label">Status</span>
+        <span class="rd-accom-status-pills" id="rdMeetAssistPills"></span>
+        <span class="rd-accom-apply-wrap">
+          <button type="button" class="rd-accom-apply" id="rdMeetAssistApply">
+            <i class="fas fa-check"></i> Apply
+          </button>
+        </span>
+      </div>
+      <div class="rd-accom-results" id="rdMeetAssistResults"></div>
     </div>
   </div>
 </template>

@@ -8191,6 +8191,28 @@ def _parse_run_down_dates(default_to_today=True):
         return None, None
 
 
+def _run_down_status_stats(statuses):
+    """Summary-card counts for a run-down section.
+
+    ``statuses`` is every status in the selected date range for that section —
+    i.e. the same in-range dataset that feeds ``total`` and the section table,
+    BEFORE the section's own filters are applied. Counting here (rather than
+    from a separate query) is what guarantees the cards can never disagree with
+    the table.
+
+    Values are normalized through normalizeServiceStatus, so legacy NULL /
+    'REQUEST' / 'WAITING' rows land in the right bucket.
+    """
+    requested = waiting = 0
+    for status in statuses:
+        normalized = normalizeServiceStatus(status)
+        if normalized == 'REQUESTED':
+            requested += 1
+        elif normalized == 'WAITING_LIST':
+            waiting += 1
+    return {'requested': requested, 'waiting': waiting}
+
+
 def _run_down_row(request_obj, service_date, description, status, pax, service_type, record_id=None, meal_type=None, meal_note=None, voucher_notes=None, check_out_date=None, room_type=None, meal_plan=None, hotel_obj=None, end_date=None, language=None, guide_notes=None, transport_notes=None, pickup_location=None, dropoff_location=None, meet_assist_notes=None, supplier_obj=None, service_time=None, flight_number=None):
     """Build a normalized run-down request row for API responses."""
     base_row = {
@@ -8760,6 +8782,7 @@ def run_down_accommodation_data():
     return jsonify({
         'hotels': rows,
         'total': len(all_hotels_in_range),
+        'stats': _run_down_status_stats(h.status for h in all_hotels_in_range),
         'filtered': len(rows),
         'filters': {
             'cities': cities,
@@ -8873,6 +8896,7 @@ def run_down_transportation_data():
     return jsonify({
         'transports': rows,
         'total': len(all_transports),
+        'stats': _run_down_status_stats(t.status for t in all_transports),
         'filtered': len(rows),
         'filters': {
             'vehicles': vehicles,
@@ -8996,6 +9020,7 @@ def run_down_guide_data():
     return jsonify({
         'guides': rows,
         'total': len(all_guides),
+        'stats': _run_down_status_stats(_effective_status(g) for g in all_guides),
         'filtered': len(rows),
         'filters': {
             'languages': languages,
@@ -9151,10 +9176,183 @@ def run_down_restaurant_data():
     return jsonify({
         'restaurants': rows,
         'total': len(all_meals),
+        'stats': _run_down_status_stats(m.status for m in all_meals),
         'filtered': len(rows),
         'filters': {
             'cities': cities,
             'restaurant_names': restaurant_names,
+        },
+        'date_from': date_from.strftime('%Y-%m-%d'),
+        'date_to': date_to.strftime('%Y-%m-%d'),
+    })
+
+
+@inbound_bp.route('/run-down/meet-assist-data')
+@login_required
+def run_down_meet_assist_data():
+    """JSON: all Meet & Assist rows + filter options for the inline table.
+
+    The two live batch models are the only source: ArrivalBatch (Arrival M&A)
+    and DepartureBatch (Departure M&A). The legacy combined ArrivalDeparture
+    model is never read — it holds no rows and has no status column.
+
+    Only genuine Meet & Assist records (``meet_assist = True``) are returned.
+    This gate matters: the request form only *visually* hides the Status select
+    when Meet & Assist is switched to "No", so non-M&A rows can still carry a
+    stored status and would otherwise leak into this section.
+
+    Filters (Name, Type, Assignment, Status) are applied independently and
+    combined with the date range — mirroring the Guide inline section.
+      • Name reads ``representative_name``, never supplier_id: the request-form
+        save path writes the name but never populates supplier_id, so supplier
+        linkage is absent on most records.
+      • Assignment is decided solely by ``representative_name`` presence. A
+        specific Name cannot be combined with "Not Assigned" — Not Assigned
+        wins (the client also disables and resets the Name input).
+      • Status is the record's OWN Meet & Assist status, normalized through the
+        shared normalizeServiceStatus so legacy NULL rows read as REQUESTED.
+        The parent request's status (Agent/File Status) is never used here.
+
+    Rows are pre-sorted Arrival-then-Departure, by name within each type, with
+    unnamed ("Not Assigned") records last in each type, so the client can group
+    by walking the list in order.
+    """
+    date_from, date_to = _parse_run_down_dates()
+    if date_from is None or date_to is None:
+        return jsonify({'error': 'Invalid date format'}), 400
+
+    name_filter = request.args.get('ma_name', '').strip()
+    type_filter = request.args.get('ma_type', '').strip().upper()  # ARRIVAL, DEPARTURE, '' / BOTH
+    assignment_filter = request.args.get('assignment', '').strip().upper()  # '', ASSIGNED, NOT_ASSIGNED
+    statuses_param = request.args.get('statuses', '').strip()
+    status_filters = [s.strip().upper() for s in statuses_param.split(',') if s.strip()] if statuses_param else []
+
+    if type_filter not in ('ARRIVAL', 'DEPARTURE'):
+        type_filter = 'BOTH'
+
+    # ── Dataset: Meet & Assist records only, within the date range ──
+    arrivals = (
+        ArrivalBatch.query.join(InboundRequest)
+        .filter(
+            ArrivalBatch.arrival_date >= date_from,
+            ArrivalBatch.arrival_date <= date_to,
+            ArrivalBatch.meet_assist == True,  # noqa: E712 — SQL boolean comparison
+        )
+        .all()
+    )
+    departures = (
+        DepartureBatch.query.join(InboundRequest)
+        .filter(
+            DepartureBatch.departure_date >= date_from,
+            DepartureBatch.departure_date <= date_to,
+            DepartureBatch.meet_assist == True,  # noqa: E712 — SQL boolean comparison
+        )
+        .all()
+    )
+
+    def _name_of(batch):
+        return (batch.representative_name or '').strip()
+
+    def _is_assigned(batch):
+        # Assignment depends ONLY on the Meet & Assist Name — never on supplier_id.
+        return bool(_name_of(batch))
+
+    # ── Name options: case-insensitive dedup, first-seen casing is displayed. ──
+    # Built from every M&A record in range (both types) and independent of the
+    # other filters, so the dropdown never cascades.
+    _seen_names = {}
+    for batch in arrivals + departures:
+        n = _name_of(batch)
+        if not n:
+            continue
+        key = n.lower()
+        if key not in _seen_names:
+            _seen_names[key] = n
+    ma_names = sorted(_seen_names.values(), key=str.lower)
+
+    def _keep(batch):
+        if assignment_filter == 'ASSIGNED' and not _is_assigned(batch):
+            return False
+        if assignment_filter == 'NOT_ASSIGNED' and _is_assigned(batch):
+            return False
+        # A specific name only makes sense for assigned records; Not Assigned wins.
+        if name_filter and assignment_filter != 'NOT_ASSIGNED':
+            if _name_of(batch).lower() != name_filter.lower():
+                return False
+        return True
+
+    def _description(point, batch_name):
+        """Service point only — Arrival/Departure is conveyed by the grouping."""
+        desc = point or 'TBA'
+        if batch_name and batch_name != 'Batch':
+            desc += f" ({batch_name})"
+        return desc
+
+    rows = []
+
+    if type_filter in ('ARRIVAL', 'BOTH'):
+        for batch in arrivals:
+            if not _keep(batch):
+                continue
+            req = batch.request
+            row = _run_down_row(
+                req,
+                batch.arrival_date,
+                _description(batch.arrival_point, batch.batch_name),
+                normalizeServiceStatus(batch.status),
+                batch.pax_count or req.pax,
+                'GROUND_HANDLER',
+                batch.id,
+                meet_assist_notes=batch.notes,
+                supplier_obj=batch.supplier_ref,
+                service_time=batch.arrival_time,
+                flight_number=batch.flight_number,
+            )
+            row['ma_type'] = 'ARRIVAL'
+            row['ma_name'] = _name_of(batch)
+            rows.append(row)
+
+    if type_filter in ('DEPARTURE', 'BOTH'):
+        for batch in departures:
+            if not _keep(batch):
+                continue
+            req = batch.request
+            row = _run_down_row(
+                req,
+                batch.departure_date,
+                _description(batch.departure_point, batch.batch_name),
+                normalizeServiceStatus(batch.status),
+                batch.pax_count or req.pax,
+                'GROUND_HANDLER',
+                batch.id,
+                meet_assist_notes=batch.notes,
+                supplier_obj=batch.supplier_ref,
+                service_time=batch.departure_time,
+                flight_number=batch.flight_number,
+            )
+            row['ma_type'] = 'DEPARTURE'
+            row['ma_name'] = _name_of(batch)
+            rows.append(row)
+
+    if status_filters and 'ALL' not in status_filters:
+        rows = [r for r in rows if normalizeServiceStatus(r.get('status', '')) in status_filters]
+
+    # Arrival block first, then Departure; by name inside each, unnamed last.
+    rows.sort(key=lambda r: (
+        0 if r['ma_type'] == 'ARRIVAL' else 1,
+        1 if not r['ma_name'] else 0,
+        (r['ma_name'] or '').lower(),
+        r['date'],
+        r['request_number'],
+    ))
+
+    return jsonify({
+        'meet_assists': rows,
+        'total': len(arrivals) + len(departures),
+        'stats': _run_down_status_stats(b.status for b in arrivals + departures),
+        'filtered': len(rows),
+        'filters': {
+            'ma_names': ma_names,
         },
         'date_from': date_from.strftime('%Y-%m-%d'),
         'date_to': date_to.strftime('%Y-%m-%d'),
