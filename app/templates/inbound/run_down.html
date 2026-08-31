@@ -929,6 +929,18 @@ body { background: #f1f5f9; }
 #runDownApp .rd-accom-apply:disabled { opacity: .6; cursor: not-allowed; }
 /* Inline results table area */
 .rd-accom-results { margin-top: 14px; }
+/* Print button row under each section table. The button follows the table: it is
+   hidden until the section's results container actually holds a rendered table,
+   so it stays out of sight before Apply and on a zero-row result (which renders
+   .rd-modal-empty instead of a table). */
+.rd-accom-print-row {
+  display: none;
+}
+.rd-accom-results:has(.rd-modal-table) + .rd-accom-print-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
 .rd-accom-city-header {
   background: #f1f5f9;
   padding: 8px 12px;
@@ -1023,7 +1035,7 @@ body { background: #f1f5f9; }
     height: auto !important;
   }
 
-  #rdRequestsModal {
+  body:not(.rd-printing-section) #rdRequestsModal {
     display: block !important;
     position: static !important;
     top: auto !important;
@@ -1089,6 +1101,144 @@ body { background: #f1f5f9; }
     padding: 20px;
     color: #94a3b8;
   }
+
+  /* ── Section print (Print button under one section's table) ──────────────
+     Same mechanism as the modal print above, aimed at a single inline section
+     instead of the modal. The sections live inside .rd-wrap, which the modal
+     path hides, so the wrapper is brought back and everything except the one
+     section carrying .rd-print-target is hidden again. Every rule here is
+     scoped to body.rd-printing-section, a class JS adds only for the duration
+     of a section print, so the modal print path above is untouched. */
+  body.rd-printing-section .rd-wrap { display: block !important; }
+  body.rd-printing-section #rdRequestsModal { display: none !important; }
+  body.rd-printing-section .rd-header,
+  body.rd-printing-section .rd-date-bar,
+  body.rd-printing-section .rd-stat-cards,
+  body.rd-printing-section .rd-services-title,
+  body.rd-printing-section .rd-service-card { display: none !important; }
+  /* The grid would otherwise reserve empty columns for the hidden cards. */
+  body.rd-printing-section .rd-services-grid {
+    display: block !important;
+    gap: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Header: section name + selected period + printed timestamp. */
+  body.rd-printing-section .rd-print-header {
+    display: block !important;
+    margin: 0 0 14px;
+  }
+  /* Brand lockup: declarations copied verbatim from the Tour File / Trip Summary /
+     Tour Expense prints (view_request.html) so every print in the system carries an
+     identical header. Scoped to .rd-print-header so the generic .company-header
+     class cannot leak onto anything else on the page. */
+  body.rd-printing-section .rd-print-header .company-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #334155;
+  }
+  body.rd-printing-section .rd-print-header .company-header img {
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    object-fit: contain;
+  }
+  body.rd-printing-section .rd-print-header .company-text .company-name {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    line-height: 1.2;
+  }
+  body.rd-printing-section .rd-print-header .company-text .company-subtitle {
+    font-size: 12px;
+    color: #64748b;
+    letter-spacing: 1px;
+    margin: 2px 0 0;
+  }
+  body.rd-printing-section .rd-print-header h2 {
+    margin: 0 0 4px;
+    font-size: 17px;
+    font-weight: 700;
+    color: #1e293b;
+  }
+  body.rd-printing-section .rd-print-header p {
+    margin: 0;
+    font-size: 11px;
+    color: #475569;
+  }
+
+  /* Only the targeted section prints. */
+  body.rd-printing-section .rd-accom-section { display: none !important; }
+  body.rd-printing-section .rd-accom-section.rd-print-target {
+    display: block !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+  /* The section name is already in the print header above. */
+  body.rd-printing-section .rd-print-target .rd-accom-header { display: none !important; }
+  /* .collapsed sets display:none on screen; a print is always expanded. */
+  body.rd-printing-section .rd-print-target .rd-accom-body {
+    display: block !important;
+    padding: 0 !important;
+  }
+  body.rd-printing-section .rd-print-target .rd-accom-results { margin-top: 0 !important; }
+  body.rd-printing-section .rd-print-target .rd-accom-print-row { display: none !important; }
+
+  /* Rows flow sheet to sheet: header repeats, no row straddles a page break. */
+  body.rd-printing-section .rd-print-target .rd-modal-table-wrap {
+    overflow: visible !important;
+  }
+  body.rd-printing-section .rd-print-target .rd-modal-table {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+  body.rd-printing-section .rd-print-target .rd-modal-table thead {
+    display: table-header-group;
+  }
+  body.rd-printing-section .rd-print-target .rd-modal-table tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  body.rd-printing-section .rd-print-target .rd-modal-table th {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  /* Group separator rows (city / hotel / supplier) are table structure, not UI
+     chrome: they print in place, keep their tint, and are never left stranded
+     at the foot of a sheet without the rows they group. */
+  body.rd-printing-section .rd-print-target .rd-accom-city-header {
+    display: table-cell !important;
+    visibility: visible !important;
+    background: #f1f5f9 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  body.rd-printing-section .rd-print-target .rd-modal-table tr:has(> .rd-accom-city-header) {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+  /* Meet & Assist splits its rows into Arrival / Departure blocks. */
+  body.rd-printing-section .rd-print-target .rd-ma-type-heading {
+    display: flex !important;
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  /* Columns dropped from the section print only. Both the <th> and every
+     matching <td> carry the marker class, so the remaining columns stay
+     aligned. The Agent section keeps File Status in print — its cells never
+     carry .rd-col-file-status, so no per-section exception is needed here.
+     Scoped to .rd-print-target: the on-screen table and the modal print
+     (#rdRequestsModal) are untouched. */
+  body.rd-printing-section .rd-print-target .rd-col-file-status,
+  body.rd-printing-section .rd-print-target .rd-col-view { display: none !important; }
 }
 </style>
 
@@ -1099,7 +1249,16 @@ body { background: #f1f5f9; }
 
   {# Print-only header #}
   <div class="rd-print-header" id="rdPrintHeader">
-    <h2>Run Down Report</h2>
+    {# Same brand lockup as the Tour File / voucher / invoice prints. #}
+    <div class="company-header">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Company Logo"
+           onerror="this.style.display='none'">
+      <div class="company-text">
+        <div class="company-name">Windows of Jordan</div>
+        <div class="company-subtitle">Travel Management</div>
+      </div>
+    </div>
+    <h2 id="rdPrintHeaderTitle">Run Down Report</h2>
     <p id="rdPrintHeaderDates"></p>
   </div>
 
@@ -1289,6 +1448,12 @@ body { background: #f1f5f9; }
         </span>
       </div>
       <div class="rd-accom-results" id="rdAccomResults"></div>
+      <div class="rd-accom-print-row">
+        <button type="button" class="rd-btn rd-btn-print"
+                data-rd-print-section="rdAccomSection">
+          <i class="fas fa-print"></i> Print
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -1348,6 +1513,12 @@ body { background: #f1f5f9; }
         </span>
       </div>
       <div class="rd-accom-results" id="rdTransportResults"></div>
+      <div class="rd-accom-print-row">
+        <button type="button" class="rd-btn rd-btn-print"
+                data-rd-print-section="rdTransportSection">
+          <i class="fas fa-print"></i> Print
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -1417,6 +1588,12 @@ body { background: #f1f5f9; }
         </span>
       </div>
       <div class="rd-accom-results" id="rdGuideResults"></div>
+      <div class="rd-accom-print-row">
+        <button type="button" class="rd-btn rd-btn-print"
+                data-rd-print-section="rdGuideSection">
+          <i class="fas fa-print"></i> Print
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -1481,6 +1658,12 @@ body { background: #f1f5f9; }
         </span>
       </div>
       <div class="rd-accom-results" id="rdRestaurantResults"></div>
+      <div class="rd-accom-print-row">
+        <button type="button" class="rd-btn rd-btn-print"
+                data-rd-print-section="rdRestaurantSection">
+          <i class="fas fa-print"></i> Print
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -1547,6 +1730,12 @@ body { background: #f1f5f9; }
         </span>
       </div>
       <div class="rd-accom-results" id="rdMeetAssistResults"></div>
+      <div class="rd-accom-print-row">
+        <button type="button" class="rd-btn rd-btn-print"
+                data-rd-print-section="rdMeetAssistSection">
+          <i class="fas fa-print"></i> Print
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -1586,6 +1775,12 @@ body { background: #f1f5f9; }
         </span>
       </div>
       <div class="rd-accom-results" id="rdAgentResults"></div>
+      <div class="rd-accom-print-row">
+        <button type="button" class="rd-btn rd-btn-print"
+                data-rd-print-section="rdAgentSection">
+          <i class="fas fa-print"></i> Print
+        </button>
+      </div>
     </div>
   </div>
 </template>

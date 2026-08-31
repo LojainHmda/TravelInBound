@@ -243,10 +243,22 @@
 
   const RD_PAGE_SIZE = 20;
 
-  /** Clamp `page` into range and return that page's slice of `rows`. */
+  /* True only while a section is being re-rendered for printing. Print output
+     ignores pagination entirely: every row of the filtered set is laid down as
+     one continuous flow. The rows are already in memory (sectionState.allRows),
+     so this costs no extra request. */
+  let printingAllRows = false;
+
+  /** Clamp `page` into range and return that page's slice of `rows`.
+   *  While `printingAllRows` is set every row is returned instead: `page` is
+   *  passed straight back so the caller's `state.page = pg.page` keeps the page
+   *  the user is on, and `totalPages: 1` makes paginationHtml() render nothing. */
   function paginate(rows, page) {
     const totalPages = Math.max(1, Math.ceil(rows.length / RD_PAGE_SIZE));
     const current = Math.min(Math.max(parseInt(page, 10) || 1, 1), totalPages);
+    if (printingAllRows) {
+      return { pageRows: rows, page: current, totalPages: 1, start: 0 };
+    }
     const start = (current - 1) * RD_PAGE_SIZE;
     return {
       pageRows: rows.slice(start, start + RD_PAGE_SIZE),
@@ -988,6 +1000,61 @@
     window.print();
   }
 
+  /** Section id -> print label + the section's own re-render. Built on demand so
+   *  the per-section state consts are all initialised by the time it is read. */
+  function sectionPrintTargets() {
+    return {
+      rdAccomSection: { label: 'Accommodation', rerender: () => renderAccomTable(accomState.allRows) },
+      rdTransportSection: { label: 'Transportation', rerender: () => renderTransportTable(transportState.allRows) },
+      rdGuideSection: { label: 'Guide', rerender: () => renderGuideTable(guideState.allRows) },
+      rdRestaurantSection: { label: 'Restaurant', rerender: () => renderRestaurantTable(restaurantState.allRows) },
+      rdMeetAssistSection: { label: 'Meet & Assist', rerender: () => renderMeetAssistTable(meetAssistState.allRows) },
+      rdAgentSection: { label: 'Agent', rerender: () => renderAgentTable(agentState.allRows) },
+    };
+  }
+
+  /** Print one inline section's table on its own — same window.print() + print
+   *  CSS mechanism as printPage(), scoped to `sectionId` by body.rd-printing-section
+   *  and .rd-print-target. The section is re-rendered with every row first, then
+   *  restored to the page it was showing once the print dialog closes. */
+  function printSection(sectionId) {
+    const target = sectionPrintTargets()[sectionId];
+    const section = $(sectionId);
+    if (!target || !section) return;
+
+    state.printTs = formatPrintTs();
+    updatePrintMeta();
+
+    const heading = $('rdPrintHeaderTitle');
+    const headingText = heading ? heading.textContent : '';
+    if (heading) heading.textContent = target.label;
+
+    printingAllRows = true;
+    target.rerender();
+    section.classList.add('rd-print-target');
+    document.body.classList.add('rd-printing-section');
+
+    let restored = false;
+    const restore = () => {
+      if (restored) return;
+      restored = true;
+      window.removeEventListener('afterprint', restore);
+      document.body.classList.remove('rd-printing-section');
+      section.classList.remove('rd-print-target');
+      if (heading) heading.textContent = headingText;
+      printingAllRows = false;
+      target.rerender();
+    };
+
+    window.addEventListener('afterprint', restore);
+    try {
+      window.print();
+    } finally {
+      // Fallback for browsers that never fire afterprint; no-op once restored.
+      setTimeout(restore, 1000);
+    }
+  }
+
   function showDateAppliedIndicator() {
     const indicator = $('rdDateApplySuccess');
     if (indicator) indicator.classList.add('show');
@@ -1009,6 +1076,13 @@
 
     const printBtn = $('rdPrintBtn');
     if (printBtn) printBtn.addEventListener('click', printPage);
+
+    // Per-section Print buttons. Delegated: the sections are cloned out of
+    // <template> and injected after this runs.
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-rd-print-section]');
+      if (btn) printSection(btn.getAttribute('data-rd-print-section'));
+    });
 
     const filterChips = $('rdModalFilterChips');
     if (filterChips) {
@@ -1303,7 +1377,7 @@
       '<th>Date From</th><th>Date To</th><th>Request</th><th>Group Name</th>' +
       '<th>PAX</th><th>Nationality</th><th>Meal Plan</th><th>Nights</th>' +
       '<th>Room Category</th><th>SGL</th><th>DBL</th><th>TRPL</th><th>Total</th>' +
-      '<th>Status</th><th>File Status</th><th></th>' +
+      '<th>Status</th><th class="rd-col-file-status">File Status</th><th class="rd-col-view"></th>' +
       '</tr></thead><tbody>';
 
     cityOrder.forEach(city => {
@@ -1324,8 +1398,8 @@
           <td class="num">${r.trpl || 0}</td>
           <td class="num">${r.total || 0}</td>
           <td>${statusBadge(r.status)}</td>
-          <td>${statusBadge(r.file_status)}</td>
-          <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+          <td class="rd-col-file-status">${statusBadge(r.file_status)}</td>
+          <td class="rd-col-view"><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
         </tr>`;
       });
     });
@@ -1640,8 +1714,8 @@
         <td class="num">${r.pax}</td>
         <td>${escapeHtml(r.transport_note || '—')}</td>
         <td>${statusBadge(r.status)}</td>
-        <td>${statusBadge(r.file_status)}</td>
-        <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+        <td class="rd-col-file-status">${statusBadge(r.file_status)}</td>
+        <td class="rd-col-view"><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
       </tr>
       <tr class="rd-transport-detail-row">
         <td colspan="11">
@@ -1671,7 +1745,7 @@
     const thead = '<thead><tr>' +
       '<th>Num</th><th>Date From</th><th>Date To</th><th>Request</th>' +
       '<th>Group Name</th><th>Nationality</th><th>PAX</th>' +
-      '<th>Transportation Notes</th><th>Status</th><th>File Status</th><th></th>' +
+      '<th>Transportation Notes</th><th>Status</th><th class="rd-col-file-status">File Status</th><th class="rd-col-view"></th>' +
       '</tr></thead>';
 
     let body = '';
@@ -2001,8 +2075,8 @@
         <td>${escapeHtml(r.language || '—')}</td>
         <td>${escapeHtml(r.guide_note || '—')}</td>
         <td>${statusBadge(r.status)}</td>
-        <td>${statusBadge(r.file_status)}</td>
-        <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+        <td class="rd-col-file-status">${statusBadge(r.file_status)}</td>
+        <td class="rd-col-view"><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
       </tr>`;
   }
 
@@ -2023,7 +2097,7 @@
     const thead = '<thead><tr>' +
       '<th>Date From</th><th>Date To</th><th>Request</th><th>Group Name</th>' +
       '<th>PAX</th><th>Language</th><th>Guide Notes</th>' +
-      '<th>Status</th><th>File Status</th><th></th>' +
+      '<th>Status</th><th class="rd-col-file-status">File Status</th><th class="rd-col-view"></th>' +
       '</tr></thead>';
 
     let body = '';
@@ -2323,8 +2397,8 @@
         <td class="num">${r.pax}</td>
         <td>${escapeHtml(r.restaurant_note || '—')}</td>
         <td>${statusBadge(r.status)}</td>
-        <td>${statusBadge(r.file_status)}</td>
-        <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+        <td class="rd-col-file-status">${statusBadge(r.file_status)}</td>
+        <td class="rd-col-view"><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
       </tr>`;
   }
 
@@ -2345,7 +2419,7 @@
     const thead = '<thead><tr>' +
       '<th>Day</th><th>Date</th><th>Request</th><th>Group Name</th>' +
       '<th>Meal</th><th>PAX No</th><th>Restaurant Note</th>' +
-      '<th>Status</th><th>File Status</th><th></th>' +
+      '<th>Status</th><th class="rd-col-file-status">File Status</th><th class="rd-col-view"></th>' +
       '</tr></thead>';
 
     // Group by City → Restaurant, preserving the server-sorted order. Each group
@@ -2720,8 +2794,8 @@
         <td>${escapeHtml(r.flight_number || '—')}</td>
         <td>${escapeHtml(r.ma_notes || '—')}</td>
         <td>${statusBadge(r.status)}</td>
-        <td>${statusBadge(r.file_status)}</td>
-        <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+        <td class="rd-col-file-status">${statusBadge(r.file_status)}</td>
+        <td class="rd-col-view"><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
       </tr>`;
   }
 
@@ -2730,7 +2804,7 @@
     const thead = '<thead><tr>' +
       '<th>Date</th><th>Request</th><th>Group Name</th><th>PAX</th>' +
       '<th>Nationality</th><th>Description</th><th>Time</th><th>Flight Number</th>' +
-      '<th>M&A Notes</th><th>Status</th><th>File Status</th><th></th>' +
+      '<th>M&A Notes</th><th>Status</th><th class="rd-col-file-status">File Status</th><th class="rd-col-view"></th>' +
       '</tr></thead>';
 
     // Group by name, preserving the server order (named first, unnamed last).
@@ -3011,7 +3085,7 @@
         <td class="num">${r.pax}</td>
         <td>${escapeHtml(r.nationality || '—')}</td>
         <td>${statusBadge(r.file_status)}</td>
-        <td><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+        <td class="rd-col-view"><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
       </tr>`;
   }
 
@@ -3031,7 +3105,7 @@
 
     const thead = '<thead><tr>' +
       '<th>From Date</th><th>To Date</th><th>Request ID</th><th>Contact Name</th>' +
-      '<th>Group Name</th><th>PAX</th><th>Nationality</th><th>File Status</th><th></th>' +
+      '<th>Group Name</th><th>PAX</th><th>Nationality</th><th>File Status</th><th class="rd-col-view"></th>' +
       '</tr></thead>';
 
     // Group by Agent, preserving the server-sorted order. Each agent gets a
