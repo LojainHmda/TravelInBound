@@ -1454,6 +1454,8 @@ def view_request(id):
     if not request_obj.parent_request_id:
         linked_children = request_obj.linked_requests.order_by(InboundRequest.created_at.desc()).all()
     return render_template('inbound/view_request.html',
+                           # Run Down deep links: section key -> service tab key (see RUN_DOWN_SECTIONS)
+                           run_down_section_tabs={k: v['tab'] for k, v in RUN_DOWN_SECTIONS.items()},
                            request=request_obj,
                            inbound_request=request_obj,  # Explicit variable to avoid Flask request confusion
                            parent_request=parent_request,
@@ -8213,6 +8215,28 @@ def _run_down_status_stats(statuses):
     return {'requested': requested, 'waiting': waiting}
 
 
+# Single source of truth for Run Down deep links: /requests/<id>?section=<key>&item=<row id>
+# 'tab' is the request page's own service key — it is the tab id, the
+# data-service-type attribute value and the service API path segment, all at once.
+# GROUND_HANDLER maps to two sections, so the Meet & Assist endpoint resolves
+# its section key from ma_type rather than from the service type alone.
+RUN_DOWN_SECTIONS = {
+    'accommodation':  {'service_type': 'HOTEL',           'tab': 'hotel'},
+    'restaurant':     {'service_type': 'MEAL',            'tab': 'meal'},
+    'transportation': {'service_type': 'TRANSPORT',       'tab': 'transport'},
+    'guide':          {'service_type': 'GUIDE',           'tab': 'guide'},
+    'arrival':        {'service_type': 'GROUND_HANDLER',  'tab': 'arrival'},
+    'departure':      {'service_type': 'GROUND_HANDLER',  'tab': 'departure'},
+}
+
+# service_type -> section key, for the unambiguous services only.
+_RUN_DOWN_SECTION_BY_SERVICE_TYPE = {
+    cfg['service_type']: key
+    for key, cfg in RUN_DOWN_SECTIONS.items()
+    if cfg['service_type'] != 'GROUND_HANDLER'
+}
+
+
 def _run_down_row(request_obj, service_date, description, status, pax, service_type, record_id=None, meal_type=None, meal_note=None, voucher_notes=None, check_out_date=None, room_type=None, meal_plan=None, hotel_obj=None, end_date=None, language=None, guide_notes=None, transport_notes=None, pickup_location=None, dropoff_location=None, meet_assist_notes=None, supplier_obj=None, service_time=None, flight_number=None):
     """Build a normalized run-down request row for API responses."""
     base_row = {
@@ -8226,6 +8250,7 @@ def _run_down_row(request_obj, service_date, description, status, pax, service_t
         'file_status': request_obj.status or 'REQUEST',
         'pax': pax or request_obj.pax or 0,
         'service_type': service_type,
+        'section_key': _RUN_DOWN_SECTION_BY_SERVICE_TYPE.get(service_type),
         'view_url': url_for('inbound.view_request', id=request_obj.id),
     }
 
@@ -8784,6 +8809,7 @@ def run_down_accommodation_data():
             hotel_obj=hotel,
         )
         row['city'] = city_display
+        row['hotel_name'] = hotel.hotel_name or ''
         rows.append(row)
 
     if status_filters and 'ALL' not in status_filters:

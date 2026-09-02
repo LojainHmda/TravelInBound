@@ -231,6 +231,15 @@
     return escapeHtml(str).replace(/'/g, '&#39;');
   }
 
+  /* Deep link to the exact service item behind a row: the request page opens
+     the mapped tab and the item itself. section_key comes from the API
+     (RUN_DOWN_SECTIONS server-side) — never hardcoded here. Falls back to the
+     plain request URL when either part is missing. */
+  function deepLinkUrl(r) {
+    if (!r || !r.section_key || !r.record_id) return (r && r.view_url) || '';
+    return `${r.view_url}?section=${encodeURIComponent(r.section_key)}&item=${encodeURIComponent(r.record_id)}`;
+  }
+
   /* ════════════════════════════════════════════════════════════════
      Client-side pagination for the inline results tables.
 
@@ -1352,6 +1361,24 @@
     const results = $('rdAccomResults');
     if (!results) return;
 
+    // Grouping order: city (server order, first-seen wins), then hotel name A-Z,
+    // then date ascending. Sorted before paginate so a hotel's rows stay
+    // contiguous. Reorders only — same rows in, same rows out.
+    const cityRank = new Map();
+    rows.forEach((r) => {
+      const city = r.city || 'Other';
+      if (!cityRank.has(city)) cityRank.set(city, cityRank.size);
+    });
+    rows = rows.slice().sort((a, b) => {
+      const ca = cityRank.get(a.city || 'Other');
+      const cb = cityRank.get(b.city || 'Other');
+      if (ca !== cb) return ca - cb;
+      const ha = (a.hotel_name || '').toLowerCase();
+      const hb = (b.hotel_name || '').toLowerCase();
+      if (ha !== hb) return ha < hb ? -1 : 1;
+      return (a.date || '').localeCompare(b.date || '');
+    });
+
     accomState.allRows = rows;
     const pg = paginate(rows, accomState.page);
     accomState.page = pg.page;
@@ -1362,15 +1389,16 @@
       return;
     }
 
+    // Group by City → Hotel, preserving the sorted order above. Each group gets a
+    // single "City — Hotel" heading; the table columns are unchanged.
     const groups = {};
-    const cityOrder = [];
-    rows.forEach(r => {
+    const order = [];
+    rows.forEach((r) => {
       const city = r.city || 'Other';
-      if (!groups[city]) {
-        groups[city] = [];
-        cityOrder.push(city);
-      }
-      groups[city].push(r);
+      const name = r.hotel_name || 'Not Assigned';
+      const key = `${city} ${name}`;
+      if (!groups[key]) { groups[key] = { label: `${city} — ${name}`, rows: [] }; order.push(key); }
+      groups[key].rows.push(r);
     });
 
     let html = '<div class="rd-modal-table-wrap"><table class="rd-modal-table"><thead><tr>' +
@@ -1380,9 +1408,9 @@
       '<th>Status</th><th class="rd-col-file-status">File Status</th><th class="rd-col-view"></th>' +
       '</tr></thead><tbody>';
 
-    cityOrder.forEach(city => {
-      html += `<tr><td colspan="16" class="rd-accom-city-header">${escapeHtml(city)}</td></tr>`;
-      groups[city].forEach(r => {
+    order.forEach((key) => {
+      html += `<tr><td colspan="16" class="rd-accom-city-header">${escapeHtml(groups[key].label)}<span class="rd-accom-group-count">${groups[key].rows.length}</span></td></tr>`;
+      groups[key].rows.forEach((r) => {
         html += `<tr>
           <td>${escapeHtml(r.date_display)}</td>
           <td>${escapeHtml(r.check_out_date || '—')}</td>
@@ -1399,7 +1427,7 @@
           <td class="num">${r.total || 0}</td>
           <td>${statusBadge(r.status)}</td>
           <td class="rd-col-file-status">${statusBadge(r.file_status)}</td>
-          <td class="rd-col-view"><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+          <td class="rd-col-view"><a href="${escapeAttr(deepLinkUrl(r))}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
         </tr>`;
       });
     });
@@ -1703,6 +1731,16 @@
 
   /** Render one Transportation record as its main row + detail sub-row.
    *  Markup/columns are identical to the existing popup table. */
+  /* Group labels for the transportation table. company comes from the row's
+     supplier_name — the same field the request page shows. */
+  function transportCompanyOf(r) {
+    return (r.company || '').trim() || 'Not Assigned';
+  }
+
+  function transportVehicleOf(r) {
+    return (r.vehicle || '').trim() || 'Unspecified';
+  }
+
   function transportRowPair(r, num) {
     return `<tr>
         <td class="num">${num}</td>
@@ -1731,6 +1769,23 @@
     const results = $('rdTransportResults');
     if (!results) return;
 
+    // Grouping order: assigned companies A-Z first and everything not assigned
+    // last (the convention Meet & Assist already uses), then vehicle A-Z, then
+    // date ascending. Sorted before paginate so a vehicle's rows stay contiguous.
+    // Reorders only — same rows in, same rows out.
+    rows = rows.slice().sort((a, b) => {
+      const ua = (a.company || '').trim() ? 0 : 1;
+      const ub = (b.company || '').trim() ? 0 : 1;
+      if (ua !== ub) return ua - ub;
+      const ca = transportCompanyOf(a).toLowerCase();
+      const cb = transportCompanyOf(b).toLowerCase();
+      if (ca !== cb) return ca < cb ? -1 : 1;
+      const va = transportVehicleOf(a).toLowerCase();
+      const vb = transportVehicleOf(b).toLowerCase();
+      if (va !== vb) return va < vb ? -1 : 1;
+      return (a.date || '').localeCompare(b.date || '');
+    });
+
     transportState.allRows = rows;
     const pg = paginate(rows, transportState.page);
     transportState.page = pg.page;
@@ -1748,23 +1803,33 @@
       '<th>Transportation Notes</th><th>Status</th><th class="rd-col-file-status">File Status</th><th class="rd-col-view"></th>' +
       '</tr></thead>';
 
+    // company -> vehicle -> rows, both levels keeping the order set by the sort
+    // above. Both headers always render, whichever filters are applied.
+    const groups = {};
+    const companyOrder = [];
+    rows.forEach((r) => {
+      const company = transportCompanyOf(r);
+      if (!groups[company]) {
+        groups[company] = { vehicles: {}, order: [] };
+        companyOrder.push(company);
+      }
+      const vehicle = transportVehicleOf(r);
+      if (!groups[company].vehicles[vehicle]) {
+        groups[company].vehicles[vehicle] = [];
+        groups[company].order.push(vehicle);
+      }
+      groups[company].vehicles[vehicle].push(r);
+    });
+
     let body = '';
-    // Group by vehicle only when "All Vehicles" is selected; otherwise one table.
-    if (!transportState.vehicle) {
-      const groups = {};
-      const order = [];
-      rows.forEach(r => {
-        const v = r.vehicle || 'Unspecified';
-        if (!groups[v]) { groups[v] = []; order.push(v); }
-        groups[v].push(r);
+    companyOrder.forEach((company) => {
+      body += `<tr><td colspan="11" class="rd-accom-city-header rd-transport-group-company">${escapeHtml(company)}</td></tr>`;
+      groups[company].order.forEach((vehicle) => {
+        const vehicleRows = groups[company].vehicles[vehicle];
+        body += `<tr><td colspan="11" class="rd-accom-city-header rd-transport-group-vehicle">${escapeHtml(vehicle)}<span class="rd-accom-group-count">${vehicleRows.length}</span></td></tr>`;
+        vehicleRows.forEach((r) => { body += transportRowPair(r, ++rowNum); });
       });
-      order.forEach(v => {
-        body += `<tr><td colspan="11" class="rd-accom-city-header">${escapeHtml(v)}</td></tr>`;
-        groups[v].forEach((r) => { body += transportRowPair(r, ++rowNum); });
-      });
-    } else {
-      rows.forEach((r) => { body += transportRowPair(r, ++rowNum); });
-    }
+    });
 
     results.innerHTML = `<div class="rd-modal-table-wrap"><table class="rd-modal-table">${thead}<tbody>${body}</tbody></table></div>` + paginationHtml(pg, transportState.allRows.length);
   }

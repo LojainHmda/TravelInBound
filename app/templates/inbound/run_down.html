@@ -952,6 +952,41 @@ body { background: #f1f5f9; }
   border-top: 2px solid #e2e8f0;
 }
 .rd-accom-city-header:first-child { border-top: none; }
+/* Transportation groups two levels deep: company then vehicle. Both cells keep
+   the base class above (shared with the other sections, and carrying the print
+   rules); only these modifiers set the hierarchy, so no other section moves. */
+.rd-accom-city-header.rd-transport-group-company {
+  background: #f1f5f9;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.rd-accom-city-header.rd-transport-group-vehicle {
+  background: #f8fafc;
+  padding: 6px 12px 6px 28px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  text-transform: none;
+  letter-spacing: 0;
+  border-top: 1px solid #e2e8f0;
+}
+/* Request count on a group heading (Accommodation "City — Hotel", and the
+   Transportation vehicle level). The headings themselves use the shared
+   .rd-accom-city-header. */
+.rd-accom-group-count {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 9999px;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 600;
+}
 /* Pagination controls under each inline results table (client-side, 20 rows/page).
    Hidden entirely when the filtered result fits on one page. */
 .rd-pagination {

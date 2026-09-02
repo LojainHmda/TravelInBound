@@ -17283,6 +17283,63 @@ document.addEventListener('DOMContentLoaded', function() {
         filterHotels();
     }
 });
+
+/* ── Run Down deep link ────────────────────────────────────────────────
+   /requests/<id>?section=<key>&item=<row id> opens the mapped tab and the
+   exact item. Shared by every Run Down section; the section -> tab map is
+   the server's RUN_DOWN_SECTIONS, never duplicated here.
+
+   The item is opened by calling handleEditServiceRow — the same function a
+   manual chip / edit click goes through — so the result is identical.       */
+const RUN_DOWN_SECTION_TABS = {{ run_down_section_tabs | default({}, true) | tojson }};
+
+function applyRunDownDeepLink() {
+    const params = new URLSearchParams(window.location.search);
+    const section = params.get('section');
+    const item = params.get('item');
+
+    // Missing either param: keep today's behaviour exactly.
+    if (!section || !item) return;
+
+    // Unknown section key: ignore silently.
+    const tab = RUN_DOWN_SECTION_TABS[section];
+    if (!tab) return;
+
+    const selector = `[data-service-type="${tab}"][data-record-id="${CSS.escape(item)}"]`;
+    const deadline = Date.now() + 2000;
+
+    const attempt = () => {
+        if (document.querySelector(selector)) {
+            // Exactly what a manual click does: switches the tab, loads the
+            // record, opens the details panel and scrolls it into view.
+            handleEditServiceRow(tab, parseInt(item, 10));
+            highlightOpenedPanel(tab);
+            return;
+        }
+        if (Date.now() < deadline) {
+            setTimeout(attempt, 100);
+            return;
+        }
+        // Item not found (deleted or changed): open the tab only, non-blocking notice.
+        switchServiceTab(tab);
+        showNotification('That service item is no longer available. Opened the section instead.', 'info');
+    };
+
+    attempt();
+}
+
+function highlightOpenedPanel(tab) {
+    const panel = document.getElementById('service-panel-' + tab);
+    if (!panel) return;
+    setTimeout(() => {
+        panel.classList.add('ring-2', 'ring-blue-300');
+        setTimeout(() => panel.classList.remove('ring-2', 'ring-blue-300'), 2000);
+    }, 150);
+}
+
+// After load, not DOMContentLoaded: several DOMContentLoaded handlers on this
+// page touch the service tables, and this must run once they are all done.
+window.addEventListener('load', applyRunDownDeepLink);
 </script>
 {% include 'components/shared_transport_popup_controller.html' %}
 {% include 'components/transport_vehicle_other_controller.html' %}
