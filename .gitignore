@@ -50,3 +50,11 @@ deploy.tar.gz
 .local/
 .cursor/
 app/static/uploads/
+
+# Claude Code skills (local tooling, not app code)
+.claude/skills/
+skills-lock.json
+
+# Run Down recovery backups (not app code)
+recovered_run_down.js
+run_down_before_restore.js

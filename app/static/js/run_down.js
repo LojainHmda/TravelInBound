@@ -3295,7 +3295,12 @@
      ═══════════════════════════════════════════════════════════════════ */
 
   // Card stat key → the status value the section's pills/endpoint already use.
-  const STAT_STATUS_KEY = { requested: 'REQUESTED', waiting: 'WAITING_LIST' };
+  const STAT_STATUS_KEY = {
+    requested: 'REQUESTED',
+    confirmed: 'CONFIRMED',
+    waiting: 'WAITING_LIST',
+    cancelled: 'CANCELLED',
+  };
 
   // The single applied stat across all cards: { card, stat } or null.
   let activeStat = null;

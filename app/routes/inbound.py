@@ -8205,14 +8205,23 @@ def _run_down_status_stats(statuses):
     Values are normalized through normalizeServiceStatus, so legacy NULL /
     'REQUEST' / 'WAITING' rows land in the right bucket.
     """
-    requested = waiting = 0
+    requested = confirmed = waiting = cancelled = 0
     for status in statuses:
         normalized = normalizeServiceStatus(status)
         if normalized == 'REQUESTED':
             requested += 1
+        elif normalized == 'CONFIRMED':
+            confirmed += 1
         elif normalized == 'WAITING_LIST':
             waiting += 1
-    return {'requested': requested, 'waiting': waiting}
+        elif normalized == 'CANCELLED':
+            cancelled += 1
+    return {
+        'requested': requested,
+        'confirmed': confirmed,
+        'waiting': waiting,
+        'cancelled': cancelled,
+    }
 
 
 # Single source of truth for Run Down deep links: /requests/<id>?section=<key>&item=<row id>
