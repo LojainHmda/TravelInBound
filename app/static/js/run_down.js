@@ -2129,6 +2129,25 @@
     }
   }
 
+  /* Group labels for the guide table. guide_name comes from the row's
+     guide_name — the same field the request page shows. An empty language
+     reaches the client as the em-dash placeholder, so treat that as empty. */
+  function guideLanguageOf(r) {
+    const l = (r.language || '').trim();
+    return l === '—' ? '' : l;
+  }
+
+  function guideNameOf(r) {
+    return (r.guide_name || '').trim();
+  }
+
+  /** "Language — Guide", or the guide alone when the language is empty. */
+  function guideGroupLabel(r) {
+    const lang = guideLanguageOf(r);
+    const name = guideNameOf(r) || 'Not Assigned';
+    return lang ? `${lang} — ${name}` : name;
+  }
+
   /** Render one Guide record — columns identical to the existing popup table. */
   function guideRow(r) {
     return `<tr>
@@ -2149,6 +2168,34 @@
     const results = $('rdGuideResults');
     if (!results) return;
 
+    // Grouping order: named languages first, in the order the server sent them,
+    // and every empty language last; within a language assigned guides A-Z with
+    // everything not assigned last (the convention Transportation uses), then
+    // date ascending. Sorted before paginate so a guide's rows stay contiguous.
+    // Reorders only — same rows in, same rows out.
+    const langRank = new Map();
+    rows.forEach((r) => {
+      const l = guideLanguageOf(r);
+      if (l && !langRank.has(l)) langRank.set(l, langRank.size);
+    });
+    rows = rows.slice().sort((a, b) => {
+      const ea = guideLanguageOf(a) ? 0 : 1;
+      const eb = guideLanguageOf(b) ? 0 : 1;
+      if (ea !== eb) return ea - eb;
+      if (!ea) {
+        const la = langRank.get(guideLanguageOf(a));
+        const lb = langRank.get(guideLanguageOf(b));
+        if (la !== lb) return la - lb;
+      }
+      const ua = guideNameOf(a) ? 0 : 1;
+      const ub = guideNameOf(b) ? 0 : 1;
+      if (ua !== ub) return ua - ub;
+      const ga = guideNameOf(a).toLowerCase();
+      const gb = guideNameOf(b).toLowerCase();
+      if (ga !== gb) return ga < gb ? -1 : 1;
+      return (a.date || '').localeCompare(b.date || '');
+    });
+
     guideState.allRows = rows;
     const pg = paginate(rows, guideState.page);
     guideState.page = pg.page;
@@ -2165,23 +2212,22 @@
       '<th>Status</th><th class="rd-col-file-status">File Status</th><th class="rd-col-view"></th>' +
       '</tr></thead>';
 
+    // Group by Language → Guide, preserving the sorted order above. Each group
+    // gets a single "Language — Guide" heading, whichever filter is applied;
+    // the table columns are unchanged.
+    const groups = {};
+    const order = [];
+    rows.forEach((r) => {
+      const key = `${guideLanguageOf(r)} ${guideNameOf(r)}`;
+      if (!groups[key]) { groups[key] = { label: guideGroupLabel(r), rows: [] }; order.push(key); }
+      groups[key].rows.push(r);
+    });
+
     let body = '';
-    // Group by language only when "All Languages" is selected; otherwise one table.
-    if (!guideState.language) {
-      const groups = {};
-      const order = [];
-      rows.forEach((r) => {
-        const l = r.language || '—';
-        if (!groups[l]) { groups[l] = []; order.push(l); }
-        groups[l].push(r);
-      });
-      order.forEach((l) => {
-        body += `<tr><td colspan="10" class="rd-accom-city-header">${escapeHtml(l)}</td></tr>`;
-        groups[l].forEach((r) => { body += guideRow(r); });
-      });
-    } else {
-      rows.forEach((r) => { body += guideRow(r); });
-    }
+    order.forEach((key) => {
+      body += `<tr><td colspan="10" class="rd-accom-city-header">${escapeHtml(groups[key].label)}<span class="rd-accom-group-count">${groups[key].rows.length}</span></td></tr>`;
+      groups[key].rows.forEach((r) => { body += guideRow(r); });
+    });
 
     results.innerHTML = `<div class="rd-modal-table-wrap"><table class="rd-modal-table">${thead}<tbody>${body}</tbody></table></div>` + paginationHtml(pg, guideState.allRows.length);
   }

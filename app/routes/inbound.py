@@ -9048,6 +9048,9 @@ def run_down_guide_data():
             guide_notes=guide.additional_comments,
         )
         row['language'] = _language_of(guide) or '—'
+        # Grouping key for the client's "Language — Guide" headings, read from
+        # the same field the request page shows (and the Guide Name filter uses).
+        row['guide_name'] = _guide_of(guide)
         rows.append(row)
 
     if status_filters and 'ALL' not in status_filters:
