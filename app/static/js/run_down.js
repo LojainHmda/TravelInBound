@@ -250,7 +250,7 @@
      and row order are untouched.
      ════════════════════════════════════════════════════════════════ */
 
-  const RD_PAGE_SIZE = 20;
+  const RD_PAGE_SIZE = 15;
 
   /* True only while a section is being re-rendered for printing. Print output
      ignores pagination entirely: every row of the filtered set is laid down as
@@ -1753,7 +1753,7 @@
         <td>${escapeHtml(r.transport_note || '—')}</td>
         <td>${statusBadge(r.status)}</td>
         <td class="rd-col-file-status">${statusBadge(r.file_status)}</td>
-        <td class="rd-col-view"><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+        <td class="rd-col-view"><a href="${escapeAttr(deepLinkUrl(r))}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
       </tr>
       <tr class="rd-transport-detail-row">
         <td colspan="11">
@@ -2160,7 +2160,7 @@
         <td>${escapeHtml(r.guide_note || '—')}</td>
         <td>${statusBadge(r.status)}</td>
         <td class="rd-col-file-status">${statusBadge(r.file_status)}</td>
-        <td class="rd-col-view"><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+        <td class="rd-col-view"><a href="${escapeAttr(deepLinkUrl(r))}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
       </tr>`;
   }
 
@@ -2509,7 +2509,7 @@
         <td>${escapeHtml(r.restaurant_note || '—')}</td>
         <td>${statusBadge(r.status)}</td>
         <td class="rd-col-file-status">${statusBadge(r.file_status)}</td>
-        <td class="rd-col-view"><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+        <td class="rd-col-view"><a href="${escapeAttr(deepLinkUrl(r))}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
       </tr>`;
   }
 
@@ -2906,7 +2906,7 @@
         <td>${escapeHtml(r.ma_notes || '—')}</td>
         <td>${statusBadge(r.status)}</td>
         <td class="rd-col-file-status">${statusBadge(r.file_status)}</td>
-        <td class="rd-col-view"><a href="${escapeAttr(r.view_url)}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+        <td class="rd-col-view"><a href="${escapeAttr(deepLinkUrl(r))}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
       </tr>`;
   }
 

@@ -8236,6 +8236,16 @@ _RUN_DOWN_SECTION_BY_SERVICE_TYPE = {
     if cfg['service_type'] != 'GROUND_HANDLER'
 }
 
+# ma_type ('ARRIVAL' / 'DEPARTURE') -> section key, for the two GROUND_HANDLER
+# sections the map above deliberately leaves out. Built from RUN_DOWN_SECTIONS
+# rather than written out, so the section keys and the ma_type values the Meet &
+# Assist endpoint sets cannot drift apart.
+_RUN_DOWN_MA_SECTIONS = {
+    key.upper(): key
+    for key, cfg in RUN_DOWN_SECTIONS.items()
+    if cfg['service_type'] == 'GROUND_HANDLER'
+}
+
 
 def _run_down_row(request_obj, service_date, description, status, pax, service_type, record_id=None, meal_type=None, meal_note=None, voucher_notes=None, check_out_date=None, room_type=None, meal_plan=None, hotel_obj=None, end_date=None, language=None, guide_notes=None, transport_notes=None, pickup_location=None, dropoff_location=None, meet_assist_notes=None, supplier_obj=None, service_time=None, flight_number=None):
     """Build a normalized run-down request row for API responses."""
@@ -9350,6 +9360,10 @@ def run_down_meet_assist_data():
                 flight_number=batch.flight_number,
             )
             row['ma_type'] = 'ARRIVAL'
+            # Meet & Assist has no tab of its own: the deep link targets the
+            # request page's Arrival tab. _run_down_row leaves section_key None
+            # for GROUND_HANDLER because the service type alone is ambiguous.
+            row['section_key'] = _RUN_DOWN_MA_SECTIONS['ARRIVAL']
             row['ma_name'] = _name_of(batch)
             rows.append(row)
 
@@ -9372,6 +9386,8 @@ def run_down_meet_assist_data():
                 flight_number=batch.flight_number,
             )
             row['ma_type'] = 'DEPARTURE'
+            # As above: Departure M&A deep links to the Departure tab.
+            row['section_key'] = _RUN_DOWN_MA_SECTIONS['DEPARTURE']
             row['ma_name'] = _name_of(batch)
             rows.append(row)
 
