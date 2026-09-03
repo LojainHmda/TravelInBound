@@ -437,6 +437,9 @@
 
     // Refresh Meet & Assist inline section for new date range
     refreshMeetAssistOnDateChange();
+
+    // Refresh the cut-off table, if one is showing, for new date range
+    refreshCutOffOnDateChange();
   }
 
   /* ── Preset date ranges (fill only — never load data) ── */
@@ -1019,6 +1022,7 @@
       rdRestaurantSection: { label: 'Restaurant', rerender: () => renderRestaurantTable(restaurantState.allRows) },
       rdMeetAssistSection: { label: 'Meet & Assist', rerender: () => renderMeetAssistTable(meetAssistState.allRows) },
       rdAgentSection: { label: 'Agent', rerender: () => renderAgentTable(agentState.allRows) },
+      rdCutOffSection: { label: cutOffPrintLabel(), rerender: () => renderCutOffTable(cutOffState.allRows) },
     };
   }
 
@@ -3279,6 +3283,161 @@
 
 
   /* ═══════════════════════════════════════════════════════════════════
+     Cut-off section
+
+     The page's last block, and the only section with no filters of its own:
+     it is filled by clicking a summary card's cut-off count and lists every
+     service of THAT service type whose supplier cut-off deadline falls inside
+     the applied date range. One shared table — picking a different service
+     replaces its contents rather than stacking a second table.
+
+     Rows come from /run-down/cut-off-data carrying the same view_url /
+     section_key / record_id the section tables use, so the View column goes
+     through deepLinkUrl() and lands on the exact service item.
+     ═══════════════════════════════════════════════════════════════════ */
+
+  // Card key -> the endpoint's service key + the service name shown in the
+  // heading. Mirrors RUN_DOWN_CUT_OFF_SERVICES server-side.
+  const CUT_OFF_SERVICES = {
+    HOTEL: { service: 'accommodation', label: 'Accommodation' },
+    TRANSPORT: { service: 'transportation', label: 'Transportation' },
+    MEAL: { service: 'restaurant', label: 'Restaurant' },
+  };
+
+  const cutOffState = {
+    card: '',            // '' until a cut-off count is clicked
+    collapsed: false,
+    total: 0,
+    page: 1,
+    allRows: [],
+  };
+
+  /** Print header label: the service the table is currently showing. */
+  function cutOffPrintLabel() {
+    const cfg = CUT_OFF_SERVICES[cutOffState.card];
+    return cfg ? `Cut-off — ${cfg.label}` : 'Cut-off';
+  }
+
+  /** Heading + total badge always name the service on display, so the table
+   *  can never be mistaken for another service's cut-off list. */
+  function updateCutOffHeading() {
+    const title = $('rdCutOffTitle');
+    const total = $('rdCutOffTotal');
+    if (title) title.textContent = cutOffPrintLabel();
+    if (total) total.textContent = cutOffState.total;
+  }
+
+  /** Fill the shared cut-off table with one card's service and scroll to it. */
+  async function showCutOffTable(cardKey) {
+    const cfg = CUT_OFF_SERVICES[cardKey];
+    const section = $('rdCutOffSection');
+    const results = $('rdCutOffResults');
+    if (!cfg || !section || !results) return;
+
+    cutOffState.card = cardKey;
+    cutOffState.total = 0;
+    section.hidden = false;
+    expandSection(cutOffState, 'rdCutOffBody', 'rdCutOffChevron');
+    updateCutOffHeading();
+    results.innerHTML = `<div class="rd-modal-empty"><i class="fas fa-spinner fa-spin"></i><p>Loading cut-off records…</p></div>`;
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    await loadCutOffRows();
+  }
+
+  /** (Re)load the rows for the service the table is already showing. */
+  async function loadCutOffRows() {
+    const cfg = CUT_OFF_SERVICES[cutOffState.card];
+    const results = $('rdCutOffResults');
+    if (!cfg || !results) return;
+
+    const url = `/inbound/run-down/cut-off-data?service=${encodeURIComponent(cfg.service)}`
+      + `&date_from=${encodeURIComponent(state.appliedDateFrom)}`
+      + `&date_to=${encodeURIComponent(state.appliedDateTo)}`;
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load');
+
+      cutOffState.total = data.total || 0;
+      cutOffState.page = 1;
+      renderCutOffTable(data.rows || []);
+    } catch (err) {
+      console.error('Cut-off load error', err);
+      cutOffState.total = 0;
+      cutOffState.allRows = [];
+      results.innerHTML = `<div class="rd-modal-empty"><i class="fas fa-exclamation-triangle"></i><p>Could not load cut-off records. Please try again.</p></div>`;
+    }
+    updateCutOffHeading();
+  }
+
+  function renderCutOffTable(rows) {
+    const results = $('rdCutOffResults');
+    if (!results) return;
+
+    // Already sorted by cut-off date ascending server-side; kept as delivered.
+    cutOffState.allRows = rows;
+    const pg = paginate(rows, cutOffState.page);
+    cutOffState.page = pg.page;
+    rows = pg.pageRows;
+
+    if (!rows.length) {
+      const cfg = CUT_OFF_SERVICES[cutOffState.card];
+      const label = cfg ? cfg.label.toLowerCase() : 'service';
+      results.innerHTML = `<div class="rd-modal-empty"><i class="fas fa-inbox"></i><p>No ${label} cut-off dates fall inside the selected period.</p></div>`;
+      return;
+    }
+
+    let html = '<div class="rd-modal-table-wrap"><table class="rd-modal-table"><thead><tr>' +
+      '<th>Cut Off Date</th><th>Request</th><th>Name</th><th>Date From</th><th>Date To</th>' +
+      '<th class="rd-col-view"></th>' +
+      '</tr></thead><tbody>';
+
+    rows.forEach((r) => {
+      html += `<tr>
+        <td>${escapeHtml(r.cut_off_date_display || '—')}</td>
+        <td><strong>${escapeHtml(r.request_number)}</strong></td>
+        <td>${escapeHtml(r.name || '—')}</td>
+        <td>${escapeHtml(r.date_from_display || '—')}</td>
+        <td>${escapeHtml(r.date_to_display || '—')}</td>
+        <td class="rd-col-view"><a href="${escapeAttr(deepLinkUrl(r))}" class="rd-view-link" target="_blank" rel="noopener">View</a></td>
+      </tr>`;
+    });
+
+    html += '</tbody></table></div>';
+    results.innerHTML = html + paginationHtml(pg, cutOffState.allRows.length);
+  }
+
+  function bindCutOffEvents() {
+    bindPagination($('rdCutOffResults'), cutOffState, () => renderCutOffTable(cutOffState.allRows));
+    const toggle = $('rdCutOffToggle');
+    if (toggle) {
+      toggle.addEventListener('click', () => {
+        cutOffState.collapsed = !cutOffState.collapsed;
+        const body = $('rdCutOffBody');
+        const chevron = $('rdCutOffChevron');
+        if (body) body.classList.toggle('collapsed', cutOffState.collapsed);
+        if (chevron) chevron.classList.toggle('open', !cutOffState.collapsed);
+      });
+    }
+  }
+
+  function initCutOffSection() {
+    // Static markup, not a <template> clone: the section is already in the page,
+    // hidden until a cut-off count is clicked.
+    bindCutOffEvents();
+  }
+
+  /** Date Apply: a cut-off table that is already showing refreshes in place for
+   *  the new range, keeping the service it is on. */
+  function refreshCutOffOnDateChange() {
+    if (cutOffState.card) {
+      loadCutOffRows();
+    }
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════════
      Summary stat cards
 
      One card per service section, sitting above the sections themselves.
@@ -3456,12 +3615,23 @@
       const value = Number(values[item.dataset.rdStat]) || 0;
       item.dataset.rdStatValue = value;
       const numEl = item.querySelector('.rd-stat-num');
-      if (numEl) numEl.textContent = value;
+      if (numEl) {
+        numEl.textContent = value;
+        // A live cut-off deadline reads red; a zero keeps the normal colour.
+        numEl.classList.toggle('rd-stat-num-alert', item.dataset.rdStat === 'cut_off' && value > 0);
+      }
     });
     renderStatActive();
   }
 
   async function onStatClick(cardKey, statKey) {
+    // Cut-off is not a status: it fills its own standalone table at the bottom
+    // of the page and leaves every section's filters exactly as they are.
+    if (statKey === 'cut_off') {
+      await showCutOffTable(cardKey);
+      return;
+    }
+
     const cfg = STAT_CARDS[cardKey];
     const statusKey = STAT_STATUS_KEY[statKey];
     if (!cfg || !statusKey) return;
@@ -3544,6 +3714,9 @@
 
     // Initialize Meet & Assist inline section
     initMeetAssistSection();
+
+    // Initialize cut-off section
+    initCutOffSection();
   }
 
   if (document.readyState === 'loading') {

@@ -7,7 +7,7 @@
 body { background: #f1f5f9; }
 
 .rd-wrap {
-  max-width: 1100px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 18px 20px 40px;
 }
@@ -358,6 +358,18 @@ body { background: #f1f5f9; }
 /* The single applied stat, so it is obvious WHICH number produced the table. */
 .rd-stat-item.active .rd-stat-num,
 .rd-stat-item.active .rd-stat-label { color: #2563EB; }
+/* Cut-off row: a second .rd-stat-items line under the status counts, on the
+   three cards whose service carries a supplier deadline. Divider + spacing
+   only, so the counts above keep the layout they already have. */
+.rd-stat-items.rd-stat-cutoff {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e2e8f0;
+}
+/* A deadline falling inside the selected range reads red. A zero keeps the
+   normal colour every other count uses. Same #rdStatCards prefix as the rules
+   above, so it beats the app-wide button theme. */
+#rdStatCards .rd-stat-num.rd-stat-num-alert { color: #dc2626; }
 
 @media (max-width: 900px) {
   .rd-stat-cards { grid-template-columns: repeat(2, minmax(0, 320px)); }
@@ -1386,6 +1398,16 @@ body { background: #f1f5f9; }
           <span class="rd-stat-label">cancelled</span>
         </button>
       </div>
+      {% if svc.key in cut_off_cards %}
+      {# Cut-off count - only the services that carry a supplier deadline.
+         Clicking it fills the cut-off table at the bottom of the page. #}
+      <div class="rd-stat-items rd-stat-cutoff">
+        <button type="button" class="rd-stat-item" data-rd-stat="cut_off" disabled>
+          <span class="rd-stat-num">0</span>
+          <span class="rd-stat-label">cut-off</span>
+        </button>
+      </div>
+      {% endif %}
     </div>
     {% endfor %}
   </div>
@@ -1394,11 +1416,6 @@ body { background: #f1f5f9; }
   <div class="rd-services-title">Services</div>
   <div class="rd-services-grid">
     {% for svc in services %}
-    {% if svc.key == 'OPTIONAL' %}
-    {# Anchor marking where the Agent inline section is injected (before Optional).
-       JS inserts #rdAgentSection here and removes this placeholder. #}
-    <div data-rd-agent-anchor hidden></div>
-    {% endif %}
     <div class="rd-service-card" data-rd-card="{{ svc.key }}">
       <div class="rd-card-head">
         <div class="rd-card-icon" style="background: {{ svc.accent }}18; color: {{ svc.accent }};">
@@ -1430,6 +1447,33 @@ body { background: #f1f5f9; }
       </div>
     </div>
     {% endfor %}
+    {# Anchor marking where the Agent inline section is injected (last in the grid).
+       JS inserts #rdAgentSection here and removes this placeholder. #}
+    <div data-rd-agent-anchor hidden></div>
+
+    {# Cut-off section: the page's last block, filled by clicking a card's
+       cut-off count. Hidden until then, and it is one shared table - picking a
+       different service replaces its contents instead of stacking a second
+       one. No filters of its own: it follows the selected date range only. #}
+    <div class="rd-accom-section" id="rdCutOffSection" hidden>
+      <div class="rd-accom-header" id="rdCutOffToggle">
+        <i class="fas fa-chevron-right rd-accom-chevron open" id="rdCutOffChevron"></i>
+        <div class="rd-card-icon" style="background: #dc262618; color: #dc2626;">
+          <i class="fas fa-hourglass-half"></i>
+        </div>
+        <h3 class="rd-card-title" id="rdCutOffTitle">Cut-off</h3>
+        <span class="rd-accom-total-badge" id="rdCutOffTotal">0</span>
+      </div>
+      <div class="rd-accom-body" id="rdCutOffBody">
+        <div class="rd-accom-results" id="rdCutOffResults"></div>
+        <div class="rd-accom-print-row">
+          <button type="button" class="rd-btn rd-btn-print"
+                  data-rd-print-section="rdCutOffSection">
+            <i class="fas fa-print"></i> Print
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 

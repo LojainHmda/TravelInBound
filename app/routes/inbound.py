@@ -8160,7 +8160,6 @@ RUN_DOWN_SERVICES = [
     {'key': 'GUIDE', 'label': 'Guides', 'icon': 'fa-user-tie', 'accent': '#6d28d9'},
     {'key': 'MEAL', 'label': 'Restaurant', 'icon': 'fa-utensils', 'accent': '#9333ea'},
     {'key': 'GROUND_HANDLER', 'label': 'Meet & Assist', 'icon': 'fa-handshake', 'accent': '#b45309'},
-    {'key': 'OPTIONAL', 'label': 'Optional', 'icon': 'fa-star', 'accent': '#15803d'},
 ]
 
 _RUN_DOWN_SUPPLIER_PATTERNS = {
@@ -8381,9 +8380,145 @@ def _run_down_row(request_obj, service_date, description, status, pax, service_t
     return base_row
 
 
+# The three services carrying a supplier cut-off deadline, keyed by the same
+# section keys RUN_DOWN_SECTIONS uses and mapped to the summary card each one
+# feeds. Guides and Meet & Assist have no cut_off_date column, so they are
+# deliberately absent and their cards keep exactly the counts they show today.
+RUN_DOWN_CUT_OFF_SERVICES = {
+    'accommodation':  {'card': 'HOTEL',     'label': 'Accommodation'},
+    'restaurant':     {'card': 'MEAL',      'label': 'Restaurant'},
+    'transportation': {'card': 'TRANSPORT', 'label': 'Transportation'},
+}
+
+
+def _run_down_cut_off_records(service_key, date_from, date_to):
+    """Service records whose cut-off date falls inside the selected date range.
+
+    Deliberately independent of every section filter (city, vehicle, hotel name,
+    status): the cut-off count and the cut-off table follow the page's date
+    range and nothing else. Cut-off is an optional, user-entered field, so rows
+    without one are excluded by the column filter itself. Cancelled records are
+    excluded too - a cancelled booking has no live deadline.
+
+    The join to InboundRequest is INNER, so a record with a dangling request_id
+    never reaches _run_down_row (which reads request_obj.request_number).
+    Returned soonest-deadline-first, which is the order the table shows.
+    """
+    if service_key == 'accommodation':
+        records = (
+            InboundHotel.query.join(InboundHotel.request)
+            .options(contains_eager(InboundHotel.request))
+            .filter(
+                InboundHotel.cut_off_date.isnot(None),
+                InboundHotel.cut_off_date >= date_from,
+                InboundHotel.cut_off_date <= date_to,
+            )
+            .all()
+        )
+    elif service_key == 'restaurant':
+        records = (
+            InboundMeal.query.join(InboundMeal.request)
+            .options(contains_eager(InboundMeal.request))
+            .filter(
+                InboundMeal.cut_off_date.isnot(None),
+                InboundMeal.cut_off_date >= date_from,
+                InboundMeal.cut_off_date <= date_to,
+            )
+            .all()
+        )
+    elif service_key == 'transportation':
+        records = (
+            InboundTransport.query.join(InboundTransport.request)
+            .options(contains_eager(InboundTransport.request))
+            .filter(
+                InboundTransport.cut_off_date.isnot(None),
+                InboundTransport.cut_off_date >= date_from,
+                InboundTransport.cut_off_date <= date_to,
+            )
+            .all()
+        )
+        # Same exclusion the Transportation section applies: incomplete
+        # arrival/departure airport-transfer stubs belong to Arrival/Departure,
+        # not here, so the cut-off set matches what that section shows.
+        records = [t for t in records if _include_transport_in_trip_summary(t)]
+    else:
+        return []
+
+    records = [r for r in records if normalizeServiceStatus(r.status) != 'CANCELLED']
+    records.sort(key=lambda r: (r.cut_off_date, r.id))
+    return records
+
+
+def _run_down_cut_off_count(service_key, date_from, date_to):
+    """Summary-card count: services whose cut-off date falls inside the range."""
+    return len(_run_down_cut_off_records(service_key, date_from, date_to))
+
+
+def _run_down_cut_off_name(service_key, record):
+    """Display name for a cut-off row: hotel, restaurant or transport company.
+
+    Mirrors each section's own name resolution, so the cut-off table can never
+    show a different name than the section table does for the same record.
+    """
+    if service_key == 'accommodation':
+        return (record.hotel_name or '').strip()
+    if service_key == 'restaurant':
+        # FK supplier wins, else the legacy free-text field; an unresolved
+        # numeric id counts as no name - exactly as run_down_restaurant_data.
+        if record.supplier_ref:
+            return (record.supplier_ref.name or '').strip()
+        name = (record.restaurant or '').strip()
+        return '' if name.isdigit() else name
+    if service_key == 'transportation':
+        return (record.supplier_name or '').strip()
+    return ''
+
+
+def _run_down_cut_off_rows(service_key, date_from, date_to):
+    """Cut-off table rows for one service, soonest deadline first.
+
+    Rows are built through _run_down_row so view_url / section_key / record_id
+    come from the same single source the section tables use: the View link goes
+    through the client's deepLinkUrl() and lands on the exact service item
+    inside the request, with no second deep-link implementation to keep in sync.
+    """
+    service_type = RUN_DOWN_SECTIONS[service_key]['service_type']
+
+    rows = []
+    for record in _run_down_cut_off_records(service_key, date_from, date_to):
+        req = record.request
+        name = _run_down_cut_off_name(service_key, record)
+
+        if service_key == 'accommodation':
+            service_date = record.check_in_date
+            end_date = record.check_out_date
+        else:
+            service_date = record.date
+            end_date = record.end_date
+
+        row = _run_down_row(
+            req,
+            service_date,
+            name,
+            record.status,
+            req.pax,
+            service_type,
+            record.id,
+        )
+        row['cut_off_date'] = record.cut_off_date.strftime('%Y-%m-%d')
+        row['cut_off_date_display'] = record.cut_off_date.strftime('%d %b %Y')
+        row['name'] = name or '—'
+        row['date_from_display'] = service_date.strftime('%d %b %Y')
+        # An em dash rather than a repeat of the start date when the service has
+        # no end date. Accommodation always has a check-out date.
+        row['date_to_display'] = end_date.strftime('%d %b %Y') if end_date else '—'
+        rows.append(row)
+
+    return rows
+
+
 def _fetch_run_down_supplier_requests(service_key, supplier, date_from, date_to):
     """Return inbound service rows for a supplier within a date range."""
-    from app.models.inbound import InboundOptional
     from sqlalchemy import or_ as _or
 
     supplier_id = supplier.id
@@ -8558,34 +8693,6 @@ def _fetch_run_down_supplier_requests(service_key, supplier, date_from, date_to)
                 flight_number=batch.flight_number,
             ))
 
-    elif service_key == 'OPTIONAL':
-        optionals = (
-            InboundOptional.query.join(InboundRequest)
-            .filter(
-                _or(
-                    InboundOptional.date == None,
-                    db.and_(
-                        InboundOptional.date >= date_from,
-                        InboundOptional.date <= date_to,
-                    ),
-                ),
-                InboundOptional.supplier.ilike(supplier_name),
-            )
-            .all()
-        )
-        for optional in optionals:
-            req = optional.request
-            svc_date = optional.date or date_from
-            rows.append(_run_down_row(
-                req,
-                svc_date,
-                optional.service_name,
-                optional.status,
-                req.pax,
-                'OPTIONAL',
-                optional.id,
-            ))
-
     rows.sort(key=lambda r: (r['date'], r['request_number']))
     return rows
 
@@ -8598,7 +8705,6 @@ def _run_down_supplier_matches(service_key, date_from, date_to):
     _fetch_run_down_supplier_requests so the dropdown list and the displayed
     results always agree on which suppliers fall inside the selected range.
     """
-    from app.models.inbound import InboundOptional
     from sqlalchemy import or_ as _or
 
     ids = set()
@@ -8685,24 +8791,6 @@ def _run_down_supplier_matches(service_key, date_from, date_to):
             .filter(
                 DepartureBatch.departure_date >= date_from,
                 DepartureBatch.departure_date <= date_to,
-            )
-            .all()
-        )
-
-    elif service_key == 'OPTIONAL':
-        # Option 1: undated optionals (date IS NULL) always appear, matching the
-        # results behaviour in _fetch_run_down_supplier_requests.
-        _add_names(
-            db.session.query(InboundOptional.supplier)
-            .join(InboundRequest)
-            .filter(
-                _or(
-                    InboundOptional.date == None,
-                    db.and_(
-                        InboundOptional.date >= date_from,
-                        InboundOptional.date <= date_to,
-                    ),
-                ),
             )
             .all()
         )
@@ -8836,10 +8924,13 @@ def run_down_accommodation_data():
 
     rows.sort(key=lambda r: ((r.get('city') or '').lower(), r['date'], r['request_number']))
 
+    stats = _run_down_status_stats(h.status for h in all_hotels_in_range)
+    stats['cut_off'] = _run_down_cut_off_count('accommodation', date_from, date_to)
+
     return jsonify({
         'hotels': rows,
         'total': len(all_hotels_in_range),
-        'stats': _run_down_status_stats(h.status for h in all_hotels_in_range),
+        'stats': stats,
         'filtered': len(rows),
         'filters': {
             'cities': cities,
@@ -8950,10 +9041,13 @@ def run_down_transportation_data():
 
     rows.sort(key=lambda r: ((r.get('vehicle') or '').lower(), r['date'], r['request_number']))
 
+    stats = _run_down_status_stats(t.status for t in all_transports)
+    stats['cut_off'] = _run_down_cut_off_count('transportation', date_from, date_to)
+
     return jsonify({
         'transports': rows,
         'total': len(all_transports),
-        'stats': _run_down_status_stats(t.status for t in all_transports),
+        'stats': stats,
         'filtered': len(rows),
         'filters': {
             'vehicles': vehicles,
@@ -9233,15 +9327,47 @@ def run_down_restaurant_data():
         r['request_number'],
     ))
 
+    stats = _run_down_status_stats(m.status for m in all_meals)
+    stats['cut_off'] = _run_down_cut_off_count('restaurant', date_from, date_to)
+
     return jsonify({
         'restaurants': rows,
         'total': len(all_meals),
-        'stats': _run_down_status_stats(m.status for m in all_meals),
+        'stats': stats,
         'filtered': len(rows),
         'filters': {
             'cities': cities,
             'restaurant_names': restaurant_names,
         },
+        'date_from': date_from.strftime('%Y-%m-%d'),
+        'date_to': date_to.strftime('%Y-%m-%d'),
+    })
+
+
+@inbound_bp.route('/run-down/cut-off-data')
+@login_required
+def run_down_cut_off_data():
+    """JSON: cut-off rows for one service, for the standalone cut-off table.
+
+    Takes only `service` plus the page's date range: the cut-off table carries
+    no filters of its own and is unaffected by every section filter, so the
+    rows here always match the count shown on that service's summary card.
+    """
+    service_key = request.args.get('service', '').strip().lower()
+    if service_key not in RUN_DOWN_CUT_OFF_SERVICES:
+        return jsonify({'error': 'Unknown service'}), 400
+
+    date_from, date_to = _parse_run_down_dates()
+    if date_from is None or date_to is None:
+        return jsonify({'error': 'Invalid date format'}), 400
+
+    rows = _run_down_cut_off_rows(service_key, date_from, date_to)
+
+    return jsonify({
+        'rows': rows,
+        'service': service_key,
+        'service_label': RUN_DOWN_CUT_OFF_SERVICES[service_key]['label'],
+        'total': len(rows),
         'date_from': date_from.strftime('%Y-%m-%d'),
         'date_to': date_to.strftime('%Y-%m-%d'),
     })
@@ -9456,6 +9582,8 @@ def run_down_plan():
     return render_template(
         'inbound/run_down.html',
         services=RUN_DOWN_SERVICES,
+        # Cards that carry a cut-off row (see RUN_DOWN_CUT_OFF_SERVICES).
+        cut_off_cards=[cfg['card'] for cfg in RUN_DOWN_CUT_OFF_SERVICES.values()],
         date_from=date_from,
         date_to=date_to,
     )
@@ -9474,7 +9602,7 @@ def run_down_suppliers():
         return jsonify({'error': 'Invalid date format'}), 400
 
     patterns = _RUN_DOWN_SUPPLIER_PATTERNS.get(service_key)
-    if patterns is None and service_key != 'OPTIONAL':
+    if patterns is None:
         return jsonify({'error': 'Unknown service type'}), 400
 
     # Restrict to suppliers that actually have requests within the selected

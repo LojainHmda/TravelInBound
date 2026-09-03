@@ -429,6 +429,10 @@
             }
         }
         
+        /* Reserve the vertical scrollbar gutter so pages whose height crosses
+           the viewport (e.g. Run Down filtering) do not shift horizontally. */
+        html { scrollbar-gutter: stable; }
+        
         /* Body and Layout */
         body {
             min-height: 100vh;
