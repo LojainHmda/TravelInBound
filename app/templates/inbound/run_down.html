@@ -244,6 +244,63 @@ body { background: #f1f5f9; }
   to { opacity: 1; transform: scale(1); }
 }
 
+/* Combined print: one button + a panel listing the sections that are applied
+   and holding rows. Anchored to the button, same dropdown look as the hotel
+   picker above. */
+.rd-print-multi { position: relative; }
+.rd-print-multi-panel {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 300;
+  width: 230px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.1);
+  padding: 10px;
+  text-align: left;
+}
+.rd-print-multi-panel.open { display: block; }
+.rd-print-multi-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  margin-bottom: 6px;
+}
+.rd-print-multi-list { max-height: 220px; overflow-y: auto; }
+.rd-print-multi-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1e293b;
+  cursor: pointer;
+  margin: 0;
+}
+.rd-print-multi-option:hover { background: #eff6ff; border-radius: 6px; }
+.rd-print-multi-option input { cursor: pointer; }
+.rd-print-multi-empty {
+  font-size: 12px;
+  color: #64748b;
+  padding: 6px 4px;
+}
+.rd-print-multi-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #f1f5f9;
+}
+.rd-print-multi-actions .rd-btn { padding: 6px 12px; font-size: 12px; }
+.rd-print-multi-actions .rd-btn:disabled { opacity: .5; cursor: not-allowed; }
+
 /* Modal auto-refresh: loading overlay + inline error (Option A) */
 .rd-modal-loading {
   position: absolute;
@@ -379,12 +436,18 @@ body { background: #f1f5f9; }
 }
 
 .rd-services-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.rd-services-title > span {
   font-size: 12px;
   font-weight: 700;
   color: #64748b;
   text-transform: uppercase;
   letter-spacing: .5px;
-  margin-bottom: 10px;
 }
 .rd-services-grid {
   display: grid;
@@ -1217,6 +1280,13 @@ body { background: #f1f5f9; }
     font-size: 11px;
     color: #475569;
   }
+  /* Combined print: every section after the first is preceded by a clone of the
+     header above, carrying that section's own label. Pagination only — the clone
+     starts a fresh sheet so the run comes out as the single prints stacked. */
+  body.rd-printing-section .rd-print-header.rd-print-break {
+    break-before: page;
+    page-break-before: always;
+  }
 
   /* Only the targeted section prints. */
   body.rd-printing-section .rd-accom-section { display: none !important; }
@@ -1413,7 +1483,25 @@ body { background: #f1f5f9; }
   </div>
 
   {# Service cards #}
-  <div class="rd-services-title">Services</div>
+  <div class="rd-services-title">
+    <span>Services</span>
+    {# Combined print: prints the sections ticked below as one run. #}
+    <div class="rd-print-multi" id="rdPrintMulti">
+      <button type="button" class="rd-btn rd-btn-print" id="rdPrintMultiBtn">
+        <i class="fas fa-print"></i> Print
+      </button>
+      <div class="rd-print-multi-panel" id="rdPrintMultiPanel">
+        <div class="rd-print-multi-title">Sections to print</div>
+        <div class="rd-print-multi-list" id="rdPrintMultiList"></div>
+        <div class="rd-print-multi-actions">
+          <button type="button" class="rd-btn rd-btn-secondary" id="rdPrintMultiCancel">Cancel</button>
+          <button type="button" class="rd-btn rd-btn-print" id="rdPrintMultiConfirm" disabled>
+            <i class="fas fa-print"></i> Print
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="rd-services-grid">
     {% for svc in services %}
     <div class="rd-service-card" data-rd-card="{{ svc.key }}">

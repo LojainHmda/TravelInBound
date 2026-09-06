@@ -8963,8 +8963,13 @@ def run_down_transportation_data():
 
     UNSPECIFIED_VEHICLE = 'Unspecified'
 
+    # The join to InboundRequest is what scopes this to real requests; keep it
+    # INNER and harvest it with contains_eager rather than re-fetching each
+    # transport.request through the lazy backref (that was one round trip per
+    # request). Same pattern as the Accommodation section.
     all_transports = (
-        InboundTransport.query.join(InboundRequest)
+        InboundTransport.query.join(InboundTransport.request)
+        .options(contains_eager(InboundTransport.request))
         .filter(
             InboundTransport.date >= date_from,
             InboundTransport.date <= date_to,
@@ -9082,8 +9087,13 @@ def run_down_guide_data():
     statuses_param = request.args.get('statuses', '').strip()
     status_filters = [s.strip().upper() for s in statuses_param.split(',') if s.strip()] if statuses_param else []
 
+    # The join to InboundRequest is what scopes this to real requests; keep it
+    # INNER and harvest it with contains_eager rather than re-fetching each
+    # guide.request through the lazy backref (that was one round trip per
+    # request). Same pattern as the Accommodation section.
     all_guides = (
-        InboundGuide.query.join(InboundRequest)
+        InboundGuide.query.join(InboundGuide.request)
+        .options(contains_eager(InboundGuide.request))
         .filter(
             InboundGuide.date >= date_from,
             InboundGuide.date <= date_to,
@@ -9216,8 +9226,13 @@ def run_down_restaurant_data():
     statuses_param = request.args.get('statuses', '').strip()
     status_filters = [s.strip().upper() for s in statuses_param.split(',') if s.strip()] if statuses_param else []
 
+    # The join to InboundRequest is what scopes this to real requests; keep it
+    # INNER and harvest it with contains_eager rather than re-fetching each
+    # meal.request through the lazy backref (that was one round trip per
+    # request). Same pattern as the Accommodation section.
     all_meals = (
-        InboundMeal.query.join(InboundRequest)
+        InboundMeal.query.join(InboundMeal.request)
+        .options(contains_eager(InboundMeal.request))
         .filter(
             InboundMeal.date >= date_from,
             InboundMeal.date <= date_to,
@@ -9417,8 +9432,13 @@ def run_down_meet_assist_data():
         type_filter = 'BOTH'
 
     # ── Dataset: Meet & Assist records only, within the date range ──
+    # The join to InboundRequest is what scopes these to real requests; keep it
+    # INNER and harvest it with contains_eager rather than re-fetching each
+    # batch.request through the lazy backref (that was one round trip per
+    # request). Same pattern as the Accommodation section.
     arrivals = (
-        ArrivalBatch.query.join(InboundRequest)
+        ArrivalBatch.query.join(ArrivalBatch.request)
+        .options(contains_eager(ArrivalBatch.request))
         .filter(
             ArrivalBatch.arrival_date >= date_from,
             ArrivalBatch.arrival_date <= date_to,
@@ -9427,7 +9447,8 @@ def run_down_meet_assist_data():
         .all()
     )
     departures = (
-        DepartureBatch.query.join(InboundRequest)
+        DepartureBatch.query.join(DepartureBatch.request)
+        .options(contains_eager(DepartureBatch.request))
         .filter(
             DepartureBatch.departure_date >= date_from,
             DepartureBatch.departure_date <= date_to,

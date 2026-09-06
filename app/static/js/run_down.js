@@ -1012,39 +1012,74 @@
     window.print();
   }
 
-  /** Section id -> print label + the section's own re-render. Built on demand so
-   *  the per-section state consts are all initialised by the time it is read. */
+  /** Section id -> print label + the section's own re-render + whether it has
+   *  been applied and has rows to print. Built on demand so the per-section
+   *  state consts are all initialised by the time it is read. */
   function sectionPrintTargets() {
     return {
-      rdAccomSection: { label: 'Accommodation', rerender: () => renderAccomTable(accomState.allRows) },
-      rdTransportSection: { label: 'Transportation', rerender: () => renderTransportTable(transportState.allRows) },
-      rdGuideSection: { label: 'Guide', rerender: () => renderGuideTable(guideState.allRows) },
-      rdRestaurantSection: { label: 'Restaurant', rerender: () => renderRestaurantTable(restaurantState.allRows) },
-      rdMeetAssistSection: { label: 'Meet & Assist', rerender: () => renderMeetAssistTable(meetAssistState.allRows) },
-      rdAgentSection: { label: 'Agent', rerender: () => renderAgentTable(agentState.allRows) },
-      rdCutOffSection: { label: cutOffPrintLabel(), rerender: () => renderCutOffTable(cutOffState.allRows) },
+      rdAccomSection: { label: 'Accommodation', rerender: () => renderAccomTable(accomState.allRows), ready: () => accomState.tableVisible && accomState.allRows.length > 0 },
+      rdTransportSection: { label: 'Transportation', rerender: () => renderTransportTable(transportState.allRows), ready: () => transportState.tableVisible && transportState.allRows.length > 0 },
+      rdGuideSection: { label: 'Guide', rerender: () => renderGuideTable(guideState.allRows), ready: () => guideState.tableVisible && guideState.allRows.length > 0 },
+      rdRestaurantSection: { label: 'Restaurant', rerender: () => renderRestaurantTable(restaurantState.allRows), ready: () => restaurantState.tableVisible && restaurantState.allRows.length > 0 },
+      rdMeetAssistSection: { label: 'Meet & Assist', rerender: () => renderMeetAssistTable(meetAssistState.allRows), ready: () => meetAssistState.tableVisible && meetAssistState.allRows.length > 0 },
+      rdAgentSection: { label: 'Agent', rerender: () => renderAgentTable(agentState.allRows), ready: () => agentState.tableVisible && agentState.allRows.length > 0 },
+      rdCutOffSection: { label: cutOffPrintLabel(), rerender: () => renderCutOffTable(cutOffState.allRows), ready: () => !!cutOffState.card && cutOffState.allRows.length > 0 },
     };
   }
 
-  /** Print one inline section's table on its own — same window.print() + print
-   *  CSS mechanism as printPage(), scoped to `sectionId` by body.rd-printing-section
-   *  and .rd-print-target. The section is re-rendered with every row first, then
-   *  restored to the page it was showing once the print dialog closes. */
-  function printSection(sectionId) {
-    const target = sectionPrintTargets()[sectionId];
-    const section = $(sectionId);
-    if (!target || !section) return;
+  /** Sections the combined Print panel never offers. Cut-off keeps its own Print
+   *  button and is deliberately absent from a combined run. */
+  const COMBINED_PRINT_EXCLUDED = ['rdCutOffSection'];
+
+  /** Print one or more inline section tables in a single run — same
+   *  window.print() + print CSS mechanism as printPage(), scoped to the given
+   *  sections by body.rd-printing-section and .rd-print-target. Each section is
+   *  re-rendered with every row first, then restored to the page it was showing
+   *  once the print dialog closes.
+   *
+   *  The first section uses the page's own print header, exactly as a lone
+   *  section print does; every later one is preceded by a clone of that header
+   *  carrying its own label and starting a new sheet, so a combined run comes
+   *  out as the individual prints stacked. */
+  function printSections(sectionIds) {
+    // A run already in flight owns printingAllRows; never start a second.
+    if (printingAllRows) return;
+
+    const targets = sectionPrintTargets();
+    const items = sectionIds
+      .map((id) => ({ target: targets[id], section: $(id) }))
+      .filter((item) => item.target && item.section);
+    if (!items.length) return;
 
     state.printTs = formatPrintTs();
     updatePrintMeta();
 
     const heading = $('rdPrintHeaderTitle');
     const headingText = heading ? heading.textContent : '';
-    if (heading) heading.textContent = target.label;
+    if (heading) heading.textContent = items[0].target.label;
+
+    // Header clones are taken after updatePrintMeta() so they carry the same
+    // period + printed timestamp, and stripped of ids so the page never holds a
+    // duplicate #rdPrintHeader / #rdPrintHeaderTitle / #rdPrintHeaderDates.
+    const headerSource = $('rdPrintHeader');
+    const headerClones = [];
+    items.slice(1).forEach((item) => {
+      if (!headerSource || !item.section.parentNode) return;
+      const clone = headerSource.cloneNode(true);
+      clone.removeAttribute('id');
+      clone.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
+      clone.classList.add('rd-print-break');
+      const cloneTitle = clone.querySelector('h2');
+      if (cloneTitle) cloneTitle.textContent = item.target.label;
+      item.section.parentNode.insertBefore(clone, item.section);
+      headerClones.push(clone);
+    });
 
     printingAllRows = true;
-    target.rerender();
-    section.classList.add('rd-print-target');
+    items.forEach((item) => {
+      item.target.rerender();
+      item.section.classList.add('rd-print-target');
+    });
     document.body.classList.add('rd-printing-section');
 
     let restored = false;
@@ -1053,10 +1088,11 @@
       restored = true;
       window.removeEventListener('afterprint', restore);
       document.body.classList.remove('rd-printing-section');
-      section.classList.remove('rd-print-target');
+      headerClones.forEach((clone) => clone.remove());
+      items.forEach((item) => item.section.classList.remove('rd-print-target'));
       if (heading) heading.textContent = headingText;
       printingAllRows = false;
-      target.rerender();
+      items.forEach((item) => item.target.rerender());
     };
 
     window.addEventListener('afterprint', restore);
@@ -1066,6 +1102,76 @@
       // Fallback for browsers that never fire afterprint; no-op once restored.
       setTimeout(restore, 1000);
     }
+  }
+
+  /** Print one section on its own — unchanged behaviour, one section in. */
+  function printSection(sectionId) {
+    printSections([sectionId]);
+  }
+
+  /** Section ids the combined Print panel offers: applied, holding rows, and in
+   *  the order they appear on the page. The order comes from the DOM, never from
+   *  the order the boxes were ticked. */
+  function combinedPrintCandidates() {
+    const targets = sectionPrintTargets();
+    const ids = Object.keys(targets).filter((id) => COMBINED_PRINT_EXCLUDED.indexOf(id) === -1);
+    const sections = document.querySelectorAll(ids.map((id) => `#${id}`).join(','));
+    return [...sections].map((el) => el.id).filter((id) => targets[id] && targets[id].ready());
+  }
+
+  /** Rebuild the panel's checkbox list. Runs on every open, so a section applied
+   *  (or emptied) since the last open is listed (or dropped) correctly. */
+  function renderCombinedPrintList() {
+    const list = $('rdPrintMultiList');
+    if (!list) return;
+    const targets = sectionPrintTargets();
+    const ids = combinedPrintCandidates();
+    if (!ids.length) {
+      list.innerHTML = '<div class="rd-print-multi-empty">No section has results yet. Apply a section filter first.</div>';
+    } else {
+      list.innerHTML = ids.map((id) => `
+        <label class="rd-print-multi-option">
+          <input type="checkbox" data-rd-print-pick="${id}">
+          <span>${targets[id].label}</span>
+        </label>`).join('');
+    }
+    syncCombinedPrintConfirm();
+  }
+
+  /** Confirm stays disabled until at least one section is ticked. */
+  function syncCombinedPrintConfirm() {
+    const confirmBtn = $('rdPrintMultiConfirm');
+    const list = $('rdPrintMultiList');
+    if (!confirmBtn || !list) return;
+    confirmBtn.disabled = list.querySelectorAll('[data-rd-print-pick]:checked').length === 0;
+  }
+
+  function openCombinedPrintPanel() {
+    const panel = $('rdPrintMultiPanel');
+    if (!panel) return;
+    renderCombinedPrintList();
+    panel.classList.add('open');
+  }
+
+  function closeCombinedPrintPanel() {
+    const panel = $('rdPrintMultiPanel');
+    if (panel) panel.classList.remove('open');
+  }
+
+  function confirmCombinedPrint() {
+    const list = $('rdPrintMultiList');
+    if (!list) return;
+    const picked = [...list.querySelectorAll('[data-rd-print-pick]:checked')]
+      .map((cb) => cb.dataset.rdPrintPick);
+    // Re-derived from the page: fixes the print order and drops anything that
+    // stopped having rows while the panel sat open.
+    const ids = combinedPrintCandidates().filter((id) => picked.indexOf(id) !== -1);
+    if (!ids.length) {
+      renderCombinedPrintList();
+      return;
+    }
+    closeCombinedPrintPanel();
+    printSections(ids);
   }
 
   function showDateAppliedIndicator() {
@@ -1095,6 +1201,36 @@
     document.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-rd-print-section]');
       if (btn) printSection(btn.getAttribute('data-rd-print-section'));
+    });
+
+    // Combined Print: pick several sections and print them in one run.
+    const printMultiBtn = $('rdPrintMultiBtn');
+    if (printMultiBtn) {
+      printMultiBtn.addEventListener('click', () => {
+        const panel = $('rdPrintMultiPanel');
+        if (panel && panel.classList.contains('open')) {
+          closeCombinedPrintPanel();
+        } else {
+          openCombinedPrintPanel();
+        }
+      });
+    }
+
+    const printMultiList = $('rdPrintMultiList');
+    if (printMultiList) {
+      printMultiList.addEventListener('change', (e) => {
+        if (e.target.closest('[data-rd-print-pick]')) syncCombinedPrintConfirm();
+      });
+    }
+
+    const printMultiCancel = $('rdPrintMultiCancel');
+    if (printMultiCancel) printMultiCancel.addEventListener('click', closeCombinedPrintPanel);
+
+    const printMultiConfirm = $('rdPrintMultiConfirm');
+    if (printMultiConfirm) printMultiConfirm.addEventListener('click', confirmCombinedPrint);
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#rdPrintMulti')) closeCombinedPrintPanel();
     });
 
     const filterChips = $('rdModalFilterChips');
