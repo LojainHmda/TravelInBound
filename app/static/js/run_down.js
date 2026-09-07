@@ -4,6 +4,12 @@
 (function () {
   'use strict';
 
+  /* Summary-card count-up: how long the digits take to reach their final
+     value, and how long a sync group waits for every card before giving up
+     (a failed fetch never reports, so the rest must still animate). */
+  const RD_COUNT_UP_MS = 2000;
+  const RD_STAT_SYNC_MAX_MS = 2500;
+
   const STATUS_CLASS = {
     REQUEST: 'sts-request',
     REQUESTED: 'sts-request',
@@ -419,6 +425,10 @@
     // Option A: an already-open modal auto-refreshes to the new range,
     // reusing the same supplier it was opened for.
     refreshOpenModal();
+
+    // Card numbers clear to 0 now and count up together once every card has
+    // landed for the new range.
+    beginStatSync();
 
     // Refresh agent inline section for new date range
     refreshAgentOnDateChange();
@@ -3729,6 +3739,111 @@
     },
   };
 
+  /* ── Summary-card count-up ──────────────────────────────────
+     Display only: the digits animate, nothing else. dataset.rdStatValue and
+     renderStatActive() still run the moment a card's data arrives, so
+     click-to-filter and the disabled-on-zero rule are untouched. */
+
+  /** Ease-out: quick off the mark, slowing into the final value. */
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  function prefersReducedMotion() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+
+  // Element -> in-flight rAF id, so a restart cancels its predecessor and
+  // nothing is left running. Elements cancelled mid-count land in
+  // statCountInterrupted, and their next run resumes from what is on screen.
+  const statCountRaf = new Map();
+  const statCountInterrupted = new Set();
+
+  function cancelStatCount(numEl) {
+    const raf = statCountRaf.get(numEl);
+    if (raf === undefined) return;
+    cancelAnimationFrame(raf);
+    statCountRaf.delete(numEl);
+    statCountInterrupted.add(numEl);
+  }
+
+  function cancelAllStatCounts() {
+    Array.from(statCountRaf.keys()).forEach(cancelStatCount);
+  }
+
+  /** Count numEl up to `to`. Zero and reduced-motion land instantly. */
+  function animateStatCount(numEl, to) {
+    cancelStatCount(numEl);
+    const resumed = statCountInterrupted.delete(numEl);
+    const from = resumed ? (parseInt(numEl.textContent, 10) || 0) : 0;
+    if (to === 0 || from === to || prefersReducedMotion()) {
+      numEl.textContent = to;
+      return;
+    }
+    const started = performance.now();
+    const step = (now) => {
+      const t = Math.min(1, (now - started) / RD_COUNT_UP_MS);
+      if (t >= 1) {
+        statCountRaf.delete(numEl);
+        // Land on the exact value — never the interpolated one.
+        numEl.textContent = to;
+        return;
+      }
+      numEl.textContent = Math.round(from + (to - from) * easeOutCubic(t));
+      statCountRaf.set(numEl, requestAnimationFrame(step));
+    };
+    statCountRaf.set(numEl, requestAnimationFrame(step));
+  }
+
+  /* Sync group: hold every card's digits until all of them have reported, so
+     the cards start counting on the same frame. Opened by init() and by
+     applyDateRange(); a single-card refresh (onStatClick) opens none and
+     animates on arrival. */
+  let statSync = null;
+
+  function beginStatSync() {
+    cancelAllStatCounts();
+    if (statSync) clearTimeout(statSync.timer);
+    statSync = null;
+
+    const cards = document.querySelectorAll('[data-rd-stat-card]');
+    if (!cards.length) return;
+
+    // Clear to 0 for the wait. Digits only — rdStatValue and the disabled
+    // state stay on the values currently applied until new data lands.
+    cards.forEach((card) => {
+      card.querySelectorAll('.rd-stat-num').forEach((numEl) => {
+        numEl.textContent = '0';
+      });
+    });
+
+    statSync = {
+      expected: cards.length,
+      reported: new Set(),
+      pending: new Map(),
+      timer: setTimeout(flushStatSync, RD_STAT_SYNC_MAX_MS),
+    };
+  }
+
+  function flushStatSync() {
+    const group = statSync;
+    if (!group) return;
+    statSync = null;
+    clearTimeout(group.timer);
+    group.pending.forEach((value, numEl) => animateStatCount(numEl, value));
+  }
+
+  /** One card's numbers, buffered while a sync group is open. */
+  function submitStatCounts(cardKey, counts) {
+    if (!statSync) {
+      counts.forEach((entry) => animateStatCount(entry[0], entry[1]));
+      return;
+    }
+    counts.forEach((entry) => statSync.pending.set(entry[0], entry[1]));
+    statSync.reported.add(cardKey);
+    if (statSync.reported.size >= statSync.expected) flushStatSync();
+  }
+
   function renderStatActive() {
     document.querySelectorAll('[data-rd-stat-card]').forEach((card) => {
       const isActiveCard = !!activeStat && card.dataset.rdStatCard === activeStat.card;
@@ -3747,16 +3862,21 @@
     const card = document.querySelector('[data-rd-stat-card="' + cardKey + '"]');
     if (!card) return;
     const values = stats || {};
+    const counts = [];
     card.querySelectorAll('[data-rd-stat]').forEach((item) => {
       const value = Number(values[item.dataset.rdStat]) || 0;
       item.dataset.rdStatValue = value;
       const numEl = item.querySelector('.rd-stat-num');
       if (numEl) {
-        numEl.textContent = value;
+        counts.push([numEl, value]);
         // A live cut-off deadline reads red; a zero keeps the normal colour.
         numEl.classList.toggle('rd-stat-num-alert', item.dataset.rdStat === 'cut_off' && value > 0);
       }
     });
+    // Display only: the digits count up, held until every card lands while a
+    // sync group is open. rdStatValue above and renderStatActive below keep
+    // firing exactly when they did before.
+    submitStatCounts(cardKey, counts);
     renderStatActive();
   }
 
@@ -3832,6 +3952,10 @@
     if (modalEl) {
       modalEl.addEventListener('hidden.bs.modal', () => { state.modalOpen = false; });
     }
+
+    // Hold the card numbers until every card has landed, so they all count
+    // up together rather than one per fetch.
+    beginStatSync();
 
     // Initialize agent inline section
     initAgentSection();
