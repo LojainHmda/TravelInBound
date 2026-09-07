@@ -246,15 +246,17 @@
     <div class="row no-print mb-3">
         <div class="col-12">
             <div class="d-flex justify-content-between">
+                {% if not is_proforma %}
                 <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left"></i> Back to invoice
                 </a>
+                {% else %}<div></div>{% endif %}
                 <div class="d-flex gap-2">
                     <button type="button" id="cust-inv-save-btn" class="btn btn-success">
                         <i class="fas fa-save"></i> Save
                     </button>
                     <button onclick="window.print()" class="btn btn-primary">
-                        <i class="fas fa-print"></i> Details Invoice
+                        <i class="fas fa-print"></i> {{ 'Proforma Detailed Invoice' if is_proforma else 'Detailed Invoice' }}
                     </button>
                 </div>
             </div>
@@ -280,9 +282,9 @@
 
         {# 2. Wrapper: Title floats above, two shoulder cells only (NO middle cell) #}
         <div class="cust-inv-header-top-wrapper">
-            <h2 class="cust-inv-title-standalone">Invoice</h2>
+            <h2 class="cust-inv-title-standalone">{{ 'Proforma Invoice' if is_proforma else 'Invoice' }}</h2>
             <div class="cust-inv-shoulder-row">
-                <div class="cust-inv-shoulder-cell"><strong>Invoice No.</strong><span class="cust-inv-editable" contenteditable="true" data-save-key="invoice_no">{{ request.document_sequence or request.request_number }}</span></div>
+                <div class="cust-inv-shoulder-cell"><strong>{{ 'Proforma Invoice No.' if is_proforma else 'Invoice No.' }}</strong><span class="cust-inv-editable" contenteditable="true" data-save-key="invoice_no">{{ request.document_sequence or request.request_number }}</span></div>
                 <div class="cust-inv-shoulder-cell"><strong>Issue Date</strong><span class="cust-inv-editable" contenteditable="true" data-save-key="issue_date">{{ request.created_at.strftime('%d/%b/%y') if request.created_at else '' }}</span></div>
             </div>
         </div>
@@ -565,7 +567,7 @@
                 }).then(function(r) { return r.json(); }).then(function(res) {
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-save"></i> Save';
-                    if (res.ok) alert('Invoice saved.');
+                    if (res.ok) alert('{{ 'Proforma Invoice saved.' if is_proforma else 'Invoice saved.' }}');
                 }).catch(function() {
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-save"></i> Save';

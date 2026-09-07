@@ -144,15 +144,17 @@
     <div class="row no-print mb-3">
         <div class="col-12">
             <div class="d-flex justify-content-between">
+                {% if not is_proforma %}
                 <a href="{{ url_for('inbound.edit_request', id=request.id) }}" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left"></i> Back to invoice
                 </a>
+                {% else %}<div></div>{% endif %}
                 <div class="d-flex gap-2">
                     <button type="button" id="invoice-save-btn" class="btn btn-success">
                         <i class="fas fa-save"></i> Save
                     </button>
                     <button onclick="window.print()" class="btn btn-primary">
-                        <i class="fas fa-print"></i> Invoice
+                        <i class="fas fa-print"></i> {{ 'Proforma Invoice' if is_proforma else 'Invoice' }}
                     </button>
                 </div>
             </div>
@@ -177,7 +179,7 @@
         </div>
 
         <div class="invoice-print-line">
-            <span>Invoice No. <span class="invoice-print-editable" contenteditable="true" data-save-key="invoice_no">{{ request.document_sequence or request.request_number }}</span></span>
+            <span>{{ 'Proforma Invoice No.' if is_proforma else 'Invoice No.' }} <span class="invoice-print-editable" contenteditable="true" data-save-key="invoice_no">{{ request.document_sequence or request.request_number }}</span></span>
             <span>Issue Date: <span class="invoice-print-editable" contenteditable="true" data-save-key="issue_date">{{ request.created_at.strftime('%d/%b/%y') if request.created_at else '' }}</span></span>
         </div>
 
@@ -411,7 +413,7 @@
             }).then(function(r) { return r.json(); }).then(function(res) {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-save"></i> Save';
-                if (res.ok) alert('Invoice saved.');
+                if (res.ok) alert('{{ 'Proforma Invoice saved.' if is_proforma else 'Invoice saved.' }}');
             }).catch(function() {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-save"></i> Save';

@@ -6096,11 +6096,13 @@ def generate_invoice(request_id):
     if request_obj.status == STATUS_REQUEST:
         abort(400, 'Cannot generate invoice for request status')
 
+    is_proforma = _map_status_for_filter(request_obj.status) == 'CONFIRMED'
+
     try:
         saved_admin = json.loads(request_obj.admin_invoice_data) if request_obj.admin_invoice_data else None
     except (TypeError, ValueError):
         saved_admin = None
-    return render_template('inbound/invoice.html', request=request_obj, saved_admin_invoice=saved_admin)
+    return render_template('inbound/invoice.html', request=request_obj, saved_admin_invoice=saved_admin, is_proforma=is_proforma)
 
 @inbound_bp.route('/<int:request_id>/customer-invoice')
 @login_required
@@ -6111,6 +6113,7 @@ def customer_invoice(request_id):
         abort(403)
     if request_obj.status == STATUS_REQUEST:
         abort(400, 'Cannot generate invoice for request status')
+    is_proforma = _map_status_for_filter(request_obj.status) == 'CONFIRMED'
     # Build rooms summary: e.g. "1 Dbl & 1 Single on BB"
     rooms_parts = []
     board = "BB"
@@ -6144,7 +6147,7 @@ def customer_invoice(request_id):
         saved_customer = json.loads(request_obj.customer_invoice_data) if request_obj.customer_invoice_data else None
     except (TypeError, ValueError):
         saved_customer = None
-    return render_template('inbound/customer_invoice.html', request=request_obj, rooms_display=rooms_display, tour_ref_display=tour_ref_display, saved_customer_invoice=saved_customer)
+    return render_template('inbound/customer_invoice.html', request=request_obj, rooms_display=rooms_display, tour_ref_display=tour_ref_display, saved_customer_invoice=saved_customer, is_proforma=is_proforma)
 
 @inbound_bp.route('/<int:request_id>/save-admin-invoice', methods=['POST'])
 @login_required

@@ -845,7 +845,14 @@ button.btn-print {
                                 {% set mapped_status = 'INVOICED' %}
                             {% endif %}
                             
-                            {% if mapped_status == 'INVOICED' and not is_deleted_row %}
+                            {% if mapped_status != 'INVOICED' or is_deleted_row %}
+                            <a href="{{ url_for('inbound.view_request', id=inb.id) }}?mode=view"
+                               class="btn-view" title="View Only">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% endif %}
+                            {% if mapped_status in ['INVOICED', 'CONFIRMED'] and not is_deleted_row %}
+                            {% set is_proforma_row = mapped_status == 'CONFIRMED' %}
                             <div class="invoice-menu-wrapper">
                                 <button type="button" class="btn-view invoice-menu-toggle" title="View Invoice Options" aria-label="View Invoice Options">
                                     <i class="fas fa-folder-open"></i>
@@ -853,29 +860,26 @@ button.btn-print {
                                 <div class="invoice-menu">
                                     <a href="{{ url_for('inbound.generate_invoice', request_id=inb.id) }}" class="invoice-menu-option">
                                         <i class="fas fa-file-invoice"></i>
-                                        <span>Invoice</span>
+                                        <span>{{ 'Proforma Invoice' if is_proforma_row else 'Invoice' }}</span>
                                     </a>
                                     <a href="{{ url_for('inbound.customer_invoice', request_id=inb.id) }}" class="invoice-menu-option">
                                         <i class="fas fa-receipt"></i>
-                                        <span>Details Invoiced</span>
+                                        <span>{{ 'Proforma Detailed Invoice' if is_proforma_row else 'Detailed Invoice' }}</span>
                                     </a>
                                 </div>
                             </div>
+                            {% endif %}
+                            {% if mapped_status == 'INVOICED' and not is_deleted_row %}
                             <button type="button"
                                class="btn-print btn-print-invoice" title="Print Invoice"
                                onclick="printInPlace('{{ url_for('inbound.generate_invoice', request_id=inb.id) }}?auto_print=1')">
                                 <i class="fas fa-file-invoice-dollar"></i>
                             </button>
                             <button type="button"
-                               class="btn-print btn-print-invoice" title="Print Details Invoice"
+                               class="btn-print btn-print-invoice" title="Print Detailed Invoice"
                                onclick="printInPlace('{{ url_for('inbound.customer_invoice', request_id=inb.id) }}?auto_print=1')">
                                 <i class="fas fa-receipt"></i>
                             </button>
-                            {% else %}
-                            <a href="{{ url_for('inbound.view_request', id=inb.id) }}?mode=view" 
-                               class="btn-view" title="View Only">
-                                <i class="fas fa-eye"></i>
-                            </a>
                             {% endif %}
                             <button type="button"
                                class="btn-print" title="Tour File"
