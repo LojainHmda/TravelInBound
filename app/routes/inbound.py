@@ -8290,8 +8290,15 @@ def _run_down_row(request_obj, service_date, description, status, pax, service_t
     elif service_type == 'HOTEL':
         group_name = request_obj.agent_ref or ''
 
-        # Calculate room counts from HotelRoom records and collect all room categories
-        sgl = dbl = twn = trpl = other = 0
+        # Calculate room counts from HotelRoom records and collect all room categories.
+        # The buckets are exactly the four Room List "Type" values and the four
+        # table columns: Single / Double / Triple / Quadro. Bed types (King, Queen,
+        # Twin, ...) live in a separate column, HotelRoom.room_option, and never
+        # reach room_type. The column set is fixed by customer requirement, so an
+        # unrecognized room_type gets no column and is left out of `total`; it is
+        # logged instead, because it means data reached the DB that no live save
+        # path can produce.
+        sgl = dbl = trpl = qdr = 0
         room_categories = set()
         if hotel_obj and hasattr(hotel_obj, 'rooms'):
             for room in hotel_obj.rooms:
@@ -8300,17 +8307,21 @@ def _run_down_row(request_obj, service_date, description, status, pax, service_t
                     sgl += room.room_count or 1
                 elif room_type_upper == 'DOUBLE':
                     dbl += room.room_count or 1
-                elif room_type_upper == 'TWIN':
-                    twn += room.room_count or 1
                 elif room_type_upper == 'TRIPLE':
                     trpl += room.room_count or 1
-                elif room_type_upper == 'OTHER':
-                    other += room.room_count or 1
+                elif room_type_upper == 'QUADRO':
+                    qdr += room.room_count or 1
+                else:
+                    current_app.logger.warning(
+                        'run-down accommodation: unrecognized room_type %r on hotel_room id=%s '
+                        '(hotel id=%s, request id=%s, request_number=%s) - excluded from Total',
+                        room.room_type, room.id, hotel_obj.id, request_obj.id, request_obj.request_number,
+                    )
                 # Collect all unique room categories
                 if room.room_category:
                     room_categories.add(room.room_category)
 
-        total = sgl + dbl + twn + trpl + other
+        total = sgl + dbl + trpl + qdr
         room_category = ', '.join(sorted(room_categories)) if room_categories else '—'
 
         nights_calc = 0
@@ -8326,9 +8337,8 @@ def _run_down_row(request_obj, service_date, description, status, pax, service_t
             'room_category': room_category,
             'sgl': sgl,
             'dbl': dbl,
-            'twn': twn,
             'trpl': trpl,
-            'other': other,
+            'qdr': qdr,
             'total': total,
         })
     elif service_type == 'GUIDE':

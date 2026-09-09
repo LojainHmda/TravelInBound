@@ -861,6 +861,7 @@
               <th>SGL</th>
               <th>DBL</th>
               <th>TRPL</th>
+              <th>QDR</th>
               <th>Total</th>
               <th>Status</th>
               <th>File Status</th>
@@ -882,6 +883,7 @@
                 <td class="num">${r.sgl || 0}</td>
                 <td class="num">${r.dbl || 0}</td>
                 <td class="num">${r.trpl || 0}</td>
+                <td class="num">${r.qdr || 0}</td>
                 <td class="num">${r.total || 0}</td>
                 <td>${statusBadge(r.status)}</td>
                 <td>${statusBadge(r.file_status)}</td>
@@ -1554,12 +1556,12 @@
     let html = '<div class="rd-modal-table-wrap"><table class="rd-modal-table"><thead><tr>' +
       '<th>Date From</th><th>Date To</th><th>Request</th><th>Group Name</th>' +
       '<th>PAX</th><th>Nationality</th><th>Meal Plan</th><th>Nights</th>' +
-      '<th>Room Category</th><th>SGL</th><th>DBL</th><th>TRPL</th><th>Total</th>' +
+      '<th>Room Category</th><th>SGL</th><th>DBL</th><th>TRPL</th><th>QDR</th><th>Total</th>' +
       '<th>Status</th><th class="rd-col-file-status">File Status</th><th class="rd-col-view"></th>' +
       '</tr></thead><tbody>';
 
     order.forEach((key) => {
-      html += `<tr><td colspan="16" class="rd-accom-city-header">${escapeHtml(groups[key].label)}<span class="rd-accom-group-count">${groups[key].rows.length}</span></td></tr>`;
+      html += `<tr><td colspan="17" class="rd-accom-city-header">${escapeHtml(groups[key].label)}<span class="rd-accom-group-count">${groups[key].rows.length}</span></td></tr>`;
       groups[key].rows.forEach((r) => {
         html += `<tr>
           <td>${escapeHtml(r.date_display)}</td>
@@ -1574,6 +1576,7 @@
           <td class="num">${r.sgl || 0}</td>
           <td class="num">${r.dbl || 0}</td>
           <td class="num">${r.trpl || 0}</td>
+          <td class="num">${r.qdr || 0}</td>
           <td class="num">${r.total || 0}</td>
           <td>${statusBadge(r.status)}</td>
           <td class="rd-col-file-status">${statusBadge(r.file_status)}</td>
