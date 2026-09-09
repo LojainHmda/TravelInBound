@@ -207,6 +207,15 @@
     margin: 6px 0;
 }
 .cust-inv-bank p { margin: 1px 0; }
+.cust-inv-bank-editable { outline: 1px dashed transparent; }
+body.cust-inv-bank-editing .cust-inv-bank-editable {
+    outline: 1px dashed #6c757d;
+    display: inline-block;
+    min-width: 30px;
+}
+@media print {
+    .cust-inv-bank-editable { outline: none !important; display: inline !important; }
+}
 
 /* IBAN - bright yellow */
 .cust-inv-iban {
@@ -242,6 +251,10 @@
 {% endblock %}
 
 {% block content %}
+{% set bank_scope = 'proforma_detailed' if is_proforma else 'detailed' %}
+{% macro bank_field(scope, key, value, text_dir='') -%}
+<span class="cust-inv-bank-editable" data-save-key="bank__{{ scope }}__{{ key }}" data-bank-default="{{ value }}" contenteditable="false"{% if text_dir %} dir="{{ text_dir }}"{% endif %}>{{ value }}</span>
+{%- endmacro %}
 <div class="container">
     <div class="row no-print mb-3">
         <div class="col-12">
@@ -252,6 +265,12 @@
                 </a>
                 {% else %}<div></div>{% endif %}
                 <div class="d-flex gap-2">
+                    <button type="button" id="cust-inv-bank-edit-btn" class="btn btn-outline-secondary">
+                        <i class="fas fa-pen"></i> Edit Bank Details
+                    </button>
+                    <button type="button" id="cust-inv-bank-reset-btn" class="btn btn-outline-danger">
+                        <i class="fas fa-rotate-left"></i> Reset to default
+                    </button>
                     <button type="button" id="cust-inv-save-btn" class="btn btn-success">
                         <i class="fas fa-save"></i> Save
                     </button>
@@ -563,7 +582,7 @@
                 fetch('/inbound/' + requestId + '/save-customer-invoice', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(collectCustData())
+                    body: JSON.stringify(preserveOtherScopeBankKeys(pruneBankDefaults(collectCustData())))
                 }).then(function(r) { return r.json(); }).then(function(res) {
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-save"></i> Save';
@@ -573,6 +592,76 @@
                     btn.innerHTML = '<i class="fas fa-save"></i> Save';
                     alert('Failed to save.');
                 });
+            });
+
+            var bankKeyPrefix = 'bank__{{ bank_scope }}__';
+
+            function bankFields() { return document.querySelectorAll('[data-bank-default]'); }
+
+            // Only store bank lines the user actually changed; never touch non-bank keys.
+            function pruneBankDefaults(data) {
+                bankFields().forEach(function(el) {
+                    var key = el.getAttribute('data-save-key') || '';
+                    if (key.indexOf('bank__') !== 0) return;
+                    var cur = (el.textContent || '').trim();
+                    var def = (el.getAttribute('data-bank-default') || '').trim();
+                    if (cur === def) delete data[key];
+                });
+                return data;
+            }
+
+            // The other document type's bank keys live in the same JSON column; keep them.
+            // The bank block sits below this script in the document, so it is not
+            // in the DOM yet; apply saved bank values once parsing is finished.
+            function applyBankOverrides(data) {
+                if (!data) return;
+                bankFields().forEach(function(el) {
+                    var key = el.getAttribute('data-save-key');
+                    if (key && data[key] !== undefined) el.textContent = data[key];
+                });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() { applyBankOverrides(savedCustomerInvoice); });
+            } else {
+                applyBankOverrides(savedCustomerInvoice);
+            }
+
+            function preserveOtherScopeBankKeys(data) {
+                if (savedCustomerInvoice) {
+                    Object.keys(savedCustomerInvoice).forEach(function(k) {
+                        if (k.indexOf('bank__') === 0 && k.indexOf(bankKeyPrefix) !== 0 && data[k] === undefined) {
+                            data[k] = savedCustomerInvoice[k];
+                        }
+                    });
+                }
+                return data;
+            }
+
+            var bankEditBtn = document.getElementById('cust-inv-bank-edit-btn');
+            var bankResetBtn = document.getElementById('cust-inv-bank-reset-btn');
+            var bankEditing = false;
+
+            function setBankEditing(on) {
+                bankEditing = on;
+                bankFields().forEach(function(el) { el.setAttribute('contenteditable', on ? 'true' : 'false'); });
+                document.body.classList.toggle('cust-inv-bank-editing', on);
+                if (bankEditBtn) bankEditBtn.innerHTML = on ? '<i class="fas fa-check"></i> Done Editing' : '<i class="fas fa-pen"></i> Edit Bank Details';
+            }
+
+            if (bankEditBtn) bankEditBtn.addEventListener('click', function() { setBankEditing(!bankEditing); });
+
+            if (bankResetBtn) bankResetBtn.addEventListener('click', function() {
+                if (!confirm('Reset bank details to the default text?')) return;
+                bankFields().forEach(function(el) { el.textContent = el.getAttribute('data-bank-default') || ''; });
+                setBankEditing(false);
+                fetch('/inbound/' + requestId + '/save-customer-invoice', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(preserveOtherScopeBankKeys(pruneBankDefaults(collectCustData())))
+                }).then(function(r) { return r.json(); }).then(function() {
+                    alert('Bank details reset to default.');
+                }).catch(function() { alert('Failed to reset.'); });
             });
 
             loadCustData(savedCustomerInvoice);
@@ -599,28 +688,28 @@
 
         {# 9. Notes #}
         <div class="cust-inv-notes">
-            <p><strong>All Charges and commissions applied by Banks for transfers are to be paid by the payee</strong></p>
-            <p>A surcharge of 3% will be added to total if payment is done by Credit/Debit Cards</p>
+            <p><strong>{{ bank_field(bank_scope, 'note_charges', 'All Charges and commissions applied by Banks for transfers are to be paid by the payee') }}</strong></p>
+            <p>{{ bank_field(bank_scope, 'note_surcharge', 'A surcharge of 3% will be added to total if payment is done by Credit/Debit Cards') }}</p>
         </div>
 
         {# 10. Company info - INVEST BANK #}
         <div class="cust-inv-bank">
-            <p><strong>Account Name:</strong> Windows of Jordan Tours & Travel</p>
-            <p><strong>ACCOUNT NAME:</strong> شركه نوافذ الاردن للسياحه والسفر</p>
-            <p><strong>BANK Name:</strong> INVEST BANK</p>
-            <p><strong>BRANCH:</strong> Shmaisani Branch</p>
-            <p>43 Abdul Hamid Sharaf Street, Shmaisani</p>
-            <p><strong>P.O BOX:</strong> 950601 Amman ZIP CODE: 11195 Jordan</p>
-            <p><strong>Tel.:</strong> +962 65001500 <strong>FAX:</strong> +96265681410</p>
-            <p><strong>SWIFT CODE;</strong> JIFBJOAMXXXX</p>
-            <p><strong>Bank Account # (USD):</strong> 01233000022267170001</p>
+            <p><strong>Account Name:</strong> {{ bank_field(bank_scope, 'account_name_en', 'Windows of Jordan Tours & Travel') }}</p>
+            <p><strong>ACCOUNT NAME:</strong> {{ bank_field(bank_scope, 'account_name_ar', 'شركه نوافذ الاردن للسياحه والسفر', 'rtl') }}</p>
+            <p><strong>BANK Name:</strong> {{ bank_field(bank_scope, 'bank', 'INVEST BANK') }}</p>
+            <p><strong>BRANCH:</strong> {{ bank_field(bank_scope, 'branch', 'Shmaisani Branch') }}</p>
+            <p>{{ bank_field(bank_scope, 'address', '43 Abdul Hamid Sharaf Street, Shmaisani') }}</p>
+            <p><strong>P.O BOX:</strong> {{ bank_field(bank_scope, 'po_box', '950601 Amman ZIP CODE: 11195 Jordan') }}</p>
+            <p><strong>Tel.:</strong> {{ bank_field(bank_scope, 'tel', '+962 65001500') }} <strong>FAX:</strong> {{ bank_field(bank_scope, 'fax', '+96265681410') }}</p>
+            <p><strong>SWIFT CODE;</strong> {{ bank_field(bank_scope, 'swift', 'JIFBJOAMXXXX') }}</p>
+            <p><strong>Bank Account # (USD):</strong> {{ bank_field(bank_scope, 'account_no', '01233000022267170001') }}</p>
         </div>
 
         {# 11. IBAN - bright yellow #}
-        <div class="cust-inv-iban">(USD) IBAN: JO79JIFB0120033000022267170001</div>
+        <div class="cust-inv-iban">(USD) IBAN: {{ bank_field(bank_scope, 'iban', 'JO79JIFB0120033000022267170001') }}</div>
 
         {# 12. Purpose code - light blue #}
-        <div class="cust-inv-purpose">PURPOSE CODE: 404</div>
+        <div class="cust-inv-purpose">PURPOSE CODE: {{ bank_field(bank_scope, 'purpose_code', '404') }}</div>
     </div>
 </div>
 {% endblock %}

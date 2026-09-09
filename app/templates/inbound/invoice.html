@@ -125,6 +125,15 @@
     line-height: 1.5;
 }
 .invoice-print-bank p { margin: 2px 0; }
+.invoice-bank-editable { outline: 1px dashed transparent; }
+body.invoice-bank-editing .invoice-bank-editable {
+    outline: 1px dashed #6c757d;
+    display: inline-block;
+    min-width: 40px;
+}
+@media print {
+    .invoice-bank-editable { outline: none !important; display: inline !important; }
+}
 .invoice-print-editable {
     min-height: 1em;
     outline: 1px dashed transparent;
@@ -140,6 +149,10 @@
 {% endblock %}
 
 {% block content %}
+{% set bank_scope = 'proforma' if is_proforma else 'invoice' %}
+{% macro bank_field(scope, key, value, text_dir='') -%}
+<span class="invoice-bank-editable" data-save-key="bank__{{ scope }}__{{ key }}" data-bank-default="{{ value }}" contenteditable="false"{% if text_dir %} dir="{{ text_dir }}"{% endif %}>{{ value }}</span>
+{%- endmacro %}
 <div class="container">
     <div class="row no-print mb-3">
         <div class="col-12">
@@ -150,6 +163,12 @@
                 </a>
                 {% else %}<div></div>{% endif %}
                 <div class="d-flex gap-2">
+                    <button type="button" id="invoice-bank-edit-btn" class="btn btn-outline-secondary">
+                        <i class="fas fa-pen"></i> Edit Bank Details
+                    </button>
+                    <button type="button" id="invoice-bank-reset-btn" class="btn btn-outline-danger">
+                        <i class="fas fa-rotate-left"></i> Reset to default
+                    </button>
                     <button type="button" id="invoice-save-btn" class="btn btn-success">
                         <i class="fas fa-save"></i> Save
                     </button>
@@ -235,20 +254,20 @@
         </table>
 
         <div class="invoice-print-statement" style="text-align: center;">
-            <p><strong>All Charges and commissions applied by Banks for transfers are to be paid by the payee.</strong></p>
+            <p><strong>{{ bank_field(bank_scope, 'note_charges', 'All Charges and commissions applied by Banks for transfers are to be paid by the payee.') }}</strong></p>
         </div>
 
         <div class="invoice-print-bank" style="text-align: center;">
-            <p><strong>ACCOUNT NAME:</strong> WINDOWS OF JORDAN TOURS</p>
-            <p><strong>BANK:</strong> JORDAN AHLI BANK</p>
-            <p><strong>BRANCH:</strong> Queen Rania Street Branch</p>
-            <p><strong>ADDRESS:</strong> Sport City Circle</p>
-            <p><strong>P.O BOX:</strong> 19285 Shmeisani ZIP CODE: 11196</p>
-            <p><strong>FAX:</strong> 96265699742</p>
-            <p><strong>SWIFT CODE:</strong> JONBJOAXXXX</p>
-            <p><strong>ACCOUNT # (USD):</strong> 53-02-301015-681581-02</p>
-            <p><strong>IBAN:</strong> JO61 JONB 0530 0002 3010 1568 1581 02</p>
-            <p><strong>PURPOSE CODE:</strong> 404</p>
+            <p><strong>ACCOUNT NAME:</strong> {{ bank_field(bank_scope, 'account_name', 'WINDOWS OF JORDAN TOURS') }}</p>
+            <p><strong>BANK:</strong> {{ bank_field(bank_scope, 'bank', 'JORDAN AHLI BANK') }}</p>
+            <p><strong>BRANCH:</strong> {{ bank_field(bank_scope, 'branch', 'Queen Rania Street Branch') }}</p>
+            <p><strong>ADDRESS:</strong> {{ bank_field(bank_scope, 'address', 'Sport City Circle') }}</p>
+            <p><strong>P.O BOX:</strong> {{ bank_field(bank_scope, 'po_box', '19285 Shmeisani ZIP CODE: 11196') }}</p>
+            <p><strong>FAX:</strong> {{ bank_field(bank_scope, 'fax', '96265699742') }}</p>
+            <p><strong>SWIFT CODE:</strong> {{ bank_field(bank_scope, 'swift', 'JONBJOAXXXX') }}</p>
+            <p><strong>ACCOUNT # (USD):</strong> {{ bank_field(bank_scope, 'account_no', '53-02-301015-681581-02') }}</p>
+            <p><strong>IBAN:</strong> {{ bank_field(bank_scope, 'iban', 'JO61 JONB 0530 0002 3010 1568 1581 02') }}</p>
+            <p><strong>PURPOSE CODE:</strong> {{ bank_field(bank_scope, 'purpose_code', '404') }}</p>
         </div>
     </div>
 
@@ -409,7 +428,7 @@
             fetch('/inbound/' + requestId + '/save-admin-invoice', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '' },
-                body: JSON.stringify(collectAdminData())
+                body: JSON.stringify(preserveOtherScopeBankKeys(pruneBankDefaults(collectAdminData())))
             }).then(function(r) { return r.json(); }).then(function(res) {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-save"></i> Save';
@@ -419,6 +438,60 @@
                 btn.innerHTML = '<i class="fas fa-save"></i> Save';
                 alert('Failed to save.');
             });
+        });
+
+        var bankKeyPrefix = 'bank__{{ bank_scope }}__';
+
+        function bankFields() { return document.querySelectorAll('[data-bank-default]'); }
+
+        // Only store bank lines the user actually changed; never touch non-bank keys.
+        function pruneBankDefaults(data) {
+            bankFields().forEach(function(el) {
+                var key = el.getAttribute('data-save-key') || '';
+                if (key.indexOf('bank__') !== 0) return;
+                var cur = (el.textContent || '').trim();
+                var def = (el.getAttribute('data-bank-default') || '').trim();
+                if (cur === def) delete data[key];
+            });
+            return data;
+        }
+
+        // The other document type's bank keys live in the same JSON column; keep them.
+        function preserveOtherScopeBankKeys(data) {
+            if (savedAdminInvoice) {
+                Object.keys(savedAdminInvoice).forEach(function(k) {
+                    if (k.indexOf('bank__') === 0 && k.indexOf(bankKeyPrefix) !== 0 && data[k] === undefined) {
+                        data[k] = savedAdminInvoice[k];
+                    }
+                });
+            }
+            return data;
+        }
+
+        var bankEditBtn = document.getElementById('invoice-bank-edit-btn');
+        var bankResetBtn = document.getElementById('invoice-bank-reset-btn');
+        var bankEditing = false;
+
+        function setBankEditing(on) {
+            bankEditing = on;
+            bankFields().forEach(function(el) { el.setAttribute('contenteditable', on ? 'true' : 'false'); });
+            document.body.classList.toggle('invoice-bank-editing', on);
+            if (bankEditBtn) bankEditBtn.innerHTML = on ? '<i class="fas fa-check"></i> Done Editing' : '<i class="fas fa-pen"></i> Edit Bank Details';
+        }
+
+        if (bankEditBtn) bankEditBtn.addEventListener('click', function() { setBankEditing(!bankEditing); });
+
+        if (bankResetBtn) bankResetBtn.addEventListener('click', function() {
+            if (!confirm('Reset bank details to the default text?')) return;
+            bankFields().forEach(function(el) { el.textContent = el.getAttribute('data-bank-default') || ''; });
+            setBankEditing(false);
+            fetch('/inbound/' + requestId + '/save-admin-invoice', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '' },
+                body: JSON.stringify(preserveOtherScopeBankKeys(pruneBankDefaults(collectAdminData())))
+            }).then(function(r) { return r.json(); }).then(function() {
+                alert('Bank details reset to default.');
+            }).catch(function() { alert('Failed to reset.'); });
         });
 
         loadAdminData(savedAdminInvoice);
