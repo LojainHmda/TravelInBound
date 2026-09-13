@@ -52,12 +52,42 @@ TOOL_SCHEMAS = [
             'description': (
                 'List inbound tour files for a customer. Use after a customer '
                 'is selected, or when the user asks for a customer\'s tours, '
-                'files or bookings.'
+                'files, requests or bookings. A "request" is a file, not a '
+                'status.'
             ),
             'parameters': {
                 'type': 'object',
                 'properties': {
                     'customer_name': {'type': 'string'},
+                    'date_phrase': {
+                        'type': 'string',
+                        'description': (
+                            'Period exactly as the user said it, when they gave '
+                            'one: September, last two months, this week, or '
+                            '"01/03/2026 to 15/03/2026". Omit it entirely when '
+                            'they named no period - never invent one.'
+                        ),
+                    },
+                    'status': {
+                        'type': 'string',
+                        'enum': ['request', 'confirmed', 'invoiced', 'all'],
+                        'description': (
+                            'The FILE status, passed ONLY when the user names '
+                            'one. These are the inbound list states (Request, '
+                            'Confirmed, Invoiced), not the service booking '
+                            'statuses used by run_down_drilldown. Omit it and '
+                            'every status is returned.'
+                        ),
+                    },
+                    'latest': {
+                        'type': 'boolean',
+                        'description': (
+                            'True only when the user asked for a single file - '
+                            '"the last file", "the most recent one", "their '
+                            'newest booking". Returns the most recently created '
+                            'file. Never guess which file is "last" yourself.'
+                        ),
+                    },
                 },
                 'required': ['customer_name'],
             },
@@ -80,9 +110,11 @@ TOOL_SCHEMAS = [
                         'type': 'string',
                         'description': (
                             'The period exactly as the user said it: today, '
-                            'tomorrow, this week, this month, next 7 days, or '
-                            'an explicit range like "01/03/2026 to 15/03/2026". '
-                            'Defaults to today when the user gave no period.'
+                            'tomorrow, this week, this month, September, last '
+                            'two months, next 7 days, or an explicit range like '
+                            '"01/03/2026 to 15/03/2026". Omit it when the user '
+                            'named no period - the tool will ask them. Never '
+                            'substitute today on their behalf.'
                         ),
                     },
                 },
@@ -110,15 +142,28 @@ TOOL_SCHEMAS = [
                         'type': 'string',
                         'enum': ['requested', 'confirmed', 'waiting', 'cancelled', 'all'],
                         'description': (
-                            'Status filter. Omit unless the user indicated one '
-                            '- it defaults to requested.'
+                            'Pass this ONLY when the user names a status out '
+                            'loud: requested, confirmed, cancelled or waiting. '
+                            'Omit it otherwise and every status is returned. '
+                            'The words "request", "requests" and "file" mean '
+                            'the tour file itself, NOT the Requested status.'
                         ),
                     },
                     'date_phrase': {'type': 'string'},
                     'city': {'type': 'string', 'description': 'City filter, if the user named one.'},
-                    'hotel_name': {
+                    'name': {
                         'type': 'string',
-                        'description': 'Hotel/restaurant/guide/company name, if the user named one.',
+                        'description': (
+                            'The specific hotel, restaurant, guide, transport '
+                            'company or Meet & Assist name, when the user named '
+                            'one -- e.g. "guide Sami" means name="Sami". '
+                            'Matched exactly, so pass the name as the user said '
+                            'it. Put ONLY the name here: a month or period that '
+                            'followed the name belongs in date_phrase, even '
+                            'when the user wrote no "in" between them and even '
+                            'when it is misspelt -- "guide Mousa julay" means '
+                            'name="Mousa", date_phrase="julay".'
+                        ),
                     },
                 },
                 'required': ['category'],
@@ -129,14 +174,19 @@ TOOL_SCHEMAS = [
 
 _DISPATCH = {
     'search_customers': lambda a: tools.search_customers(a.get('name', '')),
-    'find_inbound_tours': lambda a: tools.find_inbound_tours(a.get('customer_name', '')),
+    'find_inbound_tours': lambda a: tools.find_inbound_tours(
+        a.get('customer_name', ''),
+        date_phrase=a.get('date_phrase'),
+        status=a.get('status'),
+        latest=bool(a.get('latest')),
+    ),
     'run_down_summary': lambda a: tools.run_down_summary(a.get('date_phrase')),
     'run_down_drilldown': lambda a: tools.run_down_drilldown(
         a.get('category', ''),
-        status=a.get('status') or 'requested',
+        status=a.get('status') or 'all',
         date_phrase=a.get('date_phrase'),
         city=a.get('city'),
-        hotel_name=a.get('hotel_name'),
+        hotel_name=a.get('name'),
     ),
 }
 
@@ -151,6 +201,10 @@ def _system_prompt():
         'Rules:',
         '- Never state a count, name or date that did not come from a tool result.',
         '  If you do not have it, call a tool or say you do not know.',
+        '- A number the USER put in the question is not a tool result. Never '
+        'repeat it back as fact. If they say "the four files" and the tool '
+        'returned five, say five and tell them the count differs from what '
+        'they expected -- never restate their number to agree with them.',
         '- Dates shown to the user are DD/MM/YYYY. Never show ISO dates.',
         '- For a Run Down summary, report every category, including ones with '
         'zero activity - say "no activity" rather than leaving them out.',
@@ -162,6 +216,20 @@ def _system_prompt():
         'category (Guides and Meet & Assist), which is also not a cut-off.',
         '- Status (the service booking) and File Status (the tour file) are '
         'different fields. Never merge them.',
+        '- "Request", "requests" and "file" mean the tour file itself. They '
+        'are NOT the Requested status. Pass a status filter only when the '
+        'user actually says requested, confirmed, cancelled or waiting; '
+        'otherwise omit it and report every status.',
+        '- If the user gave no period, do not invent one and do not assume '
+        'today. Call the tool without a period and ask them which period '
+        'they mean when it asks.',
+        '- Never name a "last", "latest" or "most recent" item yourself by '
+        'picking one out of a list. Ask the tool for it, and if the tool did '
+        'not return it, say so.',
+        '- Never call a set uniform when the tool split it into more than '
+        'one group. If "groups" holds several labels, the rows are not all '
+        'the same: give the split exactly as the data has it, or say nothing '
+        'about the distribution and let the table show it.',
         '- When several customers match, list them and ask which one.',
         '- NEVER output a table, and never list every row. The interface '
         'renders the tool data as a real table directly beneath your reply, so '

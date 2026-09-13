@@ -253,7 +253,8 @@
             g.rows.forEach(function (r) {
                 // REQ-4.5: Status and File Status stay in separate columns.
                 html += '<tr>' +
-                    '<td style="padding:3px">' + esc(r.request_number) + '</td>' +
+                    '<td style="padding:3px"><a href="' + esc(r.url) + '">' +
+                        esc(r.request_number) + '</a></td>' +
                     '<td style="padding:3px">' + ddmmyyyy(r.date) + '</td>' +
                     '<td style="padding:3px">' + esc(r.name) + '</td>' +
                     '<td style="padding:3px">' + esc(r.pax) + '</td>' +
@@ -292,17 +293,29 @@
                 'No inbound tours for &ldquo;' + esc(d.customer_name) + '&rdquo;.</div></div>';
         }
 
+        // A 'latest' result is one deliberately chosen file. Heading it
+        // "13 inbound tours (showing 1)" would read as a truncated list.
+        var heading = d.latest
+            ? 'Most recent file for ' + esc(d.customer_name)
+            : d.count + ' inbound tour' + (d.count === 1 ? '' : 's') + ' for ' +
+                esc(d.customer_name) +
+                (d.truncated ? ' (showing ' + d.returned + ')' : '');
         var html = '<div class="booking-card"><div class="booking-card-header">' +
-            d.count + ' inbound tour' + (d.count === 1 ? '' : 's') + ' for ' +
-            esc(d.customer_name) +
-            (d.truncated ? ' (showing ' + d.returned + ')' : '') + '</div>';
+            heading + '</div>';
 
         var bits = [];
+        // Name the period whenever one was applied, so a short list never looks
+        // like the customer's whole history.
+        if (d.period && d.period.label) {
+            bits.push('Period: ' + esc(d.period.label));
+        }
         if (d.span && d.span.date_from) {
             bits.push('Travelling ' + ddmmyyyy(d.span.date_from) +
                 ' &ndash; ' + ddmmyyyy(d.span.date_to));
         }
-        bits.push('Grouped by ' + esc(d.grouped_by || 'status'));
+        if (!d.latest) {
+            bits.push('Grouped by ' + esc(d.grouped_by || 'status'));
+        }
         html += '<div class="booking-card-detail">' + bits.join(' &middot; ') + '</div>';
 
         // Same shape as a Run Down drill-down: a headed section per group,
@@ -327,11 +340,9 @@
             html += '</tbody></table></div>';
         });
 
-        if (d.list_url) {
-            html += '<a class="chat-suggestion" style="display:inline-block;' +
-                'margin-top:6px" href="' + esc(d.list_url) + '">' +
-                'Open the file list</a>';
-        }
+        // No list link here: navigate_url is this same file list (it stopped
+        // being the Run Down link), and addNavigation already renders it, so
+        // drawing it here too puts the button on screen twice.
         return html + '</div>';
     }
 

@@ -11,10 +11,10 @@ from urllib.parse import urlencode
 from flask import current_app, url_for
 from flask_login import current_user, login_user
 
-from .dates import UnknownDatePhrase, resolve_date_range
+from .dates import MissingPeriod, UnknownDatePhrase, resolve_date_range
 
 __all__ = [
-    'CATEGORIES', 'STATUS_CHOICES',
+    'CATEGORIES', 'STATUS_CHOICES', 'FILE_STATUS_CHOICES',
     'search_customers', 'find_inbound_tours',
     'run_down_summary', 'run_down_drilldown',
 ]
@@ -50,6 +50,18 @@ CATEGORIES = {
         'label': 'Meet & Assist', 'cut_off': False, 'group_by': 'ma_type',
         'name_field': 'ma_name', 'filters': ('ma_name', 'ma_type'),
     },
+}
+
+# A tour FILE's status is the three-state system on the inbound list
+# (Request / Confirmed / Invoiced). These are NOT the service booking
+# statuses in STATUS_CHOICES below -- a file is Confirmed while the guide
+# booking on it is still Requested, so collapsing the two vocabularies
+# would answer a different question than the one asked.
+FILE_STATUS_CHOICES = {
+    'request': 'REQUEST', 'requested': 'REQUEST', 'new': 'REQUEST',
+    'confirmed': 'CONFIRMED', 'confirm': 'CONFIRMED',
+    'invoiced': 'INVOICED', 'invoice': 'INVOICED',
+    'all': 'ALL',
 }
 
 # REQ-4.2 -- the wire values the endpoints expect for ?statuses=
@@ -97,10 +109,16 @@ def _call_view(view_name, params):
 
 
 def _range_from(date_phrase=None, date_from=None, date_to=None):
-    """Resolve a period from either a phrase or an explicit pair."""
+    """Resolve a period from either a phrase or an explicit pair.
+
+    No phrase raises :class:`MissingPeriod` rather than standing in 'today'.
+    A substituted period silently answers about a different window than the
+    one asked about, and an empty result then reads as "nothing booked"
+    instead of "you never said when".
+    """
     if date_from and date_to:
         return resolve_date_range(str(date_from) + ' to ' + str(date_to))
-    return resolve_date_range(date_phrase or 'today')
+    return resolve_date_range(date_phrase)
 
 
 def _name_matches(query, *columns):
@@ -175,13 +193,28 @@ def search_customers(name, limit=10):
 # REQ-2: inbound tours lookup
 # --------------------------------------------------------------------------
 
-def find_inbound_tours(customer_name, limit=25):
+def find_inbound_tours(customer_name, date_phrase=None, status=None,
+                       latest=False, limit=25):
     """REQ-2.1/2.2 -- inbound tours for a customer, plus the page deep link.
 
     The list page filters by ``agent`` (a name), which resolves through
     ``InboundRequest.agent`` -- the customer's name when the file is linked to
     one. Matching the FK *and* the free-text contact keeps files that predate
     the customer link from silently vanishing from the answer.
+
+    ``date_phrase`` narrows to files whose travel dates *overlap* the period,
+    the same test the list page's year/month filter uses -- a tour running
+    28 Aug to 3 Sep belongs to both months, and asking by start date alone
+    would drop it from one of them.
+
+    ``latest`` returns only the most recently created file. Newest-created is
+    what "the last file" means here: the one entered most recently, not the
+    one travelling furthest out.
+
+    ``status`` narrows to one file state. The concrete values that map to a
+    state are read back through ``_map_status_for_filter`` rather than listed
+    here: INVOICE, COMPLETED and INVOICED all mean Invoiced, and a second
+    copy of that list here would drift from the list page's.
     """
     from app.extensions import db
     from app.models.customer import Customer
@@ -197,17 +230,53 @@ def find_inbound_tours(customer_name, limit=25):
     ).all()
     customer_ids = [c.id for c in matched]
 
+    status_key = (status or 'all').strip().lower()
+    wire_status = FILE_STATUS_CHOICES.get(status_key)
+    if wire_status is None:
+        return {
+            'ok': False,
+            'error': 'Unknown file status "%s".' % (status,),
+            'valid': sorted(set(FILE_STATUS_CHOICES.values())),
+            'tours': [],
+        }
+
     conditions = [_name_matches(customer_name, InboundRequest.contact_name)]
     if customer_ids:
         conditions.append(InboundRequest.customer_id.in_(customer_ids))
 
     base = InboundRequest.query.filter(db.or_(*conditions))
+
+    if wire_status != 'ALL':
+        from app.routes.inbound import _map_status_for_filter
+        wanted = [
+            value for (value,) in db.session.query(InboundRequest.status).distinct()
+            if _map_status_for_filter(value) == wire_status
+        ]
+        base = base.filter(InboundRequest.status.in_(wanted or ['__none__']))
+
+    period = None
+    if date_phrase:
+        try:
+            period = resolve_date_range(date_phrase)
+        except UnknownDatePhrase:
+            return {
+                'ok': False,
+                'error': 'Could not work out the period from "%s".' % (date_phrase,),
+                'hint': 'Try September, last two months, this week, '
+                        'or 01/03/2026 to 15/03/2026.',
+                'tours': [],
+            }
+        base = base.filter(
+            InboundRequest.from_date <= period.date_to,
+            InboundRequest.to_date >= period.date_from,
+        )
+
     # Count before the limit: reporting len(rows) would say "25 tours" for a
     # customer with 90, which reads as a fact rather than as a page size.
     total = base.count()
     rows = (
         base.order_by(InboundRequest.created_at.desc(), InboundRequest.id.desc())
-        .limit(limit)
+        .limit(1 if latest else limit)
         .all()
     )
 
@@ -257,7 +326,12 @@ def find_inbound_tours(customer_name, limit=25):
         'customer_name': customer_name,
         'count': total,
         'returned': len(tours),
-        'truncated': total > len(tours),
+        # 'latest' is one deliberately chosen row, not a truncated page, so
+        # it must not be announced as "showing 1 of 13".
+        'latest': bool(latest),
+        'period': period.to_dict() if period else None,
+        'status_filter': status_key,
+        'truncated': (not latest) and total > len(tours),
         'tours': tours,
         'groups': [
             {'label': lbl, 'count': len(groups[lbl]), 'rows': groups[lbl]}
@@ -269,8 +343,10 @@ def find_inbound_tours(customer_name, limit=25):
             'date_to': span_to.strftime('%Y-%m-%d') if span_to else '',
         },
         'list_url': list_link,
-        # The Run Down over the customer's travel span is the primary link.
-        'navigate_url': run_down_link or list_link,
+        # The question was about this customer's files, so the file list is
+        # the primary link. A Run Down spanning every file they ever had
+        # answers a different question.
+        'navigate_url': list_link or run_down_link,
     }
 
 
@@ -287,6 +363,14 @@ def run_down_summary(date_phrase=None, date_from=None, date_to=None):
     """
     try:
         period = _range_from(date_phrase, date_from, date_to)
+    except MissingPeriod:
+        return {
+            'ok': False,
+            'error': 'Which period should I look at?',
+            'needs_period': True,
+            'hint': 'For example today, this week, September, '
+                    'last two months, or 01/03/2026 to 15/03/2026.',
+        }
     except UnknownDatePhrase:
         return {
             'ok': False,
@@ -336,7 +420,7 @@ def run_down_summary(date_phrase=None, date_from=None, date_to=None):
 # REQ-4: run down drill-down
 # --------------------------------------------------------------------------
 
-def run_down_drilldown(category, status='requested', date_phrase=None,
+def run_down_drilldown(category, status='all', date_phrase=None,
                        date_from=None, date_to=None, city=None,
                        hotel_name=None, limit=200):
     """REQ-4.1-4.5 -- rows for one category, filtered and grouped."""
@@ -348,8 +432,13 @@ def run_down_drilldown(category, status='requested', date_phrase=None,
             'valid': sorted(CATEGORIES),
         }
 
-    # REQ-4.2 -- default to Requested when the user did not say.
-    status_key = (status or 'requested').strip().lower()
+    # Default to every status when the user did not name one. This reverses
+    # REQ-4.2's "default to Requested": defaulting to one status hid rows
+    # that exist (a guide with a Requested and a Confirmed file in the same
+    # month showed only the Requested one), and a partial answer is
+    # indistinguishable from a complete one. A status filter is applied only
+    # when the user actually names a status.
+    status_key = (status or 'all').strip().lower()
     wire_status = STATUS_CHOICES.get(status_key)
     if wire_status is None:
         return {
@@ -360,6 +449,14 @@ def run_down_drilldown(category, status='requested', date_phrase=None,
 
     try:
         period = _range_from(date_phrase, date_from, date_to)
+    except MissingPeriod:
+        return {
+            'ok': False,
+            'error': 'Which period should I look at?',
+            'needs_period': True,
+            'hint': 'For example today, this week, September, '
+                    'last two months, or 01/03/2026 to 15/03/2026.',
+        }
     except UnknownDatePhrase:
         return {
             'ok': False,
@@ -397,6 +494,9 @@ def run_down_drilldown(category, status='requested', date_phrase=None,
             order.append(label)
         groups[label].append({
             'request_number': row.get('request_number', ''),
+            # Carried through so the file number can be a link, the same
+            # way find_inbound_tours rows already are.
+            'url': row.get('view_url', ''),
             'date': row.get('date', ''),
             'description': row.get('description', ''),
             'name': row.get(cfg['name_field']) or '',
