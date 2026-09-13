@@ -1,201 +1,137 @@
-from flask import Blueprint, request, jsonify
-import os
+"""Assistant API -- Phase 1.
+
+Replaces the previous Booking-centric chat endpoints. The blueprint is still
+named ``chat_api``: app/__init__.py discovers it by that name.
+"""
+
+import json
+import time
+
+from flask import Blueprint, jsonify, request
+from flask_login import current_user, login_required
+
+from app.extensions import csrf, db
+from app.models.assistant_log import AssistantChatLog
+from app.services.assistant import (
+    AssistantUnavailable,
+    TravelAssistant,
+    clear_selected_customer,
+    get_selected_customer,
+    set_selected_customer,
+)
 
 chat_api = Blueprint('chat_api', __name__)
 
-# Initialize OpenAI client only if API key is available
-_client = None
-def get_openai_client():
-    """Lazy initialization of OpenAI client"""
-    global _client
-    if _client is None:
-        api_key = os.environ.get("OPENAI_API_KEY")
-        if api_key:
-            from openai import OpenAI
-            _client = OpenAI(api_key=api_key)
-        else:
-            _client = False  # Mark as unavailable
-    return _client if _client else None
 
-@chat_api.route('/api/chat', methods=['POST'])
-def ai_chat():
-    """AI Chat endpoint for booking queries"""
+@chat_api.route('/api/assistant', methods=['POST'])
+@login_required
+@csrf.exempt
+def assistant():
+    """One assistant turn."""
+    payload = request.get_json(silent=True) or {}
+    message = (payload.get('message') or '').strip()
+    if not message:
+        return jsonify({'ok': False, 'error': 'Message is required.'}), 400
+
+    history = payload.get('history')
+    if not isinstance(history, list):
+        history = []
+
     try:
-        data = request.get_json()
-        user_query = data.get('message', '').strip()
-        
-        if not user_query:
-            return jsonify({'error': 'Message is required'}), 400
-        
-        # Get OpenAI client
-        client = get_openai_client()
-        if not client:
-            return jsonify({
-                'success': False,
-                'error': 'OpenAI API key not configured',
-                'response': 'AI chat features require an OpenAI API key. Please configure OPENAI_API_KEY environment variable.'
-            }), 503
-        
-        # Process query with OpenAI
-        response = client.chat.completions.create(
-            model="gpt-4o",  # the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-            messages=[
-                {
-                    "role": "system",
-                    "content": """You are a helpful travel booking assistant. You can help users:
-                    1. Create new bookings for flights, hotels, transport, visas, and insurance
-                    2. Check booking status and details
-                    3. Answer travel-related questions
-                    4. Provide travel recommendations
-                    
-                    When users ask to create bookings, guide them through the process and ask for necessary details like:
-                    - Destination and dates
-                    - Number of passengers
-                    - Service type (flight, hotel, etc.)
-                    - Budget preferences
-                    
-                    Keep responses helpful, professional, and concise."""
-                },
-                {
-                    "role": "user",
-                    "content": user_query
-                }
-            ],
-            max_tokens=500,
-            temperature=0.7
+        agent = TravelAssistant()
+    except AssistantUnavailable:
+        return jsonify({
+            'ok': False,
+            'error': 'assistant_unavailable',
+            'reply': 'The assistant needs OPENAI_API_KEY to be configured.',
+        }), 503
+
+    session_key = (payload.get('session_key') or '')[:64] or None
+    started = time.time()
+
+    try:
+        result = agent.ask(message, history=history)
+    except Exception as exc:
+        # The message reaches the user, so it must say what actually broke
+        # rather than a generic failure they cannot act on.
+        _log_turn(message, session_key, None, started, ok=False, error=str(exc))
+        return jsonify({
+            'ok': False,
+            'error': str(exc),
+            'reply': 'Something went wrong answering that: %s' % exc,
+        }), 500
+
+    _log_turn(message, session_key, result, started, ok=True)
+    result['ok'] = True
+    return jsonify(result)
+
+
+def _log_turn(message, session_key, result, started, ok=True, error=None):
+    """Record one turn. Never let logging break the answer the user is owed."""
+    try:
+        result = result or {}
+        selected = result.get('selected_customer') or {}
+        entry = AssistantChatLog(
+            user_id=getattr(current_user, 'id', None),
+            session_key=session_key,
+            user_message=message,
+            reply=result.get('reply'),
+            tools_used=','.join(result.get('tools_used') or []) or None,
+            tool_results=json.dumps(result.get('tool_results') or [], default=str),
+            navigate_url=result.get('navigate_url'),
+            selected_customer=selected.get('name') if isinstance(selected, dict) else None,
+            ok=ok,
+            error=error,
+            duration_ms=int((time.time() - started) * 1000),
         )
-        
-        ai_response = response.choices[0].message.content
-        
-        # Analyze if this is a booking creation request
-        booking_intent = analyze_booking_intent(user_query)
-        navigation_action = analyze_navigation_intent(user_query)
-        
-        response_data = {
-            'success': True,
-            'response': ai_response,
-            'booking_data': booking_intent,
-            'intent': {'type': 'booking_assistance'},
-            'timestamp': str(data.get('timestamp', ''))
-        }
-        
-        # Add navigation action if detected
-        if navigation_action['should_navigate']:
-            response_data['navigation'] = navigation_action
-            
-        return jsonify(response_data)
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': f'Chat service error: {str(e)}',
-            'response': 'I apologize, but I\'m having trouble right now. Please try again later.'
-        }), 500
+        db.session.add(entry)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
-@chat_api.route('/api/chat/booking/<int:booking_id>')
-def get_booking_summary(booking_id):
-    """Get booking summary"""
-    try:
-        return jsonify({
-            'success': True,
-            'response': f'Booking summary for ID {booking_id} will be available when AI services are configured.',
-            'booking_data': {}
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
 
-@chat_api.route('/api/chat/contextual', methods=['POST'])
-def contextual_ai_chat():
-    """AI Chat with screen context awareness"""
-    try:
-        data = request.get_json()
-        user_query = data.get('message', '').strip()
-        
-        if not user_query:
-            return jsonify({'error': 'Message is required'}), 400
-        
-        # Simple response without AI dependencies
-        return jsonify({
-            'success': True,
-            'response': 'I received your message: ' + user_query,
-            'action_performed': None,
-            'screen_updates': {},
-            'next_steps': [],
-            'timestamp': str(data.get('timestamp', ''))
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': f'Chat service error: {str(e)}',
-            'response': 'I apologize, but I\'m having trouble right now. Please try again later.'
-        }), 500
+@chat_api.route('/api/assistant/log', methods=['GET'])
+@login_required
+def assistant_log():
+    """Recent turns, newest first -- the input for a conversation review."""
+    limit = min(request.args.get('limit', 100, type=int), 500)
+    session_key = (request.args.get('session_key') or '').strip()
 
-def analyze_booking_intent(query):
-    """Analyze if the query is related to booking creation"""
-    booking_keywords = ['book', 'create', 'reserve', 'flight', 'hotel', 'travel', 'trip', 'vacation', 'visa', 'insurance']
-    query_lower = query.lower()
-    
-    if any(keyword in query_lower for keyword in booking_keywords):
-        return {
-            'is_booking_request': True,
-            'suggested_action': 'create_booking',
-            'confidence': 0.8
-        }
-    
-    return {
-        'is_booking_request': False,
-        'suggested_action': None,
-        'confidence': 0.1
-    }
+    query = AssistantChatLog.query
+    if session_key:
+        query = query.filter(AssistantChatLog.session_key == session_key)
 
-def analyze_navigation_intent(query):
-    """Analyze if the query requires navigation to a specific page"""
-    query_lower = query.lower()
-    
-    # Navigation patterns and their corresponding URLs
-    navigation_patterns = {
-        'create booking': '/booking/new/detail',
-        'new booking': '/booking/new/detail',
-        'book': '/booking/new/detail',
-        'add customer': '/customers/new',
-        'new customer': '/customers/new',
-        'customer': '/customers',
-        'customers': '/customers',
-        'finance': '/finance',
-        'dashboard': '/dashboard',
-        'suppliers': '/suppliers',
-        'supplier': '/suppliers',
-        'search bookings': '/find-bookings',
-        'find bookings': '/find-bookings',
-        'operations': '/dashboard'
-    }
-    
-    for pattern, url in navigation_patterns.items():
-        if pattern in query_lower:
-            return {
-                'should_navigate': True,
-                'url': url,
-                'action': 'navigate',
-                'reason': f'User requested to {pattern}'
-            }
-    
-    return {
-        'should_navigate': False,
-        'url': None,
-        'action': None,
-        'reason': None
-    }
-
-@chat_api.route('/api/chat/test', methods=['GET'])
-def test_chat_api():
-    """Test endpoint to verify chat API is working"""
+    rows = query.order_by(AssistantChatLog.created_at.desc()).limit(limit).all()
+    include = request.args.get('include_results', '1') != '0'
     return jsonify({
-        'success': True,
-        'message': 'Chat API is working',
-        'status': 'online'
+        'ok': True,
+        'count': len(rows),
+        'turns': [r.to_dict(include_results=include) for r in rows],
     })
+
+
+@chat_api.route('/api/assistant/customer', methods=['POST'])
+@login_required
+@csrf.exempt
+def select_customer():
+    """REQ-1.2 -- pin the customer chosen from the result list."""
+    payload = request.get_json(silent=True) or {}
+    customer = payload.get('customer')
+    if not isinstance(customer, dict) or not customer.get('name'):
+        return jsonify({'ok': False, 'error': 'A customer object is required.'}), 400
+    set_selected_customer(customer)
+    return jsonify({'ok': True, 'selected_customer': get_selected_customer()})
+
+
+@chat_api.route('/api/assistant/customer', methods=['DELETE'])
+@login_required
+@csrf.exempt
+def deselect_customer():
+    clear_selected_customer()
+    return jsonify({'ok': True, 'selected_customer': None})
+
+
+@chat_api.route('/api/assistant/context', methods=['GET'])
+@login_required
+def assistant_context():
+    return jsonify({'ok': True, 'selected_customer': get_selected_customer()})

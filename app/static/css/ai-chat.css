@@ -329,3 +329,27 @@
     background: #007bff;
     color: white;
 }
+/* Phase 1 assistant: result tables are wider than the widget, so each one
+   scrolls inside its own card instead of stretching the chat column. */
+.ai-chat-messages .message-bubble table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+.ai-chat-messages .booking-card,
+.ai-chat-messages .service-item {
+    max-width: 100%;
+    overflow-x: auto;
+}
+.ai-chat-messages .message-bubble {
+    max-width: 100%;
+}
+/* Let the card scroll sideways rather than breaking "Restaurant" mid-word. */
+.ai-chat-messages .message-bubble th,
+.ai-chat-messages .message-bubble td {
+    white-space: nowrap;
+}
+.ai-chat-widget .chat-suggestions {
+    margin-top: 0;
+    margin-bottom: 8px;
+}

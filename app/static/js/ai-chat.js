@@ -1,653 +1,464 @@
 /**
- * AI Chat Widget for Travel Booking Platform
- * Provides intelligent booking assistance using OpenAI
+ * Operations assistant widget -- Phase 1.
+ *
+ * Talks to /api/assistant. Renders the model's prose, then renders the tool
+ * results as real tables from the returned data rather than trusting the prose
+ * to have repeated the numbers correctly.
+ *
+ * Reuses the existing .ai-chat-* classes in css/ai-chat.css.
  */
+(function () {
+    'use strict';
 
-class AIChat {
-    constructor() {
-        this.isOpen = false;
-        this.isTyping = false;
-        this.messages = [];
-        this.init();
-    }
+    var ENDPOINT = '/api/assistant';
+    var CONTEXT_ENDPOINT = '/api/assistant/context';
+    var CUSTOMER_ENDPOINT = '/api/assistant/customer';
 
-    init() {
-        this.createChatWidget();
-        this.bindEvents();
-        this.addWelcomeMessage();
-    }
+    // Kept short on purpose: long labels wrap to several rows and crowd the
+    // message area out of a 300-350px widget.
+    var SUGGESTIONS = [
+        { label: 'Today', text: 'Run down for today' },
+        { label: 'This week', text: 'Run down for this week' },
+        { label: 'Accommodation', text: 'Show accommodation requests' },
+        { label: 'Find customer', text: 'Find customer ', keepOpen: true }
+    ];
 
-    createChatWidget() {
-        // Create AI chat button
-        const chatFab = document.createElement('button');
-        chatFab.className = 'ai-chat-fab';
-        chatFab.id = 'aiChatFab';
-        chatFab.innerHTML = `
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-            </svg>
-        `;
-
-        // Create chat widget
-        const chatWidget = document.createElement('div');
-        chatWidget.className = 'ai-chat-widget';
-        chatWidget.id = 'aiChatWidget';
-        chatWidget.innerHTML = `
-            <div class="ai-chat-header">
-                <div class="ai-chat-title">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                    </svg>
-                    AI Travel Assistant
-                </div>
-                <button class="ai-chat-close" id="aiChatClose">×</button>
-            </div>
-            
-            <div class="ai-chat-messages" id="aiChatMessages">
-                <!-- Messages will be added here dynamically -->
-            </div>
-            
-            <div class="ai-chat-input-container">
-                <div class="ai-chat-input-group">
-                    <textarea 
-                        class="ai-chat-input" 
-                        id="aiChatInput" 
-                        placeholder="Ask me about bookings, customers, or travel details..."
-                        rows="1"
-                    ></textarea>
-                    <button class="ai-chat-send" id="aiChatSend">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(chatFab);
-        document.body.appendChild(chatWidget);
-
-        this.chatFab = chatFab;
-        this.chatWidget = chatWidget;
-        this.messagesContainer = document.getElementById('aiChatMessages');
-        this.inputField = document.getElementById('aiChatInput');
-        this.sendButton = document.getElementById('aiChatSend');
-    }
-
-    bindEvents() {
-        // Toggle chat widget
-        this.chatFab.addEventListener('click', () => {
-            this.toggle();
-        });
-
-        document.getElementById('aiChatClose').addEventListener('click', () => {
-            this.close();
-        });
-
-        // Send message events
-        this.sendButton.addEventListener('click', () => {
-            this.sendMessage();
-        });
-
-        this.inputField.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                this.sendMessage();
-            }
-        });
-
-        // Auto-resize textarea
-        this.inputField.addEventListener('input', () => {
-            this.inputField.style.height = 'auto';
-            this.inputField.style.height = Math.min(this.inputField.scrollHeight, 80) + 'px';
-        });
-
-        // Close chat when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.ai-chat-widget') && 
-                !e.target.closest('.ai-chat-fab') && 
-                this.isOpen) {
-                // Don't auto-close the chat to avoid interrupting conversations
-            }
-        });
-    }
-
-    toggle() {
-        if (this.isOpen) {
-            this.close();
-        } else {
-            this.open();
-        }
-    }
-
-    open() {
-        this.isOpen = true;
-        this.chatWidget.classList.add('show');
-        this.chatFab.classList.add('active');
-        this.inputField.focus();
-    }
-
-    close() {
-        this.isOpen = false;
-        this.chatWidget.classList.remove('show');
-        this.chatFab.classList.remove('active');
-    }
-
-    addWelcomeMessage() {
-        const welcomeMessage = {
-            type: 'ai',
-            content: 'Hi! I\'m your AI travel assistant. I can help you find booking information, check customer details, and answer questions about your travel platform. Try asking me something like:',
-            timestamp: new Date()
-        };
-
-        this.addMessage(welcomeMessage);
-
-        // Add suggestions
-        setTimeout(() => {
-            this.addSuggestions([
-                'Find booking IR-12345',
-                'Show me recent bookings',
-                'Search for John Smith',
-                'What bookings are pending?',
-                'Show me today\'s confirmations'
-            ]);
-        }, 500);
-    }
-
-    addMessage(message) {
-        this.messages.push(message);
-        this.renderMessage(message);
-        this.scrollToBottom();
-    }
-
-    renderMessage(message) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `chat-message ${message.type}`;
-
-        const avatar = document.createElement('div');
-        avatar.className = `message-avatar ${message.type}`;
-        avatar.innerHTML = message.type === 'user' ? 'U' : 'AI';
-
-        const bubble = document.createElement('div');
-        bubble.className = `message-bubble ${message.type}`;
-        
-        // Handle booking data in AI responses
-        if (message.bookingData && message.bookingData.bookings) {
-            bubble.innerHTML = this.formatAIResponse(message.content, message.bookingData);
-        } else {
-            bubble.innerHTML = this.formatMessageContent(message.content);
-        }
-
-        const time = document.createElement('div');
-        time.className = 'message-time';
-        time.textContent = message.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-        if (message.type === 'user') {
-            messageDiv.appendChild(bubble);
-            messageDiv.appendChild(avatar);
-        } else {
-            messageDiv.appendChild(avatar);
-            messageDiv.appendChild(bubble);
-        }
-
-        bubble.appendChild(time);
-        this.messagesContainer.appendChild(messageDiv);
-    }
-
-    formatAIResponse(content, bookingData) {
-        let html = this.formatMessageContent(content);
-
-        // Add customer cards if available
-        if (bookingData.customers && bookingData.customers.length > 0) {
-            html += '<div style="margin-top: 10px;">';
-            bookingData.customers.forEach(customer => {
-                html += this.createCustomerCard(customer);
-            });
-            html += '</div>';
-        }
-
-        // Add booking cards if available
-        if (bookingData.bookings && bookingData.bookings.length > 0) {
-            html += '<div style="margin-top: 10px;">';
-            bookingData.bookings.forEach(booking => {
-                html += this.createBookingCard(booking);
-            });
-            html += '</div>';
-        }
-
-        // Add action results if available
-        if (bookingData.actions_performed && bookingData.actions_performed.length > 0) {
-            html += this.createActionResults(bookingData);
-        }
-
-        return html;
-    }
-
-    createCustomerCard(customer) {
-        return `
-            <div class="booking-card" onclick="window.open('/customer/${customer.id}', '_blank')">
-                <div class="booking-card-header">
-                    👤 ${customer.name}
-                </div>
-                <div class="booking-card-detail">
-                    📧 Email: ${customer.email || 'Not provided'}
-                </div>
-                <div class="booking-card-detail">
-                    📞 Phone: ${customer.phone || 'Not provided'}
-                </div>
-                ${customer.company ? `
-                    <div class="booking-card-detail">
-                        🏢 Company: ${customer.company}
-                    </div>
-                ` : ''}
-                <div class="booking-card-detail">
-                    🌍 Country: ${customer.country || 'Not specified'}
-                </div>
-                <div style="font-size: 11px; color: #666; margin-top: 6px;">
-                    Click to view customer details
-                </div>
-            </div>
-        `;
-    }
-
-    createBookingCard(booking) {
-        return `
-            <div class="booking-card" onclick="window.open('/booking/${booking.id}', '_blank')">
-                <div class="booking-card-header">
-                    📋 ${booking.reference_number} - ${booking.status}
-                </div>
-                <div class="booking-card-detail">
-                    👤 Customer: ${booking.customer_name}
-                </div>
-                <div class="booking-card-detail">
-                    💰 Amount: $${booking.total_amount.toFixed(2)}
-                </div>
-                ${booking.service_items.length > 0 ? `
-                    <div class="booking-card-detail">
-                        🛫 Services: ${booking.service_items.length} item(s)
-                    </div>
-                ` : ''}
-                <div style="font-size: 11px; color: #666; margin-top: 6px;">
-                    Click to view details
-                </div>
-                <div style="margin-top: 8px;">
-                    <button onclick="event.stopPropagation(); aiChat.generateInvoice(${booking.id})" 
-                            class="btn btn-sm btn-primary me-2">
-                        📄 Generate Invoice
-                    </button>
-                    <button onclick="event.stopPropagation(); aiChat.sendWhatsApp(${booking.id})" 
-                            class="btn btn-sm btn-success">
-                        💬 Send WhatsApp
-                    </button>
-                </div>
-            </div>
-        `;
-    }
-
-    createActionResults(bookingData) {
-        let html = '<div style="margin-top: 15px; padding: 12px; background: #e8f5e8; border-radius: 8px; border-left: 4px solid #28a745;">';
-        
-        html += '<div style="font-weight: 600; color: #155724; margin-bottom: 8px;">✅ Actions Completed:</div>';
-        
-        bookingData.actions_performed.forEach(action => {
-            html += `<div style="color: #155724; font-size: 13px;">• ${action}</div>`;
-        });
-
-        // Show invoice details if available
-        if (bookingData.action_results?.invoice?.success) {
-            html += `
-                <div style="margin-top: 10px; padding: 8px; background: white; border-radius: 6px;">
-                    <strong>📄 Invoice Generated:</strong><br>
-                    <small>${bookingData.action_results.invoice.message}</small><br>
-                    <a href="${bookingData.action_results.invoice.download_url}" target="_blank" 
-                       style="color: #007bff; text-decoration: none;">
-                        📥 Download Invoice
-                    </a>
-                </div>
-            `;
-        }
-
-        // Show WhatsApp preview if available
-        if (bookingData.action_results?.whatsapp?.success) {
-            html += `
-                <div style="margin-top: 10px; padding: 8px; background: white; border-radius: 6px;">
-                    <strong>💬 WhatsApp Message Preview:</strong><br>
-                    <div style="font-family: monospace; font-size: 12px; background: #f8f9fa; padding: 8px; border-radius: 4px; margin-top: 4px; white-space: pre-line;">${bookingData.action_results.whatsapp.message_preview}</div>
-                    <small style="color: #666;">Sent to: ${bookingData.action_results.whatsapp.recipient}</small>
-                </div>
-            `;
-        }
-
-        html += '</div>';
-        return html;
-    }
-
-    formatMessageContent(content) {
-        // Convert line breaks to HTML
-        return content.replace(/\n/g, '<br>');
-    }
-
-    addSuggestions(suggestions) {
-        const suggestionsDiv = document.createElement('div');
-        suggestionsDiv.className = 'chat-suggestions';
-
-        suggestions.forEach(suggestion => {
-            const suggestionButton = document.createElement('button');
-            suggestionButton.className = 'chat-suggestion';
-            suggestionButton.textContent = suggestion;
-            suggestionButton.onclick = () => {
-                this.inputField.value = suggestion;
-                this.sendMessage();
-                suggestionsDiv.remove();
-            };
-            suggestionsDiv.appendChild(suggestionButton);
-        });
-
-        this.messagesContainer.appendChild(suggestionsDiv);
-        this.scrollToBottom();
-    }
-
-    showTypingIndicator() {
-        if (this.isTyping) return;
-        
-        this.isTyping = true;
-        const typingDiv = document.createElement('div');
-        typingDiv.className = 'chat-message ai';
-        typingDiv.id = 'typingIndicator';
-        
-        typingDiv.innerHTML = `
-            <div class="message-avatar ai">AI</div>
-            <div class="message-bubble ai">
-                <div class="typing-indicator">
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                </div>
-            </div>
-        `;
-        
-        this.messagesContainer.appendChild(typingDiv);
-        this.scrollToBottom();
-    }
-
-    hideTypingIndicator() {
-        this.isTyping = false;
-        const typingIndicator = document.getElementById('typingIndicator');
-        if (typingIndicator) {
-            typingIndicator.remove();
-        }
-    }
-
-    async sendMessage() {
-        const message = this.inputField.value.trim();
-        if (!message) return;
-
-        // Add user message
-        this.addMessage({
-            type: 'user',
-            content: message,
-            timestamp: new Date()
-        });
-
-        // Clear input
-        this.inputField.value = '';
-        this.inputField.style.height = 'auto';
-
-        // Disable send button
-        this.sendButton.disabled = true;
-        this.showTypingIndicator();
-
+    // Stable per-tab id so logged turns can be stitched back into one
+    // conversation. sessionStorage so a reload keeps the thread; wrapped
+    // because it throws outright in some embedded/blocked-storage contexts.
+    var sessionKey = (function () {
+        var key;
         try {
-            // Capture current screen context
-            const screenContext = window.screenContext ? window.screenContext.getContextForAI() : {};
-            
-            // Decide whether to use contextual or regular chat
-            const useContextual = this.shouldUseContextualChat(message, screenContext);
-            
-            const endpoint = useContextual ? '/api/chat/contextual' : '/api/chat';
-            const requestBody = {
-                message: message,
-                timestamp: new Date().toISOString()
-            };
-            
-            if (useContextual) {
-                requestBody.screen_context = screenContext;
+            key = sessionStorage.getItem('assistantSessionKey');
+            if (!key) {
+                key = 's-' + Date.now().toString(36) + '-' +
+                    Math.random().toString(36).slice(2, 10);
+                sessionStorage.setItem('assistantSessionKey', key);
             }
-
-            // Send to AI chat API
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': this.getCSRFToken()
-                },
-                body: JSON.stringify(requestBody)
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                // Add AI response
-                this.addMessage({
-                    type: 'ai',
-                    content: data.response,
-                    bookingData: data.booking_data,
-                    screenUpdates: data.screen_updates,
-                    nextSteps: data.next_steps,
-                    timestamp: new Date()
-                });
-
-                // Handle navigation if requested
-                if (data.navigation && data.navigation.should_navigate) {
-                    this.handleNavigation(data.navigation);
-                }
-
-                // Handle screen updates if any
-                if (data.screen_updates) {
-                    this.handleScreenUpdates(data.screen_updates);
-                }
-            } else {
-                throw new Error(data.error || 'AI chat service error');
-            }
-
-        } catch (error) {
-            console.error('Chat error:', error);
-            this.addMessage({
-                type: 'ai',
-                content: 'I apologize, but I\'m having trouble right now. Please try again later or contact support if the problem persists.',
-                timestamp: new Date()
-            });
-        } finally {
-            this.hideTypingIndicator();
-            this.sendButton.disabled = false;
-            this.inputField.focus();
+        } catch (e) {
+            key = 's-' + Date.now().toString(36);
         }
+        return key;
+    })();
+
+    var history = [];
+    var selectedCustomer = null;
+    var busy = false;
+    var els = {};
+
+    function esc(value) {
+        return String(value === null || value === undefined ? '' : value)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
-    shouldUseContextualChat(message, screenContext) {
-        // Use contextual chat for screen-aware queries
-        const contextualKeywords = [
-            'this', 'current', 'update', 'change', 'edit', 'modify', 
-            'here', 'show me', 'what is', 'explain this',
-            'on this page', 'in this table', 'selected',
-            'first', 'last', 'top', 'bottom'
-        ];
-        
-        const hasContextKeywords = contextualKeywords.some(keyword => 
-            message.toLowerCase().includes(keyword)
-        );
-        
-        const hasScreenData = screenContext && (
-            screenContext.visible_data || 
-            screenContext.table_data || 
-            screenContext.current_data
-        );
-        
-        return hasContextKeywords && hasScreenData;
+    function ddmmyyyy(iso) {
+        if (!iso) { return ''; }
+        var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+        return m ? (m[3] + '/' + m[2] + '/' + m[1]) : iso;
     }
 
-    handleScreenUpdates(screenUpdates) {
-        // Handle different types of screen updates
-        if (screenUpdates.redirect_url) {
-            setTimeout(() => {
-                window.location.href = screenUpdates.redirect_url;
-            }, 1500);
-        }
-        
-        if (screenUpdates.highlight_element) {
-            this.highlightElement(screenUpdates.highlight_element);
-        }
-        
-        if (screenUpdates.suggested_values && screenUpdates.field) {
-            this.showFieldSuggestions(screenUpdates.field, screenUpdates.suggested_values);
-        }
+    // Deliberately tiny: bold, code and line breaks only. The assistant is
+    // told to keep replies short, and a full markdown parser here would be a
+    // large XSS surface for very little gain.
+    function miniMarkdown(text) {
+        return esc(text)
+            .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+            .replace(/`([^`]+)`/g, '<code>$1</code>')
+            .replace(/\n/g, '<br>');
     }
 
-    highlightElement(selector) {
-        const element = document.querySelector(selector);
-        if (element) {
-            element.style.transition = 'all 0.3s ease';
-            element.style.boxShadow = '0 0 10px #007bff';
-            element.style.border = '2px solid #007bff';
-            
-            setTimeout(() => {
-                element.style.boxShadow = '';
-                element.style.border = '';
-            }, 3000);
-        }
+    function csrfToken() {
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        return meta ? meta.getAttribute('content') : '';
     }
 
-    showFieldSuggestions(field, suggestions) {
-        // Create suggestion popup near the field
-        const fieldElement = document.querySelector(`[name="${field}"], #${field}`);
-        if (fieldElement && suggestions.length > 0) {
-            const popup = document.createElement('div');
-            popup.className = 'ai-suggestions-popup';
-            popup.innerHTML = `
-                <div style="background: white; border: 1px solid #ddd; border-radius: 6px; padding: 10px; position: absolute; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                    <div style="font-weight: bold; margin-bottom: 8px;">AI Suggestions:</div>
-                    ${suggestions.map(suggestion => `
-                        <div style="padding: 4px 8px; cursor: pointer; border-radius: 3px;" 
-                             onmouseover="this.style.background='#f0f8ff'" 
-                             onmouseout="this.style.background=''"
-                             onclick="document.querySelector('[name=\\'${field}\\']').value='${suggestion}'; this.parentElement.parentElement.remove();">
-                            ${suggestion}
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-            
-            fieldElement.parentNode.appendChild(popup);
-            
-            // Remove popup after 10 seconds
-            setTimeout(() => {
-                if (popup.parentNode) {
-                    popup.parentNode.removeChild(popup);
-                }
-            }, 10000);
-        }
-    }
+    function build() {
+        var fab = document.createElement('button');
+        fab.className = 'ai-chat-fab';
+        fab.type = 'button';
+        fab.setAttribute('aria-label', 'Open assistant');
+        fab.innerHTML = '<i class="fas fa-comment-dots"></i>';
 
-    async generateInvoice(bookingId) {
-        try {
-            const response = await fetch(`/api/chat/booking/${bookingId}`, {
-                headers: {
-                    'X-CSRFToken': this.getCSRFToken()
-                }
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                this.addMessage({
-                    type: 'ai',
-                    content: '📄 Invoice generated successfully! You can download it from the booking details.',
-                    timestamp: new Date()
-                });
-            }
-        } catch (error) {
-            this.addMessage({
-                type: 'ai',
-                content: 'Sorry, I had trouble generating the invoice. Please try again.',
-                timestamp: new Date()
-            });
-        }
-    }
+        var widget = document.createElement('div');
+        // The stylesheet keeps .ai-chat-widget at display:none and reveals it
+        // with .show -- toggling [hidden] here would never make it visible.
+        widget.className = 'ai-chat-widget';
+        widget.innerHTML =
+            '<div class="ai-chat-header">' +
+                '<div class="ai-chat-title"><i class="fas fa-robot"></i> Assistant</div>' +
+                '<button type="button" class="ai-chat-close" aria-label="Close">&times;</button>' +
+            '</div>' +
+            '<div class="ai-chat-messages" role="log" aria-live="polite"></div>' +
+            '<div class="ai-chat-input-container">' +
+                '<div class="chat-suggestions"></div>' +
+                '<div class="ai-chat-input-group">' +
+                    '<input type="text" class="ai-chat-input" placeholder="Ask about tours, files or the run down...">' +
+                    '<button type="button" class="ai-chat-send" aria-label="Send">' +
+                        '<i class="fas fa-paper-plane"></i></button>' +
+                '</div>' +
+            '</div>';
 
-    async sendWhatsApp(bookingId) {
-        try {
-            this.addMessage({
-                type: 'user',
-                content: `Send WhatsApp for booking ${bookingId}`,
-                timestamp: new Date()
-            });
+        document.body.appendChild(fab);
+        document.body.appendChild(widget);
 
-            this.showTypingIndicator();
+        els.fab = fab;
+        els.widget = widget;
+        els.messages = widget.querySelector('.ai-chat-messages');
+        els.input = widget.querySelector('.ai-chat-input');
+        els.send = widget.querySelector('.ai-chat-send');
+        els.suggestions = widget.querySelector('.chat-suggestions');
 
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': this.getCSRFToken()
-                },
-                body: JSON.stringify({
-                    message: `Generate WhatsApp message for booking ${bookingId}`,
-                    timestamp: new Date().toISOString()
-                })
-            });
-
-            const data = await response.json();
-            
-            this.hideTypingIndicator();
-
-            if (data.success) {
-                this.addMessage({
-                    type: 'ai',
-                    content: data.response,
-                    bookingData: data.booking_data,
-                    timestamp: new Date()
-                });
-            }
-        } catch (error) {
-            this.hideTypingIndicator();
-            this.addMessage({
-                type: 'ai',
-                content: 'Sorry, I had trouble sending the WhatsApp message. Please try again.',
-                timestamp: new Date()
-            });
-        }
-    }
-
-    handleNavigation(navigationData) {
-        // Show navigation message and navigate automatically
-        const navigateMessage = `I'll take you to ${navigationData.reason} now.`;
-        
-        this.addMessage({
-            type: 'ai',
-            content: navigateMessage,
-            timestamp: new Date(),
-            navigationAction: navigationData
+        fab.addEventListener('click', toggle);
+        widget.querySelector('.ai-chat-close').addEventListener('click', toggle);
+        els.send.addEventListener('click', submit);
+        els.input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); }
         });
 
-        // Navigate after a short delay to allow message to be seen
-        setTimeout(() => {
-            window.location.href = navigationData.url;
-        }, 1000);
+        renderSuggestions();
     }
 
-    getCSRFToken() {
-        const token = document.querySelector('meta[name="csrf-token"]');
-        return token ? token.getAttribute('content') : '';
+    function renderSuggestions() {
+        els.suggestions.innerHTML = '';
+        SUGGESTIONS.forEach(function (item) {
+            var chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'chat-suggestion';
+            chip.textContent = item.label;
+            chip.addEventListener('click', function () {
+                els.input.value = item.text;
+                els.input.focus();
+                if (!item.keepOpen) { submit(); }
+            });
+            els.suggestions.appendChild(chip);
+        });
     }
 
-    scrollToBottom() {
-        setTimeout(() => {
-            this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
-        }, 100);
+    function toggle() {
+        var opening = !els.widget.classList.contains('show');
+        els.widget.classList.toggle('show', opening);
+        els.fab.classList.toggle('active', opening);
+        if (opening) {
+            els.input.focus();
+            if (!els.messages.childElementCount) {
+                addMessage('assistant',
+                    'Ask me for a run down, a customer\'s tours, or a drill-down ' +
+                    'into any service category.');
+            }
+            loadContext();
+        }
     }
-}
 
-// Initialize AI Chat when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    window.aiChat = new AIChat();
-});
+    function addMessage(role, html) {
+        var wrap = document.createElement('div');
+        wrap.className = 'chat-message ' + (role === 'user' ? 'user' : 'assistant');
+
+        var avatar = document.createElement('div');
+        avatar.className = 'message-avatar';
+        avatar.innerHTML = role === 'user'
+            ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>';
+
+        var bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        bubble.innerHTML = html;
+
+        wrap.appendChild(avatar);
+        wrap.appendChild(bubble);
+        els.messages.appendChild(wrap);
+        els.messages.scrollTop = els.messages.scrollHeight;
+        return bubble;
+    }
+
+    function showTyping() {
+        var wrap = document.createElement('div');
+        wrap.className = 'chat-message assistant typing-indicator';
+        wrap.innerHTML = '<div class="message-avatar"><i class="fas fa-robot"></i></div>' +
+            '<div class="message-bubble"><span class="typing-dot"></span>' +
+            '<span class="typing-dot"></span><span class="typing-dot"></span></div>';
+        els.messages.appendChild(wrap);
+        els.messages.scrollTop = els.messages.scrollHeight;
+        return wrap;
+    }
+
+    /* ---------------------------------------------------------------- */
+    /* Structured renderers -- numbers come from data, never from prose  */
+    /* ---------------------------------------------------------------- */
+
+    function renderSummary(d) {
+        var html = '<div class="booking-card">';
+        html += '<div class="booking-card-header">Run Down &mdash; ' +
+            esc(d.period.label) + ' (' + ddmmyyyy(d.period.date_from) +
+            ' &ndash; ' + ddmmyyyy(d.period.date_to) + ')</div>';
+
+        if (d.urgent) {
+            html += '<div class="booking-card-detail" style="color:#b42318;font-weight:600">' +
+                '<i class="fas fa-triangle-exclamation"></i> Cut-off attention needed: ' +
+                d.flagged.map(function (f) {
+                    return esc(f.label) + ' (' + f.cut_off + ')';
+                }).join(', ') + '</div>';
+        }
+
+        html += '<table style="width:100%;border-collapse:collapse;font-size:12px">' +
+            '<thead><tr>' +
+            ['Category', 'Req', 'Conf', 'Wait', 'Canc', 'Cut-off'].map(function (h) {
+                return '<th style="text-align:left;padding:4px;border-bottom:1px solid #ddd">' + h + '</th>';
+            }).join('') + '</tr></thead><tbody>';
+
+        d.categories.forEach(function (c) {
+            // REQ-3.5: zero-activity categories are shown, not dropped.
+            var dim = c.has_activity ? '' : 'opacity:.55;';
+            var cut = !c.cut_off_applicable
+                ? '<span title="Cut-off does not apply to this category">n/a</span>'
+                : (c.cut_off > 0
+                    ? '<strong style="color:#b42318">' + c.cut_off + '</strong>'
+                    : '0');
+            html += '<tr style="' + dim + '">' +
+                '<td style="padding:4px">' + esc(c.label) +
+                    (c.has_activity ? '' : ' <em style="font-size:11px">no activity</em>') + '</td>' +
+                '<td style="padding:4px">' + c.requested + '</td>' +
+                '<td style="padding:4px">' + c.confirmed + '</td>' +
+                '<td style="padding:4px">' + c.waiting + '</td>' +
+                '<td style="padding:4px">' + c.cancelled + '</td>' +
+                '<td style="padding:4px">' + cut + '</td></tr>';
+        });
+
+        return html + '</tbody></table></div>';
+    }
+
+    function renderDrilldown(d) {
+        var html = '<div class="booking-card">';
+        html += '<div class="booking-card-header">' + esc(d.label) + ' &mdash; ' +
+            esc(d.status_filter) + ' &mdash; ' + esc(d.period.label) + '</div>';
+
+        var bits = [];
+        if (d.city) { bits.push('City: ' + esc(d.city)); }
+        if (d.name_filter) { bits.push('Name: ' + esc(d.name_filter)); }
+        bits.push('Grouped by ' + esc(d.grouped_by));
+        bits.push(d.matched + ' of ' + d.total_in_range + ' in range');
+        html += '<div class="booking-card-detail">' + bits.join(' &middot; ') + '</div>';
+
+        if (!d.groups.length) {
+            return html + '<div class="booking-card-detail"><em>No matching rows.</em></div></div>';
+        }
+
+        d.groups.forEach(function (g) {
+            html += '<div class="service-item"><strong>' + esc(g.label) +
+                '</strong> (' + g.count + ')';
+            html += '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:4px">' +
+                '<thead><tr>' +
+                ['File', 'Date', 'Name', 'Pax', 'Status', 'File Status'].map(function (h) {
+                    return '<th style="text-align:left;padding:3px;border-bottom:1px solid #ddd">' + h + '</th>';
+                }).join('') + '</tr></thead><tbody>';
+            g.rows.forEach(function (r) {
+                // REQ-4.5: Status and File Status stay in separate columns.
+                html += '<tr>' +
+                    '<td style="padding:3px">' + esc(r.request_number) + '</td>' +
+                    '<td style="padding:3px">' + ddmmyyyy(r.date) + '</td>' +
+                    '<td style="padding:3px">' + esc(r.name) + '</td>' +
+                    '<td style="padding:3px">' + esc(r.pax) + '</td>' +
+                    '<td style="padding:3px">' + esc(r.status) + '</td>' +
+                    '<td style="padding:3px">' + esc(r.file_status) + '</td></tr>';
+            });
+            html += '</tbody></table></div>';
+        });
+
+        return html + '</div>';
+    }
+
+    function renderCustomers(d) {
+        if (!d.customers.length) {
+            return '<div class="booking-card"><div class="booking-card-detail">' +
+                'No customer matches &ldquo;' + esc(d.query) + '&rdquo;.</div></div>';
+        }
+        var html = '<div class="booking-card"><div class="booking-card-header">' +
+            d.count + ' customer' + (d.count === 1 ? '' : 's') + ' matching &ldquo;' +
+            esc(d.query) + '&rdquo;</div>';
+        d.customers.forEach(function (c) {
+            html += '<button type="button" class="service-item js-pick-customer" ' +
+                'data-customer-id="' + esc(c.id) + '" data-customer-name="' + esc(c.name) + '" ' +
+                'style="display:block;width:100%;text-align:left;cursor:pointer;border:0;background:none">' +
+                '<strong>' + esc(c.name) + '</strong>' +
+                (c.company_name ? ' &middot; ' + esc(c.company_name) : '') +
+                (c.email ? '<br><small>' + esc(c.email) + '</small>' : '') +
+                '</button>';
+        });
+        return html + '</div>';
+    }
+
+    function renderTours(d) {
+        if (!d.tours.length) {
+            return '<div class="booking-card"><div class="booking-card-detail">' +
+                'No inbound tours for &ldquo;' + esc(d.customer_name) + '&rdquo;.</div></div>';
+        }
+
+        var html = '<div class="booking-card"><div class="booking-card-header">' +
+            d.count + ' inbound tour' + (d.count === 1 ? '' : 's') + ' for ' +
+            esc(d.customer_name) +
+            (d.truncated ? ' (showing ' + d.returned + ')' : '') + '</div>';
+
+        var bits = [];
+        if (d.span && d.span.date_from) {
+            bits.push('Travelling ' + ddmmyyyy(d.span.date_from) +
+                ' &ndash; ' + ddmmyyyy(d.span.date_to));
+        }
+        bits.push('Grouped by ' + esc(d.grouped_by || 'status'));
+        html += '<div class="booking-card-detail">' + bits.join(' &middot; ') + '</div>';
+
+        // Same shape as a Run Down drill-down: a headed section per group,
+        // each with its own row table.
+        (d.groups || []).forEach(function (g) {
+            html += '<div class="service-item"><strong>' + esc(g.label) +
+                '</strong> (' + g.count + ')';
+            html += '<table><thead><tr>' +
+                ['File', 'Dates', 'Days', 'Pax'].map(function (h) {
+                    return '<th style="text-align:left;padding:3px;border-bottom:1px solid #ddd">' +
+                        h + '</th>';
+                }).join('') + '</tr></thead><tbody>';
+            g.rows.forEach(function (r) {
+                html += '<tr>' +
+                    '<td style="padding:3px"><a href="' + esc(r.url) + '">' +
+                        esc(r.request_number) + '</a></td>' +
+                    '<td style="padding:3px">' + ddmmyyyy(r.from_date) + ' &ndash; ' +
+                        ddmmyyyy(r.to_date) + '</td>' +
+                    '<td style="padding:3px">' + esc(r.no_of_days) + '</td>' +
+                    '<td style="padding:3px">' + esc(r.pax) + '</td></tr>';
+            });
+            html += '</tbody></table></div>';
+        });
+
+        if (d.list_url) {
+            html += '<a class="chat-suggestion" style="display:inline-block;' +
+                'margin-top:6px" href="' + esc(d.list_url) + '">' +
+                'Open the file list</a>';
+        }
+        return html + '</div>';
+    }
+
+    var RENDERERS = {
+        run_down_summary: renderSummary,
+        run_down_drilldown: renderDrilldown,
+        search_customers: renderCustomers,
+        find_inbound_tours: renderTours
+    };
+
+    function renderResults(bubble, toolResults) {
+        (toolResults || []).forEach(function (item) {
+            var result = item.result || {};
+            var render = RENDERERS[item.tool];
+            if (!render) { return; }
+            if (!result.ok) {
+                var box = document.createElement('div');
+                box.className = 'booking-card-detail';
+                box.style.color = '#b42318';
+                box.textContent = result.error || 'That lookup failed.';
+                if (result.hint) { box.textContent += ' ' + result.hint; }
+                bubble.appendChild(box);
+                return;
+            }
+            var holder = document.createElement('div');
+            holder.innerHTML = render(result);
+            bubble.appendChild(holder);
+        });
+    }
+
+    function addNavigation(bubble, url) {
+        if (!url) { return; }
+        var link = document.createElement('a');
+        link.href = url;
+        link.className = 'chat-suggestion';
+        link.style.display = 'inline-block';
+        link.style.marginTop = '6px';
+        // Name the destination -- "Open this page" is wrong when the reply was
+        // about tours and the link goes to the Run Down.
+        var where = url.indexOf('/run-down') > -1 ? 'Run Down' : 'the file list';
+        link.innerHTML = '<i class="fas fa-arrow-up-right-from-square"></i> Open ' + where;
+        bubble.appendChild(link);
+    }
+
+    /* ---------------------------------------------------------------- */
+
+    function loadContext() {
+        fetch(CONTEXT_ENDPOINT, { credentials: 'same-origin' })
+            .then(function (r) { return r.json(); })
+            .then(function (d) { selectedCustomer = d.selected_customer || null; })
+            .catch(function () { /* context is a nicety, not required */ });
+    }
+
+    function pickCustomer(id, name) {
+        fetch(CUSTOMER_ENDPOINT, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
+            body: JSON.stringify({ customer: { id: id, name: name } })
+        }).then(function (r) { return r.json(); }).then(function (d) {
+            selectedCustomer = d.selected_customer || null;
+            addMessage('assistant', 'Selected <strong>' + esc(name) +
+                '</strong>. Ask about their tours, or say "show their inbound tours".');
+        }).catch(function () {
+            addMessage('assistant', 'Could not select that customer.');
+        });
+    }
+
+    function submit() {
+        var text = (els.input.value || '').trim();
+        if (!text || busy) { return; }
+
+        busy = true;
+        els.suggestions.style.display = 'none';
+        els.input.value = '';
+        els.send.disabled = true;
+        addMessage('user', esc(text));
+        var typing = showTyping();
+
+        fetch(ENDPOINT, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
+            body: JSON.stringify({
+                message: text,
+                history: history.slice(-8),
+                session_key: sessionKey
+            })
+        }).then(function (r) {
+            return r.json().then(function (body) { return { status: r.status, body: body }; });
+        }).then(function (res) {
+            typing.remove();
+            var d = res.body || {};
+            var bubble = addMessage('assistant', miniMarkdown(
+                d.reply || d.error || 'No answer came back.'));
+            renderResults(bubble, d.tool_results);
+            addNavigation(bubble, d.navigate_url);
+            if (d.selected_customer !== undefined) {
+                selectedCustomer = d.selected_customer;
+            }
+            history.push({ role: 'user', content: text });
+            if (d.reply) { history.push({ role: 'assistant', content: d.reply }); }
+            els.messages.scrollTop = els.messages.scrollHeight;
+        }).catch(function (err) {
+            typing.remove();
+            addMessage('assistant', 'Could not reach the assistant: ' + esc(err.message));
+        }).then(function () {
+            busy = false;
+            els.send.disabled = false;
+            els.input.focus();
+        });
+    }
+
+    function init() {
+        build();
+        els.messages.addEventListener('click', function (e) {
+            var btn = e.target.closest('.js-pick-customer');
+            if (btn) {
+                pickCustomer(btn.getAttribute('data-customer-id'),
+                             btn.getAttribute('data-customer-name'));
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();

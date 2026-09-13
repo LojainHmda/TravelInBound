@@ -24,6 +24,7 @@ from app.models.supplier import Supplier, SupplierService, SupplierPayment, Supp
 from app.models.customer import Customer, CustomerDocument
 from app.models.service import ServiceConfirmation, ServiceItem, Document
 from app.models.oauth import OAuth  # Add OAuth model
+from app.models.assistant_log import AssistantChatLog
 
 # Import finance models
 from app.models.finance import (
