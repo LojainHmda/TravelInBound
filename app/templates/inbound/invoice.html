@@ -149,7 +149,7 @@ body.invoice-bank-editing .invoice-bank-editable {
 {% endblock %}
 
 {% block content %}
-{% set bank_scope = 'proforma' if is_proforma else 'invoice' %}
+{% set bank_scope = 'invoice' %}
 {% macro bank_field(scope, key, value, text_dir='') -%}
 <span class="invoice-bank-editable" data-save-key="bank__{{ scope }}__{{ key }}" data-bank-default="{{ value }}" contenteditable="false"{% if text_dir %} dir="{{ text_dir }}"{% endif %}>{{ value }}</span>
 {%- endmacro %}
