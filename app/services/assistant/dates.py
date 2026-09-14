@@ -101,6 +101,111 @@ def _resolve_month(word):
     return _MONTHS[close[0]] if close else None
 
 
+
+# Arabic-Indic and Eastern Arabic-Indic digits, so "شهر ٧" reads the same as
+# "شهر 7".
+_ARABIC_DIGITS = {ord(c): str(i % 10) for i, c in enumerate(
+    '٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹')}
+
+# Letters that vary by keyboard and habit rather than by meaning: hamza forms
+# all collapse to bare alif, ta marbuta to ha, alif maqsura to ya. Without this
+# "أيلول" and "ايلول" would be two different months.
+_ARABIC_FOLD = {
+    ord('أ'): 'ا', ord('إ'): 'ا', ord('آ'): 'ا', ord('ٱ'): 'ا',
+    ord('ة'): 'ه', ord('ى'): 'ي', ord('ؤ'): 'و', ord('ئ'): 'ي',
+    ord('ـ'): '',
+}
+_ARABIC_FOLD.update({c: '' for c in range(0x064B, 0x0653)})   # tashkeel
+
+# Both naming systems are in daily use here: the Levantine names (تموز, آب,
+# أيلول) and the transliterated Gregorian ones (يوليو, أغسطس, سبتمبر).
+# Keys are stored already folded by _fold_arabic.
+_ARABIC_MONTH_SOURCE = {
+    1: ['كانون الثاني', 'كانون ثاني', 'كانونالثاني', 'يناير'],
+    2: ['شباط', 'فبراير'],
+    3: ['آذار', 'اذار', 'مارس'],
+    4: ['نيسان', 'أبريل', 'ابريل'],
+    5: ['أيار', 'ايار', 'مايو'],
+    6: ['حزيران', 'يونيو', 'يونيه'],
+    7: ['تموز', 'يوليو', 'يوليه'],
+    8: ['آب', 'اب', 'أغسطس', 'اغسطس'],
+    9: ['أيلول', 'ايلول', 'سبتمبر'],
+    10: ['تشرين الأول', 'تشرين اول', 'أكتوبر', 'اكتوبر'],
+    11: ['تشرين الثاني', 'تشرين ثاني', 'نوفمبر'],
+    12: ['كانون الأول', 'كانون اول', 'ديسمبر'],
+}
+
+# "شهر" is simply the word "month"; it prefixes both a number and a name.
+_MONTH_WORDS = ('شهر', 'month', 'mth')
+
+
+def _fold_arabic(value):
+    """Normalise the spellings that differ by keyboard rather than by meaning."""
+    return ' '.join(value.translate(_ARABIC_FOLD).split())
+
+
+_ARABIC_MONTHS = {}
+for _num, _names in _ARABIC_MONTH_SOURCE.items():
+    for _name in _names:
+        _ARABIC_MONTHS[_fold_arabic(_name)] = _num
+
+
+def _month_year_range(month, year, today):
+    """One whole calendar month, defaulting to the current year."""
+    if not 1 <= month <= 12:
+        return None
+    anchor = date(year if year else today.year, month, 1)
+    s, e = _month_bounds(anchor)
+    return DateRange(s, e, f'{anchor:%B %Y}')
+
+
+def _resolve_month_year(text, today):
+    """Numeric and Arabic month forms.
+
+    Covers "7/2026", "07/2026", "2026-07", "072026", "7 2026", "month 7",
+    "شهر 7" and every Arabic month name in both naming systems, with or
+    without a year.
+
+    A bare 1-12 beside a four-digit year is always month/year, never day/month:
+    a day needs a month beside it, so "7/2026" can only be July. Full dates are
+    parsed before this is reached, so DD/MM/YYYY is unaffected.
+    """
+    folded = _fold_arabic(text)
+
+    # Strip a leading "month"/"شهر" so the rest can be a number or a name.
+    for word in _MONTH_WORDS:
+        if folded.startswith(word + ' '):
+            folded = folded[len(word) + 1:].strip()
+            break
+
+    # Arabic month name, optionally followed by a year.
+    m = re.fullmatch(r'(.+?)(?:\s+(\d{4}))?', folded)
+    if m and m.group(1) in _ARABIC_MONTHS:
+        return _month_year_range(_ARABIC_MONTHS[m.group(1)],
+                                 int(m.group(2)) if m.group(2) else None, today)
+
+    # month then year: 7/2026, 07-2026, 7.2026, 7 2026
+    m = re.fullmatch(r'(\d{1,2})\s*[/\-. ]\s*(\d{4})', folded)
+    if m:
+        return _month_year_range(int(m.group(1)), int(m.group(2)), today)
+
+    # year then month: 2026-07, 2026/7
+    m = re.fullmatch(r'(\d{4})\s*[/\-.]\s*(\d{1,2})', folded)
+    if m:
+        return _month_year_range(int(m.group(2)), int(m.group(1)), today)
+
+    # no separator at all: 072026
+    m = re.fullmatch(r'(\d{2})(\d{4})', folded)
+    if m:
+        return _month_year_range(int(m.group(1)), int(m.group(2)), today)
+
+    # a bare number, only once a month word made the intent explicit
+    if folded.isdigit() and len(folded) <= 2 and folded != text.strip():
+        return _month_year_range(int(folded), None, today)
+
+    return None
+
+
 def _parse_explicit(text):
     text = text.strip()
     for fmt in _EXPLICIT_FORMATS:
@@ -149,6 +254,9 @@ def resolve_date_range(phrase, today=None):
 
     text = ' '.join(str(phrase).lower().split())
     text = text.replace('&', ' and ').strip(' ?.!')
+    # Arabic-Indic digits become ASCII before any pattern is tried, so every
+    # numeric rule below sees one alphabet rather than two.
+    text = text.translate(_ARABIC_DIGITS)
 
     # --- explicit ranges: "01/03/2026 to 15/03/2026", "2026-03-01..2026-03-15"
     range_sep = re.split(r'\s+(?:to|until|till|through|thru)\s+|\.\.|\s+-\s+', text, maxsplit=1)
@@ -214,6 +322,12 @@ def resolve_date_range(phrase, today=None):
         if forward:
             return DateRange(today, _shift_months(today, n), f'next {n} months')
         return DateRange(_shift_months(today, -n), today, f'last {n} months')
+
+    # Numeric and Arabic month forms. Placed after the full-date parse above,
+    # so a real DD/MM/YYYY still wins, and before the English name rule.
+    numeric = _resolve_month_year(text, today)
+    if numeric:
+        return numeric
 
     # "may", "may 2026", "march 2027" -> that whole calendar month. A bare
     # month always means the current year, read at runtime: pushing a past

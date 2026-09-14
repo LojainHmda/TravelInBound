@@ -346,11 +346,128 @@
         return html + '</div>';
     }
 
+    // Shared: one file as a row of File / Agent / Dates / Status. The file
+    // number is a link -- every result the assistant shows should open.
+    function fileRowsTable(files) {
+        var html = '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:4px">' +
+            '<thead><tr>' +
+            ['File', 'Agent', 'Travel dates', 'Status'].map(function (h) {
+                return '<th style="text-align:left;padding:3px;border-bottom:1px solid #ddd">' +
+                    h + '</th>';
+            }).join('') + '</tr></thead><tbody>';
+        files.forEach(function (f) {
+            html += '<tr>' +
+                '<td style="padding:3px"><a href="' + esc(f.url) + '">' +
+                    esc(f.request_number) + '</a></td>' +
+                '<td style="padding:3px">' + esc(f.agent || 'TBA') + '</td>' +
+                '<td style="padding:3px">' + ddmmyyyy(f.from_date) + ' &ndash; ' +
+                    ddmmyyyy(f.to_date) + '</td>' +
+                '<td style="padding:3px">' + esc(f.status) + '</td></tr>';
+        });
+        return html + '</tbody></table>';
+    }
+
+    function renderFileList(d) {
+        var bits = ['Period: ' + esc(d.period.label)];
+        if (d.agent_filter) { bits.push('Agent: ' + esc(d.agent_filter)); }
+        if (d.status_filter && d.status_filter !== 'all') {
+            bits.push('Status: ' + esc(d.status_filter));
+        }
+        if (d.deleted) { bits.push('Deleted files'); }
+
+        var html = '<div class="booking-card"><div class="booking-card-header">' +
+            d.count + ' file' + (d.count === 1 ? '' : 's') +
+            (d.truncated ? ' (showing ' + d.returned + ')' : '') + '</div>' +
+            '<div class="booking-card-detail">' + bits.join(' &middot; ') + '</div>';
+
+        if (!d.files.length) {
+            return html + '<div class="booking-card-detail"><em>No files in that period.</em>' +
+                '</div></div>';
+        }
+        return html + fileRowsTable(d.files) + '</div>';
+    }
+
+    function renderFileLookup(d) {
+        if (!d.files.length) {
+            return '<div class="booking-card"><div class="booking-card-detail">' +
+                'No file numbered &ldquo;' + esc(d.query) + '&rdquo; in ' +
+                esc(d.searched_scope) + '.</div></div>';
+        }
+        var html = '<div class="booking-card"><div class="booking-card-header">' +
+            (d.count === 1
+                ? 'File ' + esc(d.files[0].request_number)
+                : d.count + ' files matching &ldquo;' + esc(d.query) + '&rdquo;') +
+            '</div>';
+        if (!d.exact) {
+            html += '<div class="booking-card-detail">No exact match for &ldquo;' +
+                esc(d.query) + '&rdquo; &middot; showing partial matches</div>';
+        }
+        return html + fileRowsTable(d.files) + '</div>';
+    }
+
+    function renderCustomerList(d) {
+        var html = '<div class="booking-card"><div class="booking-card-header">' +
+            d.count + ' customer' + (d.count === 1 ? '' : 's') + ' &mdash; ' +
+            esc(d.period.label) +
+            (d.truncated ? ' (showing ' + d.returned + ')' : '') + '</div>' +
+            '<div class="booking-card-detail">' + d.total_files +
+            ' file' + (d.total_files === 1 ? '' : 's') + ' in the period</div>';
+
+        if (!d.customers.length) {
+            return html + '<div class="booking-card-detail"><em>Nobody travelling ' +
+                'in that period.</em></div></div>';
+        }
+        html += '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:4px">' +
+            '<thead><tr>' +
+            ['Customer', 'Files'].map(function (h) {
+                return '<th style="text-align:left;padding:3px;border-bottom:1px solid #ddd">' +
+                    h + '</th>';
+            }).join('') + '</tr></thead><tbody>';
+        d.customers.forEach(function (c) {
+            html += '<tr>' +
+                '<td style="padding:3px"><a href="' + esc(c.url) + '">' +
+                    esc(c.name) + '</a></td>' +
+                '<td style="padding:3px">' + c.files + '</td></tr>';
+        });
+        return html + '</tbody></table></div>';
+    }
+
+    function renderSuppliers(d) {
+        if (!d.suppliers.length) {
+            return '<div class="booking-card"><div class="booking-card-detail">' +
+                'No supplier matching &ldquo;' + esc(d.query) + '&rdquo; in ' +
+                esc(d.searched_scope) + '.</div></div>';
+        }
+        var html = '<div class="booking-card"><div class="booking-card-header">' +
+            d.count + ' supplier' + (d.count === 1 ? '' : 's') +
+            (d.query ? ' matching &ldquo;' + esc(d.query) + '&rdquo;' : '') +
+            (d.truncated ? ' (showing ' + d.returned + ')' : '') + '</div>';
+        html += '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:4px">' +
+            '<thead><tr>' +
+            ['Name', 'Type', 'City', 'Phone'].map(function (h) {
+                return '<th style="text-align:left;padding:3px;border-bottom:1px solid #ddd">' +
+                    h + '</th>';
+            }).join('') + '</tr></thead><tbody>';
+        d.suppliers.forEach(function (s) {
+            html += '<tr>' +
+                '<td style="padding:3px"><a href="' + esc(s.url) + '">' +
+                    esc(s.name) + '</a></td>' +
+                '<td style="padding:3px">' + esc(s.type_label || s.type) + '</td>' +
+                '<td style="padding:3px">' + esc(s.city) + '</td>' +
+                '<td style="padding:3px">' + esc(s.phone) + '</td></tr>';
+        });
+        return html + '</tbody></table></div>';
+    }
+
     var RENDERERS = {
         run_down_summary: renderSummary,
         run_down_drilldown: renderDrilldown,
         search_customers: renderCustomers,
-        find_inbound_tours: renderTours
+        find_inbound_tours: renderTours,
+        list_inbound_files: renderFileList,
+        list_customers: renderCustomerList,
+        find_file_by_number: renderFileLookup,
+        search_suppliers: renderSuppliers
     };
 
     function renderResults(bubble, toolResults) {
@@ -382,7 +499,11 @@
         link.style.marginTop = '6px';
         // Name the destination -- "Open this page" is wrong when the reply was
         // about tours and the link goes to the Run Down.
-        var where = url.indexOf('/run-down') > -1 ? 'Run Down' : 'the file list';
+        var where = 'the file list';
+        if (url.indexOf('/run-down') > -1) { where = 'Run Down'; }
+        else if (url.indexOf('/finance/supplier/') > -1) { where = 'the supplier'; }
+        else if (/\/inbound\/\d+\/view/.test(url)) { where = 'the file'; }
+        else if (url.indexOf('/customers/') > -1) { where = 'the customer'; }
         link.innerHTML = '<i class="fas fa-arrow-up-right-from-square"></i> Open ' + where;
         bubble.appendChild(link);
     }

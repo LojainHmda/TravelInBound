@@ -170,6 +170,133 @@ TOOL_SCHEMAS = [
             },
         },
     },
+    {
+        'type': 'function',
+        'function': {
+            'name': 'list_inbound_files',
+            'description': (
+                'List inbound tour FILES in a period -- for everyone, or for '
+                'one agent. Use for "all files in September", "all bookings in '
+                'June", "the requested files this month". This is the right '
+                'tool whenever no customer was named. It returns file number, '
+                'agent, travel dates and status. Do NOT use run_down_summary '
+                'for a request for files: that returns service counts, which '
+                'is a different question.'
+            ),
+            'parameters': {
+                'type': 'object',
+                'properties': {
+                    'date_phrase': {
+                        'type': 'string',
+                        'description': (
+                            'Period exactly as the user said it. Required - if '
+                            'they named no period, call this anyway without it '
+                            'and the tool will ask them which period.'
+                        ),
+                    },
+                    'agent': {
+                        'type': 'string',
+                        'description': (
+                            'Agent or customer name, only if the user named '
+                            'one. Omit for "all files".'
+                        ),
+                    },
+                    'status': {
+                        'type': 'string',
+                        'enum': ['request', 'confirmed', 'invoiced', 'all'],
+                        'description': (
+                            'FILE status, passed ONLY when the user names one. '
+                            'Omit and every status is returned.'
+                        ),
+                    },
+                    'deleted': {
+                        'type': 'boolean',
+                        'description': (
+                            'True ONLY when the user explicitly asks for '
+                            'deleted or trashed files. They are excluded '
+                            'otherwise.'
+                        ),
+                    },
+                },
+            },
+        },
+    },
+    {
+        'type': 'function',
+        'function': {
+            'name': 'list_customers',
+            'description': (
+                'List the customers who have at least one file travelling in a '
+                'period. Use for "all customers I dealt with in September", '
+                '"which agents have files this month".'
+            ),
+            'parameters': {
+                'type': 'object',
+                'properties': {
+                    'date_phrase': {
+                        'type': 'string',
+                        'description': (
+                            'Period exactly as the user said it. Call without '
+                            'it if they named none and the tool will ask.'
+                        ),
+                    },
+                },
+            },
+        },
+    },
+    {
+        'type': 'function',
+        'function': {
+            'name': 'find_file_by_number',
+            'description': (
+                'Look up ONE file by its file number, e.g. "show me file '
+                '2608015", "open 2609002". Searches every file in the system. '
+                'ALWAYS use this for a bare file number - never search a '
+                "customer's files for it, even when a customer is selected."
+            ),
+            'parameters': {
+                'type': 'object',
+                'properties': {
+                    'number': {
+                        'type': 'string',
+                        'description': 'The file number as the user typed it.',
+                    },
+                },
+                'required': ['number'],
+            },
+        },
+    },
+    {
+        'type': 'function',
+        'function': {
+            'name': 'search_suppliers',
+            'description': (
+                'Find SUPPLIERS by name and/or type: guides, hotels, '
+                'restaurants, transport companies, Meet & Assist providers and '
+                'airlines. Use this -- never search_customers -- when the user '
+                'names a guide, hotel, restaurant, transport company or '
+                'airline. A guide is not a customer.'
+            ),
+            'parameters': {
+                'type': 'object',
+                'properties': {
+                    'name': {
+                        'type': 'string',
+                        'description': 'Supplier name or part of it.',
+                    },
+                    'supplier_type': {
+                        'type': 'string',
+                        'enum': ['guides', 'accommodation', 'transportation',
+                                 'restaurant', 'meet-assist', 'airline', 'others'],
+                        'description': (
+                            'Narrow to one type when the user said which, e.g. '
+                            '"guide Sami" means supplier_type="guides".'
+                        ),
+                    },
+                },
+            },
+        },
+    },
 ]
 
 _DISPATCH = {
@@ -181,6 +308,20 @@ _DISPATCH = {
         latest=bool(a.get('latest')),
     ),
     'run_down_summary': lambda a: tools.run_down_summary(a.get('date_phrase')),
+    'list_inbound_files': lambda a: tools.list_inbound_files(
+        date_phrase=a.get('date_phrase'),
+        agent=a.get('agent'),
+        status=a.get('status'),
+        deleted=bool(a.get('deleted')),
+    ),
+    'list_customers': lambda a: tools.list_customers(
+        date_phrase=a.get('date_phrase'),
+    ),
+    'find_file_by_number': lambda a: tools.find_file_by_number(a.get('number', '')),
+    'search_suppliers': lambda a: tools.search_suppliers(
+        name=a.get('name'),
+        supplier_type=a.get('supplier_type'),
+    ),
     'run_down_drilldown': lambda a: tools.run_down_drilldown(
         a.get('category', ''),
         status=a.get('status') or 'all',
@@ -231,6 +372,20 @@ def _system_prompt():
         'the same: give the split exactly as the data has it, or say nothing '
         'about the distribution and let the table show it.',
         '- When several customers match, list them and ask which one.',
+        '- Guides, hotels, restaurants, transport companies and airlines '
+        'are SUPPLIERS, not customers. Use search_suppliers for them. '
+        'Never report a guide as missing because the customer search '
+        'found nothing.',
+        '- A bare file number is its own question. Look it up with '
+        'find_file_by_number, across the whole system, even when a '
+        'customer is selected. Never narrow it to that customer.',
+        '- Never say something does not exist unless the tool that looked '
+        'for it searched everywhere. When a result carries '
+        '"searched_scope", say what was searched: "it is not among '
+        'Black Tomato\'s files" is true, "there is no such file" is not.',
+        '- A request for FILES is not a request for the Run Down. Use '
+        'list_inbound_files for files and run_down_summary only when the '
+        'user asks for the run down or for service counts.',
         '- NEVER output a table, and never list every row. The interface '
         'renders the tool data as a real table directly beneath your reply, so '
         'a table in your text is duplicated and renders as raw pipes.',
@@ -239,6 +394,13 @@ def _system_prompt():
         'table carry the per-row numbers.',
         '- NEVER write a URL, link or markdown link. The interface renders the '
         'navigation link itself; any address you write would be invented.',
+        '- The navigation link does not always carry the filters you were asked '
+        'about. If a result has "list_url_period_applied": false, the page it '
+        'opens is NOT filtered to the period -- say so plainly in your reply. '
+        'If a result carries "list_url_note", tell the user what it says. '
+        'Never let them believe the page is narrowed when it is not: a link '
+        'that silently shows a different set of files than the count beside '
+        'it is worse than no link.',
         '- When a tool returns a count, state the number ("90 files"), never a '
         'vague quantity like "a large number". If "truncated" is true, say the '
         'total and that only the most recent are shown.',
@@ -247,7 +409,12 @@ def _system_prompt():
         lines += [
             '',
             'The user has selected customer "%s"%s. Use this customer for '
-            'follow-up questions that do not name another one.'
+            'follow-up questions that do not name another one, and SAY SO '
+            'in your reply whenever you do ("for Black Tomato") -- a '
+            'narrowed answer that does not admit it was narrowed reads as '
+            'a complete one. Never apply it to a bare file number, and '
+            'never to a request that names no customer such as "all files '
+            'in September".'
             % (selected.get('name', ''),
                ' (id %s)' % selected['id'] if selected.get('id') else ''),
         ]

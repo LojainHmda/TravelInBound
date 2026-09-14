@@ -3,8 +3,11 @@
     position: fixed;
     bottom: 100px;
     right: 30px;
-    width: 350px;
-    height: 500px;
+    /* Wide enough for a four-column result table without squeezing the
+       Status column, and clamped to the viewport so it still fits a small
+       screen. */
+    width: min(620px, calc(100vw - 60px));
+    height: min(640px, calc(100vh - 170px));
     background: white;
     border-radius: 15px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
@@ -292,10 +295,12 @@
 /* Mobile responsive */
 @media (max-width: 768px) {
     .ai-chat-widget {
-        width: 300px;
-        height: 400px;
-        bottom: 100px;
-        right: 20px;
+        /* Nearly the full width on a phone: a fixed 300px cannot hold the
+           table, and the card scrolls sideways inside it either way. */
+        width: calc(100vw - 32px);
+        height: min(70vh, 520px);
+        bottom: 90px;
+        right: 16px;
     }
     
     .ai-chat-fab {
@@ -332,7 +337,11 @@
 /* Phase 1 assistant: result tables are wider than the widget, so each one
    scrolls inside its own card instead of stretching the chat column. */
 .ai-chat-messages .message-bubble table {
-    width: 100%;
+    /* auto + min-width lets a wide table overflow its card and scroll.
+       width:100% forced it to compress instead, which is what squeezed
+       the Status column. */
+    width: auto;
+    min-width: 100%;
     border-collapse: collapse;
     font-size: 12px;
 }
