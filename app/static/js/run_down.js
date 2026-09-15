@@ -3980,6 +3980,34 @@
 
     // Initialize cut-off section
     initCutOffSection();
+
+    openCutOffFromUrl();
+  }
+
+  /** ?cut_off=<service> -- open and scroll to that service's cut-off table.
+   *
+   *  Goes through showCutOffTable, the same function a card click calls, so
+   *  arriving by link and arriving by click cannot drift apart. An unknown or
+   *  absent service is ignored: the page then behaves exactly as before.
+   */
+  function openCutOffFromUrl() {
+    var service;
+    try {
+      service = new URLSearchParams(window.location.search).get('cut_off');
+    } catch (e) {
+      return;
+    }
+    if (!service) return;
+
+    service = String(service).trim().toLowerCase();
+    var card = Object.keys(CUT_OFF_SERVICES).find(function (k) {
+      return CUT_OFF_SERVICES[k].service === service;
+    });
+    if (!card) return;
+
+    // After the stat cards have landed, so the table is not opened against a
+    // half-loaded page and the scroll lands where the content finally sits.
+    setTimeout(function () { showCutOffTable(card); }, 0);
   }
 
   if (document.readyState === 'loading') {

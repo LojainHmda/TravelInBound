@@ -18,7 +18,7 @@ from .dates import MissingPeriod, UnknownDatePhrase, resolve_date_range
 __all__ = [
     'CATEGORIES', 'STATUS_CHOICES', 'FILE_STATUS_CHOICES',
     'search_customers', 'find_inbound_tours',
-    'run_down_summary', 'run_down_drilldown',
+    'run_down_summary', 'run_down_drilldown', 'run_down_cut_off',
     'list_inbound_files', 'find_file_by_number', 'search_suppliers',
     'list_customers',
 ]
@@ -76,6 +76,12 @@ STATUS_CHOICES = {
     'cancelled': 'CANCELLED',
     'all': 'ALL',
 }
+
+# The categories that have a cut-off at all, derived from CATEGORIES rather
+# than restated: Guides and Meet & Assist have no cut_off_date column, and a
+# second hand-written list of the other three would be free to drift from it.
+CUT_OFF_CATEGORIES = tuple(k for k, c in CATEGORIES.items() if c['cut_off'])
+
 
 _CATEGORY_ALIASES = {
     'hotel': 'accommodation', 'hotels': 'accommodation',
@@ -223,6 +229,64 @@ def _file_list_link(params, period=None, page_includes_deleted=False):
         'list_url_period_applied': bool(period is None or period_exact),
         'list_url_note': ' '.join(notes) or None,
     }
+
+
+# Relative-period words in the three scripts the assistant is asked in. Only
+# ever used to answer "was a period mentioned at all", never to resolve one.
+_PERIOD_WORDS = (
+    'today', 'tonight', 'tomorrow', 'yesterday', 'week', 'month', 'year',
+    'quarter', 'season', 'now', 'current', 'next', 'last', 'coming', 'past',
+    'recent', 'upcoming', 'previous', 'this', 'ytd',
+    # Latin-script Arabic
+    'shahr', 'shaher', 'esboo', 'usbu', 'sana', 'yom', 'bukra', 'bokra',
+    'embare', 'jay', 'jaye', 'madi',
+    # Arabic script
+    '\u0627\u0644\u064a\u0648\u0645', '\u0628\u0643\u0631\u0627',
+    '\u063a\u062f\u0627', '\u0627\u0645\u0633',
+    '\u0627\u0633\u0628\u0648\u0639', '\u0634\u0647\u0631',
+    '\u0633\u0646\u0629', '\u0645\u0648\u0633\u0645',
+    '\u0627\u0644\u0642\u0627\u062f\u0645',
+    '\u0627\u0644\u0645\u0627\u0636\u064a',
+    '\u0627\u0644\u062c\u0627\u064a', '\u0647\u0627\u0644',
+)
+
+
+def _period_mentioned(text):
+    """Did this message mention a period AT ALL?
+
+    Answers "is there anything date-shaped here", never "which period is it".
+    Deliberately lopsided: a false yes only lets the period through exactly as
+    before, while a false no would refuse a question the user really did ask,
+    so anything remotely date-like counts as yes.
+
+    It exists to catch a period the MODEL supplied that the user did not --
+    carried over from an earlier turn. An inherited period answers a different
+    question than the one asked, and reads exactly as confident as a correct
+    one, which is what makes it worth refusing rather than guessing at.
+    """
+    from .dates import _ARABIC_DIGITS, _ARABIC_MONTHS, _MONTHS, _fold_arabic
+
+    if not text:
+        # Nothing to check against: let the caller through rather than block.
+        return True
+
+    raw = str(text)
+    if any(ch.isdigit() for ch in raw):
+        return True
+    if any(ord(ch) in _ARABIC_DIGITS for ch in raw):
+        return True
+
+    lowered = raw.lower()
+    if any(word in lowered for word in _PERIOD_WORDS):
+        return True
+    if any(name in lowered for name in _MONTHS):
+        return True
+
+    folded = _fold_arabic(raw)
+    if any(name in folded for name in _ARABIC_MONTHS):
+        return True
+
+    return False
 
 
 def _ask_for_period():
@@ -680,6 +744,163 @@ def run_down_drilldown(category, status='all', date_phrase=None,
             for lbl in order
         ],
         'navigate_url': url_for('inbound.run_down_plan') + '?' + urlencode(params),
+    }
+
+
+# --------------------------------------------------------------------------
+# Cut-off -- deadlines that fall inside the period
+# --------------------------------------------------------------------------
+
+def run_down_cut_off(date_phrase=None, date_from=None, date_to=None,
+                     category=None, files_only=False, limit=200,
+                     asked_in=None):
+    """Services whose cut-off DEADLINE falls inside the period.
+
+    Selected on ``cut_off_date``, never on the service date. A cut-off is a
+    deadline to act before, so a hotel checking in on 2 October with a 28
+    September deadline belongs to September. That is also the only selection
+    that can agree with the Run Down card: this reads the very rows that
+    page's cut-off table reads, through ``run_down_cut_off_data``, instead of
+    re-deriving them from a section query keyed on the service date. The
+    section queries filter on check-in/service date, so filtering their rows
+    for a cut-off would answer a different question and return a different
+    set -- which is exactly how the summary and the drill-down came to
+    contradict each other.
+
+    Cut-off exists only for Accommodation, Transportation and Restaurant.
+    Guides and Meet & Assist have no ``cut_off_date`` column at all, so asking
+    for their cut-offs is answered as "does not apply", never as "none":
+    reporting zero would state an absence the data cannot establish.
+    """
+    key, cfg = None, None
+    if category:
+        key, cfg = _resolve_category(category)
+        if not cfg:
+            return {
+                'ok': False,
+                'error': 'Unknown category "%s".' % (category,),
+                'valid': sorted(CATEGORIES),
+            }
+        if not cfg['cut_off']:
+            return {
+                'ok': False,
+                'error': '%s has no cut-off at all.' % (cfg['label'],),
+                # Not a count of zero. The caller must say the category has no
+                # cut-off concept, and must not report it as having none due.
+                'not_applicable': True,
+                'category': key,
+                'label': cfg['label'],
+                'cut_off_categories': [CATEGORIES[k]['label']
+                                       for k in CUT_OFF_CATEGORIES],
+            }
+
+    # A period the user did not give in THIS message is not a period they
+    # gave. Answering September because September was the last question is
+    # silent context inheritance: the answer looks exactly as authoritative
+    # as a correct one, and "no restaurant cut-offs" is then true of a month
+    # nobody asked about.
+    if date_phrase and asked_in is not None and not _period_mentioned(asked_in):
+        return {
+            'ok': False,
+            'error': 'Which period should I look at?',
+            'needs_period': True,
+            'inherited_period_blocked': True,
+            'attempted_period': date_phrase,
+            'hint': 'They named no period in this message, so the period was '
+                    'not carried over from the previous one. Ask which month '
+                    'or date range they mean -- do not answer for "%s".'
+                    % (date_phrase,),
+        }
+
+    try:
+        period = _range_from(date_phrase, date_from, date_to)
+    except MissingPeriod:
+        return {
+            'ok': False,
+            'error': 'Which period should I look at?',
+            'needs_period': True,
+            'hint': 'For example today, this week, September, '
+                    'last two months, or 01/03/2026 to 15/03/2026.',
+        }
+    except UnknownDatePhrase:
+        return {
+            'ok': False,
+            'error': 'Could not work out the period from "%s".' % (date_phrase,),
+            'hint': 'Try today, tomorrow, this week, this month, '
+                    'or 01/03/2026 to 15/03/2026.',
+        }
+
+    scope_keys = [key] if key else list(CUT_OFF_CATEGORIES)
+    params = period.as_params()
+
+    categories, flagged, files = [], [], []
+    for cat_key in scope_keys:
+        cat_cfg = CATEGORIES[cat_key]
+        payload = _call_view('run_down_cut_off_data',
+                             dict(params, service=cat_key)) or {}
+        rows = payload.get('rows') or []
+        count = payload.get('total', len(rows))
+
+        categories.append({'key': cat_key, 'label': cat_cfg['label'],
+                           'count': count})
+        if count:
+            flagged.append({'key': cat_key, 'label': cat_cfg['label'],
+                            'count': count})
+
+        for row in rows:
+            files.append({
+                'request_number': row.get('request_number', ''),
+                # Same view_url the Run Down cut-off table links to, so the
+                # file number opens the file rather than being inert text.
+                'url': row.get('view_url', ''),
+                'category': cat_key,
+                'category_label': cat_cfg['label'],
+                'name': row.get('name') or '',
+                'cut_off_date': row.get('cut_off_date', ''),
+                'cut_off_date_display': row.get('cut_off_date_display', ''),
+                'service_date_display': row.get('date_from_display', ''),
+                # Both ends of the service, already dashed by the endpoint
+                # when a record has no end date.
+                'service_date_to_display': row.get('date_to_display', ''),
+                'status': row.get('status', ''),
+                'file_status': row.get('file_status', ''),
+                'pax': row.get('pax'),
+            })
+
+    # Soonest deadline first, the order the Run Down cut-off table uses, held
+    # across categories so the most urgent row is first whatever it belongs to.
+    files.sort(key=lambda f: (f['cut_off_date'], f['category_label'],
+                              f['request_number']))
+
+    total = len(files)
+    if limit:
+        files = files[:limit]
+
+    # The Run Down's cut-off table is hidden until a card's cut-off count is
+    # clicked, so a bare link lands at the top of the page with the table
+    # still collapsed. `cut_off` names the service to open, and run_down.js
+    # opens and scrolls to it -- through showCutOffTable, the same function
+    # the card click calls, so there is no second way to open that table.
+    nav_params = dict(params)
+    if flagged:
+        nav_params['cut_off'] = flagged[0]['key']
+
+    return {
+        'ok': True,
+        'period': period.to_dict(),
+        'scope': key or 'all',
+        'scope_label': cfg['label'] if cfg else 'all categories with a cut-off',
+        # False -> show the counts and then the files; True -> the files alone.
+        'files_only': bool(files_only),
+        'categories': categories,
+        'flagged': flagged,
+        'urgent': bool(flagged),
+        'count': total,
+        'returned': len(files),
+        'truncated': total > len(files),
+        'files': files,
+        'navigate_url': (url_for('inbound.run_down_plan')
+                         + '?' + urlencode(nav_params)),
     }
 
 

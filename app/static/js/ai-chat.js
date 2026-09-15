@@ -61,8 +61,18 @@
     // Deliberately tiny: bold, code and line breaks only. The assistant is
     // told to keep replies short, and a full markdown parser here would be a
     // large XSS surface for very little gain.
+    //
+    // Markdown links are stripped to their label rather than turned into real
+    // anchors. The model is told never to write one, but it still does on the
+    // empty-result path, and the two ways of honouring that here are both
+    // worse: rendering it raw shows "[Open Run Down](http://...)" as literal
+    // text, and making it clickable would publish a URL the model invented --
+    // which is how "#/inbound/651/view" reached a user before. The real
+    // destination is the navigation button below the bubble, built from the
+    // tool's own navigate_url, so the label alone loses nothing.
     function miniMarkdown(text) {
         return esc(text)
+            .replace(/\[([^\]]*)\]\(([^)\s]*)\)/g, '$1')
             .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
             .replace(/`([^`]+)`/g, '<code>$1</code>')
             .replace(/\n/g, '<br>');
@@ -459,7 +469,87 @@
         return html + '</tbody></table></div>';
     }
 
+    // Cut Off Date first: it is the deadline being asked about, and the column
+    // the rows are ordered by. Request is the link -- every cut-off row has a
+    // file behind it, and the whole point is to open it and act.
+    //
+    // Category is added ONLY when more than one is in scope. With several
+    // categories mixed, one request can legitimately appear twice (an
+    // accommodation deadline and a transport deadline on the same file), and
+    // without that column the two rows look like a duplicate.
+    function cutOffFilesTable(files, showCategory) {
+        var heads = ['Cut Off Date', 'Request', 'Name', 'Date From', 'Date To'];
+        if (showCategory) { heads.splice(1, 0, 'Category'); }
+
+        var html = '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:4px">' +
+            '<thead><tr>' +
+            heads.map(function (h) {
+                return '<th style="text-align:left;padding:3px;border-bottom:1px solid #ddd">' +
+                    h + '</th>';
+            }).join('') + '</tr></thead><tbody>';
+
+        files.forEach(function (f) {
+            // The endpoint already dashes a missing name or end date; dash here
+            // too so an empty string never renders as a blank cell.
+            var dash = function (v) { return esc(v) || '&mdash;'; };
+            html += '<tr>' +
+                '<td style="padding:3px"><strong style="color:#b42318">' +
+                    dash(f.cut_off_date_display) + '</strong></td>' +
+                (showCategory
+                    ? '<td style="padding:3px">' + dash(f.category_label) + '</td>'
+                    : '') +
+                '<td style="padding:3px"><a href="' + esc(f.url) + '">' +
+                    esc(f.request_number) + '</a></td>' +
+                '<td style="padding:3px">' + dash(f.name) + '</td>' +
+                '<td style="padding:3px">' + dash(f.service_date_display) + '</td>' +
+                '<td style="padding:3px">' + dash(f.service_date_to_display) + '</td>' +
+                '</tr>';
+        });
+        return html + '</tbody></table>';
+    }
+
+    function renderCutOff(d) {
+        var html = '<div class="booking-card"><div class="booking-card-header">' +
+            'Cut-off &mdash; ' + esc(d.scope_label) + ' &mdash; ' +
+            esc(d.period.label) + '</div>';
+
+        if (!d.count) {
+            // "No cut-off falls in this period" -- never "no cut-off exists".
+            return html + '<div class="booking-card-detail"><em>No cut-off ' +
+                'deadline falls in this period.</em></div></div>';
+        }
+
+        html += '<div class="booking-card-detail">' + d.count + ' cut-off' +
+            (d.count === 1 ? '' : 's') +
+            (d.truncated ? ' (showing ' + d.returned + ')' : '') + '</div>';
+
+        // The counts table earns its place only when several categories are in
+        // scope. files_only means the user asked which FILES; a named category
+        // means a one-row table restating the header, which is noise either way.
+        if (!d.files_only && d.scope === 'all') {
+            html += '<table style="width:100%;border-collapse:collapse;font-size:12px">' +
+                '<thead><tr>' +
+                ['Category', 'Cut-off'].map(function (h) {
+                    return '<th style="text-align:left;padding:4px;border-bottom:1px solid #ddd">' +
+                        h + '</th>';
+                }).join('') + '</tr></thead><tbody>';
+            d.categories.forEach(function (c) {
+                var n = c.count > 0
+                    ? '<strong style="color:#b42318">' + c.count + '</strong>'
+                    : '0';
+                html += '<tr style="' + (c.count ? '' : 'opacity:.55;') + '">' +
+                    '<td style="padding:4px">' + esc(c.label) + '</td>' +
+                    '<td style="padding:4px">' + n + '</td></tr>';
+            });
+            html += '</tbody></table>';
+        }
+
+        // One named category -> exactly the five columns asked for.
+        return html + cutOffFilesTable(d.files, d.scope === 'all') + '</div>';
+    }
+
     var RENDERERS = {
+        run_down_cut_off: renderCutOff,
         run_down_summary: renderSummary,
         run_down_drilldown: renderDrilldown,
         search_customers: renderCustomers,
