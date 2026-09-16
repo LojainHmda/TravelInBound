@@ -22,9 +22,18 @@ def create_app():
     from app.config import get_config
     app.config.from_object(get_config())
 
+    # Cloud Run must run ProductionConfig. Without FLASK_ENV the app would fall
+    # back to DevelopmentConfig and read DATABASE_URL_TEST (preproduction).
+    env = os.environ.get('FLASK_ENV', 'development').lower()
+    if os.environ.get('K_SERVICE') and env != 'production':
+        raise RuntimeError(
+            f"Refusing to start on Cloud Run with FLASK_ENV={env!r}. "
+            "Set FLASK_ENV=production so the app uses DATABASE_URL (live) "
+            "instead of DATABASE_URL_TEST (preproduction)."
+        )
+
     # Validate DB URL is set
     if not app.config.get('SQLALCHEMY_DATABASE_URI'):
-        env = os.environ.get('FLASK_ENV', 'development')
         key = 'DATABASE_URL_TEST' if env != 'production' else 'DATABASE_URL'
         raise RuntimeError(f"Missing required env var: {key}")
 

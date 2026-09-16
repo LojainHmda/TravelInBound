@@ -34,11 +34,11 @@ RUN mkdir -p instance
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV FLASK_APP=main.py
+ENV FLASK_APP=wsgi.py
 ENV PORT=8080
 
 # Expose port (Cloud Run uses PORT env var)
 EXPOSE 8080
 
 # Use gunicorn to run the application
-CMD exec gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 --access-logfile - --error-logfile - main:app
+CMD exec gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 --access-logfile - --error-logfile - wsgi:app

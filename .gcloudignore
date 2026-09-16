@@ -1,4 +1,6 @@
 # Exclude from Cloud Build upload (speeds up deploy)
+.env
+.env.local
 .venv
 .venv/
 venv

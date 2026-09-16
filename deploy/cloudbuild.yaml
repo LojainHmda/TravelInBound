@@ -7,7 +7,7 @@ substitutions:
 steps:
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/travel-inbound:$BUILD_ID', '-t', 'gcr.io/$PROJECT_ID/travel-inbound:latest', '.']
+    args: ['build', '-f', 'deploy/Dockerfile', '-t', 'gcr.io/$PROJECT_ID/travel-inbound:$BUILD_ID', '-t', 'gcr.io/$PROJECT_ID/travel-inbound:latest', '.']
   
   # Push the container image to Container Registry
   - name: 'gcr.io/cloud-builders/docker'
@@ -29,7 +29,7 @@ steps:
           exit 1
         fi
         SESSION_SECRET=$$(openssl rand -hex 32)
-        ENV_VARS="SESSION_SECRET=$$SESSION_SECRET,SESSION_COOKIE_SECURE=true,DATABASE_URL=${_DATABASE_URL}"
+        ENV_VARS="FLASK_ENV=production,SESSION_SECRET=$$SESSION_SECRET,SESSION_COOKIE_SECURE=true,DATABASE_URL=${_DATABASE_URL}"
         DEPLOY_CMD="gcloud run deploy travel-inbound \
           --image gcr.io/$PROJECT_ID/travel-inbound:$BUILD_ID \
           --region us-central1 \

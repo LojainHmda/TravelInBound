@@ -13,6 +13,13 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# This script builds with the repository root as the Docker context. Running it
+# from deploy/ would upload only that folder and the image would have no app.
+if (-not (Test-Path "app/__init__.py") -or -not (Test-Path "deploy/cloudbuild.yaml")) {
+    Write-Host "[ERROR] Run this from the repository root: .\deploy\deploy-cloudbuild.ps1" -ForegroundColor Red
+    exit 1
+}
+
 # Load .env if present
 if (Test-Path ".env") {
     Get-Content ".env" | ForEach-Object {
@@ -105,6 +112,10 @@ if (-not $DatabaseUrl -or $DatabaseUrl -notmatch '^postgres') {
         exit 1
     }
 }
+if ($env:DATABASE_URL_TEST -and $DatabaseUrl -eq $env:DATABASE_URL_TEST) {
+    Write-Err "This is DATABASE_URL_TEST (preproduction). Production must use DATABASE_URL. Deployment cancelled."
+    exit 1
+}
 Write-Success "PostgreSQL DATABASE_URL configured"
 
 # Submit build with substitutions
@@ -121,9 +132,9 @@ if ($CloudSqlInstance) {
 if ($subs.Count -gt 0) {
     $subsStr = $subs -join ","
     Write-Host "  Passing: $($subs -join ', ')" -ForegroundColor Gray
-    gcloud builds submit --config cloudbuild.yaml . --project $PROJECT_ID --substitutions="$subsStr"
+    gcloud builds submit --config deploy/cloudbuild.yaml . --project $PROJECT_ID --substitutions="$subsStr"
 } else {
-    gcloud builds submit --config cloudbuild.yaml . --project $PROJECT_ID
+    gcloud builds submit --config deploy/cloudbuild.yaml . --project $PROJECT_ID
 }
 
 if ($LASTEXITCODE -ne 0) {
