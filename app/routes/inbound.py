@@ -4452,7 +4452,7 @@ def api_save_itinerary_rows_bulk(request_id):
 @csrf.exempt
 def api_add_hotel():
     """Add a new hotel to the suppliers list"""
-    from app.models.supplier import Supplier
+    from app.models.supplier import Supplier, parse_room_categories_field
 
     def _request_payload():
         return request.get_json(silent=True) or request.form
@@ -4526,23 +4526,15 @@ def api_add_hotel():
         # Create new supplier with all provided fields
         # Use provided city or None if empty (don't use default 'Amman' for storage)
         city_value = data.get('city', '').strip() or None
-        # Store category and room_category in notes field as JSON if provided
+        # Store category in notes field as JSON if provided
         category = data.get('category', '').strip()
-        room_category = data.get('room_category', '').strip()
         notes_value = data.get('notes', '').strip() or None
-        if category or room_category:
+        if category:
             import json
             notes_dict = {}
             if notes_value:
                 notes_dict['original_notes'] = notes_value
-            if category:
-                notes_dict['category'] = category
-            if room_category:
-                notes_dict['room_category'] = room_category
-                # Also store in room_categories list for consistency with Room List fetching
-                default_categories = ['Standard Rooms', 'Junior Suites', 'Executive Suites', 'Presidential Suites']
-                if room_category not in default_categories:
-                    notes_dict['room_categories'] = [room_category]
+            notes_dict['category'] = category
             if payment_method:
                 notes_dict['payment_method'] = payment_method
             if contract_file:
@@ -4578,6 +4570,10 @@ def api_add_hotel():
             notes=notes_value,
             is_active=True
         )
+        # Every ticked room category (base or custom), saved for this hotel only
+        room_categories = parse_room_categories_field(data.get('room_categories_json'))
+        if room_categories is not None:
+            new_hotel.set_room_categories(room_categories)
         db.session.add(new_hotel)
         db.session.commit()
         _invalidate_supplier_dropdown_cache()
@@ -4589,7 +4585,7 @@ def api_add_hotel():
                 'name': new_hotel.name,
                 'city': new_hotel.city,
                 'category': category,  # Return category for immediate use
-                'room_category': room_category
+                'room_categories': new_hotel.get_room_categories()
             }
         })
 
@@ -4602,89 +4598,38 @@ def api_add_hotel():
 @inbound_bp.route('/api/hotel/<int:supplier_id>/room-categories', methods=['GET'])
 @csrf.exempt
 def api_get_hotel_room_categories(supplier_id):
-    """Get room categories for a hotel supplier"""
+    """Room categories saved for this hotel (linked by supplier id, not by name)."""
     from app.models.supplier import Supplier
-    import json
     try:
         supplier = Supplier.query.get_or_404(supplier_id)
-        default_categories = ['Standard Rooms', 'Junior Suites', 'Executive Suites', 'Presidential Suites']
-        custom_categories = []
-        
-        # Extract custom categories from supplier notes JSON
-        if supplier.notes:
-            try:
-                notes_dict = json.loads(supplier.notes)
-                # Read from room_categories (list) - added via + button
-                custom_categories = notes_dict.get('room_categories', [])
-                # Also read from room_category (singular string) - added via Add Hotel modal
-                single_cat = notes_dict.get('room_category', '')
-                if single_cat and single_cat not in custom_categories and single_cat not in default_categories:
-                    custom_categories.append(single_cat)
-            except (json.JSONDecodeError, TypeError):
-                pass
-        
-        # Also scan existing hotel rooms for any categories in use (catches categories
-        # that were saved to rooms but might not be in the supplier notes)
-        try:
-            hotels = InboundHotel.query.filter_by(hotel_name=supplier.name).all()
-            for hotel in hotels:
-                for room in hotel.rooms:
-                    if room.room_category and room.room_category not in custom_categories and room.room_category not in default_categories:
-                        custom_categories.append(room.room_category)
-        except Exception:
-            pass  # Non-critical; don't fail the whole request
-        
-        # Merge defaults + custom, preserving order and uniqueness
-        all_categories = list(default_categories)
-        for cat in custom_categories:
-            if cat not in all_categories:
-                all_categories.append(cat)
-        
-        return jsonify({'success': True, 'categories': all_categories})
+        return jsonify({'success': True, 'categories': supplier.get_room_categories()})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @inbound_bp.route('/api/hotel/<int:supplier_id>/room-categories', methods=['POST'])
 @csrf.exempt
 def api_add_hotel_room_category(supplier_id):
-    """Add a custom room category for a hotel supplier"""
-    from app.models.supplier import Supplier
-    import json
+    """Add a room category to this hotel only (the "+" button in a Room List row)."""
+    from app.models.supplier import Supplier, normalize_room_categories
     try:
         supplier = Supplier.query.get_or_404(supplier_id)
-        data = request.get_json()
-        new_category = data.get('category', '').strip()
-        
+        data = request.get_json(silent=True) or {}
+        new_category = normalize_room_categories([data.get('category', '')])
         if not new_category:
             return jsonify({'success': False, 'error': 'Category name is required'}), 400
-        
-        # Parse existing notes
-        notes_dict = {}
-        if supplier.notes:
-            try:
-                notes_dict = json.loads(supplier.notes)
-            except (json.JSONDecodeError, TypeError):
-                notes_dict = {'original_notes': supplier.notes}
-        
-        # Add to custom room_categories list
-        room_categories = notes_dict.get('room_categories', [])
-        default_categories = ['Standard Rooms', 'Junior Suites', 'Executive Suites', 'Presidential Suites']
-        
-        if new_category in room_categories or new_category in default_categories:
-            return jsonify({'success': False, 'error': 'Category already exists'}), 400
-        
-        room_categories.append(new_category)
-        notes_dict['room_categories'] = room_categories
-        supplier.notes = json.dumps(notes_dict)
-        db.session.commit()
-        
-        # Return full list
-        all_categories = list(default_categories)
-        for cat in room_categories:
-            if cat not in all_categories:
-                all_categories.append(cat)
-        
-        return jsonify({'success': True, 'categories': all_categories})
+
+        # Start from what the hotel has now (saved list, legacy notes value or the
+        # 4 base categories), so nothing already there is lost.
+        categories = supplier.get_room_categories()
+        existing = next((c for c in categories if c.lower() == new_category[0].lower()), None)
+        if existing is None:
+            supplier.set_room_categories(categories + new_category)
+            db.session.commit()
+        return jsonify({
+            'success': True,
+            'category': existing or new_category[0],
+            'categories': supplier.get_room_categories(),
+        })
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500

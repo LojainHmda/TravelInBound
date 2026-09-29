@@ -1,6 +1,7 @@
 import os
 import sys
 import csv
+import json
 from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
 from io import StringIO
@@ -20,7 +21,7 @@ from app.models import (
     EXPENSE_CATEGORY_RENT, EXPENSE_CATEGORY_UTILITIES
 )
 from app.models.booking import Booking
-from app.models.supplier import SupplierPayment, Supplier, SupplierPrepaymentLine, SupplierService
+from app.models.supplier import SupplierPayment, Supplier, SupplierPrepaymentLine, SupplierService, parse_room_categories_field
 from app.forms.expense import (
     ExpenseCategoryForm, ExpenseForm, ExpenseFilterForm,
     ExpenseAttachmentForm, FinancialReportFilterForm
@@ -1858,7 +1859,6 @@ def quick_add_supplier(type_key):
 
     category = (request.form.get('category') or '').strip()
     custom_category = (request.form.get('custom_category') or '').strip()
-    room_category = (request.form.get('room_category') or '').strip()
     notes = (request.form.get('notes') or '').strip()
     other_payment_method = (request.form.get('other_payment_method') or '').strip()
     bank_iban = (request.form.get('bank_iban') or '').strip() or None
@@ -1868,8 +1868,6 @@ def quick_add_supplier(type_key):
         merged_notes = f"Custom Category: {custom_category}\n{merged_notes}".strip()
     if category:
         merged_notes = f"Category: {category}\n{merged_notes}".strip()
-    if room_category:
-        merged_notes = f"Room Category: {room_category}\n{merged_notes}".strip()
     if payment_method:
         merged_notes = f"Payment Method: {payment_method}\n{merged_notes}".strip()
 
@@ -1927,6 +1925,10 @@ def quick_add_supplier(type_key):
         if contract_saved_name:
             supplier.notes = (supplier.notes or '')
             supplier.notes = f"Contract file: {contract_saved_name}\n{supplier.notes}".strip()
+        # Every ticked room category (Accommodation popup only; other types don't send it)
+        room_categories = parse_room_categories_field(request.form.get('room_categories_json'))
+        if room_categories is not None:
+            supplier.set_room_categories(room_categories)
         db.session.add(supplier)
         db.session.commit()
         from app.routes.inbound import _invalidate_supplier_dropdown_cache
@@ -1940,8 +1942,36 @@ def quick_add_supplier(type_key):
     return redirect(url_for('finance.supplier_type_page', type_key=type_key))
 
 
+_STANDARD_ACCOMMODATION_CATEGORIES = ('5-Star', '4-Star', '3-Star', 'Boutique', 'Camp', 'Airbnb', 'Other')
+
+
+def _supplier_notes_json(notes_raw):
+    """The notes as a dict when they are stored as JSON (hotels added from the request page), else None."""
+    try:
+        notes_dict = json.loads(notes_raw or '')
+    except (TypeError, ValueError):
+        return None
+    return notes_dict if isinstance(notes_dict, dict) else None
+
+
 def _parse_supplier_notes(notes_raw):
     """Extract structured fields that quick_add_supplier embeds into the notes column."""
+    notes_json = _supplier_notes_json(notes_raw)
+    if notes_json is not None:
+        category = str(notes_json.get('category') or '').strip()
+        custom_category = ''
+        if category and category not in _STANDARD_ACCOMMODATION_CATEGORIES:
+            category, custom_category = 'Other', category
+        return {
+            'category': category,
+            'custom_category': custom_category,
+            'room_category': str(notes_json.get('room_category') or ''),
+            'payment_method_embedded': str(notes_json.get('payment_method') or ''),
+            'contract_file': str(notes_json.get('contract_file') or ''),
+            'clean_notes': str(notes_json.get('original_notes') or ''),
+            'notes_json': notes_json,
+        }
+
     category = ''
     custom_category = ''
     room_category = ''
@@ -1968,7 +1998,26 @@ def _parse_supplier_notes(notes_raw):
         'payment_method_embedded': payment_method_embedded,
         'contract_file': contract_file,
         'clean_notes': '\n'.join(clean_lines).strip(),
+        'notes_json': None,
     }
+
+
+def _merge_supplier_notes_json(notes_json, notes, category, custom_category, payment_method, contract_file):
+    """Apply the edit form's values to JSON notes, keeping every other key (e.g. bed_types)."""
+    merged = dict(notes_json)
+    for key, value in (
+        ('original_notes', notes),
+        ('category', custom_category if category == 'Other' and custom_category else category),
+        ('payment_method', payment_method),
+    ):
+        if value:
+            merged[key] = value
+        else:
+            merged.pop(key, None)
+    # The edit form has no way to remove a contract, so an existing one is always kept
+    if contract_file:
+        merged['contract_file'] = contract_file
+    return json.dumps(merged, ensure_ascii=False) if merged else ''
 
 
 @finance.route('/suppliers/type/<type_key>/edit/<int:supplier_id>', methods=['GET', 'POST'])
@@ -2004,7 +2053,6 @@ def edit_supplier_type(type_key, supplier_id):
         guide_languages = (request.form.get('guide_languages') or '').strip()
         category = (request.form.get('category') or '').strip()
         custom_category = (request.form.get('custom_category') or '').strip()
-        room_category = (request.form.get('room_category') or '').strip()
         notes = (request.form.get('notes') or '').strip()
         other_payment_method = (request.form.get('other_payment_method') or '').strip()
         bank_iban = (request.form.get('bank_iban') or '').strip() or None
@@ -2015,8 +2063,6 @@ def edit_supplier_type(type_key, supplier_id):
             merged_notes = f"Custom Category: {custom_category}\n{merged_notes}".strip()
         if category:
             merged_notes = f"Category: {category}\n{merged_notes}".strip()
-        if room_category:
-            merged_notes = f"Room Category: {room_category}\n{merged_notes}".strip()
         if payment_method:
             merged_notes = f"Payment Method: {payment_method}\n{merged_notes}".strip()
 
@@ -2036,6 +2082,14 @@ def edit_supplier_type(type_key, supplier_id):
                 safe_log_error('Could not save contract attachment', e)
         if contract_saved_name:
             merged_notes = f"Contract file: {contract_saved_name}\n{merged_notes}".strip()
+
+        # Hotels added from the request page keep their notes as JSON: update those
+        # keys in place instead of rewriting the notes as text, so nothing else is lost.
+        if parsed_existing['notes_json'] is not None:
+            merged_notes = _merge_supplier_notes_json(
+                parsed_existing['notes_json'], notes, category, custom_category,
+                payment_method, contract_saved_name,
+            )
 
         if payment_method:
             bank_name_val, bank_account_val = _bank_fields_from_payment_method(
@@ -2067,6 +2121,10 @@ def edit_supplier_type(type_key, supplier_id):
         supplier.notes = merged_notes or None
         if guide_languages:
             supplier.languages = guide_languages
+        # Room categories (Accommodation edit form only; other types don't send it)
+        room_categories = parse_room_categories_field(request.form.get('room_categories_json'))
+        if room_categories is not None:
+            supplier.set_room_categories(room_categories)
 
         try:
             db.session.commit()
@@ -2121,7 +2179,7 @@ def edit_supplier_type(type_key, supplier_id):
         new_supplier_type=config['new_supplier_type'],
         category=parsed['category'],
         custom_category=parsed['custom_category'],
-        room_category=parsed['room_category'],
+        room_categories=supplier.get_room_categories(),
         clean_notes=parsed['clean_notes'],
         payment_method=payment_method,
         bank_name=bank_name,

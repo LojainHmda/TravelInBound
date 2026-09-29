@@ -12033,10 +12033,6 @@ function generateRoomListRows() {
         container.appendChild(createRoomListRow(roomNum++, roomData.room_type || 'Free', roomData.adults || 0, roomData));
     });
 
-    // Populate Room List dropdowns with backend categories (incl. custom ones)
-    if (hotelRoomCategoriesCache.length > 0) {
-        refreshRoomCategoryDropdowns(hotelRoomCategoriesCache);
-    }
     // Populate Room List dropdowns with backend bed types (incl. custom ones)
     if (hotelBedTypesCache.length > 0) {
         refreshBedTypeDropdowns(hotelBedTypesCache);
@@ -12061,12 +12057,6 @@ function createRoomListRow(roomNum, roomType, defaultAdults, roomData = {}) {
     // Room Category column is available in all statuses
     const showCategory = true;
     
-    // Build extra option for custom category if it's not one of the defaults
-    const defaultCats = ['Standard Rooms', 'Junior Suites', 'Executive Suites', 'Presidential Suites'];
-    const customCatOption = (roomCategory && !defaultCats.includes(roomCategory))
-        ? `<option value="${roomCategory}" selected>${roomCategory}</option>`
-        : '';
-
     // Build extra option for custom bed type if it's not one of the defaults
     const defaultBedTypes = ['King', 'Queen', 'Twin', 'Triple'];
     const customBedTypeOption = (roomOption && !defaultBedTypes.includes(roomOption))
@@ -12088,11 +12078,6 @@ function createRoomListRow(roomNum, roomType, defaultAdults, roomData = {}) {
             <div class="flex gap-1 items-center">
                 <select class="flex-1 min-w-0 px-2 py-1 border border-slate-200 rounded text-xs" data-field="room_category" data-original-category="${roomCategory}" title="Room Category">
                     <option value="">Room Cat.</option>
-                    <option value="Standard Rooms" ${roomCategory === 'Standard Rooms' ? 'selected' : ''}>Standard Rooms</option>
-                    <option value="Junior Suites" ${roomCategory === 'Junior Suites' ? 'selected' : ''}>Junior Suites</option>
-                    <option value="Executive Suites" ${roomCategory === 'Executive Suites' ? 'selected' : ''}>Executive Suites</option>
-                    <option value="Presidential Suites" ${roomCategory === 'Presidential Suites' ? 'selected' : ''}>Presidential Suites</option>
-                    ${customCatOption}
                 </select>
                 <button type="button" onclick="addRoomCategoryForHotel(this)" class="px-1 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-slate-600 flex-shrink-0" title="Add New Room Category">
                     <i class="fas fa-plus" style="font-size:9px;"></i>
@@ -12161,6 +12146,15 @@ function createRoomListRow(roomNum, roomType, defaultAdults, roomData = {}) {
     const gnInput = row.querySelector('[data-field="guest_names"]');
     if (gnInput) gnInput.value = guestNames;
     updateGuestNamesCount(row);
+
+    // Room Category options: the selected hotel's saved categories, plus this
+    // room's own saved value so old bookings (e.g. "Junior Suites") still show it.
+    const catSelect = row.querySelector('[data-field="room_category"]');
+    if (catSelect) {
+        const cats = roomCategoryOptionsForSelectedHotel();
+        if (roomCategory && !cats.includes(roomCategory)) cats.push(roomCategory);
+        cats.forEach(cat => catSelect.add(new Option(cat, cat, false, cat === roomCategory)));
+    }
 
     return row;
 }
@@ -12454,141 +12448,6 @@ function initializeRoomWizard() {
 //     calculateTotalGuests();
 // });
 
-// Add custom room category to dropdown (Add Hotel Supplier modal)
-const DEFAULT_ROOM_CATEGORIES = ['Standard Rooms', 'Junior Suites', 'Executive Suites', 'Presidential Suites'];
-let globalRoomCategoriesCache = [];
-
-function normalizeRoomCategoryValue(value) {
-    const v = String(value || '').trim();
-    if (!v) return '';
-    if (v.toLowerCase() === 'select...') return '';
-    return v;
-}
-
-function ensureHotelRoomCategoryOption(select, value) {
-    if (!select || !value) return false;
-    const exists = Array.from(select.options).some(opt => opt.value.toLowerCase() === value.toLowerCase());
-    if (exists) return false;
-    const option = document.createElement('option');
-    option.value = value;
-    option.textContent = value;
-    select.appendChild(option);
-    return true;
-}
-
-async function fetchGlobalRoomCategories() {
-    try {
-        const resp = await fetch('/inbound/api/hotel/room-categories/global');
-        const data = await resp.json();
-        if (data && data.success && Array.isArray(data.categories)) {
-            globalRoomCategoriesCache = data.categories
-                .map(v => String(v || '').trim())
-                .filter(Boolean);
-        }
-    } catch (_) {}
-    return globalRoomCategoriesCache;
-}
-
-async function persistGlobalRoomCategory(category) {
-    const value = normalizeRoomCategoryValue(category);
-    if (!value) return;
-    if (DEFAULT_ROOM_CATEGORIES.some(c => c.toLowerCase() === value.toLowerCase())) return;
-    try {
-        const resp = await fetch('/inbound/api/hotel/room-categories/global', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ category: value })
-        });
-        if (!resp.ok) throw new Error('failed');
-    } catch (_) {}
-}
-
-async function addCustomRoomCategory() {
-    const existingOverlay = document.getElementById('custom-prompt-overlay');
-    if (existingOverlay) existingOverlay.remove();
-    const select = document.getElementById('new_hotel_room_category');
-    const globalCategories = await fetchGlobalRoomCategories();
-    (globalCategories || []).forEach(cat => ensureHotelRoomCategoryOption(select, cat));
-    const existingValues = new Set(Array.from(select.options).map(opt => opt.value.toLowerCase()));
-    const presets = [
-        { value: 'Standard Rooms', label: 'Standard Rooms' },
-        { value: 'Junior Suites', label: 'Junior Suites' },
-        { value: 'Executive Suites', label: 'Executive Suites' },
-        { value: 'Presidential Suites', label: 'Presidential Suites' }
-    ];
-
-    // Build the list shown in the prompt:
-    // defaults + any previously added custom categories (append-only behavior).
-    const presetValues = presets.map(p => p.value.toLowerCase());
-    const savedCustom = (globalCategories || [])
-        .filter(v => !presetValues.includes(v.toLowerCase()))
-        .map(v => ({ value: v, label: v }));
-    const promptOptions = [...presets, ...savedCustom];
-
-    const checkboxHtml = promptOptions.map(p => {
-        const checked = existingValues.has(p.value.toLowerCase()) ? ' checked' : '';
-        return `<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#334155;cursor:pointer;"><input type="checkbox" name="room-cat-preset" value="${p.value}"${checked}> ${p.label}</label>`;
-    }).join('');
-    const overlay = document.createElement('div');
-    overlay.id = 'custom-prompt-overlay';
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;';
-    const dialog = document.createElement('div');
-    dialog.style.cssText = 'background:white;border-radius:12px;padding:24px;min-width:360px;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
-    dialog.innerHTML = `
-        <div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:12px;">Enter new Room Category:</div>
-        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
-            ${checkboxHtml}
-        </div>
-        <input type="text" id="custom-prompt-input" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;" placeholder="Or type custom category..." autofocus>
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
-            <button type="button" id="custom-prompt-cancel" style="padding:6px 16px;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;color:#475569;font-size:12px;cursor:pointer;">Cancel</button>
-            <button type="button" id="custom-prompt-ok" style="padding:6px 16px;border:none;border-radius:6px;background:#3b82f6;color:white;font-size:12px;cursor:pointer;font-weight:500;">Add</button>
-        </div>
-    `;
-    overlay.appendChild(dialog);
-    document.body.appendChild(overlay);
-    const input = document.getElementById('custom-prompt-input');
-    const okBtn = document.getElementById('custom-prompt-ok');
-    const cancelBtn = document.getElementById('custom-prompt-cancel');
-    // Keep this prompt append-only: unchecking presets should not remove existing data.
-    document.querySelectorAll('input[name="room-cat-preset"]').forEach(cb => {
-        cb.addEventListener('change', function() {});
-    });
-    setTimeout(() => input.focus(), 50);
-    async function submit() {
-        const checkedList = document.querySelectorAll('input[name="room-cat-preset"]:checked');
-        const trimmedInput = input.value.trim();
-        const values = Array.from(checkedList).map(cb => cb.value);
-        if (trimmedInput) values.push(trimmedInput);
-        overlay.remove();
-        if (values.length === 0) return;
-        const select = document.getElementById('new_hotel_room_category');
-        let lastAdded = null;
-        values.forEach(trimmed => {
-            const created = ensureHotelRoomCategoryOption(select, trimmed);
-            if (!created) {
-                showNotification('This room category already exists.', 'warning');
-                lastAdded = trimmed;
-            } else {
-                lastAdded = trimmed;
-            }
-        });
-        await Promise.all(values.map(v => persistGlobalRoomCategory(v)));
-        await fetchGlobalRoomCategories();
-        if (lastAdded) select.value = lastAdded;
-    }
-    function cancel() { overlay.remove(); }
-    okBtn.addEventListener('click', submit);
-    cancelBtn.addEventListener('click', cancel);
-    input.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') submit();
-        if (e.key === 'Escape') cancel();
-    });
-    overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) cancel();
-    });
-}
-
 // Add custom room category for the currently selected hotel (Room List rows + Distribution)
 function addRoomCategoryForHotel(btn) {
     showCustomPrompt('Enter new Room Category for this hotel:', function(trimmed) {
@@ -12598,53 +12457,36 @@ function addRoomCategoryForHotel(btn) {
 
 function _doAddRoomCategoryForHotel(btn, trimmed) {
     if (!trimmed) return;
-    
-    // Get selected hotel supplier ID
-    const hotelSelect = document.getElementById('hotel_name');
-    const selectedOption = hotelSelect?.options[hotelSelect.selectedIndex];
-    const supplierId = selectedOption?.getAttribute('data-supplier-id');
-    
-    // Add to Room List dropdowns locally first
-    addCategoryToAllRoomDropdowns(trimmed);
-    
-    // Select the newly added category in the row where + was clicked
-    const rowSelect = btn.closest('.room-category-col')?.querySelector('[data-field="room_category"]');
-    if (rowSelect) rowSelect.value = trimmed;
-    
-    if (supplierId) {
-        // Save to backend
-        const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
-        const csrfVal = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
-        const headers = {'Content-Type': 'application/json'};
-        if (csrfVal) headers['X-CSRFToken'] = csrfVal;
-        
-        fetch(`/inbound/api/hotel/${supplierId}/room-categories`, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({category: trimmed})
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                refreshRoomCategoryDropdowns(data.categories);
-                refreshDistributionCategoryDropdowns(data.categories);
-                // Re-select the newly added category
-                if (rowSelect) rowSelect.value = trimmed;
-            }
-        })
-        .catch(err => console.warn('Could not save category to backend:', err));
+    const supplierId = selectedHotelSupplierId();
+    if (!supplierId) {
+        showNotification('Select a hotel first, then add the room category.', 'warning');
+        return;
     }
-}
 
-function addCategoryToAllRoomDropdowns(category) {
-    document.querySelectorAll('[data-field="room_category"]').forEach(select => {
-        const exists = Array.from(select.options).some(opt => opt.value.toLowerCase() === category.toLowerCase());
-        if (!exists) {
-            const option = document.createElement('option');
-            option.value = category;
-            option.textContent = category;
-            select.appendChild(option);
-        }
+    const rowSelect = btn.closest('.room-category-col')?.querySelector('[data-field="room_category"]');
+    const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+    const csrfVal = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
+    const headers = {'Content-Type': 'application/json'};
+    if (csrfVal) headers['X-CSRFToken'] = csrfVal;
+
+    // Save to this hotel first; the category only appears once it is saved
+    fetch(`/inbound/api/hotel/${supplierId}/room-categories`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({category: trimmed})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (!data.success) throw new Error(data.error || 'Save failed');
+        if (selectedHotelSupplierId() !== String(supplierId)) return;  // hotel changed meanwhile
+        hotelRoomCategoriesCache = data.categories;
+        hotelRoomCategoriesSupplierId = String(supplierId);
+        refreshRoomCategoryDropdowns(data.categories);
+        if (rowSelect) rowSelect.value = data.category || trimmed;
+    })
+    .catch(err => {
+        console.warn('Could not save room category:', err);
+        showNotification('Could not save the room category. Please try again.', 'error');
     });
 }
 
@@ -12676,6 +12518,18 @@ let hotelRoomCategoriesCache = [];
 // Track which supplier's categories are currently cached to detect hotel switches
 let hotelRoomCategoriesSupplierId = null;
 
+// Supplier id of the hotel currently picked in Hotel Name ('' when none)
+function selectedHotelSupplierId() {
+    const hotelSelect = document.getElementById('hotel_name');
+    return hotelSelect?.options[hotelSelect.selectedIndex]?.getAttribute('data-supplier-id') || '';
+}
+
+// The selected hotel's saved room categories (a copy), or [] until they are loaded
+function roomCategoryOptionsForSelectedHotel() {
+    const supplierId = selectedHotelSupplierId();
+    return supplierId && supplierId === hotelRoomCategoriesSupplierId ? [...hotelRoomCategoriesCache] : [];
+}
+
 // Clear room category dropdowns and cache (call when switching hotels)
 function clearRoomCategoryDropdownsForHotelSwitch() {
     hotelRoomCategoriesCache = [];
@@ -12694,7 +12548,8 @@ function loadRoomCategoriesForHotel(supplierId) {
     fetch(`/inbound/api/hotel/${supplierId}/room-categories`)
         .then(r => r.json())
         .then(data => {
-            if (data.success) {
+            // Ignore a late answer for a hotel that is no longer selected
+            if (data.success && selectedHotelSupplierId() === String(supplierId)) {
                 hotelRoomCategoriesCache = data.categories;
                 hotelRoomCategoriesSupplierId = String(supplierId);
                 refreshRoomCategoryDropdowns(data.categories);
@@ -13037,6 +12892,8 @@ function openAddHotelModal() {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     modal.style.display = 'flex';
+    // The form always starts with the 4 base room categories, all ticked
+    window.RoomCategoryChecklist?.reset('new_hotel_rc');
     if (typeof window.syncAccommodationPaymentMethodFields === 'function') {
         window.syncAccommodationPaymentMethodFields();
     }
@@ -13048,7 +12905,7 @@ function closeAddHotelModal() {
     // Clear all fields
     document.getElementById('new_hotel_name').value = '';
     document.getElementById('new_hotel_category').value = '';
-    document.getElementById('new_hotel_room_category').value = '';
+    window.RoomCategoryChecklist?.reset('new_hotel_rc');
     document.getElementById('new_hotel_city').value = '';
     document.getElementById('new_hotel_country').value = 'Jordan';
     document.getElementById('new_hotel_contact_person').value = '';
@@ -13090,7 +12947,7 @@ function saveNewHotel() {
     const hotelData = {
         name: hotelName,
         category: document.getElementById('new_hotel_category').value.trim(),
-        room_category: document.getElementById('new_hotel_room_category').value.trim(),
+        room_categories_json: window.RoomCategoryChecklist?.value('new_hotel_rc'),
         city: document.getElementById('new_hotel_city').value.trim(),
         country: document.getElementById('new_hotel_country').value.trim(),
         contact_person: document.getElementById('new_hotel_contact_person').value.trim(),

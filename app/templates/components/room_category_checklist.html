@@ -1,0 +1,101 @@
+{#
+  Room category tick boxes for one hotel (Add New Hotel popups and the Suppliers edit page).
+  Set before including:
+    rc_id       - unique element id, e.g. 'new_hotel_rc'
+    rc_selected - categories to show ticked; none = all BASE_ROOM_CATEGORIES (Add New Hotel)
+  Submits one hidden field, room_categories_json: a JSON list of the ticked names.
+  JS: RoomCategoryChecklist.reset(id) -> the 4 base categories, all ticked.
+      RoomCategoryChecklist.value(id) -> adds a typed-but-not-added name, returns the JSON.
+#}
+{% set rc_ticked = BASE_ROOM_CATEGORIES if (rc_selected is not defined or rc_selected is none) else rc_selected %}
+{% set rc_base_lower = BASE_ROOM_CATEGORIES|map('lower')|list %}
+{% set rc_ticked_lower = rc_ticked|map('lower')|list %}
+<div id="{{ rc_id }}" class="rc-checklist" data-base='{{ BASE_ROOM_CATEGORIES|tojson }}'>
+    <div class="rc-boxes" style="display:flex;flex-wrap:wrap;gap:4px 14px;margin-bottom:6px;">
+        {% for cat in BASE_ROOM_CATEGORIES %}
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:400;color:#334155;cursor:pointer;margin:0;">
+            <input type="checkbox" value="{{ cat }}"{% if cat|lower in rc_ticked_lower %} checked{% endif %} style="width:auto;min-height:0;margin:0;padding:0;">{{ cat }}
+        </label>
+        {% endfor %}
+        {% for cat in rc_ticked if cat|lower not in rc_base_lower %}
+        <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:400;color:#334155;cursor:pointer;margin:0;">
+            <input type="checkbox" value="{{ cat }}" checked style="width:auto;min-height:0;margin:0;padding:0;">{{ cat }}
+        </label>
+        {% endfor %}
+    </div>
+    <div style="display:flex;gap:6px;">
+        <input type="text" class="rc-new" maxlength="100" placeholder="Add a custom category"
+               style="flex:1;min-width:0;width:auto;min-height:32px;padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;">
+        <button type="button" class="rc-add"
+                style="padding:4px 12px;border:1px solid #cbd5e1;border-radius:6px;background:#f1f5f9;color:#475569;font-size:12px;cursor:pointer;">Add</button>
+    </div>
+    <input type="hidden" name="room_categories_json" id="{{ rc_id }}_json" value='{{ rc_ticked|tojson }}'>
+</div>
+<script>
+(function () {
+    if (!window.RoomCategoryChecklist) {
+        const LABEL_STYLE = 'display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:400;color:#334155;cursor:pointer;margin:0;';
+        const BOX_STYLE = 'width:auto;min-height:0;margin:0;padding:0;';
+        const boxes = root => Array.from(root.querySelectorAll('.rc-boxes input[type="checkbox"]'));
+        const sync = root => {
+            root.querySelector('input[name="room_categories_json"]').value =
+                JSON.stringify(boxes(root).filter(cb => cb.checked).map(cb => cb.value));
+        };
+        const makeBox = (name, checked) => {
+            const label = document.createElement('label');
+            label.style.cssText = LABEL_STYLE;
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.value = name;
+            cb.checked = checked;
+            cb.style.cssText = BOX_STYLE;
+            label.append(cb, name);
+            return label;
+        };
+        // Add the typed name as a ticked box, or tick the existing one (ignoring case)
+        const addTyped = root => {
+            const input = root.querySelector('.rc-new');
+            const name = input.value.trim().slice(0, 100).trim();
+            input.value = '';
+            if (!name) return;
+            const existing = boxes(root).find(cb => cb.value.toLowerCase() === name.toLowerCase());
+            if (existing) existing.checked = true;
+            else root.querySelector('.rc-boxes').appendChild(makeBox(name, true));
+            sync(root);
+        };
+        window.RoomCategoryChecklist = {
+            init(id) {
+                const root = document.getElementById(id);
+                if (!root) return;
+                root.addEventListener('change', e => {
+                    if (e.target.matches('.rc-boxes input[type="checkbox"]')) sync(root);
+                });
+                root.querySelector('.rc-add').addEventListener('click', () => addTyped(root));
+                root.querySelector('.rc-new').addEventListener('keydown', e => {
+                    if (e.key === 'Enter') { e.preventDefault(); addTyped(root); }
+                });
+                // A name typed but not added yet is still saved with the form
+                const form = root.closest('form');
+                if (form) form.addEventListener('submit', () => addTyped(root));
+                sync(root);
+            },
+            // Back to the 4 base categories, all ticked (Add New Hotel)
+            reset(id) {
+                const root = document.getElementById(id);
+                if (!root) return;
+                const base = JSON.parse(root.dataset.base || '[]');
+                root.querySelector('.rc-boxes').replaceChildren(...base.map(name => makeBox(name, true)));
+                root.querySelector('.rc-new').value = '';
+                sync(root);
+            },
+            value(id) {
+                const root = document.getElementById(id);
+                if (!root) return undefined;
+                addTyped(root);
+                return root.querySelector('input[name="room_categories_json"]').value;
+            },
+        };
+    }
+    window.RoomCategoryChecklist.init('{{ rc_id }}');
+})();
+</script>

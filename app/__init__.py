@@ -108,6 +108,9 @@ def create_app():
     from app.models.inbound import itinerary_row_guide_supplier_id_list
     app.jinja_env.globals['itinerary_row_guide_ids'] = itinerary_row_guide_supplier_id_list
 
+    from app.models.supplier import BASE_ROOM_CATEGORIES
+    app.jinja_env.globals['BASE_ROOM_CATEGORIES'] = BASE_ROOM_CATEGORIES
+
     with app.app_context():
         # Import all models so SQLAlchemy registers them
         from app.models import User                       # noqa: F401
@@ -210,6 +213,11 @@ def _run_schema_upgrades(app, db):
                 existing = {c['name'] for c in inspector.get_columns('hotel_room')}
                 if 'room_category' not in existing:
                     _add_col('hotel_room', 'room_category', 'VARCHAR(100)')
+
+            if 'supplier' in tables:
+                existing = {c['name'] for c in inspector.get_columns('supplier')}
+                if 'room_categories' not in existing:
+                    _add_col('supplier', 'room_categories', 'TEXT')
 
             if 'customer' in tables:
                 existing = {c['name'] for c in inspector.get_columns('customer')}
