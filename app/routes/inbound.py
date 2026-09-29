@@ -319,9 +319,12 @@ def _get_supplier_dropdown_data(cache_ttl_seconds: int = 120):
     for hotel in hotels:
         city = hotel.city or 'Other'
         hotels_by_city.setdefault(city, []).append(hotel)
+    # Order cities: put standard ones first, then others
+    ordered_hotel_cities = [c for c in city_order if c in hotels_by_city]
+    ordered_hotel_cities.extend([c for c in hotels_by_city if c not in city_order])
     sorted_hotels_by_city = {
-        city: hotels_by_city.get(city, [])
-        for city in city_order if city in hotels_by_city
+        city: hotels_by_city[city]
+        for city in ordered_hotel_cities
     }
 
     # Extract unique cities and categories from hotels
