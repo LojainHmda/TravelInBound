@@ -499,6 +499,56 @@ def _reconcile_flight_linked_transports(request_id: int) -> None:
         _sync_transport_from_departure(dep)
 
 
+def _sync_no_transport_movement_pax(request_obj) -> int:
+    """Individual Transport = No: arrival/departure PAX follows the request PAX.
+
+    Updates each such batch and its own Itinerary row(s): the stored current_pax
+    and the number in a standard "Arrival - N PAX" / "Departure - N PAX" text.
+    Rows whose text was reworded keep their wording. Batches with Individual
+    Transport = Yes are never touched. Returns how many records/rows changed.
+    Nothing changes while the request PAX is empty or less than 1.
+    """
+    import json as _json
+    import re
+
+    pax = request_obj.pax
+    if not pax or pax < 1:
+        return 0
+    changed = 0
+    for model, link_col, label, other_col in (
+        (ArrivalBatch, ItineraryRow.source_arrival_batch_id, 'Arrival', 'source_departure_batch_id'),
+        (DepartureBatch, ItineraryRow.source_departure_batch_id, 'Departure', 'source_arrival_batch_id'),
+    ):
+        pax_text = re.compile(rf'^(\s*{label}\s*-\s*)\d+(\s*PAX)', re.IGNORECASE)
+        for batch in model.query.filter_by(request_id=request_obj.id, needs_transport=False).all():
+            if batch.pax_count != pax:
+                batch.pax_count = pax
+                changed += 1
+            rows = ItineraryRow.query.filter(
+                ItineraryRow.request_id == request_obj.id, link_col == batch.id
+            ).all()
+            for row in rows:
+                description = row.description or ''
+                # Older shared row that shows the other movement: leave it alone.
+                if getattr(row, other_col) and not description.strip().lower().startswith(label.lower()):
+                    continue
+                new_description = pax_text.sub(rf'\g<1>{pax}\g<2>', description, count=1)
+                if new_description != description:
+                    row.description = new_description
+                    changed += 1
+                comment_data = {}
+                if row.comment:
+                    try:
+                        comment_data = _json.loads(row.comment)
+                    except (ValueError, TypeError):
+                        comment_data = None
+                if isinstance(comment_data, dict) and comment_data.get('current_pax') != pax:
+                    comment_data['current_pax'] = pax
+                    row.comment = _json.dumps(comment_data)
+                    changed += 1
+    return changed
+
+
 def _hub_status_scope_label(status_val):
     """Human label for Hub status filter (?status=) — matches inbound list filter mapping."""
     if not status_val:
@@ -2438,6 +2488,9 @@ def api_save_request(request_id):
                                         itinerary_guide_slot_saved=_itinerary_guide_slot_saved_map(request_obj),
                                         view_only=False)
 
+    # Individual Transport = No: arrivals/departures follow the request PAX
+    movement_pax_synced = _sync_no_transport_movement_pax(request_obj)
+
     db.session.commit()
 
     response = {
@@ -2445,7 +2498,8 @@ def api_save_request(request_id):
         'request_number': request_obj.request_number,
         'message': 'Request saved successfully',
         'dates_changed': dates_changed,
-        'no_of_days': request_obj.no_of_days
+        'no_of_days': request_obj.no_of_days,
+        'movement_pax_synced': movement_pax_synced
     }
     
     if itinerary_html:
@@ -3379,6 +3433,9 @@ def api_save_service_data(request_id):
             arrival.needs_transport = _parse_needs_transport(
                 form_data.get('arrival_needs_transport'), default=True
             )
+            # Individual Transport = No: PAX always follows the request PAX
+            if not arrival.needs_transport and (request_obj.pax or 0) >= 1:
+                arrival.pax_count = request_obj.pax
             # Notes: Use same simple pattern as arrival_point - strip and assign directly
             arrival.notes = form_data.get('arrival_notes', '').strip() or None
             print(f"[SAVE SERVICE] ===== ARRIVAL NOTES DEBUG =====")
@@ -3462,6 +3519,9 @@ def api_save_service_data(request_id):
             departure.needs_transport = _parse_needs_transport(
                 form_data.get('departure_needs_transport'), default=True
             )
+            # Individual Transport = No: PAX always follows the request PAX
+            if not departure.needs_transport and (request_obj.pax or 0) >= 1:
+                departure.pax_count = request_obj.pax
 
             # Parse program date
             if form_data.get('departure_program_date'):
@@ -5578,10 +5638,15 @@ def api_get_service_record(request_id, service_type, record_id):
 def _unlink_movement_itinerary_rows(request_id, *, arrival_batch_id=None, departure_batch_id=None):
     """Keep the Itinerary in sync when an arrival/departure batch is deleted.
 
-    Movement rows created purely for the batch (child rows, identified by a
-    parent_row_id stored in their comment JSON) are removed outright. Base day
-    rows that were merely filled with the movement text are kept: their movement
-    text and batch link are cleared so the day slot itself is not lost.
+    Only the deleted batch's own movement row changes:
+    - A row made for the batch (child row, identified by a parent_row_id stored in
+      its comment JSON) is removed outright.
+    - A base day row that was filled with the batch's movement text is kept so the
+      day slot itself is not lost: its movement text and batch link are cleared.
+    - An older row that also holds the other movement type (an arrival and a
+      departure saved on the same day used to share one row) keeps the other
+      batch's link; if the row showed the deleted batch's text, it is rewritten
+      to the surviving batch's text.
     """
     import json as _json
 
@@ -5596,7 +5661,41 @@ def _unlink_movement_itinerary_rows(request_id, *, arrival_batch_id=None, depart
     else:
         return
 
+    deleting_arrival = arrival_batch_id is not None
+    deleted_label = 'Arrival' if deleting_arrival else 'Departure'
+    other_label = 'Departure' if deleting_arrival else 'Arrival'
+
     for row in rows:
+        # Shared row: keep it for the other batch and drop only this batch's link.
+        if deleting_arrival and row.source_departure_batch_id:
+            other = DepartureBatch.query.filter_by(
+                id=row.source_departure_batch_id, request_id=request_id
+            ).first()
+        elif not deleting_arrival and row.source_arrival_batch_id:
+            other = ArrivalBatch.query.filter_by(
+                id=row.source_arrival_batch_id, request_id=request_id
+            ).first()
+        else:
+            other = None
+        if other is not None:
+            if deleting_arrival:
+                row.source_arrival_batch_id = None
+            else:
+                row.source_departure_batch_id = None
+            if (row.description or '').strip().lower().startswith(f'{deleted_label.lower()} -'):
+                other_pax = other.pax_count or 0
+                row.description = f'{other_label} - {other_pax} PAX'
+                comment_data = {}
+                if row.comment:
+                    try:
+                        comment_data = _json.loads(row.comment)
+                    except (ValueError, TypeError):
+                        comment_data = None
+                if isinstance(comment_data, dict):
+                    comment_data['current_pax'] = other_pax
+                    row.comment = _json.dumps(comment_data)
+            continue
+
         is_child = False
         if row.comment:
             try:

@@ -1239,14 +1239,14 @@ input[type="date"]::-webkit-calendar-table-body {
                             <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mt-2">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Individual Transport</label>
-                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_needs_transport" data-service="arrival" title="Yes: after Save, a chip appears on the Transport tab; trip summary and tour file include it after you save supplier and vehicle there.">
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_needs_transport" data-service="arrival" onchange="syncMovementPaxWithTransport('arrival')" title="Yes: after Save, a chip appears on the Transport tab; trip summary and tour file include it after you save supplier and vehicle there.">
                                         <option value="yes" selected>Yes</option>
                                         <option value="no">No</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">PAX Count</label>
-                                    <input type="number" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_pax_count" min="1" value="{{ request.pax or 1 }}" data-service="arrival">
+                                    <input type="number" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_pax_count" min="1" value="1" data-service="arrival">
                                 </div>
                                 <div class="hidden">
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Cost</label>
@@ -1381,14 +1381,14 @@ input[type="date"]::-webkit-calendar-table-body {
                             <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mt-2">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Individual Transport</label>
-                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="departure_needs_transport" data-service="departure" title="Yes: after Save, a chip appears on the Transport tab; trip summary and tour file include it after you save supplier and vehicle there.">
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="departure_needs_transport" data-service="departure" onchange="syncMovementPaxWithTransport('departure')" title="Yes: after Save, a chip appears on the Transport tab; trip summary and tour file include it after you save supplier and vehicle there.">
                                         <option value="yes" selected>Yes</option>
                                         <option value="no">No</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">PAX Count</label>
-                                    <input type="number" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="departure_pax_count" min="1" value="{{ request.pax or 1 }}" data-service="departure">
+                                    <input type="number" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="departure_pax_count" min="1" value="1" data-service="departure">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Cost</label>
@@ -6625,9 +6625,34 @@ function addNewArrivalRecord() {
 function addNewDepartureRecord() {
     // Force new record creation (no rowId)
     currentServiceContext = { serviceName: 'departure', rowId: null };
-    
+
     // Use the same save function as other services for consistency
     addNewServiceData('departure');
+}
+
+// Individual Transport rule for Arrival/Departure PAX Count:
+// No  -> PAX Count is the saved Request Details PAX and cannot be edited.
+// Yes -> PAX Count is entered by the user (starts at 1).
+function syncMovementPaxWithTransport(serviceType) {
+    const transportSelect = document.getElementById(`${serviceType}_needs_transport`);
+    const paxField = document.getElementById(`${serviceType}_pax_count`);
+    if (!transportSelect || !paxField) return;
+
+    if (transportSelect.value === 'no') {
+        const requestPax = parseInt(getPaxValue(), 10) || 0;
+        paxField.value = requestPax > 0 ? requestPax : '';
+        paxField.readOnly = true;
+        paxField.classList.add('bg-slate-100', 'cursor-not-allowed');
+        paxField.dataset.autoPax = 'true';
+    } else {
+        // Coming back from "No" starts again at 1; otherwise keep what the user entered.
+        if (paxField.dataset.autoPax === 'true') {
+            paxField.value = 1;
+        }
+        paxField.readOnly = false;
+        paxField.classList.remove('bg-slate-100', 'cursor-not-allowed');
+        delete paxField.dataset.autoPax;
+    }
 }
 
 // Add a new description input field to an itinerary row (Repeat Day)
@@ -7494,9 +7519,10 @@ function clearServiceForm(serviceType) {
             }
         }
         const paxField = document.getElementById('arrival_pax_count');
-        if (paxField) paxField.value = '{{ request.pax or 1 }}';
+        if (paxField) paxField.value = '1';
         const ant = document.getElementById('arrival_needs_transport');
         if (ant) ant.value = 'yes';
+        syncMovementPaxWithTransport('arrival');
     } else if (serviceType === 'departure') {
         const dateField = document.getElementById('departure_date');
         if (dateField) {
@@ -7518,9 +7544,10 @@ function clearServiceForm(serviceType) {
             }
         }
         const paxField = document.getElementById('departure_pax_count');
-        if (paxField) paxField.value = '{{ request.pax or 1 }}';
+        if (paxField) paxField.value = '1';
         const dnt = document.getElementById('departure_needs_transport');
         if (dnt) dnt.value = 'yes';
+        syncMovementPaxWithTransport('departure');
     }
     
     // Reset context for next new entry
@@ -7601,9 +7628,10 @@ function clearServiceFormFields(serviceType) {
     // Reset PAX to defaults based on service type
     if (serviceType === 'arrival') {
         const paxField = document.getElementById('arrival_pax_count');
-        if (paxField) paxField.value = '{{ request.pax or 1 }}';
+        if (paxField) paxField.value = '1';
         const ant = document.getElementById('arrival_needs_transport');
         if (ant) ant.value = 'yes';
+        syncMovementPaxWithTransport('arrival');
         // Reset the Attach Visa file field and sync its visibility with Visa Status
         pendingConfirmationFiles['arrival'] = null;
         const visaInput = document.getElementById('arrival_confirmation_input');
@@ -7623,9 +7651,10 @@ function clearServiceFormFields(serviceType) {
         }
     } else if (serviceType === 'departure') {
         const paxField = document.getElementById('departure_pax_count');
-        if (paxField) paxField.value = '{{ request.pax or 1 }}';
+        if (paxField) paxField.value = '1';
         const dnt = document.getElementById('departure_needs_transport');
         if (dnt) dnt.value = 'yes';
+        syncMovementPaxWithTransport('departure');
     } else if (serviceType === 'meal') {
         const paxField = document.getElementById('meal_pax');
         if (paxField) paxField.value = '';
@@ -8106,6 +8135,10 @@ function populateServiceForm(serviceType, record) {
     // Keep the Status field visibility in sync with the loaded Meet & Assist value
     if (serviceType === 'arrival' || serviceType === 'departure') {
         updateMeetAssistStatusVisibility(serviceType);
+        // Loaded record: keep its saved PAX (Yes) or show the request PAX (No)
+        const loadedPaxField = document.getElementById(`${serviceType}_pax_count`);
+        if (loadedPaxField) delete loadedPaxField.dataset.autoPax;
+        syncMovementPaxWithTransport(serviceType);
     }
 }
 
@@ -8264,68 +8297,32 @@ async function createMovementItineraryRow(serviceType, batchId = null) {
     const parentRowId = baseRow ? parseInt(baseRow.dataset.rowId, 10) : null;
     const movementText = `${movementLabel} - ${paxValue} PAX`;
 
-    // First movement for this date: fill the first same-day row if it doesn't already have Arrival/Departure.
-    // Next movements: always create a new child row (same effect as clicking +).
-    const hasSameTypeAlready = sameDateRows.some((row) => {
-        const input = row.querySelector('.description-input[data-field="description"]');
-        const desc = (input?.value || '').trim();
-        return desc.toLowerCase().startsWith(`${movementLabel.toLowerCase()} -`);
+    // Every arrival/departure gets its own row under the first row of that day
+    // (same effect as clicking +), so the day's text and any other arrival or
+    // departure on the same day are never overwritten.
+    const createPayload = {
+        itinerary_date: movementDate,
+        description: movementText,
+        current_pax: paxValue,
+        ...batchLink
+    };
+
+    if (parentRowId) {
+        createPayload.parent_row_id = parentRowId;
+    }
+
+    const createResponse = await fetch(`/inbound/api/${requestId}/itinerary-row`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(createPayload)
     });
 
-    if (!hasSameTypeAlready && baseRow) {
-        const rowId = parseInt(baseRow.dataset.rowId, 10);
-        const descriptionInput = baseRow.querySelector('.description-input[data-field="description"]');
-        const noteInput = baseRow.querySelector('input[data-field="note"]');
-        const statusSelect = baseRow.querySelector('select[data-field="status"]');
-
-        const updatePayload = {
-            row_id: rowId,
-            itinerary_date: movementDate,
-            description: movementText,
-            current_pax: paxValue,
-            status: statusSelect ? statusSelect.value : 'REQUEST',
-            note: noteInput ? (noteInput.value || '') : '',
-            ...batchLink
-        };
-
-        const updateResponse = await fetch(`/inbound/api/${requestId}/itinerary-row`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify(updatePayload)
-        });
-
-        const updateResult = await updateResponse.json();
-        if (!updateResponse.ok || !updateResult.success) {
-            throw new Error(updateResult.error || 'Failed to update itinerary movement row');
-        }
-    } else {
-        const createPayload = {
-            itinerary_date: movementDate,
-            description: movementText,
-            current_pax: paxValue,
-            ...batchLink
-        };
-
-        if (parentRowId) {
-            createPayload.parent_row_id = parentRowId;
-        }
-
-        const createResponse = await fetch(`/inbound/api/${requestId}/itinerary-row`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify(createPayload)
-        });
-
-        const createResult = await createResponse.json();
-        if (!createResponse.ok || !createResult.success) {
-            throw new Error(createResult.error || 'Failed to create itinerary movement row');
-        }
+    const createResult = await createResponse.json();
+    if (!createResponse.ok || !createResult.success) {
+        throw new Error(createResult.error || 'Failed to create itinerary movement row');
     }
 
     refreshItineraryTable();
@@ -11060,6 +11057,14 @@ function saveRequest() {
             
             // Auto-populate summary group info with latest saved request data
             syncSummaryGroupInfo();
+
+            // Individual Transport = No arrivals/departures follow the request PAX:
+            // redraw the tables that show their PAX.
+            if (data.movement_pax_synced) {
+                updateFlightsSummaryTable();
+                refreshItineraryTable();
+                refreshItinerarySummaryTable();
+            }
             
             showNotification('Request details saved and tabs updated!', 'success');
         } else {
@@ -11562,6 +11567,11 @@ function updatePaxInAllTabs(pax) {
             paxDisplay.textContent = getPaxValue();
         }
     }
+
+    // Arrival/Departure PAX Count follows the saved request PAX when
+    // Individual Transport = No.
+    syncMovementPaxWithTransport('arrival');
+    syncMovementPaxWithTransport('departure');
 }
 
 // Update date badges in tabs
@@ -16174,10 +16184,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (arrivalStatusInput) {
         arrivalStatusInput.value = '{{ first_arrival.status or "REQUESTED" }}';
     }
-    if (arrivalPaxCountInput) {
-        // Use actual pax_count from database, not request.pax
-        arrivalPaxCountInput.value = '{{ first_arrival.pax_count or 1 }}';
-    }
     {% endif %}
     
     // Populate departure form fields from existing batches on page load
@@ -16199,10 +16205,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (departureStatusInput) {
         departureStatusInput.value = '{{ first_departure.status or "REQUESTED" }}';
-    }
-    if (departurePaxCountInput) {
-        // Use actual pax_count from database, not request.pax
-        departurePaxCountInput.value = '{{ first_departure.pax_count or 1 }}';
     }
     {% endif %}
     
@@ -16244,6 +16246,10 @@ document.addEventListener('DOMContentLoaded', function() {
         updateMeetAssistStatusVisibility('arrival');
         updateMeetAssistStatusVisibility('departure');
     }
+
+    // Initialize PAX Count (Individual Transport rule)
+    syncMovementPaxWithTransport('arrival');
+    syncMovementPaxWithTransport('departure');
     
     const tableBody = document.getElementById('itineraryTableBody');
     const hasRows = tableBody && tableBody.querySelectorAll('tr[data-row-id]').length > 0;
