@@ -2,7 +2,7 @@
 
 app.config reads the environment when first imported, so it is imported inside
 the tests: importing it at collection time, before create_app() loads .env,
-would leave the other tests without DATABASE_URL_TEST.
+would leave the other tests without DATABASE_URL_LOCAL.
 """
 POOLER = 'postgresql://u:p@ep-fancy-hill-b5rwffyj-pooler.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require'
 DIRECT = 'postgresql://u:p@ep-fancy-hill-b5rwffyj.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require'

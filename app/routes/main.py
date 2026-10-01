@@ -497,7 +497,6 @@ def find_bookings():
 def health():
     """Health check for production debugging - verifies DB connectivity and schema.
     Public so the deploy script can call it; anonymous callers get no internals."""
-    import os
     from flask import current_app
     from sqlalchemy import text, inspect
     db_uri = current_app.config.get("SQLALCHEMY_DATABASE_URI") or ""
@@ -505,7 +504,7 @@ def health():
     result = {
         "status": "ok",
         "database_type": "postgresql" if is_pg else "sqlite",
-        "database_url_set": bool(os.environ.get("DATABASE_URL")),
+        "database_url_set": bool(db_uri),
         "db_connected": False,
         "schema_ok": False,
         "inbound_request_columns": [],

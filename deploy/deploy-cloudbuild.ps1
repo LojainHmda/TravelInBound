@@ -1,6 +1,7 @@
 # Deploy via Google Cloud Build (no Docker required locally)
 # Builds in the cloud and deploys to Cloud Run
-# REQUIRES: DATABASE_URL (PostgreSQL) - set in .env or -DatabaseUrl
+# REQUIRES: DATABASE_URL_LIVE (PostgreSQL) in .env, or -DatabaseUrl
+# (an older .env with DATABASE_URL still works)
 
 param(
     [string]$ProjectId = "kartacagenai",
@@ -32,9 +33,13 @@ if (Test-Path ".env") {
             Set-Item -Path "env:$key" -Value $val -Force
         }
     }
+    if (-not $DatabaseUrl) { $DatabaseUrl = $env:DATABASE_URL_LIVE }
     if (-not $DatabaseUrl) { $DatabaseUrl = $env:DATABASE_URL }
     if (-not $CloudSqlInstance) { $CloudSqlInstance = $env:CLOUD_SQL_INSTANCE }
 }
+# The local database, which must never be deployed as live
+$LocalDatabaseUrl = $env:DATABASE_URL_LOCAL
+if (-not $LocalDatabaseUrl) { $LocalDatabaseUrl = $env:DATABASE_URL_TEST }
 
 function Write-Step($message) { Write-Host "`n>>> $message" -ForegroundColor Cyan }
 function Write-Success($message) { Write-Host "[OK] $message" -ForegroundColor Green }
@@ -106,31 +111,31 @@ Write-Success "APIs enabled"
 
 # Database URL (PostgreSQL REQUIRED for production)
 if (-not $DatabaseUrl -or $DatabaseUrl -notmatch '^postgres') {
-    Write-Host "`nPostgreSQL DATABASE_URL is REQUIRED for persistent data." -ForegroundColor Cyan
-    Write-Host "Set in .env or enter now. Examples: Supabase, Neon, Railway, Cloud SQL" -ForegroundColor Gray
+    Write-Host "`nThe live database URL is REQUIRED (DATABASE_URL_LIVE in .env)." -ForegroundColor Cyan
+    Write-Host "Set it in .env or enter it now." -ForegroundColor Gray
     $DatabaseUrl = Read-Host "Enter PostgreSQL URL (postgresql://user:password@host:5432/database)"
     $DatabaseUrl = $DatabaseUrl.Trim()
     if (-not $DatabaseUrl -or $DatabaseUrl -notmatch '^postgres') {
-        Write-Err "DATABASE_URL (postgresql://...) is required. Deployment cancelled."
+        Write-Err "DATABASE_URL_LIVE (postgresql://...) is required. Deployment cancelled."
         exit 1
     }
 }
-if ($env:DATABASE_URL_TEST -and $DatabaseUrl -eq $env:DATABASE_URL_TEST) {
-    Write-Err "This is DATABASE_URL_TEST (preproduction). Production must use DATABASE_URL. Deployment cancelled."
+if ($LocalDatabaseUrl -and $DatabaseUrl -eq $LocalDatabaseUrl) {
+    Write-Err "This is the local database (DATABASE_URL_LOCAL). The live site must use DATABASE_URL_LIVE. Deployment cancelled."
     exit 1
 }
 try {
     $dbHost = ([System.Uri]$DatabaseUrl).Host
 } catch {
-    Write-Err "DATABASE_URL is not a valid URL. Deployment cancelled."
+    Write-Err "DATABASE_URL_LIVE is not a valid URL. Deployment cancelled."
     exit 1
 }
 if (-not $AllowOtherDatabase -and -not $dbHost.StartsWith($ProductionDbEndpoint)) {
-    Write-Err "DATABASE_URL points at $dbHost, not the live database ($ProductionDbEndpoint). Deployment cancelled."
+    Write-Err "DATABASE_URL_LIVE points at $dbHost, not the live database ($ProductionDbEndpoint). Deployment cancelled."
     Write-Host "  If the live database has really moved, rerun with -AllowOtherDatabase." -ForegroundColor Yellow
     exit 1
 }
-Write-Success "PostgreSQL DATABASE_URL configured (live database: $dbHost)"
+Write-Success "Live database: $dbHost"
 
 # Submit build with substitutions
 Write-Step "Submitting build to Cloud Build (builds in cloud, ~5-10 min)..."

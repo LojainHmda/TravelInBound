@@ -51,10 +51,20 @@ class Config:
     }
 
 
+def _first_env(*names):
+    """Value of the first variable that is set. .env names the databases
+    DATABASE_URL_LOCAL and DATABASE_URL_LIVE; the old names still work, and
+    the Cloud Run service itself sets DATABASE_URL."""
+    for name in names:
+        if os.environ.get(name):
+            return os.environ[name]
+    return None
+
+
 class DevelopmentConfig(Config):
     DEBUG = True
     TESTING = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL_TEST')
+    SQLALCHEMY_DATABASE_URI = _first_env('DATABASE_URL_LOCAL', 'DATABASE_URL_TEST')
     SQLALCHEMY_ENGINE_OPTIONS = Config._PG_POOLER_ENGINE_OPTIONS
     SEND_FILE_MAX_AGE_DEFAULT = 0
 
@@ -62,7 +72,7 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     DEBUG = False
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL_TEST')
+    SQLALCHEMY_DATABASE_URI = _first_env('DATABASE_URL_LOCAL', 'DATABASE_URL_TEST')
     SQLALCHEMY_ENGINE_OPTIONS = Config._PG_POOLER_ENGINE_OPTIONS
     WTF_CSRF_ENABLED = False
 
@@ -79,7 +89,7 @@ def pg_engine_options(url):
 class ProductionConfig(Config):
     DEBUG = False
     TESTING = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = _first_env('DATABASE_URL', 'DATABASE_URL_LIVE')
     SQLALCHEMY_ENGINE_OPTIONS = pg_engine_options(SQLALCHEMY_DATABASE_URI)
     SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() == 'true'
 
