@@ -2,6 +2,11 @@
 # Google Cloud Run Deployment Script
 # This script handles the complete deployment process
 
+# Retired: builds from the wrong folder and never sets FLASK_ENV=production, so
+# the app would refuse to start on Cloud Run. One deploy path only.
+echo "This script is retired. Deploy with .\\deploy\\deploy-cloudbuild.ps1 from the repository root." >&2
+exit 1
+
 set -e
 
 # Colors

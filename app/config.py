@@ -1,4 +1,5 @@
 import os
+from urllib.parse import urlsplit
 
 
 class Config:
@@ -66,11 +67,20 @@ class TestingConfig(Config):
     WTF_CSRF_ENABLED = False
 
 
+def pg_engine_options(url):
+    """Neon's pooler rejects statement_timeout as a startup option, so pooler
+    addresses get the pooler-safe set; direct addresses keep the timeout."""
+    host = urlsplit(url or '').hostname or ''
+    if '-pooler' in host:
+        return Config._PG_POOLER_ENGINE_OPTIONS
+    return Config._PG_ENGINE_OPTIONS
+
+
 class ProductionConfig(Config):
     DEBUG = False
     TESTING = False
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
-    SQLALCHEMY_ENGINE_OPTIONS = Config._PG_ENGINE_OPTIONS
+    SQLALCHEMY_ENGINE_OPTIONS = pg_engine_options(SQLALCHEMY_DATABASE_URI)
     SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() == 'true'
 
 

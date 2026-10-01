@@ -1,4 +1,6 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+import os
+
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort
 from flask_login import login_user, logout_user, login_required, current_user
 from urllib.parse import urlparse
 
@@ -119,6 +121,9 @@ def toggle_user_status(user_id):
 @auth_bp.route('/init-data')
 def init_data():
     """Seed admin user — callable only if no users exist yet."""
+    # Public route with hard-coded seed passwords: never on the live site
+    if os.environ.get('FLASK_ENV', 'development').lower() == 'production':
+        abort(404)
     if User.query.count() > 0:
         flash('Data already initialized.', 'info')
         return redirect(url_for('auth.login'))

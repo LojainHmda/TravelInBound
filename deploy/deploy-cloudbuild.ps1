@@ -8,7 +8,10 @@ param(
     [string]$Region = "us-central1",
     [string]$ServiceName = "travel-inbound",
     [string]$DatabaseUrl = $env:DATABASE_URL,
-    [string]$CloudSqlInstance = $env:CLOUD_SQL_INSTANCE
+    [string]$CloudSqlInstance = $env:CLOUD_SQL_INSTANCE,
+    # The live site's Neon database. Deploying any other one needs -AllowOtherDatabase.
+    [string]$ProductionDbEndpoint = "ep-fancy-hill-b5rwffyj",
+    [switch]$AllowOtherDatabase
 )
 
 $ErrorActionPreference = "Stop"
@@ -87,11 +90,11 @@ if (-not $ACCOUNT) {
 Write-Success "Logged in as: $ACCOUNT"
 
 # Check files
-if (-not (Test-Path "cloudbuild.yaml")) {
-    Write-Err "cloudbuild.yaml not found"
+if (-not (Test-Path "deploy/cloudbuild.yaml")) {
+    Write-Err "deploy/cloudbuild.yaml not found"
     exit 1
 }
-Write-Success "cloudbuild.yaml found"
+Write-Success "deploy/cloudbuild.yaml found"
 
 # Enable APIs
 Write-Step "Enabling required APIs..."
@@ -116,14 +119,26 @@ if ($env:DATABASE_URL_TEST -and $DatabaseUrl -eq $env:DATABASE_URL_TEST) {
     Write-Err "This is DATABASE_URL_TEST (preproduction). Production must use DATABASE_URL. Deployment cancelled."
     exit 1
 }
-Write-Success "PostgreSQL DATABASE_URL configured"
+try {
+    $dbHost = ([System.Uri]$DatabaseUrl).Host
+} catch {
+    Write-Err "DATABASE_URL is not a valid URL. Deployment cancelled."
+    exit 1
+}
+if (-not $AllowOtherDatabase -and -not $dbHost.StartsWith($ProductionDbEndpoint)) {
+    Write-Err "DATABASE_URL points at $dbHost, not the live database ($ProductionDbEndpoint). Deployment cancelled."
+    Write-Host "  If the live database has really moved, rerun with -AllowOtherDatabase." -ForegroundColor Yellow
+    exit 1
+}
+Write-Success "PostgreSQL DATABASE_URL configured (live database: $dbHost)"
 
 # Submit build with substitutions
 Write-Step "Submitting build to Cloud Build (builds in cloud, ~5-10 min)..."
 
 $subs = @()
 if ($DatabaseUrl) {
-    $subs += "_DATABASE_URL=$DatabaseUrl"
+    # Base64: the "&" in Neon URLs would cut the command short in gcloud's Windows launcher
+    $subs += "_DATABASE_URL_B64=" + [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($DatabaseUrl))
 }
 if ($CloudSqlInstance) {
     $subs += "_CLOUD_SQL_INSTANCE=$CloudSqlInstance"
@@ -131,7 +146,8 @@ if ($CloudSqlInstance) {
 
 if ($subs.Count -gt 0) {
     $subsStr = $subs -join ","
-    Write-Host "  Passing: $($subs -join ', ')" -ForegroundColor Gray
+    # Names only: the values hold the database password
+    Write-Host "  Passing: $(($subs | ForEach-Object { $_.Split('=')[0] }) -join ', ')" -ForegroundColor Gray
     gcloud builds submit --config deploy/cloudbuild.yaml . --project $PROJECT_ID --substitutions="$subsStr"
 } else {
     gcloud builds submit --config deploy/cloudbuild.yaml . --project $PROJECT_ID

@@ -494,12 +494,13 @@ def find_bookings():
                          has_search_params=has_search_params)
 
 @main_bp.route('/health')
-@login_required
 def health():
-    """Health check for production debugging - verifies DB connectivity and schema."""
+    """Health check for production debugging - verifies DB connectivity and schema.
+    Public so the deploy script can call it; anonymous callers get no internals."""
     import os
+    from flask import current_app
     from sqlalchemy import text, inspect
-    db_uri = os.environ.get("DATABASE_URL", "sqlite:///app.db")
+    db_uri = current_app.config.get("SQLALCHEMY_DATABASE_URI") or ""
     is_pg = db_uri.startswith(("postgresql://", "postgres://"))
     result = {
         "status": "ok",
@@ -510,13 +511,20 @@ def health():
         "inbound_request_columns": [],
         "errors": [],
     }
+    def respond(code=200):
+        if not current_user.is_authenticated:
+            # Error details name the database host; keep only the error kind
+            result.pop("inbound_request_columns", None)
+            result["errors"] = [e.split(":")[0] for e in result["errors"]]
+        return jsonify(result), code
+
     try:
         with db.engine.connect() as conn:
             conn.execute(text("SELECT 1"))
         result["db_connected"] = True
     except Exception as e:
         result["errors"].append(f"DB connection: {str(e)}")
-        return jsonify(result), 503
+        return respond(503)
     try:
         inspector = inspect(db.engine)
         tables = [t.lower() if is_pg else t for t in inspector.get_table_names()]
@@ -535,7 +543,7 @@ def health():
             result["errors"].append("inbound_request table not found")
     except Exception as e:
         result["errors"].append(f"Schema check: {str(e)}")
-    return jsonify(result)
+    return respond()
 
 @main_bp.route('/favicon.ico')
 @login_required

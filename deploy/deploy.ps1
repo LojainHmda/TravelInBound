@@ -13,6 +13,11 @@ param(
     [string]$SessionSecret = ""
 )
 
+# Retired: builds from the wrong folder and never sets FLASK_ENV=production, so
+# the app would refuse to start on Cloud Run. One deploy path only.
+Write-Host "[ERROR] This script is retired. Deploy with .\deploy\deploy-cloudbuild.ps1 from the repository root." -ForegroundColor Red
+exit 1
+
 $ErrorActionPreference = "Stop"
 
 # Load .env if present

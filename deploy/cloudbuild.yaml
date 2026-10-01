@@ -1,7 +1,10 @@
 # Optional: set _DATABASE_URL and _CLOUD_SQL_INSTANCE for persistent database
 # gcloud builds submit --substitutions=_DATABASE_URL="postgresql://user:pass@/db?host=/cloudsql/PROJECT:REGION:INSTANCE",_CLOUD_SQL_INSTANCE="PROJECT:REGION:INSTANCE"
+# deploy-cloudbuild.ps1 sends _DATABASE_URL_B64 instead (base64 of the URL): the
+# "&" in Neon URLs breaks gcloud's Windows launcher when passed as plain text.
 substitutions:
   _DATABASE_URL: ''
+  _DATABASE_URL_B64: ''
   _CLOUD_SQL_INSTANCE: ''
 
 steps:
@@ -16,20 +19,31 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/travel-inbound:latest']
   
-  # Deploy container image to Cloud Run (generates session secret for production)
-  # REQUIRED: Pass _DATABASE_URL - use deploy-cloudbuild.ps1 or:
+  # Deploy container image to Cloud Run (production mode, live DATABASE_URL)
+  # REQUIRED: Pass _DATABASE_URL (or _DATABASE_URL_B64) - use deploy-cloudbuild.ps1 or:
   #   gcloud builds submit --substitutions=_DATABASE_URL="postgresql://...",_CLOUD_SQL_INSTANCE="project:region:instance"
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        if [ -z "${_DATABASE_URL}" ]; then
+        DB_URL="${_DATABASE_URL}"
+        if [ -n "${_DATABASE_URL_B64}" ]; then
+          DB_URL=$$(echo "${_DATABASE_URL_B64}" | base64 -d)
+        fi
+        if [ -z "$$DB_URL" ]; then
           echo "ERROR: _DATABASE_URL is required. Use: gcloud builds submit --substitutions=_DATABASE_URL=postgresql://user:pass@host/db"
           exit 1
         fi
-        SESSION_SECRET=$$(openssl rand -hex 32)
-        ENV_VARS="FLASK_ENV=production,SESSION_SECRET=$$SESSION_SECRET,SESSION_COOKIE_SECURE=true,DATABASE_URL=${_DATABASE_URL}"
+        ENV_VARS="FLASK_ENV=production,SESSION_COOKIE_SECURE=true,DATABASE_URL=$$DB_URL"
+        # Keep the running service's SESSION_SECRET so a deploy doesn't sign
+        # everyone out; generate one only when the service has none yet
+        HAS_SECRET=$$(gcloud run services describe travel-inbound --region us-central1 --format=json 2>/dev/null \
+          | python3 -c "import json,sys; e=json.load(sys.stdin)['spec']['template']['spec']['containers'][0].get('env',[]); print('yes' if any(x.get('name')=='SESSION_SECRET' for x in e) else 'no')" 2>/dev/null)
+        if [ "$$HAS_SECRET" != "yes" ]; then
+          ENV_VARS="$$ENV_VARS,SESSION_SECRET=$$(openssl rand -hex 32)"
+        fi
+        # --update-env-vars keeps variables set by hand on the service (e.g. OPENAI_API_KEY)
         DEPLOY_CMD="gcloud run deploy travel-inbound \
           --image gcr.io/$PROJECT_ID/travel-inbound:$BUILD_ID \
           --region us-central1 \
@@ -40,7 +54,7 @@ steps:
           --timeout 300 \
           --max-instances 10 \
           --min-instances 0 \
-          --set-env-vars \"$$ENV_VARS\""
+          --update-env-vars \"$$ENV_VARS\""
         if [ -n "${_CLOUD_SQL_INSTANCE}" ]; then
           DEPLOY_CMD="$$DEPLOY_CMD --add-cloudsql-instances ${_CLOUD_SQL_INSTANCE}"
         fi
