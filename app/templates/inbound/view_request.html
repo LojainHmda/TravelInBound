@@ -16561,6 +16561,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // generic service-date range restrictions below.
     const CUTOFF_DATE_IDS = ['hotel_cut_off_date', 'transport_cut_off_date', 'meal_cut_off_date'];
 
+    // "To" date fields and the "From" field they follow: an empty "To" picker
+    // opens on the month already chosen in its "From" field.
+    const PAIRED_FROM_DATE_IDS = {
+        'hotel_check_out': 'hotel_check_in',
+        'guide_to_date': 'guide_from_date',
+        'transport_to_date': 'transport_from_date'
+    };
+
     // Get the request date range from Request Details
     const fromDateInput = document.getElementById('fromDate');
     const toDateInput = document.getElementById('toDate');
@@ -16750,6 +16758,17 @@ document.addEventListener('DOMContentLoaded', function() {
                             }
                         }
                     }
+                },
+                onOpen: function(selectedDates, dateStr, instance) {
+                    // An empty picker otherwise opens on the month the page was loaded
+                    // (or the field last cleared) in. When that month is outside the
+                    // request range the month name shows blank and every day is greyed
+                    // out, so jump to the month the user will actually pick from.
+                    if (CUTOFF_DATE_IDS.includes(input.id) || selectedDates.length > 0) return;
+                    const pairedFromId = PAIRED_FROM_DATE_IDS[input.id];
+                    const pairedFrom = pairedFromId ? document.getElementById(pairedFromId) : null;
+                    const target = (pairedFrom && pairedFrom.value) || instance.config.minDate;
+                    if (target) instance.jumpToDate(target);
                 },
                 onChange: function(selectedDates, dateStr, instance) {
                     // User has selected a date - mark as user-selected and update the badge
