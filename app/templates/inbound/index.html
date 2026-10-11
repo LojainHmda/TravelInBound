@@ -401,10 +401,10 @@ button.req-sort-btn {
     position: relative;
 }
 
+/* Fixed (placed by JS from the toggle button) so .table-section's
+   overflow: hidden can't clip it when the list has only one row. */
 .invoice-menu {
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
+    position: fixed;
     min-width: 170px;
     background: #fff;
     border: 1px solid #e9ecef;
@@ -1090,6 +1090,22 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Invoiced row: view icon opens a small menu with two invoice options.
+    // Opens below the button, right edges aligned; flips above when there is no room below.
+    function positionInvoiceMenu(btn, menu) {
+        const gap = 6, edge = 8;
+        const r = btn.getBoundingClientRect();
+        let top = r.bottom + gap;
+        if (top + menu.offsetHeight > window.innerHeight - edge) {
+            top = Math.max(edge, r.top - gap - menu.offsetHeight);
+        }
+        menu.style.top = top + 'px';
+        menu.style.left = Math.max(edge, r.right - menu.offsetWidth) + 'px';
+    }
+    function closeInvoiceMenus() {
+        document.querySelectorAll('.invoice-menu.show').forEach(function(menu) {
+            menu.classList.remove('show');
+        });
+    }
     document.querySelectorAll('.invoice-menu-toggle').forEach(function(btn) {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
@@ -1102,13 +1118,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (openMenu !== menu) openMenu.classList.remove('show');
             });
             menu.classList.toggle('show');
+            if (menu.classList.contains('show')) positionInvoiceMenu(btn, menu);
         });
     });
-    document.addEventListener('click', function() {
-        document.querySelectorAll('.invoice-menu.show').forEach(function(menu) {
-            menu.classList.remove('show');
-        });
-    });
+    document.addEventListener('click', closeInvoiceMenus);
+    // A fixed menu doesn't move with its row, so close it on any scroll or resize.
+    window.addEventListener('scroll', closeInvoiceMenus, true);
+    window.addEventListener('resize', closeInvoiceMenus);
     document.querySelectorAll('.invoice-menu').forEach(function(menu) {
         menu.addEventListener('click', function(e) {
             e.stopPropagation();

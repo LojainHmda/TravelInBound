@@ -2475,9 +2475,17 @@ def api_save_request(request_id):
             )
             db.session.add(new_row)
             current_date += timedelta(days=1)
-        
+
         db.session.flush()
-        
+
+        # Put back each arrival/departure's own "Arrival/Departure - N PAX" row
+        # (deleted above); ones outside the new dates get none.
+        for batch in ArrivalBatch.query.filter_by(request_id=request_id).order_by(ArrivalBatch.id).all():
+            _add_movement_itinerary_row(request_obj, batch)
+        for batch in DepartureBatch.query.filter_by(request_id=request_id).order_by(DepartureBatch.id).all():
+            _add_movement_itinerary_row(request_obj, batch)
+        db.session.flush()
+
         # Render updated itinerary HTML
         sorted_rows = sort_itinerary_rows_with_children(request_obj.itinerary_rows)
         itinerary_html = render_template('components/itinerary_rows.html', 
@@ -3404,6 +3412,7 @@ def api_save_service_data(request_id):
                 arrival = ArrivalBatch.query.filter_by(id=batch_id, request_id=request_id).first()
             else:
                 arrival = None
+            arrival_existed = arrival is not None
 
             if not arrival:
                 # Create new batch
@@ -3490,6 +3499,7 @@ def api_save_service_data(request_id):
                 departure = DepartureBatch.query.filter_by(id=batch_id, request_id=request_id).first()
             else:
                 departure = None
+            departure_existed = departure is not None
 
             if not departure:
                 # Create new batch
@@ -3534,11 +3544,17 @@ def api_save_service_data(request_id):
         db.session.flush()
         if service_type == 'guide':
             guide_record_id_for_json = guide.id
+        # Save Changes on an existing arrival/departure keeps its Itinerary row in
+        # step; a new one gets its row from the page (createMovementItineraryRow).
         if service_type == 'arrival':
             _sync_transport_from_arrival(arrival)
+            if arrival_existed:
+                _sync_movement_itinerary_row(request_obj, arrival)
         elif service_type == 'departure':
             _sync_transport_from_departure(departure)
-        
+            if departure_existed:
+                _sync_movement_itinerary_row(request_obj, departure)
+
         # Debug: Check notes value before commit
         if service_type == 'arrival':
             print(f"[SAVE SERVICE] Before commit - arrival.notes: {repr(getattr(arrival, 'notes', 'NOT_FOUND'))}")
@@ -5708,6 +5724,162 @@ def _unlink_movement_itinerary_rows(request_id, *, arrival_batch_id=None, depart
             row.description = ''
             row.source_arrival_batch_id = None
             row.source_departure_batch_id = None
+
+
+def _itinerary_row_comment_dict(row):
+    """The row's comment JSON as a dict (plain-text comments are kept under '_text')."""
+    if not row.comment:
+        return {}
+    try:
+        data = json.loads(row.comment)
+    except (ValueError, TypeError):
+        return {'_text': row.comment} if str(row.comment).strip() else {}
+    return data if isinstance(data, dict) else {}
+
+
+def _add_movement_itinerary_row(request_obj, batch):
+    """Add the "Arrival - N PAX" / "Departure - N PAX" Itinerary row for one batch.
+
+    Nothing is added when the batch date is outside the request dates or its PAX
+    is below 1. Like the page does for a new arrival/departure, an empty day row
+    is filled; if the day already has text or another arrival/departure, a new
+    row goes under that day, so nothing is overwritten.
+    """
+    is_arrival = isinstance(batch, ArrivalBatch)
+    movement_date = batch.arrival_date if is_arrival else batch.departure_date
+    pax = batch.pax_count or 0
+    if not (movement_date and pax >= 1 and request_obj.from_date and request_obj.to_date):
+        return
+    if not (request_obj.from_date <= movement_date <= request_obj.to_date):
+        return
+
+    label = 'Arrival' if is_arrival else 'Departure'
+    link_field = 'source_arrival_batch_id' if is_arrival else 'source_departure_batch_id'
+    text = f'{label} - {pax} PAX'
+
+    # The day's own row is its first row that is not a child (parent_row_id) row
+    day_rows = ItineraryRow.query.filter_by(
+        request_id=request_obj.id, date=movement_date
+    ).order_by(ItineraryRow.id).all()
+    base_row = next(
+        (row for row in day_rows if not _itinerary_row_comment_dict(row).get('parent_row_id')),
+        None,
+    )
+
+    if (base_row is not None and not (base_row.description or '').strip()
+            and not base_row.source_arrival_batch_id and not base_row.source_departure_batch_id):
+        base_row.description = text
+        setattr(base_row, link_field, batch.id)
+        comment_data = _itinerary_row_comment_dict(base_row)
+        comment_data['current_pax'] = pax
+        base_row.comment = json.dumps(comment_data)
+        return
+
+    comment_data = {'current_pax': pax}
+    if base_row is not None:
+        comment_data['parent_row_id'] = base_row.id
+    db.session.add(ItineraryRow(
+        request_id=request_obj.id,
+        date=movement_date,
+        description=text,
+        comment=json.dumps(comment_data),
+        **{link_field: batch.id},
+    ))
+
+
+def _sync_movement_itinerary_row(request_obj, batch):
+    """Save Changes on an existing arrival/departure: keep its own Itinerary row in step.
+
+    - Same date: the PAX in the standard "Arrival - N PAX" text and the stored
+      current_pax are updated (text the user reworded keeps its wording).
+    - New date: the old row is removed the same way deleting the batch does, and a
+      row is added on the new date.
+    - No row yet (e.g. lost when the request dates changed): one is added when the
+      date is inside the request dates.
+    """
+    import re
+
+    is_arrival = isinstance(batch, ArrivalBatch)
+    movement_date = batch.arrival_date if is_arrival else batch.departure_date
+    label = 'Arrival' if is_arrival else 'Departure'
+    link_col = ItineraryRow.source_arrival_batch_id if is_arrival else ItineraryRow.source_departure_batch_id
+
+    rows = ItineraryRow.query.filter(
+        ItineraryRow.request_id == request_obj.id, link_col == batch.id
+    ).all()
+
+    if rows and all(row.date == movement_date for row in rows):
+        pax = batch.pax_count or 0
+        standard_text = re.compile(rf'^\s*{label}\s*-\s*\d+\s*PAX\s*$', re.IGNORECASE)
+        for row in rows:
+            if standard_text.match(row.description or ''):
+                row.description = f'{label} - {pax} PAX'
+            comment_data = _itinerary_row_comment_dict(row)
+            comment_data['current_pax'] = pax
+            row.comment = json.dumps(comment_data)
+        return
+
+    if rows:
+        if is_arrival:
+            _unlink_movement_itinerary_rows(request_obj.id, arrival_batch_id=batch.id)
+        else:
+            _unlink_movement_itinerary_rows(request_obj.id, departure_batch_id=batch.id)
+        db.session.flush()
+
+    _add_movement_itinerary_row(request_obj, batch)
+
+
+def _service_date_issues(request_obj):
+    """Saved services whose dates fall outside the request dates, per service tab.
+
+    Returns {service: [{'id': record_id, 'fields': [form date field ids]}]} so the
+    request page can mark them in red until they are moved inside the trip dates
+    (same rule as the service forms: no date before From or after To).
+    Flight-linked transport stubs follow their arrival/departure and cancelled
+    guides no longer run, so neither is listed.
+    """
+    issues = {service: [] for service in ('arrival', 'departure', 'hotel', 'transport', 'guide', 'meal')}
+    start, end = request_obj.from_date, request_obj.to_date
+    if not start or not end:
+        return issues
+
+    def add(service, record_id, checks):
+        fields = [field_id for field_id, value in checks
+                  if value is not None and (value < start or value > end)]
+        if fields:
+            issues[service].append({'id': record_id, 'fields': fields})
+
+    for arrival in ArrivalBatch.query.filter_by(request_id=request_obj.id).all():
+        add('arrival', arrival.id, [('arrival_date', arrival.arrival_date)])
+    for departure in DepartureBatch.query.filter_by(request_id=request_obj.id).all():
+        add('departure', departure.id, [('departure_date', departure.departure_date)])
+    for hotel in InboundHotel.query.filter_by(request_id=request_obj.id).all():
+        add('hotel', hotel.id, [('hotel_check_in', hotel.check_in_date),
+                                ('hotel_check_out', hotel.check_out_date)])
+    for transport in InboundTransport.query.filter_by(request_id=request_obj.id).all():
+        if _is_individual_transport_from_flight(transport):
+            continue
+        add('transport', transport.id, [('transport_from_date', transport.date),
+                                        ('transport_to_date', transport.end_date)])
+    for guide in InboundGuide.query.filter_by(request_id=request_obj.id).all():
+        if guide.is_cancelled:
+            continue
+        add('guide', guide.id, [('guide_from_date', guide.date), ('guide_to_date', guide.end_date)])
+    for meal in InboundMeal.query.filter_by(request_id=request_obj.id).all():
+        add('meal', meal.id, [('meal_from_date', meal.date)])
+    return issues
+
+
+@inbound_bp.route('/api/<int:request_id>/service-date-issues', methods=['GET'])
+@csrf.exempt
+def api_service_date_issues(request_id):
+    """Services with dates outside the request dates (shown in red on the request page)"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+
+    return jsonify({'success': True, 'issues': _service_date_issues(request_obj)})
 
 
 @inbound_bp.route('/api/<int:request_id>/service/<service_type>/<int:record_id>', methods=['DELETE'])

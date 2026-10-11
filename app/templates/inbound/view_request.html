@@ -614,6 +614,28 @@ input[type="date"]::-webkit-calendar-table-body {
     box-shadow: 0 0 0 1px #3b82f6;
 }
 
+/* Services with dates outside the trip dates: red until every date is fixed.
+   Tab ids in the selectors so they beat the site-wide button rule in
+   button-theme.css (many :not() classes + !important). */
+:is(#tab-arrival, #tab-departure, #tab-hotel, #tab-transport, #tab-guide, #tab-meal).date-issue-tab {
+    background: #fee2e2 !important;
+    color: #b91c1c !important;
+    box-shadow: inset 0 0 0 2px #ef4444 !important;
+}
+:is(#tab-arrival, #tab-departure, #tab-hotel, #tab-transport, #tab-guide, #tab-meal).date-issue-tab i {
+    color: #dc2626 !important;
+}
+.date-issue-tab .tab-count-badge { background-color: #dc2626 !important; color: #fff !important; }
+#service-record-tabs button.date-issue-record-tab {
+    background-color: #fee2e2 !important;
+    color: #b91c1c !important;
+    border-color: #ef4444 !important;
+}
+.date-issue-field {
+    border-color: #ef4444 !important;
+    background-color: #fef2f2 !important;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .tw-container { padding: 1rem; }
@@ -1048,7 +1070,13 @@ input[type="date"]::-webkit-calendar-table-body {
                         {% endif %}
                     </h2>
                 </div>
-                
+
+                <!-- Services with dates outside the trip dates (stays until all are fixed) -->
+                <div id="service-date-issues-banner" class="hidden mx-3 mt-2 px-3 py-2 rounded-lg border border-red-300 bg-red-50 text-red-700 text-xs font-semibold flex items-center gap-2">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="service-date-issues-text"></span>
+                </div>
+
                 <!-- Service Tabs - Top Navigation -->
                 <div class="px-3 pt-2 pb-2">
                     <div class="flex items-center gap-1 p-1.5 rounded-full" style="background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);">
@@ -4537,6 +4565,9 @@ function updateTabColors() {
             }
         }
     }
+
+    // Tabs with dates outside the trip dates stay red with the count to fix
+    applyServiceDateIssueMarks();
 }
 
 /**
@@ -4742,6 +4773,10 @@ function displayRecordTabs(serviceName) {
         tab.textContent = label;
         tab.title = label; // Tooltip for long names
         tab.onclick = () => switchServiceTabToRecord(serviceName, i);
+        // Red when this record's dates are outside the trip dates
+        tab.dataset.serviceName = serviceName;
+        tab.dataset.recordId = recordElements[i - 1]?.dataset.recordId || '';
+        tab.classList.toggle('date-issue-record-tab', !!getServiceDateIssue(serviceName, tab.dataset.recordId));
         tabsDiv.appendChild(tab);
     }
 
@@ -7470,6 +7505,7 @@ function cancelEditMode(serviceType) {
 // Clear form fields for a service type after adding
 // NOTE: Preserves date inputs to prevent user frustration with cleared dates
 function clearServiceForm(serviceType) {
+    clearServiceDateIssueFields(serviceType);
     const fields = document.querySelectorAll(`[data-service="${serviceType}"]`);
     fields.forEach(field => {
         if (field._flatpickr) {
@@ -7580,6 +7616,7 @@ function clearServiceForm(serviceType) {
 // BUSINESS LOGIC: Reset date fields to their default values from Request Details
 // The default value is stored in data-default-value attribute (set by updateDefaultDatesInTabs)
 function clearServiceFormFields(serviceType) {
+    clearServiceDateIssueFields(serviceType);
     const fields = document.querySelectorAll(`[data-service="${serviceType}"]`);
     fields.forEach(field => {
         if (field._flatpickr) {
@@ -8140,6 +8177,9 @@ function populateServiceForm(serviceType, record) {
         if (loadedPaxField) delete loadedPaxField.dataset.autoPax;
         syncMovementPaxWithTransport(serviceType);
     }
+
+    // Dates outside the trip dates: red fields with a note to pick a new date
+    markServiceDateIssueFields(serviceType, record.id);
 }
 
 // Handle Remove button click from summary table - deletes the record
@@ -8202,7 +8242,8 @@ function handleRemoveServiceRow(serviceType, recordId, confirmMessage = null) {
                 refreshTransportSummaryTableFromServer();
                 refreshTransportFlightChips();
             }
-            
+            refreshServiceDateIssues();
+
             showNotification(`${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} record deleted successfully!`, 'success');
         } else {
             showNotification(data.error || 'Failed to delete record', 'error');
@@ -8297,18 +8338,23 @@ async function createMovementItineraryRow(serviceType, batchId = null) {
     const parentRowId = baseRow ? parseInt(baseRow.dataset.rowId, 10) : null;
     const movementText = `${movementLabel} - ${paxValue} PAX`;
 
-    // Every arrival/departure gets its own row under the first row of that day
-    // (same effect as clicking +), so the day's text and any other arrival or
-    // departure on the same day are never overwritten.
-    const createPayload = {
+    // An empty day row is filled with the arrival/departure. If the day already
+    // has text or another arrival/departure, it gets its own row under the first
+    // row of that day (same effect as clicking +), so nothing is overwritten.
+    const baseDescription = (baseRow?.querySelector('.description-input[data-field="description"]')?.value || '').trim();
+    const fillBaseRow = !!baseRow && !baseDescription;
+
+    const rowPayload = {
         itinerary_date: movementDate,
         description: movementText,
         current_pax: paxValue,
         ...batchLink
     };
 
-    if (parentRowId) {
-        createPayload.parent_row_id = parentRowId;
+    if (fillBaseRow) {
+        rowPayload.row_id = parentRowId;
+    } else if (parentRowId) {
+        rowPayload.parent_row_id = parentRowId;
     }
 
     const createResponse = await fetch(`/inbound/api/${requestId}/itinerary-row`, {
@@ -8317,7 +8363,7 @@ async function createMovementItineraryRow(serviceType, batchId = null) {
             'Content-Type': 'application/json',
             'X-CSRFToken': csrfToken
         },
-        body: JSON.stringify(createPayload)
+        body: JSON.stringify(rowPayload)
     });
 
     const createResult = await createResponse.json();
@@ -8852,6 +8898,7 @@ async function saveServiceData(serviceType) {
             // Explicitly update tab badges and colors
             updateTabBadges();
             updateTabColors();
+            refreshServiceDateIssues();
 
             if (serviceType === 'guide') {
                 if (data.itinerary_html) {
@@ -8973,7 +9020,13 @@ async function saveServiceData(serviceType) {
                 // For edit mode - update completed, reset to Add mode
                 if (wasEditRowId) activateIcon(wasEditRowId, serviceType);
                 showNotification('Record updated successfully!', 'success');
-                
+
+                // Arrival/departure edits update their Itinerary row on the server
+                if (serviceType === 'arrival' || serviceType === 'departure') {
+                    refreshItineraryTable();
+                    refreshItinerarySummaryTable();
+                }
+
                 // Reset to Add New mode after successful edit
                 setTimeout(() => {
                     clearServiceForm(serviceType);
@@ -10046,6 +10099,113 @@ function updateTabBadges() {
     
     // Debug log to help troubleshoot
     console.log('[updateTabBadges] Service counts:', serviceCounts, 'DOM ready:', domReady);
+
+    // Tabs with dates outside the trip dates stay red with the count to fix
+    applyServiceDateIssueMarks();
+}
+
+// ==========================================
+// SERVICE DATES OUTSIDE THE TRIP DATES
+// ==========================================
+// Saved services whose dates are outside the request dates (e.g. after the trip
+// dates changed) are marked in red until they are moved inside the trip dates:
+// the service tab (badge = how many to fix), the record tab, a banner, and the
+// date fields of an opened record. {service: [{id, fields}]} from the server.
+// `var` so the early updateTabBadges() calls on page load can read it.
+var serviceDateIssues = {};
+
+function getServiceDateIssueList(serviceType) {
+    return (serviceDateIssues || {})[serviceType] || [];
+}
+
+function getServiceDateIssue(serviceType, recordId) {
+    return getServiceDateIssueList(serviceType).find(issue => String(issue.id) === String(recordId)) || null;
+}
+
+function applyServiceDateIssueMarks() {
+    let total = 0;
+    ['arrival', 'departure', 'hotel', 'transport', 'guide', 'meal'].forEach(serviceType => {
+        const issueCount = getServiceDateIssueList(serviceType).length;
+        total += issueCount;
+        const tab = document.getElementById(`tab-${serviceType}`);
+        if (!tab) return;
+        tab.classList.toggle('date-issue-tab', issueCount > 0);
+        if (issueCount > 0) {
+            let badge = tab.querySelector('.tab-count-badge');
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'ml-1 text-white text-[10px] px-1.5 rounded-full tab-count-badge';
+                tab.appendChild(badge);
+            }
+            badge.textContent = issueCount;
+        }
+    });
+
+    document.querySelectorAll('#service-record-tabs button[data-record-id]').forEach(btn => {
+        btn.classList.toggle('date-issue-record-tab', !!getServiceDateIssue(btn.dataset.serviceName, btn.dataset.recordId));
+    });
+
+    const banner = document.getElementById('service-date-issues-banner');
+    const bannerText = document.getElementById('service-date-issues-text');
+    if (banner && bannerText) {
+        bannerText.textContent = `${total} item(s) have dates outside the trip dates. Please update the dates on the tabs marked in red.`;
+        banner.classList.toggle('hidden', total === 0);
+    }
+}
+
+// Reload the list from the server and redraw the red marks. With notify, also
+// warn when something needs new dates (used right after the trip dates change).
+function refreshServiceDateIssues(notify = false) {
+    return fetch(`/inbound/api/${requestId}/service-date-issues`)
+        .then(response => response.ok ? response.json() : null)
+        .then(data => {
+            if (!data || !data.success) return;
+            serviceDateIssues = data.issues || {};
+            // Puts the normal counts back on fixed tabs, then applies the red marks
+            updateTabBadges();
+            if (openServiceRecord) {
+                markServiceDateIssueFields(openServiceRecord.serviceType, openServiceRecord.recordId);
+            }
+            const total = Object.values(serviceDateIssues).reduce((sum, list) => sum + list.length, 0);
+            if (notify && total > 0) {
+                showNotification(`Trip dates changed: please check the service dates. ${total} item(s) marked in red need new dates.`, 'warning');
+            }
+        })
+        .catch(error => console.error('Error loading service date issues:', error));
+}
+
+// Record currently opened in a service form, so a refresh can re-mark its fields
+var openServiceRecord = null;
+
+// Opened record: red date fields with a note to pick a new date
+function markServiceDateIssueFields(serviceType, recordId) {
+    clearServiceDateIssueFields(serviceType);
+    openServiceRecord = { serviceType, recordId };
+    const issue = getServiceDateIssue(serviceType, recordId);
+    if (!issue) return;
+    issue.fields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+        const shown = (field._flatpickr && field._flatpickr.altInput) || field;
+        shown.classList.add('date-issue-field');
+        field.classList.add('date-issue-field');
+        const note = document.createElement('p');
+        note.className = 'date-issue-note text-[11px] font-semibold text-red-600 mt-1';
+        note.dataset.dateIssueFor = serviceType;
+        note.textContent = 'Outside the trip dates - please choose a new date.';
+        shown.insertAdjacentElement('afterend', note);
+    });
+}
+
+function clearServiceDateIssueFields(serviceType) {
+    if (openServiceRecord && openServiceRecord.serviceType === serviceType) {
+        openServiceRecord = null;
+    }
+    document.querySelectorAll(`.date-issue-note[data-date-issue-for="${serviceType}"]`).forEach(note => note.remove());
+    const panel = document.getElementById(`service-panel-${serviceType}`);
+    if (panel) {
+        panel.querySelectorAll('.date-issue-field').forEach(el => el.classList.remove('date-issue-field'));
+    }
 }
 
 // Delete service functions
@@ -11067,6 +11227,9 @@ function saveRequest() {
             }
             
             showNotification('Request details saved and tabs updated!', 'success');
+
+            // New trip dates: mark services left outside them, and warn if any
+            refreshServiceDateIssues(!!data.dates_changed);
         } else {
             showNotification(data.message || 'Error saving request', 'error');
         }
@@ -16152,6 +16315,9 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         updateTabBadges();
     }, 1000);
+
+    // Red marks for services with dates outside the trip dates
+    refreshServiceDateIssues();
     
     const form = document.getElementById('editMode');
     if (form) {

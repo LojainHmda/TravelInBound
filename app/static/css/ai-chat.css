@@ -362,3 +362,4 @@
     margin-top: 0;
     margin-bottom: 8px;
 }
+@media print { .ai-chat-fab, .ai-chat-widget { display: none !important; } }

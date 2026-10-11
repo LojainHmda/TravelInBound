@@ -472,6 +472,11 @@
             min-height: calc(100vh - 70px);
             padding: 0;
         }
+
+        /* In print 100vh is a whole page, so these minimums push short documents onto a blank extra page. */
+        @media print {
+            body, .app-container, #content { min-height: 0 !important; }
+        }
         
         .sidebar-header {
             padding: 15px 20px;
