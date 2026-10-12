@@ -2519,13 +2519,14 @@ def api_save_request(request_id):
 def _check_guide_assigned_on_date(supplier_id, check_date, exclude_guide_id=None):
     """Check if a guide (supplier) is already assigned to another trip on the given date.
     Returns (conflict_found, conflicting_request_number) or (False, None).
-    Each guide can have only one trip per day. Excludes cancelled assignments.
+    Each guide can have only one trip per day. Excludes cancelled assignments
+    and guides on requests moved to the Deleted queue (pending_invoice_queue).
     When editing, exclude_guide_id is the row being updated so we don't count it.
     A guide covers check_date if: date <= check_date <= (end_date or date).
     """
     if not supplier_id or not check_date:
         return False, None
-    from sqlalchemy import or_
+    from sqlalchemy import or_, exists
     # Guide covers check_date when: date <= check_date AND (end_date >= check_date OR (end_date IS NULL AND date = check_date))
     q = InboundGuide.query.filter(
         InboundGuide.supplier_id == int(supplier_id),
@@ -2534,7 +2535,12 @@ def _check_guide_assigned_on_date(supplier_id, check_date, exclude_guide_id=None
         or_(
             (InboundGuide.end_date != None) & (InboundGuide.end_date >= check_date),
             (InboundGuide.end_date == None) & (InboundGuide.date == check_date)
-        )
+        ),
+        # A deleted request no longer holds its guide for those days.
+        ~exists().where(
+            InboundRequest.id == InboundGuide.request_id,
+            InboundRequest.pending_invoice_queue == True,
+        ),
     )
     if exclude_guide_id is not None:
         q = q.filter(InboundGuide.id != exclude_guide_id)
