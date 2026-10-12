@@ -22,10 +22,19 @@ def create_app():
     from app.config import get_config
     app.config.from_object(get_config())
 
+    # Cloud Run must run ProductionConfig. Without FLASK_ENV the app would fall
+    # back to DevelopmentConfig and read DATABASE_URL_LOCAL (the local database).
+    env = os.environ.get('FLASK_ENV', 'development').lower()
+    if os.environ.get('K_SERVICE') and env != 'production':
+        raise RuntimeError(
+            f"Refusing to start on Cloud Run with FLASK_ENV={env!r}. "
+            "Set FLASK_ENV=production so the app uses DATABASE_URL (live) "
+            "instead of DATABASE_URL_LOCAL (local)."
+        )
+
     # Validate DB URL is set
     if not app.config.get('SQLALCHEMY_DATABASE_URI'):
-        env = os.environ.get('FLASK_ENV', 'development')
-        key = 'DATABASE_URL_TEST' if env != 'production' else 'DATABASE_URL'
+        key = 'DATABASE_URL_LOCAL' if env != 'production' else 'DATABASE_URL (or DATABASE_URL_LIVE)'
         raise RuntimeError(f"Missing required env var: {key}")
 
     # Warn if production points at non-postgres
@@ -99,6 +108,9 @@ def create_app():
     from app.models.inbound import itinerary_row_guide_supplier_id_list
     app.jinja_env.globals['itinerary_row_guide_ids'] = itinerary_row_guide_supplier_id_list
 
+    from app.models.supplier import BASE_ROOM_CATEGORIES
+    app.jinja_env.globals['BASE_ROOM_CATEGORIES'] = BASE_ROOM_CATEGORIES
+
     with app.app_context():
         # Import all models so SQLAlchemy registers them
         from app.models import User                       # noqa: F401
@@ -152,6 +164,11 @@ def create_app():
         from app.routes.inbound import inbound_bp
         app.register_blueprint(inbound_bp)
 
+        # Production must not come up without its database: a failed start makes
+        # Cloud Run keep the previous revision instead of serving 500s.
+        if env == 'production':
+            _wait_for_database(app, db)
+
         # Schema creation + upgrade (dev only — prod uses flask db upgrade)
         try:
             db.create_all()
@@ -160,9 +177,30 @@ def create_app():
 
         _run_schema_upgrades(app, db)
         _sync_sequences(app, db, db_uri)
-        _bootstrap_admin(app, db, db_uri)
+        _bootstrap_admin(app, db, db_uri, production=(env == 'production'))
+
+        # gunicorn --preload forks the workers after this point; close the
+        # startup connections so the workers don't share sockets
+        db.engine.dispose()
 
     return app
+
+
+def _wait_for_database(app, db, attempts=5, delay=3):
+    """Retry briefly (Neon may be waking from idle), then refuse to start."""
+    import time
+    from sqlalchemy import text
+
+    for attempt in range(1, attempts + 1):
+        try:
+            with db.engine.connect() as conn:
+                conn.execute(text('SELECT 1'))
+            return
+        except Exception as e:
+            app.logger.error(f'Database not reachable (attempt {attempt}/{attempts}): {e}')
+            if attempt == attempts:
+                raise RuntimeError('Database not reachable at startup; refusing to start.') from e
+            time.sleep(delay)
 
 
 def _run_schema_upgrades(app, db):
@@ -201,6 +239,11 @@ def _run_schema_upgrades(app, db):
                 existing = {c['name'] for c in inspector.get_columns('hotel_room')}
                 if 'room_category' not in existing:
                     _add_col('hotel_room', 'room_category', 'VARCHAR(100)')
+
+            if 'supplier' in tables:
+                existing = {c['name'] for c in inspector.get_columns('supplier')}
+                if 'room_categories' not in existing:
+                    _add_col('supplier', 'room_categories', 'TEXT')
 
             if 'customer' in tables:
                 existing = {c['name'] for c in inspector.get_columns('customer')}
@@ -284,11 +327,17 @@ def _sync_sequences(app, db, db_uri):
         app.logger.warning(f'Sequence sync (non-fatal): {e}')
 
 
-def _bootstrap_admin(app, db, db_uri):
+def _bootstrap_admin(app, db, db_uri, production=False):
     """Ensure admin user id=1 exists."""
     try:
         from app.models.user import User, create_test_data
         if db.session.get(User, 1) is None:
+            if production:
+                # The seed accounts have hard-coded passwords; never create
+                # them on the public site
+                app.logger.error('No admin user (id=1) in the production database; '
+                                 'default accounts are not seeded in production.')
+                return
             app.logger.info('Bootstrapping admin user (id=1)')
             create_test_data()
             if db_uri.startswith(('postgresql://', 'postgres://')):

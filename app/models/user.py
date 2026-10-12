@@ -91,7 +91,16 @@ def create_test_data():
     admin_user.set_password('admin123')
     db.session.add(admin_user)
     db.session.flush()
-    
+
+    # admin was inserted with an explicit id, so the Postgres sequence still
+    # returns 1 - advance it or the next insert collides on user_pkey
+    if db.engine.url.get_backend_name() == 'postgresql':
+        from sqlalchemy import text
+        db.session.execute(text(
+            "SELECT setval(pg_get_serial_sequence('\"user\"', 'id'), "
+            "(SELECT MAX(id) FROM \"user\"))"
+        ))
+
     # Create ops manager user only if table is empty (legacy)
     if User.query.count() <= 1:
         ops_user = User(

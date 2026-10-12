@@ -1,6 +1,11 @@
 # Install Google Cloud SDK and deploy Travel Inbound to Cloud Run
 # Run this script - you may need to approve UAC and sign in to Google in browser
 
+# Retired: submits a cloudbuild.yaml that is not in this folder and passes no
+# DATABASE_URL, so the build always stops. One deploy path only.
+Write-Host "[ERROR] This script is retired. Deploy with .\deploy\deploy-cloudbuild.ps1 from the repository root." -ForegroundColor Red
+exit 1
+
 $ErrorActionPreference = "Stop"
 $ProjectRoot = $PSScriptRoot
 Set-Location $ProjectRoot

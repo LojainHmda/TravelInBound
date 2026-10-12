@@ -319,9 +319,12 @@ def _get_supplier_dropdown_data(cache_ttl_seconds: int = 120):
     for hotel in hotels:
         city = hotel.city or 'Other'
         hotels_by_city.setdefault(city, []).append(hotel)
+    # Order cities: put standard ones first, then others
+    ordered_hotel_cities = [c for c in city_order if c in hotels_by_city]
+    ordered_hotel_cities.extend([c for c in hotels_by_city if c not in city_order])
     sorted_hotels_by_city = {
-        city: hotels_by_city.get(city, [])
-        for city in city_order if city in hotels_by_city
+        city: hotels_by_city[city]
+        for city in ordered_hotel_cities
     }
 
     # Extract unique cities and categories from hotels
@@ -494,6 +497,56 @@ def _reconcile_flight_linked_transports(request_id: int) -> None:
         _sync_transport_from_arrival(arr)
     for dep in DepartureBatch.query.filter_by(request_id=request_id).order_by(DepartureBatch.id).all():
         _sync_transport_from_departure(dep)
+
+
+def _sync_no_transport_movement_pax(request_obj) -> int:
+    """Individual Transport = No: arrival/departure PAX follows the request PAX.
+
+    Updates each such batch and its own Itinerary row(s): the stored current_pax
+    and the number in a standard "Arrival - N PAX" / "Departure - N PAX" text.
+    Rows whose text was reworded keep their wording. Batches with Individual
+    Transport = Yes are never touched. Returns how many records/rows changed.
+    Nothing changes while the request PAX is empty or less than 1.
+    """
+    import json as _json
+    import re
+
+    pax = request_obj.pax
+    if not pax or pax < 1:
+        return 0
+    changed = 0
+    for model, link_col, label, other_col in (
+        (ArrivalBatch, ItineraryRow.source_arrival_batch_id, 'Arrival', 'source_departure_batch_id'),
+        (DepartureBatch, ItineraryRow.source_departure_batch_id, 'Departure', 'source_arrival_batch_id'),
+    ):
+        pax_text = re.compile(rf'^(\s*{label}\s*-\s*)\d+(\s*PAX)', re.IGNORECASE)
+        for batch in model.query.filter_by(request_id=request_obj.id, needs_transport=False).all():
+            if batch.pax_count != pax:
+                batch.pax_count = pax
+                changed += 1
+            rows = ItineraryRow.query.filter(
+                ItineraryRow.request_id == request_obj.id, link_col == batch.id
+            ).all()
+            for row in rows:
+                description = row.description or ''
+                # Older shared row that shows the other movement: leave it alone.
+                if getattr(row, other_col) and not description.strip().lower().startswith(label.lower()):
+                    continue
+                new_description = pax_text.sub(rf'\g<1>{pax}\g<2>', description, count=1)
+                if new_description != description:
+                    row.description = new_description
+                    changed += 1
+                comment_data = {}
+                if row.comment:
+                    try:
+                        comment_data = _json.loads(row.comment)
+                    except (ValueError, TypeError):
+                        comment_data = None
+                if isinstance(comment_data, dict) and comment_data.get('current_pax') != pax:
+                    comment_data['current_pax'] = pax
+                    row.comment = _json.dumps(comment_data)
+                    changed += 1
+    return changed
 
 
 def _hub_status_scope_label(status_val):
@@ -2422,9 +2475,17 @@ def api_save_request(request_id):
             )
             db.session.add(new_row)
             current_date += timedelta(days=1)
-        
+
         db.session.flush()
-        
+
+        # Put back each arrival/departure's own "Arrival/Departure - N PAX" row
+        # (deleted above); ones outside the new dates get none.
+        for batch in ArrivalBatch.query.filter_by(request_id=request_id).order_by(ArrivalBatch.id).all():
+            _add_movement_itinerary_row(request_obj, batch)
+        for batch in DepartureBatch.query.filter_by(request_id=request_id).order_by(DepartureBatch.id).all():
+            _add_movement_itinerary_row(request_obj, batch)
+        db.session.flush()
+
         # Render updated itinerary HTML
         sorted_rows = sort_itinerary_rows_with_children(request_obj.itinerary_rows)
         itinerary_html = render_template('components/itinerary_rows.html', 
@@ -2435,6 +2496,9 @@ def api_save_request(request_id):
                                         itinerary_guide_slot_saved=_itinerary_guide_slot_saved_map(request_obj),
                                         view_only=False)
 
+    # Individual Transport = No: arrivals/departures follow the request PAX
+    movement_pax_synced = _sync_no_transport_movement_pax(request_obj)
+
     db.session.commit()
 
     response = {
@@ -2442,7 +2506,8 @@ def api_save_request(request_id):
         'request_number': request_obj.request_number,
         'message': 'Request saved successfully',
         'dates_changed': dates_changed,
-        'no_of_days': request_obj.no_of_days
+        'no_of_days': request_obj.no_of_days,
+        'movement_pax_synced': movement_pax_synced
     }
     
     if itinerary_html:
@@ -2454,13 +2519,14 @@ def api_save_request(request_id):
 def _check_guide_assigned_on_date(supplier_id, check_date, exclude_guide_id=None):
     """Check if a guide (supplier) is already assigned to another trip on the given date.
     Returns (conflict_found, conflicting_request_number) or (False, None).
-    Each guide can have only one trip per day. Excludes cancelled assignments.
+    Each guide can have only one trip per day. Excludes cancelled assignments
+    and guides on requests moved to the Deleted queue (pending_invoice_queue).
     When editing, exclude_guide_id is the row being updated so we don't count it.
     A guide covers check_date if: date <= check_date <= (end_date or date).
     """
     if not supplier_id or not check_date:
         return False, None
-    from sqlalchemy import or_
+    from sqlalchemy import or_, exists
     # Guide covers check_date when: date <= check_date AND (end_date >= check_date OR (end_date IS NULL AND date = check_date))
     q = InboundGuide.query.filter(
         InboundGuide.supplier_id == int(supplier_id),
@@ -2469,7 +2535,12 @@ def _check_guide_assigned_on_date(supplier_id, check_date, exclude_guide_id=None
         or_(
             (InboundGuide.end_date != None) & (InboundGuide.end_date >= check_date),
             (InboundGuide.end_date == None) & (InboundGuide.date == check_date)
-        )
+        ),
+        # A deleted request no longer holds its guide for those days.
+        ~exists().where(
+            InboundRequest.id == InboundGuide.request_id,
+            InboundRequest.pending_invoice_queue == True,
+        ),
     )
     if exclude_guide_id is not None:
         q = q.filter(InboundGuide.id != exclude_guide_id)
@@ -3347,6 +3418,7 @@ def api_save_service_data(request_id):
                 arrival = ArrivalBatch.query.filter_by(id=batch_id, request_id=request_id).first()
             else:
                 arrival = None
+            arrival_existed = arrival is not None
 
             if not arrival:
                 # Create new batch
@@ -3376,6 +3448,9 @@ def api_save_service_data(request_id):
             arrival.needs_transport = _parse_needs_transport(
                 form_data.get('arrival_needs_transport'), default=True
             )
+            # Individual Transport = No: PAX always follows the request PAX
+            if not arrival.needs_transport and (request_obj.pax or 0) >= 1:
+                arrival.pax_count = request_obj.pax
             # Notes: Use same simple pattern as arrival_point - strip and assign directly
             arrival.notes = form_data.get('arrival_notes', '').strip() or None
             print(f"[SAVE SERVICE] ===== ARRIVAL NOTES DEBUG =====")
@@ -3430,6 +3505,7 @@ def api_save_service_data(request_id):
                 departure = DepartureBatch.query.filter_by(id=batch_id, request_id=request_id).first()
             else:
                 departure = None
+            departure_existed = departure is not None
 
             if not departure:
                 # Create new batch
@@ -3459,6 +3535,9 @@ def api_save_service_data(request_id):
             departure.needs_transport = _parse_needs_transport(
                 form_data.get('departure_needs_transport'), default=True
             )
+            # Individual Transport = No: PAX always follows the request PAX
+            if not departure.needs_transport and (request_obj.pax or 0) >= 1:
+                departure.pax_count = request_obj.pax
 
             # Parse program date
             if form_data.get('departure_program_date'):
@@ -3471,11 +3550,17 @@ def api_save_service_data(request_id):
         db.session.flush()
         if service_type == 'guide':
             guide_record_id_for_json = guide.id
+        # Save Changes on an existing arrival/departure keeps its Itinerary row in
+        # step; a new one gets its row from the page (createMovementItineraryRow).
         if service_type == 'arrival':
             _sync_transport_from_arrival(arrival)
+            if arrival_existed:
+                _sync_movement_itinerary_row(request_obj, arrival)
         elif service_type == 'departure':
             _sync_transport_from_departure(departure)
-        
+            if departure_existed:
+                _sync_movement_itinerary_row(request_obj, departure)
+
         # Debug: Check notes value before commit
         if service_type == 'arrival':
             print(f"[SAVE SERVICE] Before commit - arrival.notes: {repr(getattr(arrival, 'notes', 'NOT_FOUND'))}")
@@ -4449,7 +4534,7 @@ def api_save_itinerary_rows_bulk(request_id):
 @csrf.exempt
 def api_add_hotel():
     """Add a new hotel to the suppliers list"""
-    from app.models.supplier import Supplier
+    from app.models.supplier import Supplier, parse_room_categories_field
 
     def _request_payload():
         return request.get_json(silent=True) or request.form
@@ -4523,23 +4608,15 @@ def api_add_hotel():
         # Create new supplier with all provided fields
         # Use provided city or None if empty (don't use default 'Amman' for storage)
         city_value = data.get('city', '').strip() or None
-        # Store category and room_category in notes field as JSON if provided
+        # Store category in notes field as JSON if provided
         category = data.get('category', '').strip()
-        room_category = data.get('room_category', '').strip()
         notes_value = data.get('notes', '').strip() or None
-        if category or room_category:
+        if category:
             import json
             notes_dict = {}
             if notes_value:
                 notes_dict['original_notes'] = notes_value
-            if category:
-                notes_dict['category'] = category
-            if room_category:
-                notes_dict['room_category'] = room_category
-                # Also store in room_categories list for consistency with Room List fetching
-                default_categories = ['Standard Rooms', 'Junior Suites', 'Executive Suites', 'Presidential Suites']
-                if room_category not in default_categories:
-                    notes_dict['room_categories'] = [room_category]
+            notes_dict['category'] = category
             if payment_method:
                 notes_dict['payment_method'] = payment_method
             if contract_file:
@@ -4575,6 +4652,10 @@ def api_add_hotel():
             notes=notes_value,
             is_active=True
         )
+        # Every ticked room category (base or custom), saved for this hotel only
+        room_categories = parse_room_categories_field(data.get('room_categories_json'))
+        if room_categories is not None:
+            new_hotel.set_room_categories(room_categories)
         db.session.add(new_hotel)
         db.session.commit()
         _invalidate_supplier_dropdown_cache()
@@ -4586,7 +4667,7 @@ def api_add_hotel():
                 'name': new_hotel.name,
                 'city': new_hotel.city,
                 'category': category,  # Return category for immediate use
-                'room_category': room_category
+                'room_categories': new_hotel.get_room_categories()
             }
         })
 
@@ -4599,89 +4680,38 @@ def api_add_hotel():
 @inbound_bp.route('/api/hotel/<int:supplier_id>/room-categories', methods=['GET'])
 @csrf.exempt
 def api_get_hotel_room_categories(supplier_id):
-    """Get room categories for a hotel supplier"""
+    """Room categories saved for this hotel (linked by supplier id, not by name)."""
     from app.models.supplier import Supplier
-    import json
     try:
         supplier = Supplier.query.get_or_404(supplier_id)
-        default_categories = ['Standard Rooms', 'Junior Suites', 'Executive Suites', 'Presidential Suites']
-        custom_categories = []
-        
-        # Extract custom categories from supplier notes JSON
-        if supplier.notes:
-            try:
-                notes_dict = json.loads(supplier.notes)
-                # Read from room_categories (list) - added via + button
-                custom_categories = notes_dict.get('room_categories', [])
-                # Also read from room_category (singular string) - added via Add Hotel modal
-                single_cat = notes_dict.get('room_category', '')
-                if single_cat and single_cat not in custom_categories and single_cat not in default_categories:
-                    custom_categories.append(single_cat)
-            except (json.JSONDecodeError, TypeError):
-                pass
-        
-        # Also scan existing hotel rooms for any categories in use (catches categories
-        # that were saved to rooms but might not be in the supplier notes)
-        try:
-            hotels = InboundHotel.query.filter_by(hotel_name=supplier.name).all()
-            for hotel in hotels:
-                for room in hotel.rooms:
-                    if room.room_category and room.room_category not in custom_categories and room.room_category not in default_categories:
-                        custom_categories.append(room.room_category)
-        except Exception:
-            pass  # Non-critical; don't fail the whole request
-        
-        # Merge defaults + custom, preserving order and uniqueness
-        all_categories = list(default_categories)
-        for cat in custom_categories:
-            if cat not in all_categories:
-                all_categories.append(cat)
-        
-        return jsonify({'success': True, 'categories': all_categories})
+        return jsonify({'success': True, 'categories': supplier.get_room_categories()})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @inbound_bp.route('/api/hotel/<int:supplier_id>/room-categories', methods=['POST'])
 @csrf.exempt
 def api_add_hotel_room_category(supplier_id):
-    """Add a custom room category for a hotel supplier"""
-    from app.models.supplier import Supplier
-    import json
+    """Add a room category to this hotel only (the "+" button in a Room List row)."""
+    from app.models.supplier import Supplier, normalize_room_categories
     try:
         supplier = Supplier.query.get_or_404(supplier_id)
-        data = request.get_json()
-        new_category = data.get('category', '').strip()
-        
+        data = request.get_json(silent=True) or {}
+        new_category = normalize_room_categories([data.get('category', '')])
         if not new_category:
             return jsonify({'success': False, 'error': 'Category name is required'}), 400
-        
-        # Parse existing notes
-        notes_dict = {}
-        if supplier.notes:
-            try:
-                notes_dict = json.loads(supplier.notes)
-            except (json.JSONDecodeError, TypeError):
-                notes_dict = {'original_notes': supplier.notes}
-        
-        # Add to custom room_categories list
-        room_categories = notes_dict.get('room_categories', [])
-        default_categories = ['Standard Rooms', 'Junior Suites', 'Executive Suites', 'Presidential Suites']
-        
-        if new_category in room_categories or new_category in default_categories:
-            return jsonify({'success': False, 'error': 'Category already exists'}), 400
-        
-        room_categories.append(new_category)
-        notes_dict['room_categories'] = room_categories
-        supplier.notes = json.dumps(notes_dict)
-        db.session.commit()
-        
-        # Return full list
-        all_categories = list(default_categories)
-        for cat in room_categories:
-            if cat not in all_categories:
-                all_categories.append(cat)
-        
-        return jsonify({'success': True, 'categories': all_categories})
+
+        # Start from what the hotel has now (saved list, legacy notes value or the
+        # 4 base categories), so nothing already there is lost.
+        categories = supplier.get_room_categories()
+        existing = next((c for c in categories if c.lower() == new_category[0].lower()), None)
+        if existing is None:
+            supplier.set_room_categories(categories + new_category)
+            db.session.commit()
+        return jsonify({
+            'success': True,
+            'category': existing or new_category[0],
+            'categories': supplier.get_room_categories(),
+        })
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -5630,10 +5660,15 @@ def api_get_service_record(request_id, service_type, record_id):
 def _unlink_movement_itinerary_rows(request_id, *, arrival_batch_id=None, departure_batch_id=None):
     """Keep the Itinerary in sync when an arrival/departure batch is deleted.
 
-    Movement rows created purely for the batch (child rows, identified by a
-    parent_row_id stored in their comment JSON) are removed outright. Base day
-    rows that were merely filled with the movement text are kept: their movement
-    text and batch link are cleared so the day slot itself is not lost.
+    Only the deleted batch's own movement row changes:
+    - A row made for the batch (child row, identified by a parent_row_id stored in
+      its comment JSON) is removed outright.
+    - A base day row that was filled with the batch's movement text is kept so the
+      day slot itself is not lost: its movement text and batch link are cleared.
+    - An older row that also holds the other movement type (an arrival and a
+      departure saved on the same day used to share one row) keeps the other
+      batch's link; if the row showed the deleted batch's text, it is rewritten
+      to the surviving batch's text.
     """
     import json as _json
 
@@ -5648,7 +5683,41 @@ def _unlink_movement_itinerary_rows(request_id, *, arrival_batch_id=None, depart
     else:
         return
 
+    deleting_arrival = arrival_batch_id is not None
+    deleted_label = 'Arrival' if deleting_arrival else 'Departure'
+    other_label = 'Departure' if deleting_arrival else 'Arrival'
+
     for row in rows:
+        # Shared row: keep it for the other batch and drop only this batch's link.
+        if deleting_arrival and row.source_departure_batch_id:
+            other = DepartureBatch.query.filter_by(
+                id=row.source_departure_batch_id, request_id=request_id
+            ).first()
+        elif not deleting_arrival and row.source_arrival_batch_id:
+            other = ArrivalBatch.query.filter_by(
+                id=row.source_arrival_batch_id, request_id=request_id
+            ).first()
+        else:
+            other = None
+        if other is not None:
+            if deleting_arrival:
+                row.source_arrival_batch_id = None
+            else:
+                row.source_departure_batch_id = None
+            if (row.description or '').strip().lower().startswith(f'{deleted_label.lower()} -'):
+                other_pax = other.pax_count or 0
+                row.description = f'{other_label} - {other_pax} PAX'
+                comment_data = {}
+                if row.comment:
+                    try:
+                        comment_data = _json.loads(row.comment)
+                    except (ValueError, TypeError):
+                        comment_data = None
+                if isinstance(comment_data, dict):
+                    comment_data['current_pax'] = other_pax
+                    row.comment = _json.dumps(comment_data)
+            continue
+
         is_child = False
         if row.comment:
             try:
@@ -5661,6 +5730,162 @@ def _unlink_movement_itinerary_rows(request_id, *, arrival_batch_id=None, depart
             row.description = ''
             row.source_arrival_batch_id = None
             row.source_departure_batch_id = None
+
+
+def _itinerary_row_comment_dict(row):
+    """The row's comment JSON as a dict (plain-text comments are kept under '_text')."""
+    if not row.comment:
+        return {}
+    try:
+        data = json.loads(row.comment)
+    except (ValueError, TypeError):
+        return {'_text': row.comment} if str(row.comment).strip() else {}
+    return data if isinstance(data, dict) else {}
+
+
+def _add_movement_itinerary_row(request_obj, batch):
+    """Add the "Arrival - N PAX" / "Departure - N PAX" Itinerary row for one batch.
+
+    Nothing is added when the batch date is outside the request dates or its PAX
+    is below 1. Like the page does for a new arrival/departure, an empty day row
+    is filled; if the day already has text or another arrival/departure, a new
+    row goes under that day, so nothing is overwritten.
+    """
+    is_arrival = isinstance(batch, ArrivalBatch)
+    movement_date = batch.arrival_date if is_arrival else batch.departure_date
+    pax = batch.pax_count or 0
+    if not (movement_date and pax >= 1 and request_obj.from_date and request_obj.to_date):
+        return
+    if not (request_obj.from_date <= movement_date <= request_obj.to_date):
+        return
+
+    label = 'Arrival' if is_arrival else 'Departure'
+    link_field = 'source_arrival_batch_id' if is_arrival else 'source_departure_batch_id'
+    text = f'{label} - {pax} PAX'
+
+    # The day's own row is its first row that is not a child (parent_row_id) row
+    day_rows = ItineraryRow.query.filter_by(
+        request_id=request_obj.id, date=movement_date
+    ).order_by(ItineraryRow.id).all()
+    base_row = next(
+        (row for row in day_rows if not _itinerary_row_comment_dict(row).get('parent_row_id')),
+        None,
+    )
+
+    if (base_row is not None and not (base_row.description or '').strip()
+            and not base_row.source_arrival_batch_id and not base_row.source_departure_batch_id):
+        base_row.description = text
+        setattr(base_row, link_field, batch.id)
+        comment_data = _itinerary_row_comment_dict(base_row)
+        comment_data['current_pax'] = pax
+        base_row.comment = json.dumps(comment_data)
+        return
+
+    comment_data = {'current_pax': pax}
+    if base_row is not None:
+        comment_data['parent_row_id'] = base_row.id
+    db.session.add(ItineraryRow(
+        request_id=request_obj.id,
+        date=movement_date,
+        description=text,
+        comment=json.dumps(comment_data),
+        **{link_field: batch.id},
+    ))
+
+
+def _sync_movement_itinerary_row(request_obj, batch):
+    """Save Changes on an existing arrival/departure: keep its own Itinerary row in step.
+
+    - Same date: the PAX in the standard "Arrival - N PAX" text and the stored
+      current_pax are updated (text the user reworded keeps its wording).
+    - New date: the old row is removed the same way deleting the batch does, and a
+      row is added on the new date.
+    - No row yet (e.g. lost when the request dates changed): one is added when the
+      date is inside the request dates.
+    """
+    import re
+
+    is_arrival = isinstance(batch, ArrivalBatch)
+    movement_date = batch.arrival_date if is_arrival else batch.departure_date
+    label = 'Arrival' if is_arrival else 'Departure'
+    link_col = ItineraryRow.source_arrival_batch_id if is_arrival else ItineraryRow.source_departure_batch_id
+
+    rows = ItineraryRow.query.filter(
+        ItineraryRow.request_id == request_obj.id, link_col == batch.id
+    ).all()
+
+    if rows and all(row.date == movement_date for row in rows):
+        pax = batch.pax_count or 0
+        standard_text = re.compile(rf'^\s*{label}\s*-\s*\d+\s*PAX\s*$', re.IGNORECASE)
+        for row in rows:
+            if standard_text.match(row.description or ''):
+                row.description = f'{label} - {pax} PAX'
+            comment_data = _itinerary_row_comment_dict(row)
+            comment_data['current_pax'] = pax
+            row.comment = json.dumps(comment_data)
+        return
+
+    if rows:
+        if is_arrival:
+            _unlink_movement_itinerary_rows(request_obj.id, arrival_batch_id=batch.id)
+        else:
+            _unlink_movement_itinerary_rows(request_obj.id, departure_batch_id=batch.id)
+        db.session.flush()
+
+    _add_movement_itinerary_row(request_obj, batch)
+
+
+def _service_date_issues(request_obj):
+    """Saved services whose dates fall outside the request dates, per service tab.
+
+    Returns {service: [{'id': record_id, 'fields': [form date field ids]}]} so the
+    request page can mark them in red until they are moved inside the trip dates
+    (same rule as the service forms: no date before From or after To).
+    Flight-linked transport stubs follow their arrival/departure and cancelled
+    guides no longer run, so neither is listed.
+    """
+    issues = {service: [] for service in ('arrival', 'departure', 'hotel', 'transport', 'guide', 'meal')}
+    start, end = request_obj.from_date, request_obj.to_date
+    if not start or not end:
+        return issues
+
+    def add(service, record_id, checks):
+        fields = [field_id for field_id, value in checks
+                  if value is not None and (value < start or value > end)]
+        if fields:
+            issues[service].append({'id': record_id, 'fields': fields})
+
+    for arrival in ArrivalBatch.query.filter_by(request_id=request_obj.id).all():
+        add('arrival', arrival.id, [('arrival_date', arrival.arrival_date)])
+    for departure in DepartureBatch.query.filter_by(request_id=request_obj.id).all():
+        add('departure', departure.id, [('departure_date', departure.departure_date)])
+    for hotel in InboundHotel.query.filter_by(request_id=request_obj.id).all():
+        add('hotel', hotel.id, [('hotel_check_in', hotel.check_in_date),
+                                ('hotel_check_out', hotel.check_out_date)])
+    for transport in InboundTransport.query.filter_by(request_id=request_obj.id).all():
+        if _is_individual_transport_from_flight(transport):
+            continue
+        add('transport', transport.id, [('transport_from_date', transport.date),
+                                        ('transport_to_date', transport.end_date)])
+    for guide in InboundGuide.query.filter_by(request_id=request_obj.id).all():
+        if guide.is_cancelled:
+            continue
+        add('guide', guide.id, [('guide_from_date', guide.date), ('guide_to_date', guide.end_date)])
+    for meal in InboundMeal.query.filter_by(request_id=request_obj.id).all():
+        add('meal', meal.id, [('meal_from_date', meal.date)])
+    return issues
+
+
+@inbound_bp.route('/api/<int:request_id>/service-date-issues', methods=['GET'])
+@csrf.exempt
+def api_service_date_issues(request_id):
+    """Services with dates outside the request dates (shown in red on the request page)"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+
+    return jsonify({'success': True, 'issues': _service_date_issues(request_obj)})
 
 
 @inbound_bp.route('/api/<int:request_id>/service/<service_type>/<int:record_id>', methods=['DELETE'])

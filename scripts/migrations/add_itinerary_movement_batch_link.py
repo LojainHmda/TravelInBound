@@ -12,8 +12,9 @@ Idempotent and non-destructive:
   * columns are only added if missing
   * backfill only sets NULL links (never deletes, never overwrites an existing link)
 
-Runs against every configured database it can find (DATABASE_URL and
-DATABASE_URL_TEST) so both production and the dev/test DB get the change.
+Runs against every configured database it can find (DATABASE_URL_LIVE and
+DATABASE_URL_LOCAL, or the older DATABASE_URL and DATABASE_URL_TEST) so both
+production and the dev/test DB get the change.
 """
 import os
 import sys
@@ -107,13 +108,13 @@ def migrate(database_uri):
 
 def main():
     uris = []
-    for var in ("DATABASE_URL", "DATABASE_URL_TEST"):
+    for var in ("DATABASE_URL_LIVE", "DATABASE_URL_LOCAL", "DATABASE_URL", "DATABASE_URL_TEST"):
         val = os.environ.get(var)
         if val and val not in uris:
             uris.append(val)
 
     if not uris:
-        print("[ERROR] Neither DATABASE_URL nor DATABASE_URL_TEST is set")
+        print("[ERROR] Neither DATABASE_URL_LIVE nor DATABASE_URL_LOCAL is set")
         sys.exit(1)
 
     any_failed = False

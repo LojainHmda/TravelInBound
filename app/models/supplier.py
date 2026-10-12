@@ -1,6 +1,42 @@
+import json
 from datetime import datetime
 from app.extensions import db
 from sqlalchemy import func, desc, or_
+
+# Room categories every hotel starts with (Add New Hotel ticks all four by
+# default, and a hotel that has never had categories saved is treated as having these).
+BASE_ROOM_CATEGORIES = ['Standard', 'Superior', 'Deluxe', 'Suite']
+ROOM_CATEGORY_MAX_LENGTH = 100  # same size as hotel_room.room_category
+
+
+def normalize_room_categories(values):
+    """Trim, drop blanks, cap length and de-duplicate (case-insensitive), keeping order."""
+    result = []
+    seen = set()
+    for value in values or []:
+        name = str(value or '').strip()[:ROOM_CATEGORY_MAX_LENGTH].strip()
+        if name and name.lower() not in seen:
+            seen.add(name.lower())
+            result.append(name)
+    return result
+
+
+def parse_room_categories_field(raw):
+    """Parse the room_categories_json form field.
+
+    Returns None when the field is missing or not a JSON list, so callers leave
+    the saved categories untouched instead of wiping them.
+    """
+    if raw is None:
+        return None
+    try:
+        values = json.loads(raw)
+    except (TypeError, ValueError):
+        return None
+    if not isinstance(values, list):
+        return None
+    return normalize_room_categories(values)
+
 
 class SupplierPrepaymentLine(db.Model):
     """Links supplier payments to specific bookings and services"""
@@ -62,7 +98,10 @@ class Supplier(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)
-    
+    # Hotel room categories as a JSON list. NULL = never saved in this column;
+    # '[]' = saved with no categories (see get_room_categories).
+    room_categories = db.Column(db.Text)
+
     # Relationships
     services = db.relationship('SupplierService', backref='supplier', lazy=True, cascade="all, delete-orphan")
     payments = db.relationship('SupplierPayment', backref='supplier', lazy=True, cascade="all, delete-orphan")
@@ -136,6 +175,50 @@ class Supplier(db.Model):
                 return 'Other'
 
         return ''
+
+    def _legacy_room_categories(self):
+        """Room categories saved in notes before the room_categories column existed."""
+        notes = (self.notes or '').strip()
+        if not notes:
+            return []
+        try:
+            notes_dict = json.loads(notes)
+        except (TypeError, ValueError):
+            notes_dict = None
+
+        # JSON format (Add New Hotel on the request page, "+" in a room row)
+        if isinstance(notes_dict, dict):
+            values = notes_dict.get('room_categories')
+            values = list(values) if isinstance(values, list) else []
+            if notes_dict.get('room_category'):
+                values.append(notes_dict['room_category'])
+            return normalize_room_categories(values)
+
+        # Text format (Suppliers page in finance): "Room Category: X"
+        for line in notes.split('\n'):
+            if line.startswith('Room Category: '):
+                return normalize_room_categories([line[len('Room Category: '):]])
+        return []
+
+    def get_room_categories(self):
+        """This hotel's room categories. Reading never writes to the database.
+
+        - room_categories column saved (even as an empty list): returned as-is.
+        - column never saved: the legacy value from notes.
+        - nothing at all: the 4 base categories.
+        """
+        if self.room_categories is not None:
+            try:
+                saved = json.loads(self.room_categories)
+            except (TypeError, ValueError):
+                saved = None
+            if isinstance(saved, list):
+                return normalize_room_categories(saved)
+        return self._legacy_room_categories() or list(BASE_ROOM_CATEGORIES)
+
+    def set_room_categories(self, values):
+        """Save this hotel's room categories. An empty list is stored as '[]' and stays empty."""
+        self.room_categories = json.dumps(normalize_room_categories(values), ensure_ascii=False)
 
 
 class SupplierService(db.Model):

@@ -2,6 +2,11 @@
 # Run this script to deploy Travel Inbound to Google Cloud Run
 # REQUIRES: DATABASE_URL (PostgreSQL) - set in .env or $env:DATABASE_URL
 
+# Retired: builds from the wrong folder, looks for the deleted main.py and never
+# sets FLASK_ENV=production, so the app would refuse to start. One deploy path only.
+Write-Host "[ERROR] This script is retired. Deploy with .\deploy\deploy-cloudbuild.ps1 from the repository root." -ForegroundColor Red
+exit 1
+
 $ErrorActionPreference = "Stop"
 
 # Load .env if present (sets $env:DATABASE_URL etc.)

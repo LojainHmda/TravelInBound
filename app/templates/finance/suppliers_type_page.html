@@ -345,8 +345,6 @@ body.modal-open {
     const isGuidesPage = "{{ type_key }}" === "guides";
     const isMeetAssistPage = "{{ type_key }}" === "meet-assist";
     const isRestaurantPage = "{{ type_key }}" === "restaurant";
-    const DEFAULT_ROOM_CATEGORIES = ['Standard Rooms', 'Junior Suites', 'Executive Suites', 'Presidential Suites'];
-    let globalRoomCategoriesCache = [];
     const overlay = document.getElementById('addHotelModal');
     const transportOverlay = document.getElementById('addTransportModal');
     const airlineOverlay = document.getElementById('addAirlineModal');
@@ -356,8 +354,6 @@ body.modal-open {
     const submitBtn = document.getElementById('submitQuickSupplierModal');
     const paymentMethodSelect = document.querySelector('#addHotelModal select[name="payment_method"]');
     const popupAccommodationCategory = document.getElementById('new_hotel_category');
-    const popupAccommodationRoomCategory = document.getElementById('new_hotel_room_category');
-    const popupAddRoomCategoryBtn = document.getElementById('popupAddRoomCategoryBtn');
 
     // ── Payment Terms "Other" modal for Accommodation and Airline ───────────
     const standardPaymentTerms = ['Credit', 'NET 15', 'NET 30', 'NET 45', 'NET 60', 'Prepaid', 'Employee', 'Other'];
@@ -667,49 +663,6 @@ body.modal-open {
 
     initAccommodationFilePreview();
 
-    function ensureOption(selectEl, value) {
-        const val = String(value || '').trim();
-        if (!selectEl || !val) return false;
-        const exists = Array.from(selectEl.options).some(opt => (opt.value || '').toLowerCase() === val.toLowerCase());
-        if (exists) return false;
-        const option = document.createElement('option');
-        option.value = val;
-        option.textContent = val;
-        selectEl.appendChild(option);
-        return true;
-    }
-
-    async function fetchGlobalRoomCategories() {
-        try {
-            const resp = await fetch('/inbound/api/hotel/room-categories/global');
-            const data = await resp.json();
-            if (data && data.success && Array.isArray(data.categories)) {
-                globalRoomCategoriesCache = data.categories
-                    .map(v => String(v || '').trim())
-                    .filter(Boolean);
-            }
-        } catch (_) {}
-        return globalRoomCategoriesCache;
-    }
-
-    async function persistGlobalRoomCategory(category) {
-        const value = String(category || '').trim();
-        if (!value) return;
-        if (DEFAULT_ROOM_CATEGORIES.some(c => c.toLowerCase() === value.toLowerCase())) return;
-        try {
-            const resp = await fetch('/inbound/api/hotel/room-categories/global', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ category: value })
-            });
-            if (!resp.ok) throw new Error('failed');
-        } catch (_) {
-            if (typeof showNotification === 'function') {
-                showNotification('Could not save global room category.', 'error');
-            }
-        }
-    }
-
     function syncAccommodationCategoriesFromHotelTab() {
         if (!popupAccommodationCategory) return;
         let customCategories = [];
@@ -737,93 +690,6 @@ body.modal-open {
         });
     }
 
-    async function openRoomCategoryPromptLikeDialog() {
-        if (!popupAccommodationRoomCategory) return;
-        const existingOverlay = document.getElementById('custom-prompt-overlay');
-        if (existingOverlay) existingOverlay.remove();
-        const select = popupAccommodationRoomCategory;
-        const globalCategories = await fetchGlobalRoomCategories();
-        globalCategories.forEach(v => ensureOption(select, v));
-        const existingValues = new Set(Array.from(select.options).map(opt => opt.value.toLowerCase()));
-        const presets = [
-            { value: 'Standard Rooms', label: 'Standard Rooms' },
-            { value: 'Junior Suites', label: 'Junior Suites' },
-            { value: 'Executive Suites', label: 'Executive Suites' },
-            { value: 'Presidential Suites', label: 'Presidential Suites' }
-        ];
-        const presetValues = presets.map(p => p.value.toLowerCase());
-        const savedCustom = (globalCategories || [])
-            .filter(v => !presetValues.includes(v.toLowerCase()))
-            .map(v => ({ value: v, label: v }));
-        const promptOptions = [...presets, ...savedCustom];
-        const checkboxHtml = promptOptions.map(p => {
-            const checked = existingValues.has(p.value.toLowerCase()) ? ' checked' : '';
-            return `<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#334155;cursor:pointer;"><input type="checkbox" name="room-cat-preset" value="${p.value}"${checked}> ${p.label}</label>`;
-        }).join('');
-        const overlayPrompt = document.createElement('div');
-        overlayPrompt.id = 'custom-prompt-overlay';
-        overlayPrompt.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;';
-        const dialog = document.createElement('div');
-        dialog.style.cssText = 'background:white;border-radius:12px;padding:24px;min-width:360px;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.3);';
-        dialog.innerHTML = `
-            <div style="font-size:14px;font-weight:600;color:#1e293b;margin-bottom:12px;">Enter new Room Category:</div>
-            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
-                ${checkboxHtml}
-            </div>
-            <input type="text" id="custom-prompt-input" style="width:100%;padding:8px 12px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;" placeholder="Or type custom category..." autofocus>
-            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
-                <button type="button" id="custom-prompt-cancel" style="padding:6px 16px;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;color:#475569;font-size:12px;cursor:pointer;">Cancel</button>
-                <button type="button" id="custom-prompt-ok" style="padding:6px 16px;border:none;border-radius:6px;background:#3b82f6;color:white;font-size:12px;cursor:pointer;font-weight:500;">Add</button>
-            </div>
-        `;
-        overlayPrompt.appendChild(dialog);
-        document.body.appendChild(overlayPrompt);
-        const input = document.getElementById('custom-prompt-input');
-        const okBtn = document.getElementById('custom-prompt-ok');
-        const cancelBtn = document.getElementById('custom-prompt-cancel');
-        document.querySelectorAll('input[name="room-cat-preset"]').forEach(cb => {
-            cb.addEventListener('change', function() {});
-        });
-        setTimeout(() => input.focus(), 50);
-        async function submit() {
-            const checkedList = document.querySelectorAll('input[name="room-cat-preset"]:checked');
-            const trimmedInput = input.value.trim();
-            const values = Array.from(checkedList).map(cb => cb.value);
-            if (trimmedInput) values.push(trimmedInput);
-            overlayPrompt.remove();
-            if (values.length === 0) return;
-            let lastAdded = null;
-            values.forEach(trimmed => {
-                const exists = Array.from(select.options).some(opt => opt.value.toLowerCase() === trimmed.toLowerCase());
-                if (exists) {
-                    if (typeof showNotification === 'function') {
-                        showNotification('This room category already exists.', 'warning');
-                    }
-                    lastAdded = trimmed;
-                } else {
-                    const option = document.createElement('option');
-                    option.value = trimmed;
-                    option.textContent = trimmed;
-                    select.appendChild(option);
-                    lastAdded = trimmed;
-                }
-            });
-            await Promise.all(values.map(v => persistGlobalRoomCategory(v)));
-            await fetchGlobalRoomCategories();
-            if (lastAdded) select.value = lastAdded;
-        }
-        function cancel() { overlayPrompt.remove(); }
-        okBtn.addEventListener('click', submit);
-        cancelBtn.addEventListener('click', cancel);
-        input.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') submit();
-            if (e.key === 'Escape') cancel();
-        });
-        overlayPrompt.addEventListener('click', function(e) {
-            if (e.target === overlayPrompt) cancel();
-        });
-    }
-
     function closeModal() {
         overlay.classList.add('hidden');
         overlay.classList.remove('flex');
@@ -844,6 +710,8 @@ body.modal-open {
         overlay.style.display = 'flex';
         overlay.setAttribute('aria-hidden', 'false');
         document.body.classList.add('modal-open');
+        // The form always starts with the 4 base room categories, all ticked
+        window.RoomCategoryChecklist?.reset('new_hotel_rc');
         syncAccommodationCategoriesFromHotelTab();
         syncPaymentMethodFields();
     }
@@ -1109,6 +977,8 @@ body.modal-open {
                 popupAccommodationCategory.value = 'Other';
             }
 
+            // Include a room category that was typed but not added yet
+            window.RoomCategoryChecklist?.value('new_hotel_rc');
             const formData = new FormData();
             overlay.querySelectorAll('[name]').forEach(el => {
                 if (!(el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement)) return;
@@ -1140,11 +1010,6 @@ body.modal-open {
             }
         });
     }
-    if (popupAddRoomCategoryBtn && popupAccommodationRoomCategory) {
-        popupAddRoomCategoryBtn.addEventListener('click', function () {
-            openRoomCategoryPromptLikeDialog();
-        });
-    }
     if (paymentMethodSelect) paymentMethodSelect.addEventListener('change', syncPaymentMethodFields);
     if (overlay) {
         overlay.addEventListener('click', function (e) {
@@ -1155,12 +1020,6 @@ body.modal-open {
         if (e.key === 'Escape') closeModal();
     });
     syncAccommodationCategoriesFromHotelTab();
-    // Keep room-category dropdown in sync with the shared set used by tab dialog.
-    if (popupAccommodationRoomCategory) {
-        fetchGlobalRoomCategories().then(cats => {
-            (cats || []).forEach(v => ensureOption(popupAccommodationRoomCategory, v));
-        });
-    }
     syncPaymentMethodFields();
 
     // Skip accommodation-specific code if not on accommodation page
