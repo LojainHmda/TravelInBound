@@ -80,7 +80,7 @@ class InboundRequest(db.Model):
 
     # Total pricing
     total_amount = db.Column(db.Float, default=0.0)
-    total_currency = db.Column(db.String(3), default='USD')
+    total_currency = db.Column(db.String(3), default='JOD')
     pricing_mode = db.Column(db.String(20), default='ITEMIZED')  # ITEMIZED or LUMPSUM
 
     # Relationships
@@ -288,7 +288,7 @@ class ItineraryRow(db.Model):
     # Costing
     base_cost = db.Column(db.Float, default=0.0)
     cost_unit = db.Column(db.String(20), default=COST_UNIT_PER_PERSON)  # PER_PERSON or PER_GROUP
-    currency = db.Column(db.String(3), default='USD')
+    currency = db.Column(db.String(3), default='JOD')
 
     # Service flags
     flag_hotel = db.Column(db.Boolean, default=False)
@@ -482,7 +482,7 @@ class InboundHotel(db.Model):
 
     # Costing
     total_cost = db.Column(db.Float, default=0.0)
-    currency = db.Column(db.String(3), default='USD')
+    currency = db.Column(db.String(3), default='JOD')
 
     # Status
     status = db.Column(db.String(20), default=STATUS_REQUEST)
@@ -541,7 +541,7 @@ class HotelRoom(db.Model):
     status = db.Column(db.String(20), default=STATUS_REQUEST)
     supplier_name = db.Column(db.String(200), nullable=True)
     cost_per_room = db.Column(db.Float, default=0.0)
-    currency = db.Column(db.String(3), default='USD')
+    currency = db.Column(db.String(3), default='JOD')
     notes = db.Column(db.Text, nullable=True)
     confirmation = db.Column(db.String(200), nullable=True)  # Confirmation code/number from supplier
 
@@ -553,6 +553,7 @@ class HotelRoom(db.Model):
     adults = db.Column(db.Integer, default=1)
     children = db.Column(db.Integer, default=0)
     guest_names = db.Column(db.Text, nullable=True)  # Lead passenger/guest names for this room
+    room_confirmation = db.Column(db.String(200), nullable=True)  # Per-room confirmation number (Room List)
 
     # Tracking
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -615,7 +616,7 @@ class InboundTransport(db.Model):
 
     # Costing
     cost = db.Column(db.Float, default=0.0)
-    currency = db.Column(db.String(3), default='USD')
+    currency = db.Column(db.String(3), default='JOD')
 
     # Status
     status = db.Column(db.String(20), default=STATUS_REQUEST)
@@ -692,7 +693,7 @@ class InboundMeal(db.Model):
     # Costing
     cost_per_person = db.Column(db.Float, default=0.0)
     total_cost = db.Column(db.Float, default=0.0)
-    currency = db.Column(db.String(3), default='USD')
+    currency = db.Column(db.String(3), default='JOD')
 
     # Status
     status = db.Column(db.String(20), default=STATUS_REQUEST)
@@ -773,7 +774,7 @@ class InboundGuide(db.Model):
 
     # Costing
     cost = db.Column(db.Float, default=0.0)
-    currency = db.Column(db.String(3), default='USD')
+    currency = db.Column(db.String(3), default='JOD')
 
     # Status
     status = db.Column(db.String(20), default=STATUS_REQUEST)
@@ -833,7 +834,7 @@ class InboundCashExpense(db.Model):
 
     # Costing
     amount = db.Column(db.Float, default=0.0)
-    currency = db.Column(db.String(3), default='USD')
+    currency = db.Column(db.String(3), default='JOD')
     is_per_person = db.Column(db.Boolean, default=False)  # True if per person, False if total
 
     # Tracking
@@ -1025,7 +1026,7 @@ class InboundOptional(db.Model):
     # Costing
     cost_per_person = db.Column(db.Float, default=0.0)
     total_cost = db.Column(db.Float, default=0.0)
-    currency = db.Column(db.String(3), default='USD')
+    currency = db.Column(db.String(3), default='JOD')
 
     # Status
     status = db.Column(db.String(20), default=STATUS_REQUEST)
@@ -1073,7 +1074,7 @@ class InboundQuotation(db.Model):
     tax_rate = db.Column(db.Numeric(5, 2), default=0.00)  # Tax percentage
     tax_amount = db.Column(db.Numeric(12, 2), default=0.00)
     total_amount = db.Column(db.Numeric(12, 2), default=0.00)
-    currency = db.Column(db.String(3), default='USD')
+    currency = db.Column(db.String(3), default='JOD')
 
     # Unique constraint on version per request
     __table_args__ = (

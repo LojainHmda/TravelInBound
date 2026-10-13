@@ -10,7 +10,7 @@
             new_airline_phone: '',
             new_airline_email: '',
             new_airline_city: '',
-            new_airline_default_currency: 'USD',
+            new_airline_default_currency: 'JOD',
             new_airline_payment_terms: '',
             new_airline_payment_method: '',
             new_airline_bank_name: '',
@@ -85,7 +85,7 @@
         formData.append('phone', (getEl('new_airline_phone')?.value || '').trim());
         formData.append('email', (getEl('new_airline_email')?.value || '').trim());
         formData.append('city', (getEl('new_airline_city')?.value || '').trim());
-        formData.append('default_currency', (getEl('new_airline_default_currency')?.value || 'USD').trim() || 'USD');
+        formData.append('default_currency', (getEl('new_airline_default_currency')?.value || 'JOD').trim() || 'JOD');
         formData.append('payment_terms', financial.payment_terms);
         formData.append('payment_method', financial.payment_method || '');
         formData.append('bank_name', financial.bank_name || '');

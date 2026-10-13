@@ -133,6 +133,7 @@
                 <th>{{ 'File No.' if is_invoiced_status_view else 'Request No.' }}</th>
                 <th>Agent</th>
                 <th>Contact</th>
+                <th>Agent Reference</th>
                 <th>Nationality</th>
                 <th>Pax</th>
                 <th>Travel Dates</th>
@@ -153,6 +154,7 @@
                 </td>
                 <td>{{ inb.agent or 'TBA' }}</td>
                 <td>{{ inb.contact_name or 'TBA' }}</td>
+                <td>{{ inb.agent_ref or '-' }}</td>
                 <td>{{ inb.nationality or 'TBA' }}</td>
                 <td>{{ inb.pax }}</td>
                 <td>

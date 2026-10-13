@@ -287,7 +287,7 @@
         document.getElementById('new_guide_country').value = 'Jordan';
         document.getElementById('new_guide_payment_terms').value = '';
         document.getElementById('new_guide_payment_method').value = '';
-        document.getElementById('new_guide_default_currency').value = 'USD';
+        document.getElementById('new_guide_default_currency').value = 'JOD';
         document.getElementById('new_guide_bank_name').value = '';
         document.getElementById('new_guide_bank_account').value = '';
         const guideCliq = document.getElementById('new_guide_cliq_alias');
@@ -330,7 +330,7 @@
             country: document.getElementById('new_guide_country').value.trim(),
             payment_terms: financial.payment_terms,
             payment_method: financial.payment_method || '',
-            default_currency: document.getElementById('new_guide_default_currency').value.trim() || 'USD',
+            default_currency: document.getElementById('new_guide_default_currency').value.trim() || 'JOD',
             bank_name: financial.bank_name,
             bank_account: financial.bank_account,
             cliq_alias: financial.cliq_alias,

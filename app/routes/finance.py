@@ -1914,7 +1914,7 @@ def quick_add_supplier(type_key):
             country=(request.form.get('country') or '').strip() or None,
             payment_terms=payment_terms,
             payment_method=payment_method,
-            default_currency=(request.form.get('default_currency') or 'USD').strip() or 'USD',
+            default_currency=(request.form.get('default_currency') or 'JOD').strip() or 'JOD',
             bank_name=bank_name_val,
             bank_account=bank_account_val,
             bank_iban=bank_iban,

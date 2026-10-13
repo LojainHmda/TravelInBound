@@ -239,6 +239,8 @@ def _run_schema_upgrades(app, db):
                 existing = {c['name'] for c in inspector.get_columns('hotel_room')}
                 if 'room_category' not in existing:
                     _add_col('hotel_room', 'room_category', 'VARCHAR(100)')
+                if 'room_confirmation' not in existing:
+                    _add_col('hotel_room', 'room_confirmation', 'VARCHAR(200)')
 
             if 'supplier' in tables:
                 existing = {c['name'] for c in inspector.get_columns('supplier')}

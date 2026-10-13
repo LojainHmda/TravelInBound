@@ -1601,8 +1601,9 @@ input[type="date"]::-webkit-calendar-table-body {
                                                 <th class="border border-slate-300 px-2 py-1.5 text-left font-semibold">Bed Type</th>
                                                 <th class="border border-slate-300 px-2 py-1.5 text-left font-semibold">Board</th>
                                                 <th class="border border-slate-300 px-2 py-1.5 text-left font-semibold">Dietary Req</th>
-                                                <th class="border border-slate-300 px-2 py-1.5 text-center font-semibold">Adt</th>
-                                                <th class="border border-slate-300 px-2 py-1.5 text-center font-semibold">Chd</th>
+                                                <th class="border border-slate-300 px-2 py-1.5 text-center font-semibold w-16">Adt</th>
+                                                <th class="border border-slate-300 px-2 py-1.5 text-center font-semibold w-16">Chd</th>
+                                                <th class="border border-slate-300 px-2 py-1.5 text-left font-semibold">Confirmation No.</th>
                                                 <th class="border border-slate-300 px-2 py-1.5 text-left font-semibold">Note</th>
                                                 <th class="border border-slate-300 px-2 py-1.5 w-8"></th>
                                             </tr>
@@ -2349,8 +2350,8 @@ input[type="date"]::-webkit-calendar-table-body {
                                             <th class="text-center summary-date-col">Date From</th>
                                             <th class="text-center summary-date-col">Date To</th>
                                             <th class="text-left">Vehicle</th>
-                                            <th class="text-left">Pickup</th>
-                                            <th class="text-left">Drop-off</th>
+                                            <th class="text-left">Driver Name</th>
+                                            <th class="text-left">Driver Phone</th>
                                             <th class="text-center summary-compact-col print-hide-status">Status</th>
                                             <th class="text-left summary-notes-col">Notes</th>
                                             <th class="text-center summary-compact-col print-hide-actions">Actions</th>
@@ -2364,8 +2365,8 @@ input[type="date"]::-webkit-calendar-table-body {
                                                 <td class="text-center summary-date-col">{{ (transport.service_date.strftime('%d %b %Y') if transport.service_date else transport.date.strftime('%d %b %Y') if transport.date else '-') }}</td>
                                                 <td class="text-center summary-date-col">{{ (transport.end_date.strftime('%d %b %Y') if transport.end_date else '-') }}</td>
                                                 <td>{{ transport.vehicle_type or '-' }}</td>
-                                                <td>{{ transport.pickup_point or '-' }}</td>
-                                                <td>{{ transport.drop_off_point or '-' }}</td>
+                                                <td>{{ transport.driver_name or '-' }}</td>
+                                                <td>{{ transport.driver_phone or '-' }}</td>
                                                 <td class="text-center summary-compact-col print-hide-status">
                                                     <span class="px-2 py-0.5 rounded text-[10px] {% if transport.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif transport.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% elif transport.status == 'WAITING_LIST' %}bg-blue-100 text-blue-700{% elif transport.status == 'CANCELLED' %}bg-red-100 text-red-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ transport.status or 'PENDING' }}</span>
                                                 </td>
@@ -2693,7 +2694,7 @@ input[type="date"]::-webkit-calendar-table-body {
                         <select id="new_arrival_supplier_default_currency" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-green-500 focus:border-green-500">
                             <option value="USD">USD</option>
                             <option value="EUR">EUR</option>
-                            <option value="JOD">JOD</option>
+                            <option value="JOD" selected>JOD</option>
                             <option value="GBP">GBP</option>
                         </select>
                     </div>
@@ -2777,7 +2778,7 @@ input[type="date"]::-webkit-calendar-table-body {
                         <select id="new_departure_supplier_default_currency" class="w-full px-2 py-1 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-green-500 focus:border-green-500">
                             <option value="USD">USD</option>
                             <option value="EUR">EUR</option>
-                            <option value="JOD">JOD</option>
+                            <option value="JOD" selected>JOD</option>
                             <option value="GBP">GBP</option>
                         </select>
                     </div>
@@ -2991,12 +2992,13 @@ input[type="date"]::-webkit-calendar-table-body {
                             <th class="border border-black px-2 py-1">Dietary Req</th>
                             <th class="border border-black px-2 py-1">Adt</th>
                             <th class="border border-black px-2 py-1">Chd</th>
+                            <th class="border border-black px-2 py-1">Confirmation No.</th>
                             <th class="border border-black px-2 py-1" style="width: 24%;">Note</th>
                         </tr>
                     </thead>
                     <tbody id="hotelVoucherRoomListTbody">
                         <tr>
-                            <td colspan="8" class="border border-black px-2 py-2 text-center">No room list details</td>
+                            <td colspan="9" class="border border-black px-2 py-2 text-center">No room list details</td>
                         </tr>
                     </tbody>
                 </table>
@@ -3057,6 +3059,7 @@ input[type="date"]::-webkit-calendar-table-body {
                         dietaryRequirements: "{{ (room.dietary_requirements or '-') | e }}",
                         adults: {{ room.adults or 0 }},
                         children: {{ room.children or 0 }},
+                        roomConfirmation: {{ (room.room_confirmation or '') | tojson }},
                         roomNote: {{ (room.guest_names or '') | tojson }}
                     }{% if not loop.last %},{% endif %}
                     {% endfor %}
@@ -3953,7 +3956,8 @@ const hotelRoomsData = {
             dietary_requirements: "{{ room.dietary_requirements or '' }}",
             adults: {{ room.adults or 1 }},
             children: {{ room.children or 0 }},
-            guest_names: {{ (room.guest_names or '') | tojson }}
+            guest_names: {{ (room.guest_names or '') | tojson }},
+            room_confirmation: {{ (room.room_confirmation or '') | tojson }}
         }{% if not loop.last %},{% endif %}
         {% endfor %}
     ]{% if not loop.last %},{% endif %}
@@ -12226,7 +12230,8 @@ function createRoomListRow(roomNum, roomType, defaultAdults, roomData = {}) {
     const adults = roomData.adults || defaultAdults;
     const children = roomData.children || 0;
     const guestNames = roomData.guest_names || '';
-    
+    const roomConfirmation = roomData.room_confirmation || '';
+
     // Room Category column is available in all statuses
     const showCategory = true;
     
@@ -12299,6 +12304,10 @@ function createRoomListRow(roomNum, roomType, defaultAdults, roomData = {}) {
             <input type="number" class="w-12 px-1 py-1 border border-slate-200 rounded text-xs text-center" 
                    data-field="children" value="${children}" min="0" max="6" title="Children">
         </td>
+        <td class="border border-slate-300 px-2 py-1.5">
+            <input type="text" size="10" class="w-full px-2 py-1 border border-slate-200 rounded text-xs"
+                   data-field="room_confirmation" placeholder="Conf. No." title="Confirmation Number">
+        </td>
         <td class="border border-slate-300 px-2 py-1.5 text-center">
             <input type="hidden" data-field="guest_names">
             <button type="button" onclick="openGuestNamesModal(this)"
@@ -12319,6 +12328,8 @@ function createRoomListRow(roomNum, roomType, defaultAdults, roomData = {}) {
     const gnInput = row.querySelector('[data-field="guest_names"]');
     if (gnInput) gnInput.value = guestNames;
     updateGuestNamesCount(row);
+    const confInput = row.querySelector('[data-field="room_confirmation"]');
+    if (confInput) confInput.value = roomConfirmation;
 
     // Room Category options: the selected hotel's saved categories, plus this
     // room's own saved value so old bookings (e.g. "Junior Suites") still show it.
@@ -12498,7 +12509,8 @@ function getRoomListData() {
         const adults = parseInt(row.querySelector('[data-field="adults"]')?.value) || 1;
         const children = parseInt(row.querySelector('[data-field="children"]')?.value) || 0;
         const guestNames = row.querySelector('[data-field="guest_names"]')?.value || '';
-        
+        const roomConfirmation = (row.querySelector('[data-field="room_confirmation"]')?.value || '').trim();
+
         return {
             room_type: roomType,
             room_category: roomCategory,
@@ -12507,7 +12519,8 @@ function getRoomListData() {
             dietary_requirements: dietaryReq,
             adults: adults,
             children: children,
-            guest_names: guestNames
+            guest_names: guestNames,
+            room_confirmation: roomConfirmation
         };
     });
 }
@@ -13087,7 +13100,7 @@ function closeAddHotelModal() {
     document.getElementById('new_hotel_website').value = '';
     document.getElementById('new_hotel_payment_terms').value = '';
     document.getElementById('new_hotel_payment_method').value = '';
-    document.getElementById('new_hotel_default_currency').value = 'USD';
+    document.getElementById('new_hotel_default_currency').value = 'JOD';
     document.getElementById('new_hotel_address').value = '';
     document.getElementById('new_hotel_bank_name').value = '';
     document.getElementById('new_hotel_bank_account').value = '';
@@ -13129,7 +13142,7 @@ function saveNewHotel() {
         website: document.getElementById('new_hotel_website').value.trim(),
         payment_terms: financial.payment_terms,
         payment_method: financial.payment_method || '',
-        default_currency: document.getElementById('new_hotel_default_currency').value.trim() || 'USD',
+        default_currency: document.getElementById('new_hotel_default_currency').value.trim() || 'JOD',
         address: document.getElementById('new_hotel_address').value.trim(),
         bank_name: financial.bank_name,
         bank_account: financial.bank_account,
@@ -13289,7 +13302,7 @@ function closeAddArrivalSupplierModal() {
     document.getElementById('new_arrival_supplier_country').value = 'Jordan';
     document.getElementById('new_arrival_supplier_payment_terms').value = '';
     document.getElementById('new_arrival_supplier_payment_method').value = '';
-    document.getElementById('new_arrival_supplier_default_currency').value = 'USD';
+    document.getElementById('new_arrival_supplier_default_currency').value = 'JOD';
     document.getElementById('new_arrival_supplier_address').value = '';
     document.getElementById('new_arrival_supplier_bank_name').value = '';
     document.getElementById('new_arrival_supplier_bank_account').value = '';
@@ -13322,7 +13335,7 @@ function saveNewArrivalSupplier() {
         country: document.getElementById('new_arrival_supplier_country').value.trim(),
         payment_terms: financial.payment_terms,
         payment_method: financial.payment_method || '',
-        default_currency: document.getElementById('new_arrival_supplier_default_currency').value.trim() || 'USD',
+        default_currency: document.getElementById('new_arrival_supplier_default_currency').value.trim() || 'JOD',
         address: document.getElementById('new_arrival_supplier_address').value.trim(),
         bank_name: financial.bank_name,
         bank_account: financial.bank_account,
@@ -13397,7 +13410,7 @@ function closeAddDepartureSupplierModal() {
     document.getElementById('new_departure_supplier_country').value = 'Jordan';
     document.getElementById('new_departure_supplier_payment_terms').value = '';
     document.getElementById('new_departure_supplier_payment_method').value = '';
-    document.getElementById('new_departure_supplier_default_currency').value = 'USD';
+    document.getElementById('new_departure_supplier_default_currency').value = 'JOD';
     document.getElementById('new_departure_supplier_address').value = '';
     document.getElementById('new_departure_supplier_bank_name').value = '';
     document.getElementById('new_departure_supplier_bank_account').value = '';
@@ -13430,7 +13443,7 @@ function saveNewDepartureSupplier() {
         country: document.getElementById('new_departure_supplier_country').value.trim(),
         payment_terms: financial.payment_terms,
         payment_method: financial.payment_method || '',
-        default_currency: document.getElementById('new_departure_supplier_default_currency').value.trim() || 'USD',
+        default_currency: document.getElementById('new_departure_supplier_default_currency').value.trim() || 'JOD',
         address: document.getElementById('new_departure_supplier_address').value.trim(),
         bank_name: financial.bank_name,
         bank_account: financial.bank_account,
@@ -13579,7 +13592,7 @@ function closeAddGuideModal() {
     document.getElementById('new_guide_city').value = '';
     document.getElementById('new_guide_country').value = 'Jordan';
     document.getElementById('new_guide_payment_terms').value = '';
-    document.getElementById('new_guide_default_currency').value = 'USD';
+    document.getElementById('new_guide_default_currency').value = 'JOD';
     document.getElementById('new_guide_address').value = '';
     document.getElementById('new_guide_bank_name').value = '';
     document.getElementById('new_guide_bank_account').value = '';
@@ -13615,7 +13628,7 @@ function saveNewGuide() {
         city: document.getElementById('new_guide_city').value.trim(),
         country: document.getElementById('new_guide_country').value.trim(),
         payment_terms: financial.payment_terms,
-        default_currency: document.getElementById('new_guide_default_currency').value.trim() || 'USD',
+        default_currency: document.getElementById('new_guide_default_currency').value.trim() || 'JOD',
         address: document.getElementById('new_guide_address').value.trim(),
         bank_name: financial.bank_name,
         bank_account: financial.bank_account,
@@ -13957,7 +13970,7 @@ function closeAddTransportModal() {
     document.getElementById('new_transport_city').value = '';
     document.getElementById('new_transport_country').value = 'Jordan';
     document.getElementById('new_transport_payment_terms').value = '';
-    document.getElementById('new_transport_default_currency').value = 'USD';
+    document.getElementById('new_transport_default_currency').value = 'JOD';
     document.getElementById('new_transport_address').value = '';
     document.getElementById('new_transport_bank_name').value = '';
     document.getElementById('new_transport_bank_account').value = '';
@@ -13986,7 +13999,7 @@ function saveNewTransport() {
         city: document.getElementById('new_transport_city').value.trim(),
         country: document.getElementById('new_transport_country').value.trim(),
         payment_terms: financial.payment_terms,
-        default_currency: document.getElementById('new_transport_default_currency').value.trim() || 'USD',
+        default_currency: document.getElementById('new_transport_default_currency').value.trim() || 'JOD',
         address: document.getElementById('new_transport_address').value.trim(),
         bank_name: financial.bank_name,
         bank_account: financial.bank_account,
@@ -14248,7 +14261,7 @@ function renderHotelVoucherRoomListPreview(targetHotel) {
     const roomList = sortHotelVoucherRoomList(getHotelVoucherRoomListForHotel(targetHotel));
     const escapeHtml = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     if (!roomList.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="border border-black px-2 py-2 text-center">No room list details</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="border border-black px-2 py-2 text-center">No room list details</td></tr>';
         return;
     }
     tbody.innerHTML = roomList.map((room) => `<tr>
@@ -14259,6 +14272,7 @@ function renderHotelVoucherRoomListPreview(targetHotel) {
         <td class="border border-black px-2 py-1">${escapeHtml(room.dietary_requirements || room.dietaryRequirements || '-')}</td>
         <td class="border border-black px-2 py-1">${room.adults || 0}</td>
         <td class="border border-black px-2 py-1">${room.children || 0}</td>
+        <td class="border border-black px-2 py-1" style="white-space: normal; overflow-wrap: anywhere; word-break: break-word;">${escapeHtml(room.room_confirmation || room.roomConfirmation || '-')}</td>
         <td class="border border-black px-2 py-1" style="line-height:1.25;vertical-align:top;white-space: normal; overflow-wrap: anywhere; word-break: break-word;">${renderGuestNameLines(room.guest_names ?? room.roomNote, escapeHtml)}</td>
     </tr>`).join('');
 }
@@ -14408,10 +14422,11 @@ function printHotelVoucher() {
             <td style="border:1px solid #000;padding:4px;text-align:center">${escapeHtml(room.dietaryRequirements || room.dietary_requirements || '-')}</td>
             <td style="border:1px solid #000;padding:4px 2px;text-align:center">${room.adults || 0}</td>
             <td style="border:1px solid #000;padding:4px 2px;text-align:center">${room.children || 0}</td>
+            <td style="border:1px solid #000;padding:4px;text-align:center">${escapeHtml(room.roomConfirmation || room.room_confirmation || '-')}</td>
             <td style="border:1px solid #000;padding:4px;text-align:center;line-height:1.25;vertical-align:top;white-space:normal;overflow-wrap:anywhere;word-break:break-word">${renderGuestNameLines(room.roomNote ?? room.guest_names, escapeHtml)}</td>
         </tr>`).join('');
     } else {
-        roomListRowsHtml = '<tr><td colspan="8" style="border:1px solid #000;padding:8px;text-align:center">No room list details</td></tr>';
+        roomListRowsHtml = '<tr><td colspan="9" style="border:1px solid #000;padding:8px;text-align:center">No room list details</td></tr>';
     }
     const confirmationNum = selHotel ? (selHotel.confirmation || '-') : '-';
     const logoUrl = window.location.origin + '/static/images/logo.png';
@@ -14462,7 +14477,7 @@ function printHotelVoucher() {
         </div>
         <p style="margin-bottom:16px;font-size:12px">Please provide with the following.</p>
         <table><thead><tr><th style="width:14%;">Check In</th><th style="width:14%;">Check Out</th><th style="width:7%;">SGL</th><th style="width:7%;">DBL</th><th style="width:7%;">TRPL</th><th style="width:7%;">Quadro</th><th style="width:8%;">OTHER</th><th style="width:36%;">Note</th></tr></thead><tbody>${rowsHtml}</tbody></table>
-        <table><thead><tr><th style="width:12%;">Type</th><th style="width:16%;">Room Category</th><th style="width:14%;">Bed Type</th><th style="width:10%;">Board</th><th style="width:12%;">Dietary Req</th><th style="width:6%;">Adt</th><th style="width:6%;">Chd</th><th style="width:24%;">Note</th></tr></thead><tbody>${roomListRowsHtml}</tbody></table>
+        <table><thead><tr><th style="width:10%;">Type</th><th style="width:14%;">Room Category</th><th style="width:12%;">Bed Type</th><th style="width:8%;">Board</th><th style="width:11%;">Dietary Req</th><th style="width:5%;">Adt</th><th style="width:5%;">Chd</th><th style="width:14%;">Confirmation No.</th><th style="width:21%;">Note</th></tr></thead><tbody>${roomListRowsHtml}</tbody></table>
         <div class="hv-meal">BB = Bed and Breakfast | HB = Half Board | FB = Full Board | RO = Room Only</div>
         <div class="hv-disclaimer">Our Company is responsible only for service listed above.<br>The presentation of this voucher must be attached to your invoice otherwise payment may be delayed.</div>
         <div class="hv-sig"><span>Authorised Signature :</span><div class="line"></div></div>
@@ -14583,7 +14598,7 @@ function closeAddRestaurantModal() {
     document.getElementById('new_restaurant_email').value = '';
     document.getElementById('new_restaurant_website').value = '';
     document.getElementById('new_restaurant_payment_terms').value = '';
-    document.getElementById('new_restaurant_default_currency').value = 'USD';
+    document.getElementById('new_restaurant_default_currency').value = 'JOD';
     document.getElementById('new_restaurant_address').value = '';
     document.getElementById('new_restaurant_bank_name').value = '';
     document.getElementById('new_restaurant_bank_account').value = '';
@@ -14613,7 +14628,7 @@ function saveNewRestaurant() {
         email: document.getElementById('new_restaurant_email').value.trim(),
         website: document.getElementById('new_restaurant_website').value.trim(),
         payment_terms: financial.payment_terms,
-        default_currency: document.getElementById('new_restaurant_default_currency').value.trim() || 'USD',
+        default_currency: document.getElementById('new_restaurant_default_currency').value.trim() || 'JOD',
         address: document.getElementById('new_restaurant_address').value.trim(),
         bank_name: financial.bank_name,
         bank_account: financial.bank_account,

@@ -86,7 +86,7 @@ class Supplier(db.Model):
     # Payment information
     payment_terms = db.Column(db.String(100))  # e.g., "NET 30", "Prepaid"
     payment_method = db.Column(db.String(50))  # Payment method for freelancers
-    default_currency = db.Column(db.String(3), default='USD')
+    default_currency = db.Column(db.String(3), default='JOD')
     bank_name = db.Column(db.String(100))
     bank_account = db.Column(db.String(100))
     bank_iban = db.Column(db.String(100))
@@ -229,7 +229,7 @@ class SupplierService(db.Model):
     service_name = db.Column(db.String(100), nullable=False)  # e.g. "Economy Flights", "Business Hotels"
     description = db.Column(db.Text)
     commission_rate = db.Column(db.Float)  # Percentage
-    currency = db.Column(db.String(3), default='USD')
+    currency = db.Column(db.String(3), default='JOD')
     notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

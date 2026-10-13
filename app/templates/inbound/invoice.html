@@ -217,7 +217,7 @@ body.invoice-bank-editing .invoice-bank-editable {
 
         <div style="height: 20px;"></div>
 
-        {% set currency = request.total_currency or 'USD' %}
+        {% set currency = 'JOD' %}
         <table class="invoice-print-items-table">
             <thead>
                 <tr>
@@ -246,7 +246,7 @@ body.invoice-bank-editing .invoice-bank-editable {
             </tbody>
             <tfoot>
                 {% set print_total = request.total_amount or 0 %}
-                {% set print_currency = request.total_currency or 'USD' %}
+                {% set print_currency = 'JOD' %}
                 <tr><td></td><td></td><td></td><td></td><td>Total</td><td class="invoice-print-tfoot-value invoice-footer-total" contenteditable="false">{{ print_currency }} {{ "%.2f"|format(print_total) }}</td></tr>
                 <tr><td></td><td></td><td></td><td></td><td>Advance Payment</td><td class="invoice-print-tfoot-value invoice-advance" contenteditable="true" data-save-key="advance">{{ print_currency }} 0.00</td></tr>
                 <tr><td></td><td></td><td></td><td></td><td><strong>Net Due</strong></td><td class="invoice-print-tfoot-value invoice-net-due" contenteditable="false"><strong>{{ print_currency }} {{ "%.2f"|format(print_total) }}</strong></td></tr>
@@ -273,7 +273,7 @@ body.invoice-bank-editing .invoice-bank-editable {
 
     <script>
     (function() {
-        var currency = "{{ request.total_currency or 'USD' }}";
+        var currency = "JOD";
         function parseNum(str) {
             if (!str) return 0;
             var m = String(str).replace(/,/g, '').match(/-?\d+\.?\d*/g);

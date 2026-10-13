@@ -19,7 +19,7 @@ class InboundInvoiceLine(db.Model):
     description = db.Column(db.String(500), nullable=False)
     quantity = db.Column(db.Float, default=1.0)
     unit_price = db.Column(db.Float, default=0.0)
-    currency = db.Column(db.String(3), default='USD')
+    currency = db.Column(db.String(3), default='JOD')
     line_total = db.Column(db.Float, default=0.0)
     category = db.Column(db.String(100), nullable=True)  # hotel, transport, guide, etc.
     notes = db.Column(db.Text, nullable=True)

@@ -334,7 +334,7 @@ body.cust-inv-bank-editing .cust-inv-bank-editable {
 
         {# 6. Pricing table - gray header, summary with gray labels #}
         {% set total_amt = request.total_amount or 0 %}
-        {% set currency = request.total_currency or 'USD' %}
+        {% set currency = 'JOD' %}
         {% set advance = 0 %}
         {% set net_due = total_amt %}
         <table class="cust-inv-table">
@@ -394,7 +394,7 @@ body.cust-inv-bank-editing .cust-inv-bank-editable {
 
         <script>
         (function() {
-            var currency = "{{ request.total_currency or 'USD' }}";
+            var currency = "JOD";
             function parseNum(str) {
                 if (!str) return 0;
                 var m = String(str).replace(/,/g, '').match(/-?\d+\.?\d*/g);

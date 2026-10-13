@@ -289,7 +289,7 @@
         document.getElementById('new_ma_rep_country').value = 'Jordan';
         document.getElementById('new_ma_rep_payment_terms').value = '';
         document.getElementById('new_ma_rep_payment_method').value = '';
-        document.getElementById('new_ma_rep_default_currency').value = 'USD';
+        document.getElementById('new_ma_rep_default_currency').value = 'JOD';
         document.getElementById('new_ma_rep_bank_name').value = '';
         document.getElementById('new_ma_rep_bank_account').value = '';
         const cliqEl = document.getElementById('new_ma_rep_cliq_alias');
@@ -342,7 +342,7 @@
             country: document.getElementById('new_ma_rep_country').value.trim(),
             payment_terms: financial.payment_terms,
             payment_method: financial.payment_method || '',
-            default_currency: document.getElementById('new_ma_rep_default_currency').value.trim() || 'USD',
+            default_currency: document.getElementById('new_ma_rep_default_currency').value.trim() || 'JOD',
             bank_name: financial.bank_name,
             bank_account: financial.bank_account,
             cliq_alias: financial.cliq_alias,

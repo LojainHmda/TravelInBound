@@ -194,7 +194,7 @@ def _ensure_ground_handler_supplier(name, data=None):
         city=(payload.get('city') or '').strip() or None,
         country=(payload.get('country') or '').strip() or None,
         payment_terms=payment_terms,
-        default_currency=(payload.get('default_currency') or 'USD') or 'USD',
+        default_currency=(payload.get('default_currency') or 'JOD') or 'JOD',
         address=(payload.get('address') or '').strip() or None,
         bank_name=bank_name_val,
         bank_account=bank_account_val,
@@ -897,7 +897,7 @@ def export_list_excel():
         bottom=Side(style='thin'),
     )
 
-    headers = ['Request No.', 'Agent', 'Contact', 'Nationality', 'Pax', 'Travel Dates', 'Days']
+    headers = ['Request No.', 'Agent', 'Contact', 'Agent Reference', 'Nationality', 'Pax', 'Travel Dates', 'Days']
     if all_files_view:
         headers.append('Status')
 
@@ -926,6 +926,7 @@ def export_list_excel():
             inb.request_number,
             inb.agent or 'TBA',
             inb.contact_name or 'TBA',
+            inb.agent_ref or '-',
             inb.nationality or 'TBA',
             inb.pax or 0,
             (
@@ -942,7 +943,7 @@ def export_list_excel():
             cell.border = thin_border
         row_idx += 1
 
-    widths = [18, 24, 22, 15, 8, 24, 8, 14]
+    widths = [18, 24, 22, 20, 15, 8, 24, 8, 14]
     for idx, width in enumerate(widths[:len(headers)], start=1):
         ws.column_dimensions[openpyxl.utils.get_column_letter(idx)].width = width
 
@@ -1800,7 +1801,7 @@ def api_save_itinerary(request_id):
                     'date': current_date.strftime('%Y-%m-%d'),
                     'description': f'Day {day_counter} - {current_date.strftime("%A, %B %d")}',
                     'base_cost': 0.0,
-                    'currency': request_obj.total_currency or 'USD',
+                    'currency': request_obj.total_currency or 'JOD',
                     'cost_unit': 'PER_PERSON',
                     'flag_hotel': False,
                     'flag_guide': False,
@@ -2002,7 +2003,7 @@ def api_save_itinerary_original(request_id):
                 row.comment = row_data.get('comment', '')
                 row.base_cost = float(row_data.get('base_cost', 0))
                 row.cost_unit = row_data.get('cost_unit', COST_UNIT_PER_PERSON)
-                row.currency = row_data.get('currency', 'USD')
+                row.currency = row_data.get('currency', 'JOD')
                 row.flag_hotel = row_data.get('flag_hotel', False)
                 row.flag_guide = row_data.get('flag_guide', False)
                 row.flag_transport = row_data.get('flag_transport', False)
@@ -2024,7 +2025,7 @@ def api_save_itinerary_original(request_id):
                     comment=row_data.get('comment', ''),
                     base_cost=float(row_data.get('base_cost', 0)),
                     cost_unit=row_data.get('cost_unit', COST_UNIT_PER_PERSON),
-                    currency=row_data.get('currency', 'USD'),
+                    currency=row_data.get('currency', 'JOD'),
                     flag_hotel=row_data.get('flag_hotel', False),
                     flag_guide=row_data.get('flag_guide', False),
                     flag_transport=row_data.get('flag_transport', False),
@@ -2907,7 +2908,8 @@ def api_save_service_data(request_id):
                         dietary_requirements=room_data.get('dietary_requirements', ''),
                         adults=room_data.get('adults', 2),
                         children=room_data.get('children', 0),
-                        guest_names=room_data.get('guest_names', '')
+                        guest_names=room_data.get('guest_names', ''),
+                        room_confirmation=room_data.get('room_confirmation', '')
                     )
                     db.session.add(room)
 
@@ -3002,7 +3004,7 @@ def api_save_service_data(request_id):
                     transport.license_number = form_data.get('transport_license_number', '')
                     transport.status = form_data.get('transport_status', STATUS_REQUEST)
                     transport.cost = float(form_data.get('transport_cost', 0) or 0)
-                    transport.currency = form_data.get('transport_cost_currency', 'USD')
+                    transport.currency = form_data.get('transport_cost_currency', 'JOD')
                     transport.note = form_data.get('transport_notes', '')
                     supplier_id = form_data.get('transport_supplier')
                     transport.supplier_id = int(supplier_id) if supplier_id else None
@@ -3062,7 +3064,7 @@ def api_save_service_data(request_id):
                 transport.license_number = form_data.get('transport_license_number', '')
                 transport.status = form_data.get('transport_status', 'REQUEST')
                 transport.cost = float(form_data.get('transport_cost', 0) or 0)
-                transport.currency = form_data.get('transport_cost_currency', 'USD')
+                transport.currency = form_data.get('transport_cost_currency', 'JOD')
                 transport.note = form_data.get('transport_notes', '')
                 transport.supplier_id = supplier_id
                 db.session.add(transport)
@@ -3141,7 +3143,7 @@ def api_save_service_data(request_id):
                 g.language = form_data.get('guide_language', '')
                 g.telephone_number = form_data.get('guide_phone', '')
                 g.cost = float(form_data.get('guide_cost', 0) or 0)
-                g.currency = form_data.get('guide_cost_currency', 'USD')
+                g.currency = form_data.get('guide_cost_currency', 'JOD')
                 g.is_cancelled = form_data.get('guide_cancelled') in ['true', 'True', True, 'on', '1']
                 g.additional_comments = form_data.get('guide_notes', '')
                 g.status = form_data.get('guide_status', 'REQUESTED')
@@ -3201,7 +3203,7 @@ def api_save_service_data(request_id):
                     guide.language = form_data.get('guide_language', '')
                     guide.telephone_number = form_data.get('guide_phone', '')
                     guide.cost = float(form_data.get('guide_cost', 0) or 0)
-                    guide.currency = form_data.get('guide_cost_currency', 'USD')
+                    guide.currency = form_data.get('guide_cost_currency', 'JOD')
                     guide.is_cancelled = form_data.get('guide_cancelled') in ['true', 'True', True, 'on', '1']
                     guide.additional_comments = form_data.get('guide_notes', '')
                     guide.status = form_data.get('guide_status', 'REQUEST')
@@ -3244,7 +3246,7 @@ def api_save_service_data(request_id):
                 guide.language = form_data.get('guide_language', '')
                 guide.telephone_number = form_data.get('guide_phone', '')
                 guide.cost = float(form_data.get('guide_cost', 0) or 0)
-                guide.currency = form_data.get('guide_cost_currency', 'USD')
+                guide.currency = form_data.get('guide_cost_currency', 'JOD')
                 guide.is_cancelled = form_data.get('guide_cancelled') in ['true', 'True', True, 'on', '1']
                 guide.additional_comments = form_data.get('guide_notes', '')
                 guide.status = form_data.get('guide_status', 'REQUEST')
@@ -3943,7 +3945,8 @@ def api_save_service_data(request_id):
                     'dietary_requirements': r.dietary_requirements or '',
                     'adults': r.adults or 1,
                     'children': r.children or 0,
-                    'guest_names': r.guest_names or ''
+                    'guest_names': r.guest_names or '',
+                    'room_confirmation': r.room_confirmation or ''
                 } for r in rooms]
 
         # For transport: include transport_id for file upload
@@ -4644,7 +4647,7 @@ def api_add_hotel():
             phone=data.get('phone', '').strip() or None,
             website=data.get('website', '').strip() or None,
             payment_terms=payment_terms,
-            default_currency=data.get('default_currency', 'USD') or 'USD',
+            default_currency=data.get('default_currency', 'JOD') or 'JOD',
             address=data.get('address', '').strip() or None,
             bank_name=bank_name_val,
             bank_account=bank_account_val,
@@ -5026,7 +5029,7 @@ def api_add_guide():
             city=data.get('city', '').strip() or None,
             country=data.get('country', '').strip() or None,
             payment_terms=payment_terms,
-            default_currency=data.get('default_currency', 'USD') or 'USD',
+            default_currency=data.get('default_currency', 'JOD') or 'JOD',
             address=data.get('address', '').strip() or None,
             bank_name=bank_name_val,
             bank_account=bank_account_val,
@@ -5127,7 +5130,7 @@ def api_add_restaurant():
             phone=data.get('phone', '').strip() or None,
             website=data.get('website', '').strip() or None,
             payment_terms=payment_terms,
-            default_currency=data.get('default_currency', 'USD') or 'USD',
+            default_currency=data.get('default_currency', 'JOD') or 'JOD',
             bank_name=bank_name_val,
             bank_account=bank_account_val,
             tax_number=data.get('tax_number', '').strip() or None,
@@ -5216,7 +5219,7 @@ def api_add_transport():
             country=data.get('country', '').strip() or None,
             payment_terms=payment_terms,
             payment_method=payment_method,
-            default_currency=data.get('default_currency', 'USD') or 'USD',
+            default_currency=data.get('default_currency', 'JOD') or 'JOD',
             address=data.get('address', '').strip() or None,
             bank_name=bank_name_val,
             bank_account=bank_account_val,

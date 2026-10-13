@@ -243,16 +243,21 @@
    filtered view (e.g. Requests vs Confirmed), independent of row content.
    The trailing column(s) — Actions, or Status + Actions on the all-files
    view — share the remaining width automatically. */
-.requests-table th:nth-child(1), .requests-table td:nth-child(1) { width: 12%; }
-.requests-table th:nth-child(2), .requests-table td:nth-child(2) { width: 12%; }
+.requests-table th:nth-child(1), .requests-table td:nth-child(1) { width: 11%; }
+.requests-table th:nth-child(2), .requests-table td:nth-child(2) { width: 10%; }
 .requests-table th:nth-child(3), .requests-table td:nth-child(3) { width: 7%; }
-.requests-table th:nth-child(4), .requests-table td:nth-child(4) { width: 14%; }
-.requests-table th:nth-child(5), .requests-table td:nth-child(5) { width: 5%; }
-.requests-table th:nth-child(6), .requests-table td:nth-child(6) { width: 14%; white-space: nowrap; }
-.requests-table th:nth-child(7), .requests-table td:nth-child(7) { width: 8%; white-space: nowrap; }
+.requests-table th:nth-child(4), .requests-table td:nth-child(4) { width: 8%; }
+.requests-table th:nth-child(5), .requests-table td:nth-child(5) { width: 10%; }
+.requests-table th:nth-child(6), .requests-table td:nth-child(6) { width: 5%; }
+.requests-table th:nth-child(7), .requests-table td:nth-child(7) { width: 14%; white-space: nowrap; }
+.requests-table th:nth-child(8), .requests-table td:nth-child(8) { width: 7%; white-space: nowrap; }
 /* Actions column: explicit width so all buttons fit on one row, regardless
    of view (guaranteed even on the all-files view, which adds a Status column). */
 .requests-table .col-actions { width: 18%; white-space: nowrap; }
+/* Status and Actions sit centered under their headings. */
+.requests-table .col-status,
+.requests-table th.col-actions { text-align: center; }
+.requests-table td.col-actions .action-buttons { justify-content: center; }
 
 .requests-table thead {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -276,7 +281,7 @@
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 .req-sort-arrows {
     display: inline-flex;
@@ -794,12 +799,13 @@ button.btn-print {
                     </th>
                     <th>Agent</th>
                     <th>Contact</th>
+                    <th>Agent Reference</th>
                     <th>Nationality</th>
                     <th>Pax</th>
                     <th>Travel Dates</th>
                     <th>Days</th>
                     {% if all_files_view|default(false) %}
-                    <th>Status</th>
+                    <th class="col-status">Status</th>
                     {% endif %}
                     <th class="col-actions">Actions</th>
                 </tr>
@@ -813,6 +819,7 @@ button.btn-print {
                     </td>
                     <td>{{ inb.agent or 'TBA' }}</td>
                     <td>{{ inb.contact_name or 'TBA' }}</td>
+                    <td>{{ inb.agent_ref or '-' }}</td>
                     <td>{{ inb.nationality or 'TBA' }}</td>
                     <td><span class="badge-light">{{ inb.pax }}</span></td>
                     <td>
@@ -821,7 +828,7 @@ button.btn-print {
                     </td>
                     <td><span class="badge-light">{{ inb.no_of_days }} days</span></td>
                     {% if all_files_view|default(false) %}
-                    <td>
+                    <td class="col-status">
                         {% if is_deleted_queue|default(false) or inb.pending_invoice_queue %}
                             <span class="status-badge status-deleted">Deleted</span>
                         {% elif inb.status == 'REQUEST' %}

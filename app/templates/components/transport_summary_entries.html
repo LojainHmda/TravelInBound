@@ -5,8 +5,8 @@
     <td class="text-center summary-date-col">{{ (transport.service_date.strftime('%d %b %Y') if transport.service_date else transport.date.strftime('%d %b %Y') if transport.date else '-') }}</td>
     <td class="text-center summary-date-col">{{ (transport.end_date.strftime('%d %b %Y') if transport.end_date else '-') }}</td>
     <td>{{ transport.vehicle_type or '-' }}</td>
-    <td>{{ transport.pickup_point or transport.pickup_location or '-' }}</td>
-    <td>{{ transport.drop_off_point or transport.dropoff_location or '-' }}</td>
+    <td>{{ transport.driver_name or '-' }}</td>
+    <td>{{ transport.driver_phone or '-' }}</td>
     <td class="text-center summary-compact-col print-hide-status">
         <span class="px-2 py-0.5 rounded text-[10px] {% if transport.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif transport.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% elif transport.status == 'WAITING_LIST' %}bg-blue-100 text-blue-700{% elif transport.status == 'CANCELLED' %}bg-red-100 text-red-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ transport.status or 'PENDING' }}</span>
     </td>
