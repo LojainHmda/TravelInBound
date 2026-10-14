@@ -2977,9 +2977,10 @@ def api_save_service_data(request_id):
                     # Rooms in the 'other' bucket (e.g. manually added types) are
                     # intentionally left untouched so their detail is preserved.
 
-            # Save confirmation number to first room (hotel-level field in UI)
+            # Save confirmation number to first room (hotel-level field in UI).
+            # Same order as InboundHotel.rooms, which every page reads rooms[0] from.
             confirmation = form_data.get('hotel_confirmation_number', '').strip()
-            rooms = HotelRoom.query.filter_by(hotel_id=hotel.id).all()
+            rooms = HotelRoom.query.filter_by(hotel_id=hotel.id).order_by(HotelRoom.id).all()
             if rooms:
                 rooms[0].confirmation = confirmation
             elif confirmation:
@@ -3636,7 +3637,7 @@ def api_save_service_data(request_id):
         if service_type == 'hotel':
             # Always use direct query to ensure fresh data and avoid relationship duplicates
             # This prevents duplicate entries that can occur with SQLAlchemy relationships
-            hotels_list = InboundHotel.query.filter_by(request_id=request_id).order_by(InboundHotel.check_in_date).all()
+            hotels_list = InboundHotel.query.filter_by(request_id=request_id).order_by(InboundHotel.check_in_date, InboundHotel.id).all()
             print(f"[SAVE SERVICE] Direct query found {len(hotels_list)} hotels")
             
             # Remove duplicates by hotel ID (safety check) - use dictionary for O(1) lookup

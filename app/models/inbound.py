@@ -86,7 +86,7 @@ class InboundRequest(db.Model):
     # Relationships
     customer = db.relationship('Customer', backref='inbound_requests', lazy=True)
     itinerary_rows = db.relationship('ItineraryRow', backref='request', lazy=True, cascade="all, delete-orphan", order_by="ItineraryRow.date, ItineraryRow.id")
-    inbound_hotels = db.relationship('InboundHotel', backref='request', lazy=True, cascade="all, delete-orphan")
+    inbound_hotels = db.relationship('InboundHotel', backref='request', lazy=True, cascade="all, delete-orphan", order_by="InboundHotel.check_in_date, InboundHotel.id")
     inbound_transports = db.relationship('InboundTransport', backref='request', lazy=True, cascade="all, delete-orphan")
     inbound_meals = db.relationship('InboundMeal', backref='request', lazy=True, cascade="all, delete-orphan")
     inbound_guides = db.relationship('InboundGuide', backref='request', lazy=True, cascade="all, delete-orphan")
@@ -503,7 +503,10 @@ class InboundHotel(db.Model):
     rooming_list_uploaded_at = db.Column(db.DateTime, nullable=True)
 
     # Relationships
-    rooms = db.relationship('HotelRoom', backref='hotel', lazy=True, cascade='all, delete-orphan')
+    # Ordered by id so rooms[0] is always the same room: the hotel-level
+    # Confirmation Number is stored on the first room.
+    rooms = db.relationship('HotelRoom', backref='hotel', lazy=True, cascade='all, delete-orphan',
+                            order_by='HotelRoom.id')
     supplier_ref = db.relationship('Supplier', foreign_keys=[supplier_id], lazy='joined')
 
     def __repr__(self):

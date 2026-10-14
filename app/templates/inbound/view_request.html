@@ -848,15 +848,15 @@ input[type="date"]::-webkit-calendar-table-body {
                                 <input type="hidden" name="nationality" id="nationalityHiddenField" value="{{ request.nationality|e }}">
                                 <label class="tw-label">Nationality</label>
                                 <div class="flex flex-wrap items-end gap-1.5">
-                                    <select id="nationalityPicker" class="tw-input flex-1 min-w-[8rem] text-sm py-1.5" title="Nationality" {% if view_only or mapped_status == 'CONFIRMED' %}disabled{% endif %}>
+                                    <select id="nationalityPicker" class="tw-input flex-1 min-w-[8rem] text-sm py-1.5" title="Nationality" {% if view_only %}disabled{% endif %}>
                                         <option value="">Select</option>
                                         {% for nat in nationalities %}
                                         <option value="{{ nat }}">{{ nat }}</option>
                                         {% endfor %}
                                     </select>
                                     <input type="number" id="nationalityCountInput" min="1" placeholder="#" title="Count"
-                                           class="tw-input w-16 shrink-0 text-sm py-1.5 tabular-nums" {% if view_only or mapped_status == 'CONFIRMED' %}disabled{% endif %}>
-                                    <button type="button" id="nationalityAddBtn" class="tw-btn tw-btn-secondary tw-btn-sm shrink-0 px-3" {% if view_only or mapped_status == 'CONFIRMED' %}disabled{% endif %}>Add</button>
+                                           class="tw-input w-16 shrink-0 text-sm py-1.5 tabular-nums" {% if view_only %}disabled{% endif %}>
+                                    <button type="button" id="nationalityAddBtn" class="tw-btn tw-btn-secondary tw-btn-sm shrink-0 px-3" {% if view_only %}disabled{% endif %}>Add</button>
                                 </div>
                                 <div id="nationalityChipsHost" class="nationality-mix-chips flex flex-wrap gap-1 mt-2 min-h-[22px]"></div>
                                 <script>
@@ -866,7 +866,7 @@ input[type="date"]::-webkit-calendar-table-body {
                                     const picker = document.getElementById('nationalityPicker');
                                     const countInp = document.getElementById('nationalityCountInput');
                                     const addBtn = document.getElementById('nationalityAddBtn');
-                                    const locked = {% if view_only or mapped_status == 'CONFIRMED' %}true{% else %}false{% endif %};
+                                    const locked = {% if view_only %}true{% else %}false{% endif %};
                                     let items = [];
 
                                     function paxNow() {
@@ -1043,12 +1043,12 @@ input[type="date"]::-webkit-calendar-table-body {
                                 </div>
                                 <div class="flex-1">
                                     <label class="tw-label">Pax</label>
-                                    <input type="number" class="tw-input" name="pax" value="{{ request.pax if request.pax else 1 }}" min="1" {% if view_only or mapped_status == 'CONFIRMED' %}disabled{% endif %}>
+                                    <input type="number" class="tw-input" name="pax" value="{{ request.pax if request.pax else 1 }}" min="1" {% if view_only %}disabled{% endif %}>
                                 </div>
                             </div>
                         </div>
                     </form>
-                    {% if not view_only and mapped_status != 'CONFIRMED' and mapped_status != 'INVOICED' %}
+                    {% if not view_only and mapped_status != 'INVOICED' %}
                     <div class="flex justify-end mt-3">
                         <button type="button" id="saveRequestBtnDetails" class="tw-btn tw-btn-primary tw-btn-sm" onclick="saveRequest()">
                             <i class="fas fa-save"></i>
@@ -15132,7 +15132,7 @@ async function openAdvanceExpenseSheet() {
                 });
             }
             if (saved.file !== undefined && saved.file !== '') fileEl.value = saved.file;
-            if (saved.pax !== undefined && saved.pax !== '') paxEl.value = saved.pax;
+            // Pax always shows the file's current PAX, not the copy saved with the sheet.
             if (saved.guide_driver !== undefined) document.getElementById('advance_guide_driver').value = saved.guide_driver || '';
             if (saved.date !== undefined && saved.date !== '') dateEl.value = saved.date;
             if (saved.method_of_payment !== undefined) document.getElementById('advance_method_of_payment').value = saved.method_of_payment || '';
@@ -15158,7 +15158,8 @@ async function openClosingGuidePaymentSheet() {
     closeTourExpenseChoiceModal();
     var reqNum = (typeof currentRequestNumber !== 'undefined' && currentRequestNumber ? currentRequestNumber
                : (typeof requestNumber !== 'undefined' ? requestNumber : '')) || '';
-    var reqPax = (typeof requestPax !== 'undefined' ? requestPax : '') || '';
+    // The file's saved PAX (updated by Save without a page reload), else the page-load value.
+    var reqPax = (typeof getPaxValue === 'function' && getPaxValue()) || (typeof requestPax !== 'undefined' ? requestPax : '') || '';
     closingGuidePaymentSheetData = CLOSING_GUIDE_ITEMS.map((x, i) => ({ id: i, item: x.item || '', amount: x.amount === '' ? '' : x.amount, pax: '', checked: false, total: 0, itemLocked: !!(x.item && x.item.trim()), amountLocked: false }));
     var modal = document.getElementById('closingGuidePaymentSheetModal');
     var reqId = (modal && modal.getAttribute('data-request-id')) || (typeof requestId !== 'undefined' ? requestId : null);
@@ -15183,7 +15184,7 @@ async function openClosingGuidePaymentSheet() {
                 });
             }
             if (saved.file !== undefined && saved.file !== '') fileEl.value = saved.file;
-            if (saved.pax !== undefined && saved.pax !== '') paxEl.value = saved.pax;
+            // Pax always shows the file's current PAX, not the copy saved with the sheet.
             if (saved.guide_driver !== undefined) document.getElementById('closing_guide_driver').value = saved.guide_driver || '';
             if (saved.date !== undefined && saved.date !== '') dateEl.value = saved.date;
             if (saved.method_of_payment !== undefined) document.getElementById('closing_method_of_payment').value = saved.method_of_payment || '';
