@@ -5,9 +5,9 @@
 {{ super() }}
 <style>
 /* Single-page A4 layout - tight spacing, compact */
-.cust-inv-row-actions { white-space: nowrap; padding: 2px 4px !important; width: 1%; }
-.cust-inv-row-actions .cust-inv-btn { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 0; border: 1px solid #666; background: #f5f5f5; cursor: pointer; font-size: 14px; line-height: 1; border-radius: 2px; margin: 0 1px; }
-.cust-inv-row-actions .cust-inv-btn:hover { background: #e0e0e0; }
+.cust-inv-row-actions { white-space: nowrap; padding: 1px 3px !important; width: 1%; }
+.cust-inv-row-actions .cust-inv-btn { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; padding: 0; border: 1px solid #ccc; background: #fff; color: #555; cursor: pointer; font-size: 11px; line-height: 1; border-radius: 3px; margin: 0 1px; }
+.cust-inv-row-actions .cust-inv-btn:hover { background: #f0f0f0; }
 @media print {
     .no-print { display: none !important; }
     .top-navbar, #sidebar, #sidebar-overlay { display: none !important; }
@@ -349,11 +349,11 @@ body.cust-inv-bank-editing .cust-inv-bank-editable {
                     <th class="col-price" style="width:16%;">Price ($)</th>
                     <th class="col-price" style="width:14%;">Pax No.</th>
                     <th class="col-total" style="width:15%;">Total</th>
-                    <th class="cust-inv-row-actions no-print" style="width:60px;"></th>
+                    <th class="cust-inv-row-actions no-print"></th>
                 </tr>
             </thead>
             <tbody data-save-section="rows">
-                {% set ns = namespace(total=0) %}
+                {% set ns = namespace(total=0, rows=0) %}
                 {% for row in request.itinerary_rows %}
                     {% set row_cost = row.calculate_row_cost(request.pax) %}
                     {% set pax_qty = request.pax if row.cost_unit == 'PER_PERSON' else 1 %}
@@ -368,6 +368,7 @@ body.cust-inv-bank-editing .cust-inv-bank-editable {
                         <td class="cust-inv-row-actions no-print"><button type="button" class="cust-inv-btn cust-inv-add-row" title="Add row">+</button><button type="button" class="cust-inv-btn cust-inv-remove-row" title="Remove row">−</button></td>
                     </tr>
                     {% set ns.total = ns.total + row_cost %}
+                    {% set ns.rows = ns.rows + 1 %}
                     {% endif %}
                 {% endfor %}
                 {% if ns.total == 0 and total_amt > 0 %}
@@ -380,10 +381,12 @@ body.cust-inv-bank-editing .cust-inv-bank-editable {
                     <td class="cust-inv-row-actions no-print"><button type="button" class="cust-inv-btn cust-inv-add-row" title="Add row">+</button><button type="button" class="cust-inv-btn cust-inv-remove-row" title="Remove row">−</button></td>
                 </tr>
                 {% set ns.total = total_amt %}
+                {% set ns.rows = 1 %}
                 {% endif %}
-                <tr data-save-row><td class="cust-inv-editable" contenteditable="true">Tour Package As agreed</td><td class="cust-inv-currency-cell">{{ currency }}</td><td class="cust-inv-editable cust-inv-price" contenteditable="true"></td><td class="cust-inv-editable cust-inv-pax" contenteditable="true"></td><td class="cust-inv-row-total" contenteditable="false"></td><td class="cust-inv-row-actions no-print"><button type="button" class="cust-inv-btn cust-inv-add-row" title="Add row">+</button><button type="button" class="cust-inv-btn cust-inv-remove-row" title="Remove row">−</button></td></tr>
-                <tr data-save-row><td class="cust-inv-editable" contenteditable="true"></td><td class="cust-inv-currency-cell">{{ currency }}</td><td class="cust-inv-editable cust-inv-price" contenteditable="true"></td><td class="cust-inv-editable cust-inv-pax" contenteditable="true"></td><td class="cust-inv-row-total" contenteditable="false"></td><td class="cust-inv-row-actions no-print"><button type="button" class="cust-inv-btn cust-inv-add-row" title="Add row">+</button><button type="button" class="cust-inv-btn cust-inv-remove-row" title="Remove row">−</button></td></tr>
-                <tr data-save-row><td class="cust-inv-editable" contenteditable="true"></td><td class="cust-inv-currency-cell">{{ currency }}</td><td class="cust-inv-editable cust-inv-price" contenteditable="true"></td><td class="cust-inv-editable cust-inv-pax" contenteditable="true"></td><td class="cust-inv-row-total" contenteditable="false"></td><td class="cust-inv-row-actions no-print"><button type="button" class="cust-inv-btn cust-inv-add-row" title="Add row">+</button><button type="button" class="cust-inv-btn cust-inv-remove-row" title="Remove row">−</button></td></tr>
+                {# Pad with blank rows so a new invoice starts with 5 rows #}
+                {% for _ in range(5 - ns.rows) %}
+                <tr data-save-row><td class="cust-inv-editable" contenteditable="true">{{ 'Tour Package As agreed' if loop.first else '' }}</td><td class="cust-inv-currency-cell">{{ currency }}</td><td class="cust-inv-editable cust-inv-price" contenteditable="true"></td><td class="cust-inv-editable cust-inv-pax" contenteditable="true"></td><td class="cust-inv-row-total" contenteditable="false"></td><td class="cust-inv-row-actions no-print"><button type="button" class="cust-inv-btn cust-inv-add-row" title="Add row">+</button><button type="button" class="cust-inv-btn cust-inv-remove-row" title="Remove row">−</button></td></tr>
+                {% endfor %}
             </tbody>
             <tfoot>
                 <tr><td class="cust-inv-footer-left" colspan="3"></td><td class="cust-inv-summary-label">Total</td><td class="cust-inv-footer-total" contenteditable="false"><strong>{{ currency }} {{ "%.2f"|format(ns.total or total_amt) }}</strong></td><td class="no-print"></td></tr>
@@ -439,13 +442,14 @@ body.cust-inv-bank-editing .cust-inv-bank-editable {
                     }
                 }
             }
-            function addRow() {
-                var tbody = document.querySelector('.cust-inv-doc .cust-inv-table tbody');
+            function addRow(btn) {
+                var after = btn.closest('tr');
+                var tbody = after ? after.parentElement : null;
                 if (!tbody) return;
                 var tr = document.createElement('tr');
                 tr.setAttribute('data-save-row', '');
                 tr.innerHTML = '<td class="cust-inv-editable" contenteditable="true"></td><td class="cust-inv-currency-cell"></td><td class="cust-inv-editable cust-inv-price" contenteditable="true"></td><td class="cust-inv-editable cust-inv-pax" contenteditable="true"></td><td class="cust-inv-row-total" contenteditable="false"></td><td class="cust-inv-row-actions no-print"><button type="button" class="cust-inv-btn cust-inv-add-row" title="Add row">+</button><button type="button" class="cust-inv-btn cust-inv-remove-row" title="Remove row">−</button></td>';
-                tbody.appendChild(tr);
+                tbody.insertBefore(tr, after.nextSibling);
                 recalc();
             }
             function removeRow(btn) {
@@ -460,7 +464,8 @@ body.cust-inv-bank-editing .cust-inv-bank-editable {
             function restrictToNumbers(el, allowDecimal) {
                 var v = (el.textContent || '').replace(/\s/g, '');
                 if (allowDecimal) {
-                    v = v.replace(/[^\d.]/g, '').replace(/\.(?=.*\.)/g, '');
+                    // On an Arabic keyboard the period key types ز, so treat it as the decimal point
+                    v = v.replace(/ز/g, '.').replace(/[^\d.]/g, '').replace(/\.(?=.*\.)/g, '');
                 } else {
                     v = v.replace(/\D/g, '');
                 }
@@ -490,7 +495,7 @@ body.cust-inv-bank-editing .cust-inv-bank-editable {
                 });
                 doc.addEventListener('keyup', recalc);
                 doc.addEventListener('click', function(e) {
-                    if (e.target.classList.contains('cust-inv-add-row')) { e.preventDefault(); addRow(); }
+                    if (e.target.classList.contains('cust-inv-add-row')) { e.preventDefault(); addRow(e.target); }
                     if (e.target.classList.contains('cust-inv-remove-row')) { e.preventDefault(); removeRow(e.target); }
                 });
                 recalc();

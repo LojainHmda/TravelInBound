@@ -110,6 +110,10 @@
 .invoice-print-items-table tfoot td:nth-child(5),
 .invoice-print-items-table tfoot td:nth-child(6) { border: 1px solid #000 !important; }
 .invoice-print-items-table tfoot td:nth-child(5) { white-space: nowrap; }
+/* Add/remove row buttons - screen only, sit just outside the table */
+.invoice-print-items-table .invoice-row-actions { width: 1%; white-space: nowrap; border: none; background: transparent; padding: 0 0 0 4px; }
+.invoice-row-btn { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; padding: 0; margin: 0 1px; border: 1px solid #ccc; border-radius: 3px; background: #fff; color: #555; font-size: 11px; line-height: 1; cursor: pointer; }
+.invoice-row-btn:hover { background: #f0f0f0; color: #000; }
 
 /* Shared currency selector - looks like plain text when printed */
 .inv-currency-select { font: inherit; padding: 1px 2px; margin-left: 4px; }
@@ -231,25 +235,20 @@ body.invoice-bank-editing .invoice-bank-editable {
                     <th class="col-price">Price</th>
                     <th class="col-pax">Pax</th>
                     <th class="col-total">Total</th>
+                    <th class="invoice-row-actions no-print"></th>
                 </tr>
             </thead>
             <tbody data-save-section="rows">
-                <tr data-save-row><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-currency-cell">{{ currency }}</td><td class="invoice-print-editable invoice-price" contenteditable="true"></td><td class="invoice-print-editable invoice-pax" contenteditable="true"></td><td class="invoice-print-editable invoice-row-total" contenteditable="false"></td></tr>
-                <tr data-save-row><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-currency-cell">{{ currency }}</td><td class="invoice-print-editable invoice-price" contenteditable="true"></td><td class="invoice-print-editable invoice-pax" contenteditable="true"></td><td class="invoice-print-editable invoice-row-total" contenteditable="false"></td></tr>
-                <tr data-save-row><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-currency-cell">{{ currency }}</td><td class="invoice-print-editable invoice-price" contenteditable="true"></td><td class="invoice-print-editable invoice-pax" contenteditable="true"></td><td class="invoice-print-editable invoice-row-total" contenteditable="false"></td></tr>
-                <tr data-save-row><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-currency-cell">{{ currency }}</td><td class="invoice-print-editable invoice-price" contenteditable="true"></td><td class="invoice-print-editable invoice-pax" contenteditable="true"></td><td class="invoice-print-editable invoice-row-total" contenteditable="false"></td></tr>
-                <tr data-save-row><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-currency-cell">{{ currency }}</td><td class="invoice-print-editable invoice-price" contenteditable="true"></td><td class="invoice-print-editable invoice-pax" contenteditable="true"></td><td class="invoice-print-editable invoice-row-total" contenteditable="false"></td></tr>
-                <tr data-save-row><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-currency-cell">{{ currency }}</td><td class="invoice-print-editable invoice-price" contenteditable="true"></td><td class="invoice-print-editable invoice-pax" contenteditable="true"></td><td class="invoice-print-editable invoice-row-total" contenteditable="false"></td></tr>
-                <tr data-save-row><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-currency-cell">{{ currency }}</td><td class="invoice-print-editable invoice-price" contenteditable="true"></td><td class="invoice-print-editable invoice-pax" contenteditable="true"></td><td class="invoice-print-editable invoice-row-total" contenteditable="false"></td></tr>
-                <tr data-save-row><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-currency-cell">{{ currency }}</td><td class="invoice-print-editable invoice-price" contenteditable="true"></td><td class="invoice-print-editable invoice-pax" contenteditable="true"></td><td class="invoice-print-editable invoice-row-total" contenteditable="false"></td></tr>
-                <tr data-save-row><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-currency-cell">{{ currency }}</td><td class="invoice-print-editable invoice-price" contenteditable="true"></td><td class="invoice-print-editable invoice-pax" contenteditable="true"></td><td class="invoice-print-editable invoice-row-total" contenteditable="false"></td></tr>
+                {% for _ in range(5) %}
+                <tr data-save-row><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-print-editable" contenteditable="true"></td><td class="invoice-currency-cell">{{ currency }}</td><td class="invoice-print-editable invoice-price" contenteditable="true"></td><td class="invoice-print-editable invoice-pax" contenteditable="true"></td><td class="invoice-print-editable invoice-row-total" contenteditable="false"></td><td class="invoice-row-actions no-print"><button type="button" class="invoice-row-btn invoice-add-row" title="Add row">+</button><button type="button" class="invoice-row-btn invoice-remove-row" title="Remove row">−</button></td></tr>
+                {% endfor %}
             </tbody>
             <tfoot>
                 {% set print_total = request.total_amount or 0 %}
                 {% set print_currency = 'JOD' %}
-                <tr><td></td><td></td><td></td><td></td><td>Total</td><td class="invoice-print-tfoot-value invoice-footer-total" contenteditable="false">{{ print_currency }} {{ "%.2f"|format(print_total) }}</td></tr>
-                <tr><td></td><td></td><td></td><td></td><td>Advance Payment</td><td class="invoice-print-tfoot-value invoice-advance" contenteditable="true" data-save-key="advance">{{ print_currency }} 0.00</td></tr>
-                <tr><td></td><td></td><td></td><td></td><td><strong>Net Due</strong></td><td class="invoice-print-tfoot-value invoice-net-due" contenteditable="false"><strong>{{ print_currency }} {{ "%.2f"|format(print_total) }}</strong></td></tr>
+                <tr><td></td><td></td><td></td><td></td><td>Total</td><td class="invoice-print-tfoot-value invoice-footer-total" contenteditable="false">{{ print_currency }} {{ "%.2f"|format(print_total) }}</td><td class="invoice-row-actions no-print"></td></tr>
+                <tr><td></td><td></td><td></td><td></td><td>Advance Payment</td><td class="invoice-print-tfoot-value invoice-advance" contenteditable="true" data-save-key="advance">{{ print_currency }} 0.00</td><td class="invoice-row-actions no-print"></td></tr>
+                <tr><td></td><td></td><td></td><td></td><td><strong>Net Due</strong></td><td class="invoice-print-tfoot-value invoice-net-due" contenteditable="false"><strong>{{ print_currency }} {{ "%.2f"|format(print_total) }}</strong></td><td class="invoice-row-actions no-print"></td></tr>
             </tfoot>
         </table>
 
@@ -311,7 +310,8 @@ body.invoice-bank-editing .invoice-bank-editable {
         function restrictToNumbers(el, allowDecimal) {
             var v = (el.textContent || '').replace(/\s/g, '');
             if (allowDecimal) {
-                v = v.replace(/[^\d.]/g, '').replace(/\.(?=.*\.)/g, '');
+                // On an Arabic keyboard the period key types ز, so treat it as the decimal point
+                v = v.replace(/ز/g, '.').replace(/[^\d.]/g, '').replace(/\.(?=.*\.)/g, '');
             } else {
                 v = v.replace(/\D/g, '');
             }
@@ -343,7 +343,25 @@ body.invoice-bank-editing .invoice-bank-editable {
                 recalc();
             });
             table.addEventListener('keyup', recalc);
+            table.addEventListener('click', function(e) {
+                var btn = e.target.closest('.invoice-row-btn');
+                if (!btn) return;
+                var tr = btn.closest('tr');
+                if (btn.classList.contains('invoice-add-row')) {
+                    tr.parentNode.insertBefore(blankRow(), tr.nextSibling);
+                } else if (tr.parentNode.querySelectorAll('tr[data-save-row]').length > 1) {
+                    tr.remove();
+                }
+                recalc();
+            });
             recalc();
+        }
+
+        // A copy of the first item row with every cell emptied
+        function blankRow() {
+            var tr = document.querySelector('.invoice-print-items-table tbody tr[data-save-row]').cloneNode(true);
+            tr.querySelectorAll('td:not(.invoice-currency-cell):not(.invoice-row-actions)').forEach(function(td) { td.textContent = ''; });
+            return tr;
         }
 
         var currencySelect = document.querySelector('.invoice-currency-select');
@@ -397,17 +415,17 @@ body.invoice-bank-editing .invoice-bank-editable {
                 } else if (key === 'rows') {
                     var tbody = document.querySelector('.invoice-print-items-table tbody[data-save-section="rows"]');
                     if (!tbody || !data.rows || !data.rows.length) return;
-                    var rows = tbody.querySelectorAll('tr[data-save-row]');
-                    data.rows.forEach(function(r, i) {
-                        if (rows[i]) {
-                            var tds = rows[i].querySelectorAll('td');
-                            var priceCell = rows[i].querySelector('.invoice-price');
-                            var paxCell = rows[i].querySelector('.invoice-pax');
-                            if (tds[0]) tds[0].textContent = r.ref || '';
-                            if (tds[1]) tds[1].textContent = r.desc || '';
-                            if (priceCell) priceCell.textContent = r.price || '';
-                            if (paxCell) paxCell.textContent = r.pax || '';
-                        }
+                    // Rebuild the rows so a saved invoice opens with the same number of rows it was saved with
+                    var template = blankRow();
+                    while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+                    data.rows.forEach(function(r) {
+                        var tr = template.cloneNode(true);
+                        var tds = tr.querySelectorAll('td');
+                        tds[0].textContent = r.ref || '';
+                        tds[1].textContent = r.desc || '';
+                        tr.querySelector('.invoice-price').textContent = r.price || '';
+                        tr.querySelector('.invoice-pax').textContent = r.pax || '';
+                        tbody.appendChild(tr);
                     });
                 } else {
                     var el = document.querySelector('[data-save-key="' + key + '"]');
