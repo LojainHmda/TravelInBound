@@ -6077,6 +6077,33 @@ def api_cancel_request(request_id):
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
+@inbound_bp.route('/api/<int:request_id>/revert-to-request', methods=['POST'])
+@login_required
+@csrf.exempt
+def api_revert_to_request(request_id):
+    """Revert request - transitions CONFIRMED → REQUEST.
+
+    Only the status changes. Saved invoices, vouchers, services and guides are
+    left as they are, so confirming the request again brings it back unchanged.
+    """
+    request_obj = InboundRequest.query.get_or_404(request_id)
+
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+
+    # Same bucketing as the inbound list and Run Down, so Requested, Invoiced
+    # and Deleted-queue requests are all refused here.
+    if _file_status_bucket(request_obj) != 'CONFIRMED':
+        return jsonify({'success': False, 'message': 'Only confirmed requests can be reverted to Requested'}), 400
+
+    try:
+        request_obj.status = STATUS_REQUEST
+        db.session.commit()
+        return jsonify({'success': True, 'status': request_obj.status})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @inbound_bp.route('/api/<int:request_id>/submit-request', methods=['POST'])
 @csrf.exempt
 def api_submit_request(request_id):

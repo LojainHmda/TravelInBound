@@ -1,6 +1,10 @@
 from datetime import datetime
 from app.extensions import db
 
+# Direct customers are people (First/Last Name); every other type is an agent
+# account (Agent Name/Contact Person).
+DIRECT_CUSTOMER_TYPE = 'Direct'
+
 class Customer(db.Model):
     """Customer model for tracking individual and corporate customers"""
     id = db.Column(db.Integer, primary_key=True)
@@ -33,7 +37,11 @@ class Customer(db.Model):
         if self.last_name:
             return f"{self.first_name} {self.last_name}"
         return self.first_name
-    
+
+    @property
+    def is_direct(self):
+        return self.customer_type == DIRECT_CUSTOMER_TYPE
+
     # Relationships
     documents = db.relationship('CustomerDocument', backref='customer', lazy=True, cascade="all, delete-orphan")
     bookings = db.relationship('Booking', backref='customer', lazy=True)

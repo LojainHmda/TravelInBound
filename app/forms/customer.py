@@ -2,9 +2,11 @@ from datetime import date
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired
 from wtforms import StringField, TextAreaField, SelectField, DateField, SubmitField
-from wtforms.validators import DataRequired, Email, Optional, Length, Regexp, ValidationError
+from wtforms.validators import DataRequired, Email, Optional, Length, Regexp, ValidationError, StopValidation
 import json
 import os
+
+from app.models.customer import DIRECT_CUSTOMER_TYPE
 
 
 def get_customer_type_choices():
@@ -129,15 +131,42 @@ class PaymentTermsField(SelectField):
         raise ValidationError('Selected payment term is not recognized.')
 
 
+class NameFieldFor:
+    """Validate a name field only when it is on screen for the chosen customer type.
+
+    The hidden pair is skipped entirely (no errors, its value is not saved).
+    """
+
+    def __init__(self, direct):
+        self.direct = direct
+
+    def __call__(self, form, field):
+        if (form.customer_type.data == DIRECT_CUSTOMER_TYPE) != self.direct:
+            field.errors[:] = []
+            raise StopValidation()
+
+
 class CustomerForm(FlaskForm):
-    """Form for creating and editing customers"""
+    """Form for creating and editing customers.
+
+    Direct customers are people and use First Name / Last Name; every other type
+    is an account and uses Agent Name / Contact Person.
+    """
     agent_name = StringField(
         'Agent Name',
-        validators=[DataRequired(), Length(min=1, max=120)],
+        validators=[NameFieldFor(direct=False), DataRequired(), Length(max=120)],
     )
     contact_person = StringField(
         'Contact Person',
-        validators=[Optional(), Length(max=100)],
+        validators=[NameFieldFor(direct=False), Optional(), Length(max=100)],
+    )
+    first_name = StringField(
+        'First Name',
+        validators=[NameFieldFor(direct=True), DataRequired(), Length(max=100)],
+    )
+    last_name = StringField(
+        'Last Name',
+        validators=[NameFieldFor(direct=True), Optional(), Length(max=100)],
     )
     email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
     phone = StringField('Phone', validators=[DataRequired(), Length(min=1, max=20), Regexp(r'^[0-9 +]+$', message='Only digits (0–9), spaces, and + are allowed.')])

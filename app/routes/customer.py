@@ -41,6 +41,41 @@ def _apply_customer_financial_from_form(form, customer):
         customer.cliq_alias = None
 
 
+def _apply_customer_from_form(form, customer):
+    """Copy the customer form onto a Customer.
+
+    The new page, the edit page and the request page's quick-add popup all save
+    through here. Agent Name is stored whole in first_name and Contact Person in
+    company_name; a Direct customer's stored contact person is left as is.
+    """
+    customer.customer_type = form.customer_type.data
+    if customer.is_direct:
+        customer.first_name = (form.first_name.data or '').strip()
+        customer.last_name = (form.last_name.data or '').strip()
+    else:
+        customer.first_name = (form.agent_name.data or '').strip()
+        customer.last_name = ''
+        customer.company_name = (form.contact_person.data or '').strip() or None
+    customer.email = (form.email.data or '').strip()
+    customer.phone = (form.phone.data or '').strip()
+    customer.payment_terms = (form.payment_terms.data or '').strip() or None
+    _apply_customer_financial_from_form(form, customer)
+
+
+def _is_duplicate_phone_error(exc):
+    msg = str(exc)
+    return (
+        'UNIQUE constraint failed: customer.phone' in msg
+        or 'duplicate key value violates unique constraint' in msg
+        or 'uq_customer_phone' in msg
+    )
+
+
+def _wants_json():
+    """The quick-add popup posts with fetch and needs JSON back instead of a page."""
+    return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+
 @customer_bp.route('/')
 @login_required
 def list_customers():
@@ -86,36 +121,34 @@ def new_customer():
         form.customer_type._formdata = None
     
     if form.validate_on_submit():
-        customer = Customer(
-            first_name=(form.agent_name.data or '').strip(),
-            last_name='',
-            email=(form.email.data or '').strip(),
-            phone=(form.phone.data or '').strip(),
-            address=None,
-            city=None,
-            country=None,
-            customer_type=form.customer_type.data,
-            company_name=(form.contact_person.data or '').strip() or None,
-            payment_terms=(form.payment_terms.data or '').strip() or None,
-            tax_number=None,
-            notes=None,
-        )
-        _apply_customer_financial_from_form(form, customer)
+        customer = Customer()
+        _apply_customer_from_form(form, customer)
 
         try:
             db.session.add(customer)
             db.session.commit()
-            
+
+            if _wants_json():
+                return jsonify({'success': True, 'customer': _customer_summary(customer)})
             flash(f'Customer {customer.name} created successfully', 'success')
             return redirect(url_for('customer.view_customer', customer_id=customer.id))
         except Exception as e:
             db.session.rollback()
-            if 'UNIQUE constraint failed: customer.phone' in str(e) or 'duplicate key value violates unique constraint' in str(e) or 'uq_customer_phone' in str(e):
+            if _is_duplicate_phone_error(e):
                 form.phone.errors.append('This phone number is already registered to another customer.')
-                flash('Phone number already exists. Please use a different phone number.', 'error')
+                if not _wants_json():
+                    flash('Phone number already exists. Please use a different phone number.', 'error')
+            elif _wants_json():
+                return jsonify({
+                    'success': False,
+                    'error': 'An error occurred while creating the customer. Please try again.',
+                }), 500
             else:
                 flash('An error occurred while creating the customer. Please try again.', 'error')
-    
+
+    if request.method == 'POST' and _wants_json():
+        return jsonify({'success': False, 'errors': form.errors}), 400
+
     # CRITICAL: Always ensure choices are set before rendering
     form.customer_type.choices = [
         ('Travel Agent', 'Travel Agent'),
@@ -148,8 +181,11 @@ def edit_customer(customer_id):
     ]
 
     if request.method == 'GET':
-        form.agent_name.data = customer.first_name
+        # Both name pairs are filled so switching Customer Type keeps the name.
+        form.agent_name.data = customer.name
         form.contact_person.data = customer.company_name or ''
+        form.first_name.data = customer.first_name
+        form.last_name.data = customer.last_name or ''
         form.email.data = customer.email
         form.phone.data = customer.phone
         form.customer_type.data = customer.customer_type
@@ -170,20 +206,14 @@ def edit_customer(customer_id):
 
     if form.validate_on_submit():
         try:
-            customer.first_name = (form.agent_name.data or '').strip()
-            customer.company_name = (form.contact_person.data or '').strip() or None
-            customer.email = (form.email.data or '').strip()
-            customer.phone = (form.phone.data or '').strip()
-            customer.customer_type = form.customer_type.data
-            customer.payment_terms = (form.payment_terms.data or '').strip() or None
-            _apply_customer_financial_from_form(form, customer)
+            _apply_customer_from_form(form, customer)
             db.session.commit()
-            
+
             flash(f'Customer {customer.name} updated successfully', 'success')
             return redirect(url_for('customer.view_customer', customer_id=customer.id))
         except Exception as e:
             db.session.rollback()
-            if 'UNIQUE constraint failed: customer.phone' in str(e) or 'duplicate key value violates unique constraint' in str(e) or 'uq_customer_phone' in str(e):
+            if _is_duplicate_phone_error(e):
                 form.phone.errors.append('This phone number is already registered to another customer.')
                 flash('Phone number already exists. Please use a different phone number.', 'error')
             else:
@@ -391,22 +421,29 @@ def view_document(customer_id, document_id):
     # Serve the file
     return send_file(file_path)
 
+def _customer_summary(c):
+    """Customer as the selection popup sees it (list rows and a just-added customer)."""
+    return {
+        'id': c.id,
+        'name': c.name,
+        'email': c.email,
+        'phone': c.phone,
+        'customer_type': c.customer_type,
+        'company_name': c.company_name,
+        'created_at': c.created_at.isoformat() if c.created_at else None,
+        'updated_at': c.updated_at.isoformat() if c.updated_at else None,
+    }
+
+
 @customer_bp.route('/api/list')
 
 def api_list_customers():
     """API endpoint to return customers as JSON"""
     try:
         customers = Customer.query.order_by(Customer.first_name, Customer.last_name).all()
-        
+
         customers_list = [{
-            'id': c.id,
-            'name': c.name,
-            'email': c.email,
-            'phone': c.phone,
-            'customer_type': c.customer_type,
-            'company_name': c.company_name,
-            'created_at': c.created_at.isoformat() if c.created_at else None,
-            'updated_at': c.updated_at.isoformat() if c.updated_at else None,
+            **_customer_summary(c),
             'booking_count': len(c.bookings) if hasattr(c, 'bookings') and c.bookings else 0
         } for c in customers]
         

@@ -1,0 +1,95 @@
+{#
+  Customer form fields, shared by the New/Edit Customer page and the request
+  page's Quick Add Customer popup so both stay identical.
+
+  Field names match CustomerForm. The popup is on every page (base.html), so it
+  passes id_prefix to keep its ids apart from the page's own fields.
+  Styles: static/css/customer-form.css. Behaviour (Direct name swap, Cliq,
+  custom payment terms): static/js/customer-form.js.
+#}
+
+{% macro _text_field(form, id_prefix, name, label, placeholder, maxlength, required=False) %}
+  <label class="popup-like-label" for="{{ id_prefix }}{{ name }}">{{ label }}</label>
+  <input type="text" class="popup-like-control" id="{{ id_prefix }}{{ name }}" name="{{ name }}"
+         value="{{ (form[name].data or '') if form else '' }}" placeholder="{{ placeholder }}"
+         maxlength="{{ maxlength }}"{% if required %} required{% endif %}>
+  <div class="text-danger small" data-field-error="{{ name }}">{{ form[name].errors | join(' ') if form else '' }}</div>
+{% endmacro %}
+
+{% macro customer_form_fields(form=None, id_prefix='') %}
+{%- set customer_type = (form.customer_type.data if form else none) or 'Direct' -%}
+{%- set is_direct = customer_type == 'Direct' -%}
+{%- set payment_terms = (form.payment_terms.data if form else none) or '' -%}
+{%- set standard_payment_terms = ['Cash before arrival', 'Credit', 'NET 15', 'NET 30', 'NET 45', 'NET 60', 'Prepaid', 'Cash on Delivery', 'Cliq'] -%}
+
+<div class="row g-3 align-items-start" data-cf="account-names"{% if is_direct %} style="display: none;"{% endif %}>
+  <div class="col-6">
+    {{ _text_field(form, id_prefix, 'agent_name', 'Agent Name', 'Agent / account', 120, required=not is_direct) }}
+  </div>
+  <div class="col-6">
+    {{ _text_field(form, id_prefix, 'contact_person', 'Contact Person', 'Contact', 100) }}
+  </div>
+</div>
+
+<div class="row g-3 align-items-start" data-cf="person-names"{% if not is_direct %} style="display: none;"{% endif %}>
+  <div class="col-6">
+    {{ _text_field(form, id_prefix, 'first_name', 'First Name', 'First name', 100, required=is_direct) }}
+  </div>
+  <div class="col-6">
+    {{ _text_field(form, id_prefix, 'last_name', 'Last Name', 'Last name', 100) }}
+  </div>
+</div>
+
+<div class="row g-3 align-items-start">
+  <div class="col-6">
+    {{ _text_field(form, id_prefix, 'phone', 'Phone', '+962 …', 20, required=True) }}
+  </div>
+  <div class="col-6">
+    {{ _text_field(form, id_prefix, 'email', 'Email', 'email@example.com', 120, required=True) }}
+  </div>
+</div>
+
+<div class="popup-section-strip">Business Details</div>
+<div class="row g-3 align-items-start">
+  <div class="col-sm-6">
+    <label class="popup-like-label" for="{{ id_prefix }}customer_type">Customer Type</label>
+    <select class="popup-like-select" id="{{ id_prefix }}customer_type" name="customer_type">
+      {% for value in ['Travel Agent', 'Corporate', 'Direct', 'Other'] %}
+        <option value="{{ value }}"{% if value == customer_type %} selected{% endif %}>{{ value }}</option>
+      {% endfor %}
+    </select>
+    <div class="text-danger small" data-field-error="customer_type">{{ form.customer_type.errors | join(' ') if form else '' }}</div>
+  </div>
+  <div class="col-sm-6">
+    <label class="popup-like-label" for="{{ id_prefix }}payment_terms">Payment Terms</label>
+    <select class="popup-like-select" id="{{ id_prefix }}payment_terms" name="payment_terms">
+      <option value="">Select payment terms...</option>
+      {% for value in standard_payment_terms %}
+        <option value="{{ value }}"{% if value == payment_terms %} selected{% endif %}>{{ value }}</option>
+      {% endfor %}
+      {% if payment_terms and payment_terms not in standard_payment_terms and payment_terms != 'Other' %}
+        {# A saved custom term (added through "Other") #}
+        <option value="{{ payment_terms }}" selected>{{ payment_terms }}</option>
+      {% endif %}
+      <option value="Other"{% if payment_terms == 'Other' %} selected{% endif %}>Other</option>
+    </select>
+    <div class="text-danger small" data-field-error="payment_terms">{{ form.payment_terms.errors | join(' ') if form else '' }}</div>
+  </div>
+</div>
+
+<div class="popup-section-strip">Financial Information</div>
+<div class="row g-3 align-items-start" data-cf="bank-fields"{% if payment_terms == 'Cliq' %} style="display: none;"{% endif %}>
+  <div class="col-sm-6">
+    {{ _text_field(form, id_prefix, 'bank_name', 'Bank Name', 'Bank name', 120) }}
+  </div>
+  <div class="col-sm-6">
+    {{ _text_field(form, id_prefix, 'bank_account', 'Bank Account', 'Account number', 255) }}
+  </div>
+</div>
+
+<div class="row g-3 align-items-start" data-cf="cliq-field"{% if payment_terms != 'Cliq' %} style="display: none;"{% endif %}>
+  <div class="col-12">
+    {{ _text_field(form, id_prefix, 'cliq_alias', 'Cliq num/Alias', 'Enter cliq num or alias', 255) }}
+  </div>
+</div>
+{% endmacro %}

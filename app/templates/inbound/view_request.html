@@ -766,6 +766,10 @@ input[type="date"]::-webkit-calendar-table-body {
                 <i class="fas fa-times"></i>
                 <span>Cancel</span>
             </button>
+            <button type="button" id="revertToRequestBtn" class="tw-btn tw-btn-secondary tw-btn-sm" onclick="revertToRequest()">
+                <i class="fas fa-rotate-left"></i>
+                <span>Revert to Requested</span>
+            </button>
             <button type="button" class="tw-btn tw-btn-success tw-btn-sm" onclick="submitRequest()">
                 <i class="fas fa-check"></i>
                 <span>Submit</span>
@@ -3230,7 +3234,7 @@ input[type="date"]::-webkit-calendar-table-body {
                     </tr>
                     <tr>
                         <td colspan="4" class="border border-black px-3 py-2 font-bold text-center" style="background-color: #9ca3af;">Advanced Payment</td>
-                        <td class="border border-black px-3 py-2 text-right bg-white"></td>
+                        <td class="border border-black px-3 py-2 text-right bg-white"><div class="flex items-center justify-end gap-1 w-full"><input type="number" id="advance_advanced_payment" min="0" step="0.01" onkeydown="if (event.key === '-') event.preventDefault();" oninput="if (parseFloat(this.value) < 0) this.value = '';" class="flex-1 min-w-0 text-right border-0 focus:ring-0 text-sm bg-transparent py-0.5" placeholder="0.00" /><span class="text-sm flex-shrink-0">JOD</span></div></td>
                     </tr>
                 </tfoot>
             </table>
@@ -11866,6 +11870,51 @@ function submitRequest() {
     });
 }
 
+// Revert Request (CONFIRMED → REQUEST)
+function revertToRequest() {
+    const confirmMessage = 'Revert this request to Requested?\n\n'
+        + '• Supplier bookings and guides will NOT be cancelled. Contact suppliers if anything changes.\n'
+        + '• Saved Proforma invoices are kept but will not update automatically.\n'
+        + '• Hotel and restaurant vouchers are unavailable until the request is confirmed again.';
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+
+    // Block a second click while the first one is still on its way
+    const revertBtn = document.getElementById('revertToRequestBtn');
+    if (revertBtn) revertBtn.disabled = true;
+
+    fetch(`/inbound/api/${requestId}/revert-to-request`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json().catch(() => {
+        // Not JSON: the login expired and the server answered with the login page
+        throw new Error(response.redirected ? 'login' : 'server');
+    }))
+    .then(data => {
+        if (data.success) {
+            showNotification('Request reverted to Requested', 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showNotification(data.message || data.error || 'Error reverting request', 'error');
+            if (revertBtn) revertBtn.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error reverting request:', error);
+        showNotification(error.message === 'login'
+            ? 'Your login has expired. Please log in again.'
+            : 'Error reverting request', 'error');
+        if (revertBtn) revertBtn.disabled = false;
+    });
+}
+
 // ==========================================
 // EXCEL EXPORT FUNCTION (English Only)
 // ==========================================
@@ -15086,6 +15135,8 @@ const ADVANCE_EXPENSE_ITEMS = [
     { item: '', amount: '' }
 ];
 let advanceExpenseSheetData = [];
+// The file's PAX when the sheet was opened; a header Pax that differs from it was typed by the user.
+let advanceExpenseRequestPax = '';
 
 async function openAdvanceExpenseSheet() {
     closeTourExpenseChoiceModal();
@@ -15102,9 +15153,12 @@ async function openAdvanceExpenseSheet() {
     var fileEl = document.getElementById('advance_file');
     var paxEl = document.getElementById('advance_pax');
     var dateEl = document.getElementById('advance_date');
+    var advPayEl = document.getElementById('advance_advanced_payment');
     fileEl.value = reqNum;
     paxEl.value = reqPax;
+    advanceExpenseRequestPax = String(reqPax).trim();
     dateEl.value = new Date().toISOString().slice(0, 10);
+    if (advPayEl) advPayEl.value = '';
     if (reqId) {
         try {
             var r = await fetch('/inbound/api/' + reqId + '/advance-expense-sheet');
@@ -15132,10 +15186,13 @@ async function openAdvanceExpenseSheet() {
                 });
             }
             if (saved.file !== undefined && saved.file !== '') fileEl.value = saved.file;
-            // Pax always shows the file's current PAX, not the copy saved with the sheet.
+            // Pax shows the file's current PAX unless the user typed their own value
+            // into the sheet and saved it. Sheets saved before the flag existed follow the file.
+            if (saved.pax_overridden === true && String(saved.pax || '').trim() !== '') paxEl.value = saved.pax;
             if (saved.guide_driver !== undefined) document.getElementById('advance_guide_driver').value = saved.guide_driver || '';
             if (saved.date !== undefined && saved.date !== '') dateEl.value = saved.date;
             if (saved.method_of_payment !== undefined) document.getElementById('advance_method_of_payment').value = saved.method_of_payment || '';
+            if (saved.advanced_payment !== undefined && advPayEl) advPayEl.value = saved.advanced_payment || '';
             if (saved.approved_by_1 !== undefined) { var a1 = document.getElementById('advance_approved_by_1'); if (a1) a1.value = saved.approved_by_1 || ''; }
             if (saved.approved_by_2 !== undefined) { var a2 = document.getElementById('advance_approved_by_2'); if (a2) a2.value = saved.approved_by_2 || ''; }
         } catch (e) {}
@@ -15408,6 +15465,12 @@ async function saveAdvanceExpenseSheet() {
         else alert('Cannot save: request not found');
         return;
     }
+    var advancedPayment = ((document.getElementById('advance_advanced_payment') || {}).value || '').trim();
+    if (advancedPayment !== '' && !(parseFloat(advancedPayment) >= 0)) {
+        if (typeof showNotification === 'function') showNotification('Advanced Payment cannot be negative', 'error');
+        else alert('Advanced Payment cannot be negative');
+        return;
+    }
     var saveUrl = '/inbound/api/' + reqId + '/save-advance-expense-sheet';
     var saveBtn = document.getElementById('advanceExpenseSaveBtn');
     var saveIcon = document.getElementById('advanceExpenseSaveIcon');
@@ -15427,13 +15490,17 @@ async function saveAdvanceExpenseSheet() {
                 if (!row.amountLocked && tr.cells[3]) { var amtInp = tr.cells[3].querySelector('input'); if (amtInp) row.amount = amtInp.value; }
             }
         });
+        var headerPax = ((document.getElementById('advance_pax') || {}).value || '').trim();
         var payload = {
             rows: advanceExpenseSheetData.map(r => ({ item: r.item, amount: r.amount, pax: r.pax, checked: r.checked })),
             file: (document.getElementById('advance_file') || {}).value || '',
-            pax: (document.getElementById('advance_pax') || {}).value || '',
+            pax: headerPax,
+            // Kept on reopen only when the user changed it; otherwise the box keeps following the file's PAX.
+            pax_overridden: headerPax !== '' && headerPax !== advanceExpenseRequestPax,
             guide_driver: (document.getElementById('advance_guide_driver') || {}).value || '',
             date: (document.getElementById('advance_date') || {}).value || '',
             method_of_payment: (document.getElementById('advance_method_of_payment') || {}).value || '',
+            advanced_payment: advancedPayment,
             approved_by_1: (document.getElementById('advance_approved_by_1') || {}).value || '',
             approved_by_2: (document.getElementById('advance_approved_by_2') || {}).value || ''
         };
@@ -15536,6 +15603,9 @@ function printAdvanceExpenseSheet() {
     const methodVal = document.getElementById('advance_method_of_payment').value;
     const approved1 = (document.getElementById('advance_approved_by_1') || {}).value || '';
     const approved2 = (document.getElementById('advance_approved_by_2') || {}).value || '';
+    // Left blank when empty so it can still be filled in by pen
+    const advPayVal = ((document.getElementById('advance_advanced_payment') || {}).value || '').trim();
+    const advPayDisplay = advPayVal === '' ? '' : 'JOD ' + (parseFloat(advPayVal) || 0).toFixed(2);
     let rowsHtml = '';
     const rowStyle = 'border:1px solid #000;padding:2px 4px;text-align:center;height:18px;line-height:14px;font-size:9px;vertical-align:middle';
     const rowStyleL = 'border:1px solid #000;padding:2px 4px;text-align:left;height:18px;line-height:14px;font-size:9px;vertical-align:middle';
@@ -15580,7 +15650,7 @@ tbody td{height:18px;line-height:14px;font-size:9px;vertical-align:middle}
 <table class="outer-table" style="border:none;border-collapse:collapse;margin:0 auto"><tr><td style="border:none;padding:0;vertical-align:top">
 <table class="tbl-header"><tr><td colspan="2" class="gray" style="text-align:center;padding:3px 5px;font-size:10px;height:22px">Windows of Jordan</td></tr><tr><td colspan="2" class="red" style="padding:3px 5px;font-size:10px;height:22px">Advance Expense Sheet</td></tr><tr><td style="padding:2px 5px;height:18px"><strong>File</strong> ${escapeHtml(fileVal)}</td><td style="padding:2px 5px;height:18px"><strong>Pax</strong> ${escapeHtml(paxVal)}</td></tr><tr><td style="padding:2px 5px;height:18px"><strong>Guide/Driver:</strong> ${escapeHtml(guideVal)}</td><td style="padding:2px 5px;height:18px"><strong>Date:</strong> ${escapeHtml(dateVal)}</td></tr></table>
 </td></tr><tr><td style="border:none;padding:0;vertical-align:top">
-<table class="tbl-main"><thead><tr class="gray"><th style="text-align:center">✓</th><th style="text-align:left">ITEM</th><th style="text-align:center">PAX</th><th style="text-align:right">Amount</th><th style="text-align:right">Total</th></tr></thead><tbody>${rowsHtml}</tbody><tfoot><tr><td colspan="4" class="orange" style="padding:2px 5px;height:18px;color:white;font-weight:bold;text-align:right">Total</td><td class="orange" style="padding:2px 5px;height:18px;color:white;font-weight:bold;text-align:right">JOD ${grandTotal.toFixed(2)}</td></tr><tr><td colspan="4" class="gray" style="padding:2px 5px;height:18px;font-weight:bold;text-align:center">Advanced Payment</td><td style="padding:2px 5px;height:18px;background:#fff"></td></tr></tfoot></table>
+<table class="tbl-main"><thead><tr class="gray"><th style="text-align:center">✓</th><th style="text-align:left">ITEM</th><th style="text-align:center">PAX</th><th style="text-align:right">Amount</th><th style="text-align:right">Total</th></tr></thead><tbody>${rowsHtml}</tbody><tfoot><tr><td colspan="4" class="orange" style="padding:2px 5px;height:18px;color:white;font-weight:bold;text-align:right">Total</td><td class="orange" style="padding:2px 5px;height:18px;color:white;font-weight:bold;text-align:right">JOD ${grandTotal.toFixed(2)}</td></tr><tr><td colspan="4" class="gray" style="padding:2px 5px;height:18px;font-weight:bold;text-align:center">Advanced Payment</td><td style="padding:2px 5px;height:18px;background:#fff;text-align:right">${advPayDisplay}</td></tr></tfoot></table>
 </td></tr></table>
 <p style="margin:5px 0 3px;font-size:9px"><strong>Method of Payment</strong> ${escapeHtml(methodVal)}</p>
 <p style="margin:3px 0;font-size:9px"><strong>Approved By</strong> ${escapeHtml(approved1)} &nbsp;........................&nbsp; ${escapeHtml(approved2)}</p>

@@ -24,13 +24,16 @@
               <h6 class="fw-bold">Customer Information</h6>
               <table class="table table-borderless">
                 <tr>
-                  <th style="width: 35%">Agent name:</th>
+                  <th style="width: 35%">{{ 'Name:' if customer.is_direct else 'Agent name:' }}</th>
                   <td>{{ customer.name }}</td>
                 </tr>
+                {# Direct customers have no contact person; one saved before they became Direct still shows #}
+                {% if not customer.is_direct or customer.company_name %}
                 <tr>
                   <th>Contact person:</th>
                   <td>{{ customer.company_name or '—' }}</td>
                 </tr>
+                {% endif %}
                 <tr>
                   <th>Email:</th>
                   <td>{{ customer.email }}</td>

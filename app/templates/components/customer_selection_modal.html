@@ -1,3 +1,4 @@
+{% from 'customer/_form_fields.html' import customer_form_fields %}
 <!-- Customer Selection Modal with Search -->
 <div class="modal fade" id="customerSelectionModal" tabindex="-1" aria-labelledby="customerSelectionModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -385,93 +386,56 @@ window.showNewCustomerForm = function() {
         customerModal.hide();
     }
     
+    // Start from an empty form (Direct) every time
+    const form = document.getElementById('qaCustomerForm');
+    form.reset();
+    window.CustomerFormFields.clearErrors(form);
+    window.CustomerFormFields.init(form);
+
     // Show quick add modal
-    const quickAddModal = new bootstrap.Modal(document.getElementById('quickAddCustomerModal'));
-    quickAddModal.show();
-    
-    // Clear form
-    document.getElementById('quickAddCustomerForm').reset();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('quickAddCustomerModal')).show();
 }
 
-window.quickAddCustomer = function() {
-    const form = document.getElementById('quickAddCustomerForm');
-    const formData = new FormData(form);
-    
-    // Convert to JSON - include all fields from the form
-    const data = {
-        first_name: formData.get('first_name'),
-        last_name: formData.get('last_name'),
-        email: formData.get('email'),
-        phone: formData.get('phone'),
-        customer_type: formData.get('customer_type') || 'Direct',
-        company_name: formData.get('company_name'),
-        tax_number: formData.get('tax_number'),
-        address: formData.get('address'),
-        city: formData.get('city'),
-        country: formData.get('country'),
-        notes: formData.get('notes')
-    };
-    
-    // Validate required fields
-    if (!data.first_name) {
-        alert('Please fill in the first name (required)');
-        return;
-    }
-    if (!data.email) {
-        alert('Please fill in the email (required)');
-        return;
-    }
-    if (!data.phone) {
-        alert('Please fill in the phone (required)');
-        return;
-    }
-    
-    // Show loading state
+// Saves through the New Customer page itself, so the popup and the page share
+// one form, one set of rules and one save. The browser has already checked the
+// required fields, exactly as on the page.
+window.quickAddCustomer = function(event) {
+    event.preventDefault();
+    const form = event.target;
+    window.CustomerFormFields.clearErrors(form);
+
     const submitBtn = document.getElementById('quickAddSubmitBtn');
     const originalText = submitBtn.innerHTML;
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
-    
-    // Get CSRF token
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
-                     document.querySelector('input[name="csrf_token"]')?.value || '';
-    
-    // Send to API
-    fetch('/customers/api/create', {
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+    fetch(form.action, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken
-        },
-        body: JSON.stringify(data)
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: new FormData(form)
     })
-    .then(response => response.json())
+    .then(response => response.json().catch(() => {
+        // Not JSON: the login expired and the server answered with the login page
+        throw new Error(response.redirected ? 'login' : 'server');
+    }))
     .then(result => {
         if (result.success) {
-            // Close quick add modal
-            const quickAddModal = bootstrap.Modal.getInstance(document.getElementById('quickAddCustomerModal'));
-            quickAddModal.hide();
-            
-            // Reload customers and select the new one
-            loadCustomers();
-            
-            // Show success message
-            setTimeout(() => {
-                if (window.customerSelectionCallback) {
-                    window.customerSelectionCallback(result.customer.id, result.customer.name);
-                }
-                
-                // Reopen customer selection modal
-                const customerModal = new bootstrap.Modal(document.getElementById('customerSelectionModal'));
-                customerModal.show();
-            }, 500);
-        } else {
-            alert('Error adding customer: ' + (result.error || 'Unknown error'));
+            bootstrap.Modal.getInstance(document.getElementById('quickAddCustomerModal')).hide();
+            // Select the new customer straight into the page that asked for one
+            if (window.customerSelectionCallback) {
+                window.customerSelectionCallback(result.customer);
+            }
+            return;
         }
+        const unplaced = window.CustomerFormFields.showErrors(form, result.errors);
+        if (result.error) unplaced.push(result.error);
+        if (unplaced.length) alert(unplaced.join('\n'));
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error adding customer. Please try again.');
+        alert(error.message === 'login'
+            ? 'Your login has expired. Please log in again, then add the customer.'
+            : 'Error adding customer. Please try again.');
     })
     .finally(() => {
         submitBtn.disabled = false;
@@ -511,25 +475,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Show/hide company fields based on customer type in Quick Add modal
-    const quickAddCustomerType = document.getElementById('customer_type');
-    const quickAddCompanyFields = document.querySelector('#quickAddCustomerModal .company-fields');
-    
-    if (quickAddCustomerType && quickAddCompanyFields) {
-        function toggleQuickAddCompanyFields() {
-            const customerType = quickAddCustomerType.value;
-            if (customerType === 'Corporate' || customerType === 'Travel Agent') {
-                quickAddCompanyFields.style.display = 'block';
-            } else {
-                quickAddCompanyFields.style.display = 'none';
-            }
-        }
-        
-        // Initial state
-        toggleQuickAddCompanyFields();
-        
-        // On change
-        quickAddCustomerType.addEventListener('change', toggleQuickAddCompanyFields);
+    const quickAddForm = document.getElementById('qaCustomerForm');
+    if (quickAddForm) {
+        quickAddForm.addEventListener('submit', window.quickAddCustomer);
     }
 });
 
@@ -548,80 +496,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     <i class="fas fa-xmark" style="font-size: 1rem; color: #333;"></i>
                 </button>
             </div>
-            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
-                <form id="quickAddCustomerForm">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="first_name" class="form-label">
-                                First Name <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" class="form-control" id="first_name" name="first_name" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="last_name" class="form-label">Last Name</label>
-                            <input type="text" class="form-control" id="last_name" name="last_name">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="email" class="form-label">
-                                Email <span class="text-danger">*</span>
-                            </label>
-                            <input type="email" class="form-control" id="email" name="email" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="phone" class="form-label">
-                                Phone <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" class="form-control" id="phone" name="phone" required>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="customer_type" class="form-label">Customer Type</label>
-                        <select class="form-select" id="customer_type" name="customer_type">
-                            <option value="Direct" selected>Direct</option>
-                            <option value="Travel Agent">Travel Agent</option>
-                            <option value="Corporate">Corporate</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div class="row company-fields">
-                        <div class="col-md-6 mb-3">
-                            <label for="company_name" class="form-label">Company Name</label>
-                            <input type="text" class="form-control" id="company_name" name="company_name">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="tax_number" class="form-label">Tax Number</label>
-                            <input type="text" class="form-control" id="tax_number" name="tax_number">
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="address" class="form-label">Address</label>
-                        <textarea class="form-control" id="address" name="address" rows="3"></textarea>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="city" class="form-label">City</label>
-                            <input type="text" class="form-control" id="city" name="city">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="country" class="form-label">Country</label>
-                            <input type="text" class="form-control" id="country" name="country">
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="notes" class="form-label">Notes</label>
-                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
-                    </div>
+            <div class="modal-body customer-popup-like" style="max-height: 70vh; overflow-y: auto; padding: 2.2rem 2.2rem 1.75rem;">
+                {# Same fields, rules and save as the New Customer page (it posts there). #}
+                <form id="qaCustomerForm" class="d-flex flex-column gap-3" method="POST"
+                      action="{{ url_for('customer.new_customer') }}" data-customer-form data-customer-form-lazy>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {{ customer_form_fields(id_prefix='qa_') }}
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times"></i> Cancel
-                </button>
-                <button type="button" class="btn text-dark" style="background-color: #FFBF00; border-color: #FFBF00;" id="quickAddSubmitBtn" onclick="quickAddCustomer()">
-                    <i class="fas fa-plus"></i> Add Customer
-                </button>
+            <div class="modal-footer justify-content-between">
+                {# A link, like the page's Cancel, so the button theme styles both the same #}
+                <a href="#" role="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cancel</a>
+                <button type="submit" form="qaCustomerForm" class="btn btn-primary px-4" id="quickAddSubmitBtn">Save Customer</button>
             </div>
         </div>
     </div>
